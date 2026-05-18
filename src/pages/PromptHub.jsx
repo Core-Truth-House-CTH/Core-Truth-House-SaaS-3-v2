@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../hooks/useAuth';
-import axios from 'axios';
+import apiClient from '../lib/apiClient';
+import { usePlan } from '../context/PlanContext';
+import { useWorkspace } from '../context/WorkspaceContext';
+import { PLAN_ORDER } from '../config/routeConfig';
 import { DashboardLayout } from '../components/Layout';
 import { Search, Star, Trash2, Copy, Download, ShoppingBag, Wand2, Plus, ChevronRight, Check, Loader2, Sparkles } from 'lucide-react';
 import { PromptCard } from '../components/prompts/PromptCard';
-
-const API = import.meta.env.VITE_BACKEND_URL;
 
 // Tabs configuration
 const TABS = [
@@ -14,8 +15,10 @@ const TABS = [
  { id: 'generators', label: 'Generators', icon: Wand2 },
 ];
 
-// Generator configurations
-const PLAN_ORDER = { FOUNDATION: 0, STRUCTURE: 1, HOUSE: 2, ESTATE: 3 };
+// Per-generator one-time access pricing, keyed by the lowercase plan tier
+// that normally unlocks the generator.
+const GENERATOR_PRICES = { structure: 27, house: 47, estate: 67 };
+const PLAN_TIER_LABELS = { structure: 'The Structure', house: 'The House', estate: 'The Estate' };
 
 const GENERATORS = [
  {
@@ -141,9 +144,10 @@ const GENERATORS = [
 
 export default function PromptHub() {
  const { user } = useUser();
+ const { plan } = usePlan();
+ const { activeWorkspaceId } = useWorkspace();
  const [activeTab, setActiveTab] = useState('library');
  const [prompts, setPrompts] = useState([]);
- const [packs, setPacks] = useState([]);
  const [loading, setLoading] = useState(true);
  const [searchQuery, setSearchQuery] = useState('');
  const [selectedGenerator, setSelectedGenerator] = useState(null);
@@ -151,69 +155,23 @@ export default function PromptHub() {
  const [generating, setGenerating] = useState(false);
  const [generatedResult, setGeneratedResult] = useState(null);
  const [copiedId, setCopiedId] = useState(null);
- const [purchasingPack, setPurchasingPack] = useState(null);
- const [userPlan, setUserPlan] = useState('FOUNDATION');
  const [showUpgradeModal, setShowUpgradeModal] = useState(null);
 
  const userId = user?.id || 'default';
+ const isEstate = plan === 'estate';
 
- // Fetch prompts and packs on mount; handle post-checkout session
  useEffect(() => {
  fetchPrompts();
- fetchPacks();
- const params = new URLSearchParams(window.location.search);
- const sessionId = params.get('session_id');
- const packSuccess = params.get('pack_success');
- if (sessionId && packSuccess === 'true') {
- const packId = params.get('pack_id');
- axios.get(`${API}/api/prompt-packs/checkout/status/${sessionId}`)
- .then(() => { fetchPacks(); })
- .catch(console.error);
- window.history.replaceState({}, '', '/prompt-hub');
- }
- // Fetch user's plan
- axios.get(`${API}/api/usage/summary?workspace_id=default`)
- .then(r => { if (r.data?.plan) setUserPlan(r.data.plan); })
- .catch(() => {});
  }, [userId]);
-
- const handlePurchasePack = async (pack) => {
- if (!user?.id) { alert('Please sign in to purchase packs.'); return; }
- setPurchasingPack(pack.id);
- try {
- const res = await axios.post(`${API}/api/prompt-packs/checkout`, {
- pack_id: pack.id,
- user_id: user.id,
- user_email: user.primaryEmailAddress?.emailAddress,
- origin_url: window.location.origin,
- });
- if (res.data.checkout_url) {
- window.location.href = res.data.checkout_url;
- }
- } catch (e) {
- alert(e.response?.data?.detail || 'Failed to start checkout. Please try again.');
- } finally {
- setPurchasingPack(null);
- }
- };
 
  const fetchPrompts = async () => {
  try {
- const res = await axios.get(`${API}/api/prompts?user_id=${userId}`);
- setPrompts(res.data.prompts || []);
+ const res = await apiClient.get(`/api/prompts?user_id=${userId}`);
+ setPrompts(res.prompts || []);
  } catch (err) {
  console.error('Error fetching prompts:', err);
  } finally {
  setLoading(false);
- }
- };
-
- const fetchPacks = async () => {
- try {
- const res = await axios.get(`${API}/api/prompt-packs?user_id=${userId}`);
- setPacks(res.data.packs || []);
- } catch (err) {
- console.error('Error fetching packs:', err);
  }
  };
 
@@ -225,8 +183,8 @@ export default function PromptHub() {
 
  const handleToggleFavorite = async (promptId) => {
  try {
- await axios.put(`${API}/api/prompts/${promptId}/favorite?user_id=${userId}`);
- setPrompts(prompts.map(p => 
+ await apiClient.put(`/api/prompts/${promptId}/favorite?user_id=${userId}`);
+ setPrompts(prompts.map(p =>
  p.id === promptId ? { ...p, is_favorite: !p.is_favorite } : p
  ));
  } catch (err) {
@@ -237,7 +195,7 @@ export default function PromptHub() {
  const handleDeletePrompt = async (promptId) => {
  if (!window.confirm('Delete this prompt?')) return;
  try {
- await axios.delete(`${API}/api/prompts/${promptId}?user_id=${userId}`);
+ await apiClient.delete(`/api/prompts/${promptId}?user_id=${userId}`);
  setPrompts(prompts.filter(p => p.id !== promptId));
  } catch (err) {
  console.error('Error deleting prompt:', err);
@@ -250,22 +208,29 @@ export default function PromptHub() {
  setGeneratedResult(null);
 
  try {
- const res = await axios.post(`${API}/api/generators/${selectedGenerator.id}?user_id=${userId}`, {
+ const res = await apiClient.post(`/api/generators/${selectedGenerator.id}?user_id=${userId}`, {
  generator_type: selectedGenerator.id,
- inputs: generatorInputs
+ inputs: generatorInputs,
+ workspace_id: activeWorkspaceId || 'default',
+ user_id: userId,
  });
- setGeneratedResult(res.data.result);
+ setGeneratedResult(res.result);
  fetchPrompts(); // Refresh prompts to show the saved one
  } catch (err) {
  console.error('Generator error:', err);
- alert(err.response?.data?.detail?.message || 'Generation failed. Please try again.');
+ alert(err.message || 'Generation failed. Please try again.');
  } finally {
  setGenerating(false);
  }
  };
 
+ const handleStorePurchase = () => {
+ alert('Generator purchases coming soon. Upgrade your plan to get instant access.');
+ window.location.href = '/billing';
+ };
+
  // Filter prompts by search
- const filteredPrompts = prompts.filter(p => 
+ const filteredPrompts = prompts.filter(p =>
  p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
  p.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
  p.category?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -380,67 +345,64 @@ export default function PromptHub() {
  </div>
  )}
 
- {/* TAB: Store */}
+ {/* TAB: Store (Generator Access) */}
  {activeTab === 'store' && (
  <div className="space-y-6">
  <div className="p-4 rounded-xl border" style={{ background: "rgba(224,78,53,0.06)", borderColor: "rgba(224,78,53,0.18)" }}>
- <h3 className="cth-heading font-semibold mb-1">Premium Prompt Packs</h3>
- <p className="text-sm cth-muted">One-time purchase add-ons to expand your brand toolkit</p>
+ <h3 className="cth-heading font-semibold mb-1">Generator Access</h3>
+ <p className="text-sm cth-muted">Unlock individual generators with one-time purchases, or upgrade your plan for instant access to all.</p>
  </div>
 
  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
- {packs.map(pack => (
+ {GENERATORS.map(gen => {
+ const requiredPlan = (gen.requiredPlan || 'foundation').toLowerCase();
+ const isIncluded = isEstate || PLAN_ORDER.indexOf(plan) >= PLAN_ORDER.indexOf(requiredPlan);
+ const price = GENERATOR_PRICES[requiredPlan] || 27;
+ const tierLabel = PLAN_TIER_LABELS[requiredPlan] || 'Foundation';
+ return (
  <div
- key={pack.id}
- className={`p-5 rounded-2xl border transition-all ${
- pack.is_purchased
- ? 'cth-card border-green-500/30'
- : 'cth-card border-[var(--cth-admin-border)] hover:border-[rgba(224,78,53,0.24)]'
- }`}
- data-testid={`pack-${pack.slug}`}
+ key={gen.id}
+ className="p-5 rounded-2xl border cth-card border-[var(--cth-admin-border)] transition-all"
+ data-testid={`store-generator-${gen.id}`}
  >
  <div className="flex items-start justify-between mb-3">
- <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: 'linear-gradient(135deg, var(--cth-admin-accent), var(--cth-admin-ruby))' }}>
- {pack.icon}
+ <div
+ className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+ style={{ background: `linear-gradient(135deg, ${gen.color}, ${gen.color}88)` }}
+ >
+ {gen.icon}
  </div>
- {pack.is_purchased && (
+ {isIncluded && (
  <span className="px-2 py-1 text-xs rounded-full flex items-center gap-1" style={{ background: "rgba(63,122,95,0.14)", color: "var(--cth-success)" }}>
- <Check className="w-3 h-3" /> Owned
+ <Check className="w-3 h-3" /> Included in your plan
  </span>
  )}
  </div>
-
- <h3 className="cth-heading font-semibold mb-1">{pack.title}</h3>
- <p className="text-xs cth-muted mb-3 line-clamp-2">{pack.description}</p>
-
- <div className="space-y-1.5 mb-4">
- {pack.includes?.slice(0, 3).map((item, i) => (
- <div key={i} className="flex items-center gap-2 text-xs cth-muted">
- <ChevronRight className="w-3 h-3 cth-text-accent" />
- {item}
- </div>
- ))}
- </div>
-
+ <h3 className="cth-heading font-semibold mb-1">{gen.title}</h3>
+ <p className="text-xs cth-muted mb-3 line-clamp-2">{gen.description}</p>
+ <p className="text-xs cth-muted mb-4">Normally unlocked with <strong style={{ color: 'var(--cth-admin-ink)' }}>{tierLabel}</strong></p>
  <div className="flex items-center justify-between">
- <div className="text-lg font-bold cth-text-accent">${pack.price}</div>
- {pack.is_purchased ? (
- <button className="cth-button-secondary px-4 py-2 rounded-lg text-sm">
- View Prompts
+ <div className="text-lg font-bold cth-text-accent">${price}</div>
+ {isIncluded ? (
+ <button
+ onClick={() => setActiveTab('generators')}
+ className="cth-button-secondary px-4 py-2 rounded-lg text-sm"
+ >
+ Use Generator
  </button>
  ) : (
  <button
- data-testid={`purchase-pack-${pack.id}`}
- onClick={() => handlePurchasePack(pack)}
- disabled={purchasingPack === pack.id}
- className="cth-button-primary px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-60"
+ data-testid={`store-buy-${gen.id}`}
+ onClick={handleStorePurchase}
+ className="cth-button-primary px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
  >
- {purchasingPack === pack.id ? <><Loader2 className="w-3 h-3 animate-spin" />Processing…</> : <>Purchase</>}
+ Get Access
  </button>
  )}
  </div>
  </div>
- ))}
+ );
+ })}
  </div>
  </div>
  )}
@@ -457,27 +419,28 @@ export default function PromptHub() {
 
  <div className="grid md:grid-cols-2 gap-4">
  {GENERATORS.map(gen => {
- const planRequired = gen.requiredPlan || 'FOUNDATION';
- const isLocked = PLAN_ORDER[userPlan] < PLAN_ORDER[planRequired];
- const planLabels = { STRUCTURE: 'The Structure', HOUSE: 'The House', ESTATE: 'The Estate' };
+ const planRequired = (gen.requiredPlan || 'foundation').toLowerCase();
+ const isLocked = PLAN_ORDER.indexOf(plan) < PLAN_ORDER.indexOf(planRequired);
+ const effectiveLocked = isEstate ? false : isLocked;
+ const planLabels = { structure: 'The Structure', house: 'The House', estate: 'The Estate' };
  return (
  <button
  key={gen.id}
  onClick={() => {
- if (isLocked) { setShowUpgradeModal(gen); return; }
+ if (effectiveLocked) { setShowUpgradeModal(gen); return; }
  setSelectedGenerator(gen);
  setGeneratorInputs({});
  setGeneratedResult(null);
  }}
  className="p-5 rounded-2xl border text-left group relative overflow-hidden transition-all cth-card"
  style={{
- background: isLocked ? 'var(--cth-admin-panel-alt)' : 'var(--cth-admin-panel)',
- borderColor: isLocked ? 'var(--cth-admin-border)' : 'var(--cth-admin-border)',
- opacity: isLocked ? 0.75 : 1,
+ background: effectiveLocked ? 'var(--cth-admin-panel-alt)' : 'var(--cth-admin-panel)',
+ borderColor: 'var(--cth-admin-border)',
+ opacity: effectiveLocked ? 0.75 : 1,
  }}
  data-testid={`generator-${gen.id}`}
  >
- {isLocked && (
+ {effectiveLocked && (
  <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(224,78,53,0.12)', color: 'var(--cth-admin-accent)' }}>
  🔒 {planLabels[planRequired] || planRequired}
  </div>
@@ -485,15 +448,15 @@ export default function PromptHub() {
  <div className="flex items-start justify-between mb-3">
  <div
  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
- style={{ background: isLocked ? 'var(--cth-admin-panel-alt)' : `linear-gradient(135deg, ${gen.color}, ${gen.color}88)` }}
+ style={{ background: effectiveLocked ? 'var(--cth-admin-panel-alt)' : `linear-gradient(135deg, ${gen.color}, ${gen.color}88)` }}
  >
  {gen.icon}
  </div>
- {!isLocked && <ChevronRight className="w-5 h-5 cth-muted group-hover:cth-text-accent transition-colors" />}
+ {!effectiveLocked && <ChevronRight className="w-5 h-5 cth-muted group-hover:cth-text-accent transition-colors" />}
  </div>
  <h3 className="cth-heading font-semibold mb-1">{gen.title}</h3>
  <p className="text-sm cth-muted">{gen.description}</p>
- {isLocked && (
+ {effectiveLocked && (
  <div className="mt-3 text-xs font-semibold" style={{ color: 'var(--cth-admin-accent)' }}>
  Upgrade to {planLabels[planRequired]} to unlock →
  </div>
@@ -519,7 +482,7 @@ export default function PromptHub() {
 
  {/* Generator header */}
  <div className="flex items-center gap-4">
- <div 
+ <div
  className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
  style={{ background: `linear-gradient(135deg, ${selectedGenerator.color}, ${selectedGenerator.color}88)` }}
  >
@@ -552,7 +515,7 @@ export default function PromptHub() {
  onClick={handleGeneratorSubmit}
  disabled={generating}
  className="cth-button-primary w-full mt-4 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
- style={{ 
+ style={{
  background: generating ? 'rgba(168,143,159,0.18)' : 'linear-gradient(135deg, var(--cth-admin-accent), var(--cth-admin-ruby))',
  cursor: generating ? 'not-allowed' : 'pointer'
  }}
@@ -628,7 +591,7 @@ export default function PromptHub() {
  <p style={{ fontSize: 14, color: 'var(--cth-admin-ink-soft)', marginBottom: 6 }}>
  <strong style={{ color: 'var(--cth-admin-ink)' }}>{showUpgradeModal.title}</strong> is available on {' '}
  <strong style={{ color: 'var(--cth-admin-accent)' }}>
- {{ STRUCTURE: 'The Structure ($97/mo)', HOUSE: 'The House ($197/mo)', ESTATE: 'The Estate ($497/mo)' }[showUpgradeModal.requiredPlan]}
+ {{ STRUCTURE: 'The Structure ($97/mo)', HOUSE: 'The House ($197/mo)', ESTATE: 'The Estate ($397/mo)' }[showUpgradeModal.requiredPlan]}
  </strong> and above.
  </p>
  <p style={{ fontSize: 13, color: 'var(--cth-admin-muted)', marginBottom: 24 }}>{showUpgradeModal.description}</p>
@@ -646,7 +609,3 @@ export default function PromptHub() {
  </DashboardLayout>
  );
 }
-
-// Prompt Card Component
-
-
