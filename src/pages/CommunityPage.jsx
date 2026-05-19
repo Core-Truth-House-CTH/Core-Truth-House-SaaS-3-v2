@@ -30,35 +30,35 @@ const FALLBACK_CHANNELS = [
  name: "Welcome + Orientation",
  description: "Start here. Introduce yourself, your offer, and the brand gap you want to close first.",
  unread: 0,
- accent: "var(--cth-admin-accent)",
+ accent: "var(--cth-command-crimson)",
  },
  {
  id: "wins",
  name: "Weekly Wins",
  description: "Share proof of movement: clearer copy, stronger offers, finished assets, booked calls, and better decisions.",
  unread: 0,
- accent: "var(--cth-admin-ruby)",
+ accent: "var(--cth-command-gold)",
  },
  {
  id: "ask",
  name: "Ask The House",
  description: "Focused questions for brand structure, content, offers, diagnostics, and implementation.",
  unread: 0,
- accent: "var(--cth-admin-ink)",
+ accent: "var(--cth-command-purple)",
  },
  {
  id: "office-hours",
  name: "Office Hour Recaps",
  description: "Pinned summaries, replay links, action steps, and decisions made during live cohort sessions.",
  unread: 0,
- accent: "var(--cth-admin-accent)",
+ accent: "var(--cth-command-crimson)",
  },
  {
  id: "resources",
  name: "Resource Library",
  description: "Templates, replay links, worksheets, prompts, swipe files, and cohort-only references.",
  unread: 0,
- accent: "var(--cth-admin-ruby)",
+ accent: "var(--cth-command-gold)",
  },
 ];
 
@@ -151,7 +151,7 @@ function resolveAssetUrl(path) {
 }
 
 function normalizeChannel(channel, index) {
- const accents = ["var(--cth-admin-accent)", "var(--cth-admin-ruby)", "var(--cth-admin-ink)"];
+ const accents = ["var(--cth-command-crimson)", "var(--cth-command-crimson)", "var(--cth-command-ink)"];
  return {
  id: channel.id || channel.channel_id || `channel-${index}`,
  name: channel.name || channel.title || "Cohort Room",
@@ -236,7 +236,7 @@ function normalizeResource(resource, index) {
 
 function StatCard({ label, value, note }) {
  return (
- <article className="cth-card rounded-[28px] border border-[var(--cth-admin-border)] p-5 shadow-[0_18px_44px_rgba(43,16,64,0.08)]">
+ <article className="cth-card rounded border border-[var(--cth-command-border)] p-5 shadow-sm">
  <p className="text-[10px] font-bold uppercase tracking-[0.22em] cth-muted">{label}</p>
  <p className="mt-3 font-serif text-4xl font-semibold cth-heading">{value}</p>
  <p className="mt-2 text-sm leading-6 cth-muted">{note}</p>
@@ -260,7 +260,7 @@ function Avatar({ member, size = 56 }) {
 
  return (
  <div
- className="grid shrink-0 place-items-center rounded-full bg-[var(--cth-admin-ink)] font-serif font-semibold text-white"
+ className="grid shrink-0 place-items-center rounded-full bg-[var(--cth-command-ink)] font-serif font-semibold text-white"
  style={{ width: size, height: size, fontSize: Math.max(14, size * 0.33) }}
  >
  {member?.initials || "CM"}
@@ -274,10 +274,10 @@ function MemberProfileCard({ member, active, onSelect }) {
  type="button"
  onClick={() => onSelect(member)}
  className={classNames(
- "w-full rounded-[28px] border p-5 text-left transition-all",
+ "w-full rounded border p-5 text-left transition-all",
  active
- ? "border-[var(--cth-admin-accent)] bg-[#fffaf7] shadow-[0_18px_44px_rgba(43,16,64,0.10)]"
- : "border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] hover:border-[var(--cth-admin-accent)]/45"
+ ? "border-[var(--cth-command-crimson)] bg-[#fffaf7] shadow-sm"
+ : "border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] hover:border-[var(--cth-command-crimson)]/45"
  )}
  >
  <div className="flex items-start gap-4">
@@ -286,11 +286,11 @@ function MemberProfileCard({ member, active, onSelect }) {
  <div className="flex items-start justify-between gap-3">
  <div>
  <h3 className="font-serif text-xl font-semibold leading-tight cth-heading">{member.name}</h3>
- <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">
+ <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--cth-command-crimson)]">
  {member.role}
  </p>
  </div>
- <span className="rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] px-3 py-1 text-[10px] font-bold cth-muted">
+ <span className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-3 py-1 text-[10px] font-bold cth-muted">
  {member.score || "New"}
  </span>
  </div>
@@ -302,7 +302,7 @@ function MemberProfileCard({ member, active, onSelect }) {
  {member.tags.map((tag) => (
  <span
  key={tag}
- className="rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] px-3 py-1 text-[11px] font-semibold text-[var(--cth-admin-ruby)]"
+ className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-3 py-1 text-[11px] font-semibold text-[var(--cth-command-crimson)]"
  >
  {tag}
  </span>
@@ -318,14 +318,14 @@ function ChannelCard({ channel, active, onSelect }) {
  type="button"
  onClick={() => onSelect(channel.id)}
  className={classNames(
- "w-full rounded-[24px] border p-4 text-left transition-all",
+ "w-full rounded border p-4 text-left transition-all",
  active
- ? "border-[var(--cth-admin-accent)] bg-[#fffaf7] shadow-[0_14px_34px_rgba(43,16,64,0.08)]"
- : "border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] hover:border-[var(--cth-admin-accent)]/45"
+ ? "border-[var(--cth-command-crimson)] bg-[#fffaf7] shadow-sm"
+ : "border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] hover:border-[var(--cth-command-crimson)]/45"
  )}
  >
  <div className="flex items-start gap-3">
- <div className="mt-1 h-3 w-3 shrink-0 rounded-full" style={{ background: channel.accent }} />
+ <div className="mt-1 h-3 w-3 shrink-0 rounded" style={{ background: channel.accent }} />
  <div className="min-w-0 flex-1">
  <div className="flex items-center justify-between gap-3">
  <h3 className="font-serif text-lg font-semibold cth-heading">{channel.name}</h3>
@@ -393,10 +393,10 @@ function SuperAdminCommunityPanel({
  }, [selectedMember]);
 
  return (
- <section className="mb-7 rounded-[34px] border border-[rgba(224,78,53,0.28)] bg-[linear-gradient(135deg,rgba(224,78,53,0.12),rgba(248,244,242,0.92))] p-5 shadow-[0_24px_70px_rgba(43,16,64,0.08)] md:p-6">
+ <section className="mb-7 rounded border border-[rgba(224,78,53,0.28)] bg-[linear-gradient(135deg,rgba(224,78,53,0.12),rgba(248,244,242,0.92))] p-5 shadow-sm md:p-6">
  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
  <div className="max-w-2xl">
- <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-admin-accent)]">
+ <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-command-crimson)]">
  SuperAdmin Administration
  </p>
  <h2 className="mt-2 font-serif text-3xl font-semibold cth-heading">
@@ -405,7 +405,7 @@ function SuperAdminCommunityPanel({
  <p className="mt-3 text-sm leading-6 cth-muted">
  Purchased slots can enroll members automatically. SuperAdmin can still add manual, comped, internal, or testing access here without exposing admin tools to tenants.
  </p>
- <div className="mt-4 rounded-[20px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-4 text-sm leading-6 cth-muted">
+ <div className="mt-4 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4 text-sm leading-6 cth-muted">
  <strong className="cth-heading">Access model:</strong> Purchased slot equals automatic member access. SuperAdmin manual add equals override, comp, internal access, or testing.
  </div>
  </div>
@@ -413,14 +413,14 @@ function SuperAdminCommunityPanel({
  <button
  type="button"
  onClick={onRefresh}
- className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(224,78,53,0.24)] bg-[rgba(224,78,53,0.10)] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[var(--cth-admin-accent)]"
+ className="inline-flex items-center justify-center gap-2 rounded border border-[rgba(224,78,53,0.24)] bg-[rgba(224,78,53,0.10)] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[var(--cth-command-crimson)]"
  >
  <RefreshCw size={14} /> Refresh data
  </button>
  </div>
 
  <div className="mt-6 grid gap-4 xl:grid-cols-3">
- <article className="rounded-[26px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-5">
+ <article className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-5">
  <h3 className="font-serif text-xl font-semibold cth-heading">Create cohort room</h3>
  <div className="mt-4 space-y-3">
  <input className="cth-input w-full" placeholder="Room name" value={channelForm.name} onChange={(e) => setChannelForm({ ...channelForm, name: e.target.value })} />
@@ -433,14 +433,14 @@ function SuperAdminCommunityPanel({
  type="button"
  disabled={!channelForm.name.trim() || creating}
  onClick={() => onCreateChannel(channelForm, () => setChannelForm({ name: "", description: "", order: 100, locked: false }))}
- className="rounded-full bg-[var(--cth-admin-accent)] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+ className="rounded bg-[var(--cth-command-purple)] px-4 py-2 text-xs font-bold text-[var(--cth-command-gold)] disabled:opacity-50"
  >
  Add room
  </button>
  </div>
  </article>
 
- <article className="rounded-[26px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-5">
+ <article className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-5">
  <h3 className="font-serif text-xl font-semibold cth-heading">Pin resource</h3>
  <div className="mt-4 space-y-3">
  <input className="cth-input w-full" placeholder="Resource title" value={resourceForm.title} onChange={(e) => setResourceForm({ ...resourceForm, title: e.target.value })} />
@@ -450,14 +450,14 @@ function SuperAdminCommunityPanel({
  type="button"
  disabled={!resourceForm.title.trim() || creating}
  onClick={() => onCreateResource(resourceForm, () => setResourceForm({ title: "", description: "", url: "", resource_type: "link", order: 100 }))}
- className="rounded-full bg-[var(--cth-admin-accent)] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+ className="rounded bg-[var(--cth-command-purple)] px-4 py-2 text-xs font-bold text-[var(--cth-command-gold)] disabled:opacity-50"
  >
  Pin resource
  </button>
  </div>
  </article>
 
- <article className="rounded-[26px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-5">
+ <article className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-5">
  <h3 className="font-serif text-xl font-semibold cth-heading">Member Access + Profile</h3>
  <div className="mt-4 space-y-3">
  <input className="cth-input w-full" placeholder="User ID for manual or purchased-slot member" value={memberForm.user_id} onChange={(e) => setMemberForm({ ...memberForm, user_id: e.target.value })} />
@@ -491,7 +491,7 @@ function SuperAdminCommunityPanel({
  type="button"
  disabled={!memberForm.user_id.trim() || creating}
  onClick={() => onSaveMember(memberForm)}
- className="rounded-full bg-[var(--cth-admin-accent)] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+ className="rounded bg-[var(--cth-command-purple)] px-4 py-2 text-xs font-bold text-[var(--cth-command-gold)] disabled:opacity-50"
  >
  Save member access
  </button>
@@ -499,7 +499,7 @@ function SuperAdminCommunityPanel({
  type="button"
  disabled={!memberForm.user_id.trim() || creating}
  onClick={() => avatarInputRef.current?.click()}
- className="inline-flex items-center gap-2 rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] px-4 py-2 text-xs font-bold cth-heading disabled:opacity-50"
+ className="inline-flex items-center gap-2 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-2 text-xs font-bold cth-heading disabled:opacity-50"
  >
  <ImagePlus size={14} /> Upload image
  </button>
@@ -516,11 +516,11 @@ function ThreadDrawer({ thread, messages, loading, reply, setReply, posting, onP
 
  return (
  <div className="fixed inset-0 z-[1100] flex justify-end bg-[rgba(13,0,16,0.50)] p-3 backdrop-blur-md md:p-5">
- <section className="flex h-full w-full max-w-3xl flex-col overflow-hidden rounded-[32px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] shadow-[0_30px_90px_rgba(43,16,64,0.30)]">
- <header className="border-b border-[var(--cth-admin-border)] bg-[linear-gradient(135deg,#fffaf7_0%,#f8f4f2_58%,rgba(224,78,53,0.10)_130%)] p-5 md:p-6">
+ <section className="flex h-full w-full max-w-3xl flex-col overflow-hidden rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] shadow-sm">
+ <header className="border-b border-[var(--cth-command-border)] bg-[linear-gradient(135deg,#fffaf7_0%,#f8f4f2_58%,rgba(224,78,53,0.10)_130%)] p-5 md:p-6">
  <div className="flex items-start justify-between gap-4">
  <div className="min-w-0">
- <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-admin-ruby)]">
+ <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-command-crimson)]">
  Cohort Thread
  </p>
  <h2 className="mt-2 font-serif text-2xl font-semibold leading-tight cth-heading md:text-3xl">
@@ -529,13 +529,13 @@ function ThreadDrawer({ thread, messages, loading, reply, setReply, posting, onP
  <p className="mt-3 max-w-2xl text-sm leading-6 cth-muted">{thread.body}</p>
 
  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs cth-muted">
- <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-1">
+ <span className="inline-flex items-center gap-1.5 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-3 py-1">
  <UserRound size={13} /> {thread.author}
  </span>
- <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-1">
+ <span className="inline-flex items-center gap-1.5 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-3 py-1">
  <MessageCircle size={13} /> {messages.length || thread.replies || 0} replies
  </span>
- <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-1">
+ <span className="inline-flex items-center gap-1.5 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-3 py-1">
  <Clock size={13} /> {thread.time}
  </span>
  </div>
@@ -544,7 +544,7 @@ function ThreadDrawer({ thread, messages, loading, reply, setReply, posting, onP
  <button
  type="button"
  onClick={onClose}
- className="shrink-0 rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-2 text-[var(--cth-admin-ink)] transition hover:border-[var(--cth-admin-accent)]/45"
+ className="shrink-0 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-2 text-[var(--cth-command-ink)] transition hover:border-[var(--cth-command-crimson)]/45"
  aria-label="Close thread"
  >
  <X size={18} />
@@ -554,7 +554,7 @@ function ThreadDrawer({ thread, messages, loading, reply, setReply, posting, onP
 
  <div className="min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
  {loading ? (
- <div className="rounded-[24px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-5 text-sm cth-muted">
+ <div className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-5 text-sm cth-muted">
  Loading replies...
  </div>
  ) : messages.length ? (
@@ -562,11 +562,11 @@ function ThreadDrawer({ thread, messages, loading, reply, setReply, posting, onP
  {messages.map((message) => (
  <article
  key={message.id}
- className="rounded-[24px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-4 shadow-[0_10px_28px_rgba(43,16,64,0.04)]"
+ className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4 shadow-sm"
  >
  <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-xs cth-muted">
  <span className="inline-flex items-center gap-2 font-semibold cth-heading">
- <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--cth-admin-ink)] font-serif text-[11px] text-white">
+ <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--cth-command-ink)] font-serif text-[11px] text-white">
  {String(message.author || "CM").slice(0, 2).toUpperCase()}
  </span>
  {message.author}
@@ -578,7 +578,7 @@ function ThreadDrawer({ thread, messages, loading, reply, setReply, posting, onP
  ))}
  </div>
  ) : (
- <div className="rounded-[26px] border border-dashed border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-6 text-center">
+ <div className="rounded border border-dashed border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-6 text-center">
  <p className="font-serif text-2xl font-semibold cth-heading">No replies yet.</p>
  <p className="mx-auto mt-2 max-w-md text-sm leading-6 cth-muted">
  Start the thread with one clear next step, answer, or question.
@@ -587,12 +587,12 @@ function ThreadDrawer({ thread, messages, loading, reply, setReply, posting, onP
  )}
  </div>
 
- <footer className="border-t border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-4 md:p-5">
+ <footer className="border-t border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4 md:p-5">
  <label className="cth-label">Add a focused reply</label>
  <textarea
  value={reply}
  onChange={(event) => setReply(event.target.value)}
- className="cth-input mt-2 min-h-[96px] w-full resize-y rounded-[22px]"
+ className="cth-input mt-2 min-h-[96px] w-full resize-y rounded"
  placeholder="Share a helpful answer, next step, resource, or clarification..."
  />
  <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -603,7 +603,7 @@ function ThreadDrawer({ thread, messages, loading, reply, setReply, posting, onP
  type="button"
  onClick={onPostReply}
  disabled={!reply.trim() || posting}
- className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--cth-admin-accent)] px-5 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(224,78,53,0.18)] disabled:opacity-50"
+ className="inline-flex items-center justify-center gap-2 rounded bg-[var(--cth-command-purple)] px-5 py-3 text-sm font-bold text-[var(--cth-command-gold)] disabled:opacity-50"
  >
  {posting ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
  {posting ? "Posting..." : "Post Reply"}
@@ -909,20 +909,20 @@ export default function CommunityPage() {
  }
 
  return (
- <main className="min-h-screen bg-[var(--cth-app-bg)] text-[var(--cth-app-ink)]">
+ <main className="min-h-screen text-[var(--cth-app-ink)]" style={{ background: "var(--cth-command-blush)", minHeight: "100vh" }}>
  <section className="px-4 py-6 md:px-7 md:py-8">
- <div className="mb-5 overflow-hidden rounded-[30px] border border-[var(--cth-admin-border)] bg-[linear-gradient(135deg,#33033C_0%,#140016_58%,#AF002A_150%)] p-5 text-white shadow-[0_22px_56px_rgba(43,16,64,0.18)] md:p-6">
+ <div className="mb-5 overflow-hidden rounded border border-[var(--cth-command-border)] bg-[linear-gradient(135deg,var(--cth-command-purple)_0%,var(--cth-purple-black,#0d0010)_58%,var(--cth-command-crimson)_150%)] p-5 text-white shadow-sm md:p-6">
  <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
  <div className="max-w-3xl">
  <div className="mb-4 flex flex-wrap items-center gap-3">
  <button
  type="button"
  onClick={() => navigate("/command-center")}
- className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/80 transition hover:bg-white/15"
+ className="inline-flex items-center gap-2 rounded border border-white/15 bg-white/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/80 transition hover:bg-white/15"
  >
  <ArrowLeft size={14} /> Back to SaaS
  </button>
- <p className="inline-flex rounded-full border border-white/15 bg-white/8 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-white/70">
+ <p className="inline-flex rounded border border-white/15 bg-white/8 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-white/70">
  Upcoming Cohort
  </p>
  </div>
@@ -935,7 +935,7 @@ export default function CommunityPage() {
  </p>
  </div>
 
- <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/8 p-5 backdrop-blur-sm md:min-w-[320px]">
+ <div className="grid gap-3 rounded border border-white/10 bg-white/8 p-5 backdrop-blur-sm md:min-w-[320px]">
  <div className="flex items-center justify-between gap-4">
  <span className="text-sm text-white/70">Current room</span>
  <span className="font-semibold">{activeChannelName}</span>
@@ -955,9 +955,9 @@ export default function CommunityPage() {
  </div>
 
  {error ? (
- <div className="mb-7 rounded-[24px] border border-[rgba(224,78,53,0.28)] bg-[rgba(224,78,53,0.08)] p-4">
+ <div className="mb-7 rounded border border-[rgba(224,78,53,0.28)] bg-[rgba(224,78,53,0.08)] p-4">
  <div className="flex gap-3">
- <AlertCircle size={18} className="mt-0.5 shrink-0 text-[var(--cth-admin-accent)]" />
+ <AlertCircle size={18} className="mt-0.5 shrink-0 text-[var(--cth-command-crimson)]" />
  <div>
  <p className="font-semibold cth-heading">Community notice</p>
  <p className="mt-1 text-sm leading-6 cth-muted">{error}</p>
@@ -973,10 +973,10 @@ export default function CommunityPage() {
  </div>
 
  {isSuperAdmin ? (
- <div className="mb-7 rounded-[28px] border border-[rgba(224,78,53,0.24)] bg-[var(--cth-admin-panel)] p-4 shadow-[0_18px_44px_rgba(43,16,64,0.08)]">
+ <div className="mb-7 rounded border border-[rgba(224,78,53,0.24)] bg-[var(--cth-command-panel)] p-4 shadow-sm">
  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
  <div>
- <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-admin-accent)]">
+ <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-command-crimson)]">
  SuperAdmin Tools
  </p>
  <h2 className="mt-1 font-serif text-2xl font-semibold cth-heading">
@@ -990,7 +990,7 @@ export default function CommunityPage() {
  <button
  type="button"
  onClick={() => setShowSuperAdminTools(true)}
- className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--cth-admin-accent)] px-5 py-3 text-sm font-bold text-white shadow-[0_18px_38px_rgba(224,78,53,0.20)]"
+ className="inline-flex items-center justify-center gap-2 rounded bg-[var(--cth-command-purple)] px-5 py-3 text-sm font-bold text-[var(--cth-command-gold)] shadow-sm"
  >
  <ShieldCheck size={16} /> Open Admin Panel
  </button>
@@ -1000,10 +1000,10 @@ export default function CommunityPage() {
 
  {isSuperAdmin && showSuperAdminTools ? (
  <div className="fixed inset-0 z-[1200] flex justify-end bg-[rgba(13,0,16,0.58)] backdrop-blur-sm">
- <section className="h-full w-full max-w-6xl overflow-y-auto border-l border-[var(--cth-admin-border)] bg-[var(--cth-admin-bg)] p-4 shadow-[0_30px_90px_rgba(43,16,64,0.34)] md:p-7">
- <div className="mb-5 flex flex-col gap-4 rounded-[28px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-5 md:flex-row md:items-start md:justify-between">
+ <section className="h-full w-full max-w-6xl overflow-y-auto border-l border-[var(--cth-command-border)] bg-[var(--cth-command-blush)] p-4 shadow-sm md:p-7">
+ <div className="mb-5 flex flex-col gap-4 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-5 md:flex-row md:items-start md:justify-between">
  <div>
- <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-admin-accent)]">
+ <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-command-crimson)]">
  SuperAdmin Administration
  </p>
  <h2 className="mt-2 font-serif text-3xl font-semibold cth-heading">
@@ -1018,14 +1018,14 @@ export default function CommunityPage() {
  <button
  type="button"
  onClick={() => navigate("/command-center")}
- className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] px-4 py-2 text-xs font-bold cth-heading"
+ className="inline-flex items-center justify-center gap-2 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-2 text-xs font-bold cth-heading"
  >
  <ArrowLeft size={16} /> Back to Command Center
  </button>
  <button
  type="button"
  onClick={() => setShowSuperAdminTools(false)}
- className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] px-4 py-2 text-xs font-bold cth-heading"
+ className="inline-flex items-center justify-center gap-2 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-2 text-xs font-bold cth-heading"
  >
  <X size={16} /> Close
  </button>
@@ -1045,7 +1045,7 @@ export default function CommunityPage() {
  </div>
  ) : null}
 
- <div className="mb-5 rounded-[28px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-3 shadow-[0_14px_34px_rgba(43,16,64,0.06)]">
+ <div className="mb-5 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
  <div className="grid gap-3 md:grid-cols-3">
  {COMMUNITY_TABS.map((tab) => {
  const active = activeCommunityTab === tab.id;
@@ -1055,10 +1055,10 @@ export default function CommunityPage() {
  type="button"
  onClick={() => setActiveCommunityTab(tab.id)}
  className={classNames(
- "rounded-[22px] border p-4 text-left transition-all",
+ "rounded border p-4 text-left transition-all",
  active
- ? "border-[var(--cth-admin-accent)] bg-[#fffaf7] shadow-[0_12px_28px_rgba(43,16,64,0.08)]"
- : "border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] hover:border-[var(--cth-admin-accent)]/45"
+ ? "border-[var(--cth-command-crimson)] bg-[#fffaf7] shadow-sm"
+ : "border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] hover:border-[var(--cth-command-crimson)]/45"
  )}
  >
  <p className="font-serif text-xl font-semibold cth-heading">{tab.label}</p>
@@ -1077,13 +1077,13 @@ export default function CommunityPage() {
  }
  >
  <aside className={classNames("space-y-4", activeCommunityTab === "threads" ? "" : "hidden")}>
- <div className="cth-card rounded-[30px] border border-[var(--cth-admin-border)] p-5">
+ <div className="cth-card rounded border border-[var(--cth-command-border)] p-5">
  <div className="mb-4 flex items-center justify-between gap-3">
  <div>
  <p className="text-[10px] font-bold uppercase tracking-[0.22em] cth-muted">Rooms</p>
  <h2 className="mt-1 font-serif text-2xl font-semibold cth-heading">Cohort Channels</h2>
  </div>
- <MessageCircle size={20} className="text-[var(--cth-admin-accent)]" />
+ <MessageCircle size={20} className="text-[var(--cth-command-crimson)]" />
  </div>
 
  <div className="space-y-3">
@@ -1098,9 +1098,9 @@ export default function CommunityPage() {
  </div>
  </div>
 
- <div className="cth-card rounded-[30px] border border-[var(--cth-admin-border)] p-5">
+ <div className="cth-card rounded border border-[var(--cth-command-border)] p-5">
  <div className="mb-4 flex items-center gap-2">
- <Pin size={16} className="text-[var(--cth-admin-accent)]" />
+ <Pin size={16} className="text-[var(--cth-command-crimson)]" />
  <h2 className="font-serif text-xl font-semibold cth-heading">Pinned Resources</h2>
  </div>
 
@@ -1108,7 +1108,7 @@ export default function CommunityPage() {
  {resources.map((resource) => {
  const content = (
  <>
- <FileText size={16} className="text-[var(--cth-admin-ruby)]" />
+ <FileText size={16} className="text-[var(--cth-command-crimson)]" />
  <span>{resource.title}</span>
  </>
  );
@@ -1120,7 +1120,7 @@ export default function CommunityPage() {
  href={resource.url}
  target="_blank"
  rel="noreferrer"
- className="flex w-full items-center gap-3 rounded-2xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] px-4 py-3 text-left text-sm cth-heading transition hover:border-[var(--cth-admin-accent)]/45"
+ className="flex w-full items-center gap-3 rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-3 text-left text-sm cth-heading transition hover:border-[var(--cth-command-crimson)]/45"
  >
  {content}
  </a>
@@ -1131,7 +1131,7 @@ export default function CommunityPage() {
  <button
  key={resource.id}
  type="button"
- className="flex w-full items-center gap-3 rounded-2xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] px-4 py-3 text-left text-sm cth-heading transition hover:border-[var(--cth-admin-accent)]/45"
+ className="flex w-full items-center gap-3 rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-3 text-left text-sm cth-heading transition hover:border-[var(--cth-command-crimson)]/45"
  >
  {content}
  </button>
@@ -1141,10 +1141,10 @@ export default function CommunityPage() {
  </div>
  </aside>
 
- <section className={classNames("cth-card rounded-[30px] border border-[var(--cth-admin-border)] p-5 shadow-[0_18px_44px_rgba(43,16,64,0.07)] md:p-6", activeCommunityTab === "threads" ? "" : "hidden")}>
- <div className="mb-5 flex flex-col gap-4 border-b border-[var(--cth-admin-border)] pb-5 md:flex-row md:items-center md:justify-between">
+ <section className={classNames("cth-card rounded border border-[var(--cth-command-border)] p-5 shadow-sm md:p-6", activeCommunityTab === "threads" ? "" : "hidden")}>
+ <div className="mb-5 flex flex-col gap-4 border-b border-[var(--cth-command-border)] pb-5 md:flex-row md:items-center md:justify-between">
  <div>
- <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-admin-ruby)]">
+ <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-command-crimson)]">
  {activeChannelName}
  </p>
  <h2 className="mt-1 font-serif text-3xl font-semibold cth-heading">Community Threads</h2>
@@ -1156,13 +1156,13 @@ export default function CommunityPage() {
  <button
  type="button"
  onClick={() => document.getElementById("community-thread-composer")?.focus()}
- className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--cth-admin-accent)] px-5 py-3 text-sm font-bold text-white shadow-[0_18px_38px_rgba(224,78,53,0.20)]"
+ className="inline-flex items-center justify-center gap-2 rounded bg-[var(--cth-command-purple)] px-5 py-3 text-sm font-bold text-[var(--cth-command-gold)] shadow-sm"
  >
  <Plus size={16} /> New Thread
  </button>
  </div>
 
- <div className="mb-5 flex items-center gap-3 rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] px-4 py-3">
+ <div className="mb-5 flex items-center gap-3 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-3">
  <Search size={16} className="cth-muted" />
  <input
  className="w-full bg-transparent text-sm cth-heading outline-none placeholder:cth-muted"
@@ -1172,24 +1172,24 @@ export default function CommunityPage() {
 
  <div className="space-y-4">
  {loading ? (
- <div className="rounded-[28px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-6 text-sm cth-muted">
+ <div className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-6 text-sm cth-muted">
  Loading community threads...
  </div>
  ) : visibleThreads.length ? (
  visibleThreads.map((thread) => (
  <article
  key={thread.id}
- className="rounded-[28px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-5 transition hover:border-[var(--cth-admin-accent)]/45"
+ className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-5 transition hover:border-[var(--cth-command-crimson)]/45"
  >
  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
  <div className="min-w-0">
  <div className="mb-3 flex flex-wrap items-center gap-2">
  {thread.pinned ? (
- <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(224,78,53,0.22)] bg-[rgba(224,78,53,0.10)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--cth-admin-accent)]">
+ <span className="inline-flex items-center gap-1 rounded border border-[rgba(224,78,53,0.22)] bg-[rgba(224,78,53,0.10)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--cth-command-crimson)]">
  <Pin size={11} /> Pinned
  </span>
  ) : null}
- <span className="rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] cth-muted">
+ <span className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] cth-muted">
  {thread.channel}
  </span>
  </div>
@@ -1213,7 +1213,7 @@ export default function CommunityPage() {
  <button
  type="button"
  onClick={() => openThread(thread)}
- className="rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-4 py-2 text-xs font-bold cth-heading"
+ className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-2 text-xs font-bold cth-heading"
  >
  Open
  </button>
@@ -1221,7 +1221,7 @@ export default function CommunityPage() {
  </article>
  ))
  ) : (
- <div className="rounded-[28px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-6">
+ <div className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-6">
  <p className="font-serif text-2xl font-semibold cth-heading">No threads in this room yet.</p>
  <p className="mt-2 text-sm leading-6 cth-muted">
  Start the first focused conversation for this cohort room.
@@ -1230,7 +1230,7 @@ export default function CommunityPage() {
  )}
  </div>
 
- <div className="mt-6 rounded-[26px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-4 shadow-[0_12px_30px_rgba(43,16,64,0.05)]">
+ <div className="mt-6 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4 shadow-sm">
  <label className="cth-label">Thread title</label>
  <input
  value={threadTitle}
@@ -1244,7 +1244,7 @@ export default function CommunityPage() {
  id="community-thread-composer"
  value={draft}
  onChange={(event) => setDraft(event.target.value)}
- className="cth-input mt-2 min-h-[96px] w-full resize-y rounded-[22px]"
+ className="cth-input mt-2 min-h-[96px] w-full resize-y rounded"
  placeholder="Share a win, ask one focused question, or document what moved forward this week..."
  />
  <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -1254,7 +1254,7 @@ export default function CommunityPage() {
  <button
  type="button"
  onClick={handleCreateThread}
- className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--cth-admin-accent)] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+ className="inline-flex items-center justify-center gap-2 rounded bg-[var(--cth-command-purple)] px-5 py-3 text-sm font-bold text-[var(--cth-command-gold)] disabled:opacity-50"
  disabled={!draft.trim() || posting}
  >
  {posting ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
@@ -1265,13 +1265,13 @@ export default function CommunityPage() {
  </section>
 
  <aside className={classNames("space-y-5", activeCommunityTab === "members" ? "" : "hidden")}>
- <div className="cth-card rounded-[30px] border border-[var(--cth-admin-border)] p-5">
+ <div className="cth-card rounded border border-[var(--cth-command-border)] p-5">
  <div className="mb-5 flex items-center justify-between gap-3">
  <div>
  <p className="text-[10px] font-bold uppercase tracking-[0.22em] cth-muted">Profiles</p>
  <h2 className="mt-1 font-serif text-2xl font-semibold cth-heading">Cohort Members</h2>
  </div>
- <Users size={20} className="text-[var(--cth-admin-accent)]" />
+ <Users size={20} className="text-[var(--cth-command-crimson)]" />
  </div>
 
  <div className="space-y-4">
@@ -1286,12 +1286,12 @@ export default function CommunityPage() {
  </div>
  </div>
 
- <div className="cth-card rounded-[30px] border border-[var(--cth-admin-border)] p-5">
+ <div className="cth-card rounded border border-[var(--cth-command-border)] p-5">
  <div className="flex items-start gap-4">
  <Avatar member={selectedMember} size={64} />
  <div>
  <h2 className="font-serif text-2xl font-semibold cth-heading">{selectedMember?.name || "Cohort Member"}</h2>
- <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">
+ <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--cth-command-crimson)]">
  {selectedMember?.cohort || "Cohort"}
  </p>
  <p className="mt-2 text-sm cth-muted">{selectedMember?.status || "Active"}</p>
@@ -1299,15 +1299,15 @@ export default function CommunityPage() {
  </div>
 
  <div className="mt-6 grid grid-cols-3 gap-2 text-center">
- <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-3">
+ <div className="rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3">
  <strong className="block font-serif text-2xl cth-heading">{selectedMember?.score || "New"}</strong>
  <span className="text-[10px] font-bold uppercase tracking-[0.14em] cth-muted">Score</span>
  </div>
- <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-3">
+ <div className="rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3">
  <strong className="block text-sm cth-heading">{selectedMember?.timezone || "Local"}</strong>
  <span className="text-[10px] font-bold uppercase tracking-[0.14em] cth-muted">Zone</span>
  </div>
- <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-3">
+ <div className="rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3">
  <strong className="block text-sm cth-heading">{String(selectedMember?.location || "Workspace").split(",")[0]}</strong>
  <span className="text-[10px] font-bold uppercase tracking-[0.14em] cth-muted">Base</span>
  </div>
@@ -1328,9 +1328,9 @@ export default function CommunityPage() {
  </div>
  </div>
 
- <div className="mt-6 rounded-[24px] border border-[rgba(224,78,53,0.22)] bg-[rgba(224,78,53,0.08)] p-4">
+ <div className="mt-6 rounded border border-[rgba(224,78,53,0.22)] bg-[rgba(224,78,53,0.08)] p-4">
  <div className="flex gap-3">
- <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[var(--cth-admin-accent)]" />
+ <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[var(--cth-command-crimson)]" />
  <p className="text-sm leading-6 cth-heading">
  Profile data should support accountability and relevant connection, not popularity.
  </p>
@@ -1338,16 +1338,16 @@ export default function CommunityPage() {
  </div>
  </div>
 
- <div className="cth-card rounded-[30px] border border-[var(--cth-admin-border)] p-5">
+ <div className="cth-card rounded border border-[var(--cth-command-border)] p-5">
  <div className="mb-4 flex items-center gap-2">
- <CalendarDays size={17} className="text-[var(--cth-admin-accent)]" />
+ <CalendarDays size={17} className="text-[var(--cth-command-crimson)]" />
  <h2 className="font-serif text-xl font-semibold cth-heading">Upcoming</h2>
  </div>
  <div className="space-y-3">
  {["Cohort orientation", "Office hours", "Brand Score review"].map((event, index) => (
  <div
  key={event}
- className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] px-4 py-3"
+ className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-3"
  >
  <span className="text-sm cth-heading">{event}</span>
  <span className="text-xs cth-muted">Week {index + 1}</span>
@@ -1358,10 +1358,10 @@ export default function CommunityPage() {
  </aside>
  </div>
 
- <section className={classNames("cth-card rounded-[30px] border border-[var(--cth-admin-border)] p-5 shadow-[0_18px_44px_rgba(43,16,64,0.07)] md:p-6", activeCommunityTab === "resources" ? "" : "hidden")}>
- <div className="mb-6 flex flex-col gap-4 border-b border-[var(--cth-admin-border)] pb-5 md:flex-row md:items-center md:justify-between">
+ <section className={classNames("cth-card rounded border border-[var(--cth-command-border)] p-5 shadow-sm md:p-6", activeCommunityTab === "resources" ? "" : "hidden")}>
+ <div className="mb-6 flex flex-col gap-4 border-b border-[var(--cth-command-border)] pb-5 md:flex-row md:items-center md:justify-between">
  <div>
- <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-admin-ruby)]">
+ <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--cth-command-crimson)]">
  Resource Library
  </p>
  <h2 className="mt-1 font-serif text-3xl font-semibold cth-heading">Pinned Cohort Resources</h2>
@@ -1374,8 +1374,8 @@ export default function CommunityPage() {
  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
  {resources.map((resource) => {
  const card = (
- <article className="h-full rounded-[24px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] p-5 transition hover:border-[var(--cth-admin-accent)]/45">
- <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--cth-admin-panel)] text-[var(--cth-admin-ruby)]">
+ <article className="h-full rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-5 transition hover:border-[var(--cth-command-crimson)]/45">
+ <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--cth-command-panel)] text-[var(--cth-command-crimson)]">
  <FileText size={18} />
  </div>
  <h3 className="font-serif text-2xl font-semibold cth-heading">{resource.title}</h3>
@@ -1401,10 +1401,10 @@ export default function CommunityPage() {
  </div>
  </section>
 
- <div className="mt-7 rounded-[30px] border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-5 shadow-[0_18px_44px_rgba(43,16,64,0.08)]">
+ <div className="mt-7 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-5 shadow-sm">
  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
  <div className="flex items-start gap-3">
- <Bell size={20} className="mt-1 shrink-0 text-[var(--cth-admin-accent)]" />
+ <Bell size={20} className="mt-1 shrink-0 text-[var(--cth-command-crimson)]" />
  <div>
  <h2 className="font-serif text-2xl font-semibold cth-heading">Community backend connected</h2>
  <p className="mt-2 max-w-3xl text-sm leading-6 cth-muted">
@@ -1413,7 +1413,7 @@ export default function CommunityPage() {
  </p>
  </div>
  </div>
- <span className="inline-flex items-center gap-2 rounded-full border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel-alt)] px-4 py-2 text-xs font-bold cth-muted">
+ <span className="inline-flex items-center gap-2 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-2 text-xs font-bold cth-muted">
  <CheckCircle2 size={14} /> Live community
  </span>
  </div>
