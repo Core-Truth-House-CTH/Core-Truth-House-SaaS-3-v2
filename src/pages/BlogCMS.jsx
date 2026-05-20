@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../hooks/useAuth';
 import apiClient from '../lib/apiClient';
+import { toast } from 'sonner';
 import { DashboardLayout, TopBar } from '../components/Layout';
 import {
  Plus, Search, PenLine, Loader2, X, Trash2, Eye, Archive,
@@ -202,11 +203,18 @@ function RichTextToolbar({ editor }) {
  input.onchange = async (e) => {
  const file = e.target.files?.[0];
  if (!file) return;
- const fd = new FormData(); fd.append('file', file); fd.append('user_id', 'default');
+ const fd = new FormData();
+ fd.append('file', file);
+ fd.append('context', 'content_source');
+ fd.append('category', 'blog');
+ fd.append('label', 'Blog inline image');
  try {
- const res = await apiClient.post('/api/blog/upload-image', fd);
- if (res.url) editor.chain().focus().setImage({ src: `${API}${res.url}` }).run();
- } catch { alert('Image upload failed'); }
+ const res = await apiClient.post('/api/media-upload/upload-asset', fd);
+ if (res.preview_url) editor.chain().focus().setImage({ src: `${API}${res.preview_url}` }).run();
+ } catch (err) {
+ console.error('Blog image upload failed:', err);
+ toast.error("Image upload failed. Please try again.");
+ }
  };
  input.click();
  }, <Image size={14} />)}
@@ -297,10 +305,17 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  const handleFeaturedImageUpload = async (file) => {
  setUploadingImage(true);
  try {
- const fd = new FormData(); fd.append('file', file); fd.append('user_id', 'default');
- const res = await apiClient.post('/api/blog/upload-image', fd);
- if (res.url) update('featured_image', `${API}${res.url}`);
- } catch { alert('Image upload failed'); }
+ const fd = new FormData();
+ fd.append('file', file);
+ fd.append('context', 'content_source');
+ fd.append('category', 'blog');
+ fd.append('label', 'Blog featured image');
+ const res = await apiClient.post('/api/media-upload/upload-asset', fd);
+ if (res.preview_url) update('featured_image', `${API}${res.preview_url}`);
+ } catch (err) {
+ console.error('Blog image upload failed:', err);
+ toast.error("Image upload failed. Please try again.");
+ }
  setUploadingImage(false);
  };
 
