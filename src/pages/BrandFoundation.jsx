@@ -3,6 +3,7 @@ import { DashboardLayout, TopBar } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
 import { BrandGuidelinesExportButton } from "../components/shared/BrandGuidelinesExport";
+import DashboardHero from "../components/shared/DashboardHero";
 import { getNextStep } from "../config/brandCoreNextStep";
 import apiClient from "../lib/apiClient";
 import {
@@ -593,6 +594,7 @@ export default function BrandFoundation() {
 
   return (
     <DashboardLayout>
+      <DashboardHero imagePath="/dashboard-assets/cth-foundation-hero-banner.png" />
       <TopBar
         title="Brand Foundation"
         subtitle="Define the core truth your brand is built on so every strategy, offer, and content decision pulls from the same source of truth."
