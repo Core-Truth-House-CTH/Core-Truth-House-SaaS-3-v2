@@ -312,6 +312,7 @@ function TabResults({ campaign, onSaveResults }) {
  ]);
 
  const handleSave = async () => {
+ try {
  await onSaveResults(campaign.id, {
  target_metric: targetMetric,
  target_value: targetValue,
@@ -321,6 +322,9 @@ function TabResults({ campaign, onSaveResults }) {
  });
  setIsSaved(true);
  setTimeout(() => setIsSaved(false), 1500);
+ } catch (err) {
+ toast.error('Could not save results. Please try again.');
+ }
  };
 
  return (
@@ -1143,13 +1147,11 @@ function CampaignBuilderPageContent() {
  };
 
  const handleStatusChange = async (id, status) => {
+ const previous = campaigns;
  setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
 
  try {
  await apiClient.post(`/api/campaigns/${id}/status`, null, { params: { status } });
- } catch (e) {
- console.error('Status update failed:', e);
- }
 
  if (status === 'active') {
  const camp = campaigns.find((c) => c.id === id);
@@ -1165,14 +1167,21 @@ function CampaignBuilderPageContent() {
  });
  }
  }
+ } catch (err) {
+ setCampaigns(previous);
+ toast.error('Could not update status. Please try again.');
+ }
  };
 
  const handleSaveResults = async (id, updates) => {
+ const previous = campaigns;
  setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
  try {
  await apiClient.post(`/api/campaigns/${id}/update-results`, updates);
- } catch (e) {
- console.error('Results save failed:', e);
+ } catch (err) {
+ setCampaigns(previous);
+ toast.error('Could not save results. Please try again.');
+ throw err;
  }
  };
 
