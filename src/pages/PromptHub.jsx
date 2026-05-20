@@ -7,6 +7,7 @@ import { PLAN_ORDER } from '../config/routeConfig';
 import { DashboardLayout } from '../components/Layout';
 import { Search, Star, Trash2, Copy, Download, ShoppingBag, Wand2, Plus, ChevronRight, Check, Loader2, Sparkles } from 'lucide-react';
 import { PromptCard } from '../components/prompts/PromptCard';
+import { toast } from 'sonner';
 
 // Tabs configuration
 const TABS = [
@@ -189,6 +190,7 @@ export default function PromptHub() {
  ));
  } catch (err) {
  console.error('Error toggling favorite:', err);
+ toast.error("Could not update favorite. Please try again.");
  }
  };
 
@@ -199,6 +201,7 @@ export default function PromptHub() {
  setPrompts(prompts.filter(p => p.id !== promptId));
  } catch (err) {
  console.error('Error deleting prompt:', err);
+ toast.error("Could not delete prompt. Please try again.");
  }
  };
 
@@ -218,7 +221,7 @@ export default function PromptHub() {
  fetchPrompts(); // Refresh prompts to show the saved one
  } catch (err) {
  console.error('Generator error:', err);
- alert(err.message || 'Generation failed. Please try again.');
+ toast.error(err.message || "Generator failed. Please try again.");
  } finally {
  setGenerating(false);
  }
