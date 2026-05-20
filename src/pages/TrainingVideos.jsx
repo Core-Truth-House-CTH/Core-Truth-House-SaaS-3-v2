@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useUser } from '../hooks/useAuth';
 import apiClient from '../lib/apiClient';
+import { toast } from 'sonner';
 import { DashboardLayout } from '../components/Layout';
 import { useColors } from '../context/ThemeContext';
 import { Video, Play, Filter } from 'lucide-react';
@@ -14,10 +14,11 @@ export default function TrainingVideos() {
  useEffect(() => {
  const fetchVideos = async () => {
  try {
- const res = await apiClient.get('/api/admin/training-videos');
+ const res = await apiClient.get('/api/training-videos');
  setVideos(res.videos || []);
  } catch (err) {
- console.error('Failed to load training videos:', err);
+ console.error('Failed to load videos:', err);
+ toast.error("Could not load training videos. Please refresh.");
  } finally {
  setLoading(false);
  }
@@ -27,15 +28,6 @@ export default function TrainingVideos() {
 
  const categories = ['all', ...new Set(videos.map(v => v.category))];
  const filtered = selectedCategory === 'all' ? videos : videos.filter(v => v.category === selectedCategory);
-
- const getEmbedUrl = (url) => {
- if (!url) return null;
- const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
- if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
- const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
- if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
- return null;
- };
 
  return (
  <DashboardLayout>
@@ -85,7 +77,6 @@ export default function TrainingVideos() {
  ) : (
  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
  {filtered.map(video => {
- const embedUrl = getEmbedUrl(video.url);
  return (
  <div
  key={video.id}
@@ -97,26 +88,18 @@ export default function TrainingVideos() {
  overflow: 'hidden',
  }}
  >
- {embedUrl ? (
- <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+ {video.youtube_id ? (
  <iframe
- src={embedUrl}
+ src={`https://www.youtube.com/embed/${video.youtube_id}`}
  title={video.title}
- style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
  allowFullScreen
+ style={{ width: "100%", aspectRatio: "16/9", border: "none", borderRadius: 4 }}
  />
- </div>
  ) : (
- <a href={video.url} target="_blank" rel="noopener noreferrer"
- style={{
- display: 'flex', alignItems: 'center', justifyContent: 'center',
- height: 200, background: `${colors.cinnabar}10`,
- textDecoration: 'none',
- }}
- >
+ <div style={{ width: "100%", aspectRatio: "16/9", display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${colors.cinnabar}10` }}>
  <Play size={48} style={{ color: colors.cinnabar }} />
- </a>
+ </div>
  )}
  <div style={{ padding: 16 }}>
  <h3 style={{ fontSize: 16, fontWeight: 600, color: colors.textPrimary, marginBottom: 4 }}>{video.title}</h3>

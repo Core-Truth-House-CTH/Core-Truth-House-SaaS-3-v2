@@ -1,38 +1,41 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Video, Plus, Save, Trash2 } from 'lucide-react';
 import { useColors } from '../../context/ThemeContext';
+import apiClient from '../../lib/apiClient';
+import { toast } from 'sonner';
 
-const API = import.meta.env.VITE_BACKEND_URL;
-
-export function AdminTrainingVideos({ trainingVideos, fetchTrainingVideos, adminId }) {
+export function AdminTrainingVideos({ trainingVideos, fetchTrainingVideos }) {
   const colors = useColors();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', url: '', category: 'general', file: null });
+  const [form, setForm] = useState({ title: '', description: '', url: '', category: 'general' });
 
   const save = async () => {
-    if (!form.title || (!form.url && !form.file)) return;
+    if (!form.title || !form.url) return;
     try {
-      if (form.file) {
-        const fd = new FormData();
-        fd.append('file', form.file);
-        fd.append('title', form.title);
-        fd.append('description', form.description);
-        fd.append('category', form.category);
-        fd.append('admin_id', adminId);
-        await axios.post(`${API}/api/admin/training-videos/upload`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      } else {
-        await axios.post(`${API}/api/admin/training-videos?admin_id=${adminId}`, { title: form.title, description: form.description, url: form.url, category: form.category });
-      }
-      setForm({ title: '', description: '', url: '', category: 'general', file: null });
+      await apiClient.post('/api/admin/training-videos', {
+        title: form.title,
+        description: form.description,
+        youtube_url: form.url,
+        category: form.category,
+      });
+      setForm({ title: '', description: '', url: '', category: 'general' });
       setShowForm(false);
       fetchTrainingVideos();
-    } catch { alert('Failed to save video'); }
+    } catch (err) {
+      console.error('Failed to save training video:', err);
+      toast.error('Failed to save video. Please try again.');
+    }
   };
 
   const remove = async (videoId) => {
     if (!window.confirm('Delete this training video?')) return;
-    try { await axios.delete(`${API}/api/admin/training-videos/${videoId}?admin_id=${adminId}`); fetchTrainingVideos(); } catch {}
+    try {
+      await apiClient.delete(`/api/admin/training-videos/${videoId}`);
+      fetchTrainingVideos();
+    } catch (err) {
+      console.error('Failed to delete training video:', err);
+      toast.error('Failed to delete video. Please try again.');
+    }
   };
 
   return (
@@ -67,20 +70,10 @@ export function AdminTrainingVideos({ trainingVideos, fetchTrainingVideos, admin
             </div>
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: colors.textMuted }}>Video URL or Upload</label>
-            <input type="text" placeholder="https://youtube.com/... or https://vimeo.com/..."
-              value={form.url} onChange={e => setForm({...form, url: e.target.value, file: null})}
+            <label className="block text-xs mb-1" style={{ color: colors.textMuted }}>YouTube URL</label>
+            <input type="text" placeholder="https://youtube.com/watch?v=... or https://youtu.be/..."
+              value={form.url} onChange={e => setForm({...form, url: e.target.value})}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, background: colors.darkest, border: `1px solid ${colors.border}`, color: colors.textPrimary, fontSize: 14 }} />
-            <div className="mt-2 flex items-center gap-3">
-              <span className="text-xs" style={{ color: colors.textMuted }}>or</span>
-              <label className="flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer text-xs"
-                style={{ border: `1px solid ${colors.border}`, color: form.file ? colors.cinnabar : colors.textMuted }}>
-                <Video size={14} />
-                {form.file ? form.file.name : 'Upload video file'}
-                <input type="file" accept="video/*" className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) setForm({...form, file: f, url: ''}); }} />
-              </label>
-            </div>
           </div>
           <div>
             <label className="block text-xs text-gray-400 mb-1">Description</label>
@@ -114,8 +107,7 @@ export function AdminTrainingVideos({ trainingVideos, fetchTrainingVideos, admin
                     <div className="text-xs text-gray-400 mt-1">{video.description}</div>
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-xs px-2 py-1 rounded-full bg-white/5 text-gray-400 capitalize">{video.category}</span>
-                      {video.url && <a href={video.url} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--cth-admin-accent)] hover:underline">Watch Video</a>}
-                      {video.is_uploaded && <span className="text-xs text-green-400">Uploaded</span>}
+                      {video.youtube_url && <a href={video.youtube_url} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--cth-admin-accent)] hover:underline">Watch Video</a>}
                     </div>
                   </div>
                 </div>

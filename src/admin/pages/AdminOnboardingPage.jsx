@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import apiClient from "../../lib/apiClient";
 import { useUser } from "../../hooks/useAuth";
 import { BookOpen, PlayCircle, ClipboardList, ShieldCheck, RefreshCw, AlertTriangle } from "lucide-react";
 import { AdminTrainingVideos } from "../../components/admin/AdminTrainingVideos";
@@ -131,10 +132,9 @@ export default function AdminOnboardingPage() {
   const [onboardingProgress, setOnboardingProgress] = useState(null);
 
   const fetchTrainingVideos = useCallback(async () => {
-    if (!API) return;
-    const res = await axios.get(`${API}/api/admin/training-videos?admin_id=${adminId}`);
-    setTrainingVideos(res.data?.videos || []);
-  }, [adminId]);
+    const res = await apiClient.get('/api/training-videos');
+    setTrainingVideos(res.videos || []);
+  }, []);
 
   const fetchOnboardingProgress = useCallback(async () => {
     if (!API) return;
