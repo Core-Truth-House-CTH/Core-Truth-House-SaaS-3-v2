@@ -6,8 +6,8 @@ import { useUser } from '../hooks/useAuth';
 import { BrandGuidelinesExportButton } from '../components/shared/BrandGuidelinesExport';
 import IdentityStudioAssets from '../components/shared/IdentityStudioAssets';
 import { getNextStep } from '../config/brandCoreNextStep';
-import axios from 'axios';
 import apiClient from "../lib/apiClient";
+import { toast } from 'sonner';
 
 function isValidHex(value) {
   return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value.trim());
@@ -36,8 +36,6 @@ function normalizeHex(value) {
 function isCssVarReference(value) {
   return typeof value === 'string' && value.trim().startsWith('var(');
 }
-
-const API = `${import.meta.env.VITE_BACKEND_URL}/api`;
 
 const DEFAULT_COLORS = [
   { id: 'primary', role: 'primary', label: 'Primary', hex: 'var(--cth-brand-primary)' },
@@ -350,7 +348,7 @@ function IdentityStudioContent() {
       if (!assetId) return;
 
       try {
-        await axios.delete(`${API}/media-upload/assets/${assetId}`);
+        await apiClient.delete(`/api/media-upload/assets/${assetId}`);
         setAssets((prev) =>
           prev.filter((asset) => (asset.asset_id || asset.id) !== assetId)
         );
@@ -385,6 +383,7 @@ function IdentityStudioContent() {
       setDraftRecovery(null);
     } catch (err) {
       console.error('Save failed:', err);
+      toast.error("Could not save identity. Please try again.");
     } finally {
       setIsSaving(false);
     }
