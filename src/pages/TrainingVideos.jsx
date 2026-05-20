@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../hooks/useAuth';
-import axios from 'axios';
+import apiClient from '../lib/apiClient';
 import { DashboardLayout } from '../components/Layout';
 import { useColors } from '../context/ThemeContext';
 import { Video, Play, Filter } from 'lucide-react';
-
-const API = import.meta.env.VITE_BACKEND_URL;
 
 export default function TrainingVideos() {
  const colors = useColors();
@@ -16,8 +14,8 @@ export default function TrainingVideos() {
  useEffect(() => {
  const fetchVideos = async () => {
  try {
- const res = await axios.get(`${API}/api/admin/training-videos`);
- setVideos(res.data.videos || []);
+ const res = await apiClient.get('/api/admin/training-videos');
+ setVideos(res.videos || []);
  } catch (err) {
  console.error('Failed to load training videos:', err);
  } finally {

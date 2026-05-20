@@ -14,10 +14,7 @@ import {
  Sparkles,
  TrendingUp,
 } from 'lucide-react';
-import axios from 'axios';
 import apiClient from "../lib/apiClient";
-
-const API = `${import.meta.env.VITE_BACKEND_URL}/api`;
 
 const MODULE_META = {
  brand_foundation: { icon: Palette, path: '/brand-foundation' },

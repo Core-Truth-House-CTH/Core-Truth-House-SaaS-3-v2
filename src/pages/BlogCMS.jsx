@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../hooks/useAuth';
-import axios from 'axios';
+import apiClient from '../lib/apiClient';
 import { DashboardLayout, TopBar } from '../components/Layout';
 import {
  Plus, Search, PenLine, Loader2, X, Trash2, Eye, Archive,
@@ -204,8 +204,8 @@ function RichTextToolbar({ editor }) {
  if (!file) return;
  const fd = new FormData(); fd.append('file', file); fd.append('user_id', 'default');
  try {
- const res = await axios.post(`${API}/api/blog/upload-image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
- if (res.data.url) editor.chain().focus().setImage({ src: `${API}${res.data.url}` }).run();
+ const res = await apiClient.post('/api/blog/upload-image', fd);
+ if (res.url) editor.chain().focus().setImage({ src: `${API}${res.url}` }).run();
  } catch { alert('Image upload failed'); }
  };
  input.click();
@@ -298,8 +298,8 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  setUploadingImage(true);
  try {
  const fd = new FormData(); fd.append('file', file); fd.append('user_id', 'default');
- const res = await axios.post(`${API}/api/blog/upload-image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
- if (res.data.url) update('featured_image', `${API}${res.data.url}`);
+ const res = await apiClient.post('/api/blog/upload-image', fd);
+ if (res.url) update('featured_image', `${API}${res.url}`);
  } catch { alert('Image upload failed'); }
  setUploadingImage(false);
  };
@@ -603,11 +603,11 @@ function BlogCMSContent({ embedded = false }) {
  setLoading(true);
  try {
  const [articlesRes, analyticsRes] = await Promise.all([
- axios.get(`${API}/api/blog/articles?user_id=${userId}`),
- axios.get(`${API}/api/blog/analytics?user_id=${userId}`),
+ apiClient.get(`/api/blog/articles?user_id=${userId}`),
+ apiClient.get(`/api/blog/analytics?user_id=${userId}`),
  ]);
- setArticles(articlesRes.data.articles || []);
- setAnalytics(analyticsRes.data);
+ setArticles(articlesRes.articles || []);
+ setAnalytics(analyticsRes);
  } catch (err) { console.error('Failed to fetch blog data:', err); }
  setLoading(false);
  };
@@ -615,9 +615,9 @@ function BlogCMSContent({ embedded = false }) {
  const handleSave = async (postData) => {
  try {
  if (postData.id) {
- await axios.put(`${API}/api/blog/articles/${postData.id}?user_id=${userId}`, postData);
+ await apiClient.put(`/api/blog/articles/${postData.id}?user_id=${userId}`, postData);
  } else {
- await axios.post(`${API}/api/blog/articles?user_id=${userId}`, postData);
+ await apiClient.post(`/api/blog/articles?user_id=${userId}`, postData);
  }
  setEditingPost(null);
  setSearchQuery('');
@@ -627,14 +627,14 @@ function BlogCMSContent({ embedded = false }) {
 
  const handlePublish = async (id) => {
  try {
- await axios.post(`${API}/api/blog/articles/${id}/publish?user_id=${userId}`);
+ await apiClient.post(`/api/blog/articles/${id}/publish?user_id=${userId}`);
  fetchData();
  } catch (err) { console.error('Publish failed:', err); }
  };
 
  const handleArchive = async (id) => {
  try {
- await axios.put(`${API}/api/blog/articles/${id}?user_id=${userId}`, { status: 'archived' });
+ await apiClient.put(`/api/blog/articles/${id}?user_id=${userId}`, { status: 'archived' });
  fetchData();
  } catch (err) { console.error('Archive failed:', err); }
  };
@@ -642,7 +642,7 @@ function BlogCMSContent({ embedded = false }) {
  const handleDelete = async (id) => {
  if (!window.confirm('Delete this article?')) return;
  try {
- await axios.delete(`${API}/api/blog/articles/${id}?user_id=${userId}`);
+ await apiClient.delete(`/api/blog/articles/${id}?user_id=${userId}`);
  fetchData();
  } catch (err) { console.error('Delete failed:', err); }
  };
@@ -650,11 +650,11 @@ function BlogCMSContent({ embedded = false }) {
  const handleGenerate = async (prompt) => {
  setGenerating(true);
  try {
- const res = await axios.post(`${API}/api/blog/generate?user_id=${userId}`, {
+ const res = await apiClient.post(`/api/blog/generate?user_id=${userId}`, {
  topic: prompt, keywords: [], tone: 'professional', word_count: 800, include_outline: true,
  });
  setGenerating(false);
- return res.data.generated;
+ return res.generated;
  } catch (err) {
  console.error('AI generation failed:', err);
  setGenerating(false);
