@@ -30,6 +30,7 @@ import { usePlan } from '../context/PlanContext';
 import { NotificationPreferences } from '../components/NotificationPreferences';
 import { IOSInstallInstructions } from '../pwa/PWAProvider';
 import apiClient from "../lib/apiClient";
+import { toast } from 'sonner';
 import MailIntegrationsSettings from "../components/mail/MailIntegrationsSettings";
 import SocialConnectionsSection from "../components/SocialConnectionsSection";
 
@@ -292,11 +293,12 @@ export default function Settings() {
   }, [searchParams]);
 
   const loadDomain = async () => {
+    if (!activeWorkspace?.id) return;
     if (!user?.id) return;
     setDomainLoading(true);
 
     try {
-      const res = await apiClient.get("/custom-domain", { params: { workspace_id: "default", user_id: user.id } });
+      const res = await apiClient.get("/custom-domain", { params: { workspace_id: activeWorkspace?.id || '', user_id: user.id } });
       if (res.data.domain) {
         setDomainData(res.data.domain);
         setDomainInput(res.data.domain.domain || '');
@@ -309,13 +311,17 @@ export default function Settings() {
   };
 
   const saveDomain = async () => {
+    if (!activeWorkspace?.id) {
+      toast.error("No active workspace found. Please refresh.");
+      return;
+    }
     if (!domainInput.trim()) return;
     setDomainSaving(true);
 
     try {
       await apiClient.post("/custom-domain", {
         domain: domainInput.trim(),
-        workspace_id: 'default',
+        workspace_id: activeWorkspace?.id || '',
         user_id: user?.id,
       });
 
@@ -334,9 +340,18 @@ export default function Settings() {
   };
 
   const performRemoveDomain = async () => {
+    if (!activeWorkspace?.id) {
+      toast.error("No active workspace found. Please refresh.");
+      return;
+    }
     setConfirmRemoveDomainOpen(false);
     try {
-      await axios.delete(`${API}/custom-domain?workspace_id=default&user_id=${user?.id}`);
+      await apiClient.delete('/custom-domain', {
+        params: {
+          workspace_id: activeWorkspace?.id || '',
+          user_id: user?.id || '',
+        },
+      });
       setDomainData(null);
       setDomainInput('');
       setDnsResult(null);
@@ -346,11 +361,15 @@ export default function Settings() {
   };
 
   const verifyDns = async () => {
+    if (!activeWorkspace?.id) {
+      toast.error("No active workspace found. Please refresh.");
+      return;
+    }
     setDnsVerifying(true);
     setDnsResult(null);
 
     try {
-      const res = await apiClient.post("/custom-domain/verify", {}, { params: { workspace_id: "default", user_id: user?.id } });
+      const res = await apiClient.post("/custom-domain/verify", {}, { params: { workspace_id: activeWorkspace?.id || '', user_id: user?.id } });
       setDnsResult(res.data);
       loadDomain();
     } catch (e) {
