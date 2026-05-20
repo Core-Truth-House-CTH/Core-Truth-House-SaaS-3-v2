@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import apiClient from '../lib/apiClient';
 import MediaStudioUploadPanel from '../components/shared/MediaStudioUploadZones';
 import CampaignContextBanner from '../components/shared/CampaignContextBanner';
+import { toast } from 'sonner';
 
 const API_BASE = apiClient.baseUrl || '';
 
@@ -395,8 +396,9 @@ function MediaStudioContent() {
  const res = await apiClient.get('/api/media/gallery', { params: { limit: 40 } });
  setLibrary((res?.items || []).map(normalizeGalleryItem));
  } catch (err) {
- console.error('Failed to load gallery:', err);
+ console.error('Gallery load failed:', err);
  setLibrary([]);
+ toast.error("Could not load gallery. Please refresh.");
  } finally {
  setLibraryLoading(false);
  }
@@ -622,7 +624,8 @@ function MediaStudioContent() {
  setLibrary((prev) => prev.map((m) => (m.id === media.id ? { ...m, is_saved: true, campaign_id: activeCampaignId || m.campaign_id } : m)));
  setGeneratedResults((prev) => prev.map((m) => (m.id === media.id ? { ...m, is_saved: true, campaign_id: activeCampaignId || m.campaign_id } : m)));
  } catch (err) {
- console.error('Failed to save media:', err);
+ console.error('Media save failed:', err);
+ toast.error("Could not save to library. Please try again.");
  }
  };
 
@@ -632,7 +635,8 @@ function MediaStudioContent() {
  setLibrary((prev) => prev.filter((m) => m.id !== mediaId));
  setSelectedMedia(null);
  } catch (err) {
- console.error('Failed to delete media:', err);
+ console.error('Media delete failed:', err);
+ toast.error("Could not delete. Please try again.");
  }
  };
 
