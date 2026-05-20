@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, RefreshCw, RotateCcw } from 'lucide-react';
 
 import { DashboardLayout, TopBar } from '../components/Layout';
+import DashboardHero from '../components/shared/DashboardHero';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../lib/apiClient';
@@ -557,9 +558,10 @@ export default function BrandAudit() {
 
   return (
     <DashboardLayout>
+      <DashboardHero
+        imagePath="/dashboard-assets/cth-brand-audit-hero-door.png"
+      />
       <TopBar
-        title="Brand Audit"
-        subtitle="Answer the audit intake, generate your score, then use the results to choose the next move."
         action={
           showIntake ? null : (
             <div className="flex items-center gap-3">

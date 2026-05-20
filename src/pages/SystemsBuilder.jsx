@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { DashboardLayout, TopBar } from "../components/Layout";
+import DashboardHero from "../components/shared/DashboardHero";
 import { useWorkspace } from "../context/WorkspaceContext";
 import apiClient from "../lib/apiClient";
 import {
@@ -831,10 +832,10 @@ export default function SystemsBuilder() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Structure"
-        subtitle="Build the repeatable operating systems behind how your brand runs."
+      <DashboardHero
+        imagePath="/dashboard-assets/cth-structure-hero-door.png"
       />
+      <TopBar />
 
       <div
         className="flex-1 overflow-auto px-4 py-7 md:px-8"
