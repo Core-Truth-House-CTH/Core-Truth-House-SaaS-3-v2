@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Bot, Send, ChevronRight, Clock, Sparkles } from "lucide-react";
+import { Bot, Send, ChevronRight, Clock, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { DashboardLayout } from "../components/Layout";
@@ -379,6 +379,22 @@ export default function BrandStudio() {
     }
   };
 
+  const deleteSession = async (e, session) => {
+    e.stopPropagation();
+    const sid = session?.session_id || session?.id;
+    if (!sid) return;
+    try {
+      await apiClient.delete(API_PATHS.brandStudio.deleteSession(activeWorkspaceId, sid));
+      setSessions((prev) => prev.filter((s) => (s.session_id || s.id) !== sid));
+      if (sessionId === sid) {
+        setSessionId(null);
+        setMessages([]);
+      }
+    } catch (err) {
+      toast.error("Could not delete session.");
+    }
+  };
+
   function handleKeyDown(event) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -438,6 +454,21 @@ export default function BrandStudio() {
                     </div>
                   </div>
                   <ChevronRight size={14} />
+                  <button
+                    onClick={(e) => deleteSession(e, session)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "2px 4px",
+                      color: "var(--cth-admin-muted)",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                    title="Delete session"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               ))
             )}

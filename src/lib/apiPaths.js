@@ -156,6 +156,8 @@ export const API_PATHS = {
     sessions: (workspaceId) => `/api/workspaces/${encode(workspaceId)}/agentic-workflows/sessions`,
     session: (workspaceId, sessionId) =>
       `/api/workspaces/${encode(workspaceId)}/agentic-workflows/sessions/${encode(sessionId)}`,
+    deleteSession: (workspaceId, sessionId) =>
+      `/api/workspaces/${encode(workspaceId)}/agentic-workflows/sessions/${encode(sessionId)}`,
   },
 
   crm: {
