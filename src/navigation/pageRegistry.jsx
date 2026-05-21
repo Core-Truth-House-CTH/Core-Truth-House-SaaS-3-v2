@@ -19,7 +19,6 @@ const BlogCMS = lazy(() => import("../pages/BlogCMS"));
 const Settings = lazy(() => import("../pages/Settings"));
 const CRMSuite = lazy(() => import("../pages/CRMSuite"));
 const MailSuite = lazy(() => import("../pages/MailSuite"));
-const DocumentManager = lazy(() => import("../pages/DocumentManager"));
 const TenantDataDashboardV2 = lazy(() => import("../pages/TenantDataDashboardV2"));
 const ContentStudio = lazy(() => import("../pages/ContentStudio"));
 const CampaignBuilder = lazy(() => import("../pages/CampaignBuilder"));
