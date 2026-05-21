@@ -360,6 +360,25 @@ export default function BrandStudio() {
     }
   }
 
+  const loadSession = async (session) => {
+    const sid = session?.session_id || session?.id;
+    if (!sid) return;
+    try {
+      const data = await apiClient.get(API_PATHS.brandStudio.session(activeWorkspaceId, sid));
+      setSessionId(sid);
+      setMessages(
+        (data?.messages || []).map((m) => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp || Date.now(),
+        }))
+      );
+      setSelectedBot(session.bot_type || selectedBot);
+    } catch (err) {
+      toast.error("Could not load session.");
+    }
+  };
+
   function handleKeyDown(event) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -410,6 +429,7 @@ export default function BrandStudio() {
                 <div
                   key={session?.id || session?.session_id || index}
                   className="cth-bs-session"
+                  onClick={() => loadSession(session)}
                 >
                   <div className="cth-bs-session-main">
                     <div className="cth-bs-session-title">{sessionTitle(session)}</div>
