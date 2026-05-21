@@ -287,6 +287,14 @@ export const APP_ROUTES = [
     lockedTooltip: "Upgrade to Structure to unlock Prompt Generator.",
   },
     {
+    path: "/brand-studio",
+    label: "Brand Studio",
+    group: "execution",
+    requiredPlan: "estate",
+    gateType: "page",
+    tooltip: "AI-powered brand strategy tools",
+  },
+    {
     path: "/launch-planner",
     label: "Launch Planner",
     icon: Rocket,

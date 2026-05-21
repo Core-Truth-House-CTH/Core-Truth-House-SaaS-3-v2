@@ -36,6 +36,7 @@ const VideoTutorialsPage = lazy(() => import("../pages/VideoTutorialsPage"));
 const OnboardingWorkflow = lazy(() => import("../pages/OnboardingWorkflow"));
 const PromptHub = lazy(() => import("../pages/PromptHub"));
 const PromptGenerator = lazy(() => import("../pages/PromptGenerator"));
+const BrandStudio = lazy(() => import("../pages/BrandStudio"));
 
 const FirstCampaign = CampaignBuilder;
 
@@ -62,6 +63,7 @@ const pageRegistry = {
 
   "/content-studio": ContentStudio,
   "/prompt-generator": PromptGenerator,
+  "/brand-studio": BrandStudio,
   "/campaign-builder": CampaignBuilder,
   "/campaign-setup": CampaignSetup,
   "/first-campaign": FirstCampaign,

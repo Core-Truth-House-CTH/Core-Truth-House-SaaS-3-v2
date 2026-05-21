@@ -151,6 +151,13 @@ export const API_PATHS = {
       `/api/os-workflow/${encode(workflowId)}/step/${encode(stepNum)}/edit`,
   },
 
+  brandStudio: {
+    chat: (workspaceId) => `/api/workspaces/${encode(workspaceId)}/agentic-workflows/chat`,
+    sessions: (workspaceId) => `/api/workspaces/${encode(workspaceId)}/agentic-workflows/sessions`,
+    session: (workspaceId, sessionId) =>
+      `/api/workspaces/${encode(workspaceId)}/agentic-workflows/sessions/${encode(sessionId)}`,
+  },
+
   crm: {
     dashboard: "/api/crm/dashboard/summary",
 
