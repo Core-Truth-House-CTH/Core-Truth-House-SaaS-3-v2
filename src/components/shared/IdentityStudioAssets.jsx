@@ -10,8 +10,8 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import apiClient from "../../lib/apiClient";
+import { toast } from 'sonner';
 
 const API = import.meta.env.VITE_BACKEND_URL;
 
@@ -552,16 +552,17 @@ export default function IdentityStudioAssets({
   useEffect(() => {
     setLoading(true);
 
-    axios
+    apiClient
       .get("/api/media-upload/assets", { params: { context: "brand_asset", workspace_id: workspaceId } })
       .then((res) => {
-        const loadedAssets = Array.isArray(res.data?.assets)
-          ? res.data.assets.map((a, idx) => normalizeAsset(a, idx))
+        const loadedAssets = Array.isArray(res?.assets)
+          ? res.assets.map((a, idx) => normalizeAsset(a, idx))
           : [];
         if (onAssetsChange) onAssetsChange(loadedAssets);
       })
       .catch((err) => {
         console.error('Failed to load assets:', err);
+        toast.error("Could not load brand assets. Please refresh.");
       })
       .finally(() => setLoading(false));
   }, [workspaceId, onAssetsChange]);
