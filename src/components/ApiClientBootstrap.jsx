@@ -60,13 +60,13 @@ export default function ApiClientBootstrap({
       provisionTimeoutRef.current = setTimeout(() => {
         if (provisionResolveRef.current) {
           console.warn(
-            "[ApiClientBootstrap] Provision gate timed out after 10s - releasing"
+            "[ApiClientBootstrap] Provision gate timed out after 4s - releasing"
           );
           provisionResolveRef.current();
           provisionResolveRef.current = null;
         }
         provisionTimeoutRef.current = null;
-      }, 10000);
+      }, 4000);
     });
     apiClient.setProvisionGate(gate);
   }
@@ -159,9 +159,9 @@ export default function ApiClientBootstrap({
       const fetchTimeout = setTimeout(() => {
         controller.abort();
         console.warn(
-          "[ApiClientBootstrap] Provisioning fetch timed out after 8s"
+          "[ApiClientBootstrap] Provisioning fetch timed out after 3s"
         );
-      }, 8000);
+      }, 3000);
 
       try {
         await apiClient.get("/api/workspaces/mine", {
