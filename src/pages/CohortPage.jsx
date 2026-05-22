@@ -1,917 +1,799 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  Calendar,
-  Monitor,
-  Fingerprint,
-  ClipboardList,
-  User,
-  Flower2,
-  Columns3,
-  Target,
-  ArrowRight,
-  Crown,
-  Check,
-  Plus,
-  Minus,
-} from "lucide-react";
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
 
-const HERO_IMAGE = "/cohort-assets/cth-cohort-hero-doorway.png";
-const STANDARD_IMAGE = "/cohort-assets/cth-cohort-standard.jpg";
+const doorwayAsset = "/cohort-assets/cth-cohort-hero-doorway.png";
 
-const FEATURE_STRIP = [
-  { icon: Calendar, label: "4 Live Sessions" },
-  { icon: Monitor, label: "Async Work Inside Core Truth House OS" },
-  { icon: Fingerprint, label: "Core Truth Profile" },
-  { icon: ClipboardList, label: "90-Day Brand Operations Plan" },
+const styles = {
+  page: {
+    background: "#EFE7E3",
+    color: "#2B1040",
+    minHeight: "100vh",
+    overflowX: "hidden",
+    fontFamily: '"DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif',
+  },
+  wrap: {
+    width: "min(1200px, calc(100% - 48px))",
+    margin: "0 auto",
+  },
+  eyebrow: {
+    display: "inline-block",
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+    fontSize: "0.78rem",
+    fontWeight: 700,
+    color: "#C4A95B",
+  },
+  hero: {
+    position: "relative",
+    isolation: "isolate",
+    color: "#fff",
+    background:
+      "radial-gradient(circle at 76% 48%, rgba(224, 78, 53, 0.22), transparent 34%), linear-gradient(90deg, rgba(15, 8, 29, 0.98) 0%, rgba(15, 8, 29, 0.94) 48%, rgba(15, 8, 29, 0.86) 100%), #140f2b",
+    borderBottom: "1px solid rgba(196, 169, 91, 0.16)",
+  },
+  blueprintOverlay: {
+    position: "absolute",
+    inset: 0,
+    backgroundImage:
+      "linear-gradient(rgba(196, 169, 91, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(196, 169, 91, 0.08) 1px, transparent 1px)",
+    backgroundSize: "74px 74px",
+    opacity: 0.22,
+    pointerEvents: "none",
+    zIndex: -1,
+  },
+  heroInner: {
+    width: "min(1200px, calc(100% - 48px))",
+    margin: "0 auto",
+    padding: "72px 0 48px",
+    display: "grid",
+    gridTemplateColumns: "1.1fr 0.9fr",
+    gap: "48px",
+    alignItems: "center",
+    minHeight: "720px",
+  },
+  heroCopy: {
+    maxWidth: "620px",
+  },
+  h1: {
+    fontFamily: '"Playfair Display", Georgia, Cambria, "Times New Roman", serif',
+    fontSize: "clamp(3.6rem, 8vw, 6.3rem)",
+    lineHeight: 0.92,
+    fontWeight: 600,
+    margin: "14px 0 18px",
+    letterSpacing: "-0.03em",
+  },
+  heroLead: {
+    fontSize: "1.24rem",
+    color: "rgba(255,255,255,0.88)",
+    margin: "0 0 18px",
+    maxWidth: "580px",
+  },
+  heroBody: {
+    color: "rgba(255,255,255,0.75)",
+    maxWidth: "580px",
+    fontSize: "1.02rem",
+    margin: "0 0 30px",
+  },
+  btnRow: {
+    display: "flex",
+    gap: "16px",
+    flexWrap: "wrap",
+    alignItems: "center",
+  },
+  btn: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
+    minHeight: "52px",
+    padding: "0 26px",
+    borderRadius: "999px",
+    fontSize: "0.95rem",
+    fontWeight: 700,
+    letterSpacing: "0.02em",
+    cursor: "pointer",
+    textDecoration: "none",
+    whiteSpace: "nowrap",
+  },
+  btnPrimary: {
+    background: "linear-gradient(135deg, #AF0024, #E04E35)",
+    color: "#fff",
+    border: "1px solid transparent",
+    boxShadow: "0 12px 28px rgba(175, 0, 36, 0.24)",
+  },
+  btnSecondary: {
+    background: "rgba(255, 255, 255, 0.06)",
+    color: "#fff",
+    border: "1px solid rgba(255, 255, 255, 0.22)",
+    backdropFilter: "blur(6px)",
+  },
+  heroMeta: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "12px 18px",
+    marginTop: "22px",
+    color: "rgba(255,255,255,0.76)",
+    fontSize: "0.92rem",
+  },
+  heroVisual: {
+    position: "relative",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: "560px",
+    background: "#140f2b",
+  },
+  heroGlow: {
+    position: "absolute",
+    width: "520px",
+    height: "520px",
+    borderRadius: "50%",
+    background: "radial-gradient(circle, rgba(224, 78, 53, 0.22), transparent 70%)",
+    filter: "blur(12px)",
+    zIndex: 0,
+  },
+  doorway: {
+    position: "relative",
+    zIndex: 1,
+    width: "min(100%, 520px)",
+    filter: "drop-shadow(0 26px 45px rgba(0,0,0,0.34))",
+  },
+  featureStrip: {
+    marginTop: "-34px",
+    position: "relative",
+    zIndex: 5,
+  },
+  featureWrap: {
+    width: "min(1200px, calc(100% - 48px))",
+    margin: "0 auto",
+    background: "rgba(248, 244, 242, 0.96)",
+    border: "1px solid #D8C5C3",
+    borderRadius: "22px",
+    boxShadow: "0 18px 48px rgba(30, 10, 40, 0.14)",
+    overflow: "hidden",
+  },
+  featureGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+  },
+  featureItem: {
+    padding: "26px 24px",
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+    minHeight: "118px",
+    borderRight: "1px solid rgba(216, 197, 195, 0.7)",
+    background: "linear-gradient(180deg, rgba(255,255,255,0.68), rgba(255,255,255,0.96))",
+  },
+  featureIcon: {
+    width: "54px",
+    height: "54px",
+    borderRadius: "50%",
+    border: "1px solid rgba(196, 169, 91, 0.55)",
+    display: "grid",
+    placeItems: "center",
+    color: "#C4A95B",
+    background: "#fff",
+    fontSize: "1.15rem",
+    flexShrink: 0,
+  },
+  featureText: {
+    display: "block",
+    fontSize: "0.9rem",
+    lineHeight: 1.25,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    color: "#2B1040",
+    fontWeight: 800,
+  },
+  lightSection: {
+    position: "relative",
+    padding: "92px 0",
+    background: "radial-gradient(circle at top right, rgba(196,169,91,0.06), transparent 24%), #EFE7E3",
+  },
+  sectionTag: {
+    textAlign: "center",
+    marginBottom: "10px",
+  },
+  sectionTitle: {
+    fontFamily: '"Playfair Display", Georgia, Cambria, "Times New Roman", serif',
+    fontSize: "clamp(2.2rem, 5vw, 4rem)",
+    lineHeight: 0.95,
+    margin: "0 0 18px",
+    letterSpacing: "-0.02em",
+    textAlign: "center",
+    color: "#2B1040",
+  },
+  sectionCopy: {
+    maxWidth: "720px",
+    color: "#7C6576",
+    fontSize: "1.05rem",
+    margin: "0 auto",
+    textAlign: "center",
+  },
+  audienceGrid: {
+    marginTop: "42px",
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "20px",
+  },
+  audienceCard: {
+    background: "rgba(255,255,255,0.74)",
+    border: "1px solid rgba(216, 197, 195, 0.8)",
+    borderRadius: "20px",
+    padding: "26px 22px",
+    boxShadow: "0 10px 24px rgba(43, 16, 64, 0.06)",
+  },
+  cardIcon: {
+    width: "48px",
+    height: "48px",
+    borderRadius: "50%",
+    display: "grid",
+    placeItems: "center",
+    background: "rgba(196,169,91,0.1)",
+    color: "#C4A95B",
+    border: "1px solid rgba(196,169,91,0.25)",
+    marginBottom: "18px",
+    fontSize: "1.1rem",
+  },
+  cardTitle: {
+    fontFamily: '"Playfair Display", Georgia, Cambria, "Times New Roman", serif',
+    fontSize: "1.6rem",
+    lineHeight: 1,
+    margin: "0 0 10px",
+    color: "#2B1040",
+  },
+  cardText: {
+    margin: 0,
+    color: "#7C6576",
+    fontSize: "0.98rem",
+  },
+  stepsSection: {
+    padding: "28px 0 48px",
+  },
+  stepsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "26px",
+    marginTop: "32px",
+  },
+  stepNumber: {
+    fontFamily: '"Playfair Display", Georgia, Cambria, "Times New Roman", serif',
+    color: "#AF0024",
+    fontSize: "clamp(3rem, 6vw, 4.4rem)",
+    lineHeight: 0.9,
+    marginBottom: "10px",
+  },
+  stepTitle: {
+    margin: "0 0 8px",
+    fontSize: "1rem",
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    color: "#2B1040",
+  },
+  pricingSection: {
+    padding: "32px 0 92px",
+  },
+  pricingGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "28px",
+    marginTop: "32px",
+  },
+  priceCard: {
+    position: "relative",
+    overflow: "hidden",
+    borderRadius: "26px",
+    padding: "34px 30px 28px",
+    color: "#fff",
+    boxShadow: "0 20px 44px rgba(43,16,64,0.18)",
+    border: "1px solid rgba(196,169,91,0.22)",
+  },
+  foundingCard: {
+    background: "linear-gradient(160deg, #6b001c 0%, #8d1026 28%, #4c0727 100%)",
+  },
+  standardCard: {
+    background: "linear-gradient(160deg, #1b1029 0%, #260d38 48%, #3d0a35 100%)",
+  },
+  priceLabel: {
+    display: "inline-block",
+    letterSpacing: "0.24em",
+    textTransform: "uppercase",
+    fontSize: "0.78rem",
+    color: "rgba(255,255,255,0.75)",
+    marginBottom: "10px",
+  },
+  priceTitle: {
+    fontFamily: '"Playfair Display", Georgia, Cambria, "Times New Roman", serif',
+    fontSize: "2.2rem",
+    margin: 0,
+    lineHeight: 1,
+    color: "#fff",
+  },
+  priceLine: {
+    display: "flex",
+    alignItems: "end",
+    gap: "10px",
+    margin: "16px 0 14px",
+    flexWrap: "wrap",
+  },
+  priceValue: {
+    fontFamily: '"Playfair Display", Georgia, Cambria, "Times New Roman", serif',
+    fontSize: "clamp(3rem, 6vw, 4.6rem)",
+    lineHeight: 0.9,
+    color: "#C4A95B",
+  },
+  priceNote: {
+    color: "rgba(255,255,255,0.75)",
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    fontSize: "0.75rem",
+    paddingBottom: "10px",
+  },
+  priceDescription: {
+    color: "rgba(255,255,255,0.82)",
+    margin: "0 0 18px",
+  },
+  priceList: {
+    listStyle: "none",
+    margin: "0 0 28px",
+    padding: 0,
+    display: "grid",
+    gap: "10px",
+  },
+  cardFootnote: {
+    marginTop: "16px",
+    color: "rgba(255,255,255,0.72)",
+    fontSize: "0.88rem",
+  },
+  outcomesSection: {
+    padding: "0 0 84px",
+  },
+  outcomesGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "18px",
+    marginTop: "26px",
+  },
+  outcomeCard: {
+    background: "rgba(255,255,255,0.72)",
+    border: "1px solid rgba(216, 197, 195, 0.82)",
+    borderRadius: "18px",
+    padding: "24px 18px",
+    minHeight: "150px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "14px",
+    justifyContent: "center",
+  },
+  faqSection: {
+    padding: "0 0 92px",
+  },
+  faqGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "18px 24px",
+    marginTop: "30px",
+  },
+  faqItem: {
+    background: "rgba(255,255,255,0.76)",
+    border: "1px solid rgba(216,197,195,0.88)",
+    borderRadius: "16px",
+    padding: "18px",
+    boxShadow: "0 10px 24px rgba(43,16,64,0.04)",
+  },
+  faqQuestion: {
+    margin: "0 0 8px",
+    fontWeight: 800,
+    color: "#2B1040",
+  },
+  faqAnswer: {
+    margin: 0,
+    color: "#7C6576",
+    fontSize: "0.97rem",
+  },
+  ctaBand: {
+    color: "#fff",
+    background:
+      "radial-gradient(circle at 90% 30%, rgba(224,78,53,0.18), transparent 32%), linear-gradient(90deg, rgba(27,16,41,0.98), rgba(58,11,52,0.94)), #140f2b",
+    position: "relative",
+    overflow: "hidden",
+  },
+  ctaInner: {
+    width: "min(1200px, calc(100% - 48px))",
+    margin: "0 auto",
+    padding: "78px 0",
+    position: "relative",
+    display: "grid",
+    gridTemplateColumns: "1fr auto",
+    gap: "30px",
+    alignItems: "center",
+  },
+  ctaTitle: {
+    fontFamily: '"Playfair Display", Georgia, Cambria, "Times New Roman", serif',
+    fontSize: "clamp(2.3rem, 5vw, 4rem)",
+    lineHeight: 0.95,
+    margin: "0 0 14px",
+  },
+  ctaCopy: {
+    margin: 0,
+    color: "rgba(255,255,255,0.8)",
+    maxWidth: "650px",
+    fontSize: "1.05rem",
+  },
+};
+
+const benefits = [
+  { icon: "◷", label: "4 Live Sessions" },
+  { icon: "⌘", label: "Async Work Inside Core Truth House OS" },
+  { icon: "◌", label: "Core Truth Profile" },
+  { icon: "✓", label: "90-Day Brand Operations Plan" },
 ];
 
-const WHO_CARDS = [
+const audience = [
   {
-    icon: User,
-    title: "Founders who are showing up consistently but not converting",
-    body: "You're visible. The results aren't matching the effort.",
+    icon: "◎",
+    title: "Showing Up Without Sales",
+    text: "You're consistent. People see you. The results still are not matching the effort.",
   },
   {
-    icon: Flower2,
-    title: "Experts whose brand feels scattered or unclear",
-    body: "Your message is strong in parts — but not together.",
+    icon: "✦",
+    title: "Scattered Messaging",
+    text: "Your brand has strong parts, but they are not locking together into a sentence that converts.",
   },
   {
-    icon: Columns3,
-    title: "Solo service-based founders 3 to 10 years in",
-    body: "You've built the business. Now make it convert.",
+    icon: "║",
+    title: "3 to 10 Years In",
+    text: "You've built a real business. Now you need positioning that carries the weight of it.",
   },
   {
-    icon: Target,
-    title: "Founders ready for positioning repair, not beginner branding",
-    body: "This is not branding 101. It's clarity, architecture, and conversion.",
+    icon: "◎",
+    title: "Ready for Repair",
+    text: "This is for founders ready to fix the sentence costing them conversions.",
   },
 ];
 
-const PHASES = [
+const steps = [
   {
-    num: "01",
+    number: "01",
     title: "Clarify",
-    body: "We uncover your Core Truth and the real reason prospects aren't converting.",
+    text: "We uncover your Core Truth and the real reason prospects are not converting.",
   },
   {
-    num: "02",
+    number: "02",
     title: "Position",
-    body: "We architect a positioning statement that makes your value undeniable.",
+    text: "We architect a positioning statement that makes your value easier to understand and trust.",
   },
   {
-    num: "03",
+    number: "03",
     title: "Convert",
-    body: "We build a conversion path that moves the right people from interest to yes.",
+    text: "We build a conversion path that moves the right people from interest to yes.",
   },
   {
-    num: "04",
+    number: "04",
     title: "Operationalize",
-    body: "We install your 90-day Brand Operations Plan so clarity becomes consistent action.",
+    text: "We install your 90-day Brand Operations Plan so clarity turns into consistent action.",
   },
 ];
 
-const FOUNDING_FEATURES = [
-  "14-day positioning sprint",
-  "Four live sessions",
-  "Async work inside Core Truth House OS",
-  "Core Truth Profile",
-  "90-day Brand Operations plan",
-  "Lifetime Estate tier access to the OS",
+const seatOptions = [
+  {
+    type: "founding",
+    label: "Founding Seat",
+    title: "The Founding Seat",
+    price: "$497",
+    note: "",
+    description: "Founding seat in The Core Truth Cohort.",
+    href: "/cohort/apply?seat=founding",
+    cta: "Claim Founding Seat",
+    footnote: "This pricing and lifetime access do not carry to Cohort 02.",
+    bullets: [
+      "14-day positioning sprint",
+      "Four live sessions",
+      "Async work inside Core Truth House OS",
+      "Core Truth Profile",
+      "90-day Brand Operations Plan",
+      "Lifetime Estate tier access to the OS",
+    ],
+  },
+  {
+    type: "standard",
+    label: "Standard Seat",
+    title: "The Standard Seat",
+    price: "$997",
+    note: "One-time",
+    description: "Seat in The Core Truth Cohort.",
+    href: "/cohort/apply?seat=standard",
+    cta: "Apply for Standard Seat",
+    footnote: "Includes alumni access to The Core Truth House Residency upon completion.",
+    bullets: [
+      "14-day positioning sprint",
+      "Four live sessions",
+      "Async work inside Core Truth House OS",
+      "Core Truth Profile",
+      "90-day Brand Operations Plan",
+      "12-month Estate tier access to Core Truth House OS",
+      "Alumni access to The Core Truth House Residency upon completion",
+    ],
+  },
 ];
 
-const STANDARD_FEATURES = [
-  "14-day positioning sprint",
-  "Four live sessions",
-  "Async work inside Core Truth House OS",
-  "Core Truth Profile",
-  "90-day Brand Operations plan",
-  "12-month Estate tier access to Core Truth House OS",
-  "Alumni access to The Core Truth House Residency upon completion",
+const outcomes = [
+  { icon: "✦", text: "A sharper one-sentence positioning statement." },
+  { icon: "⌒", text: "A clearer conversion path from first sentence to sale." },
+  { icon: "◌", text: "A Core Truth Profile and messaging clarity." },
+  { icon: "✓", text: "A 90-day Brand Operations Plan." },
 ];
 
-const LEAVE_WITH = [
-  { icon: Target, body: "A sharper one-sentence positioning statement" },
-  { icon: ArrowRight, body: "A clearer conversion path from first sentence to sale" },
-  { icon: Fingerprint, body: "A Core Truth Profile and messaging clarity" },
-  { icon: ClipboardList, body: "A 90-day Brand Operations plan" },
-];
-
-const FAQS = [
+const faqs = [
   {
     q: "Who is the cohort for?",
     a: "Solo service-based founders 3 to 10 years in who are showing up consistently but not converting. You have the skills. Your brand is not translating them into revenue.",
+  },
+  {
+    q: "Do I get access to Core Truth House OS?",
+    a: "Yes. Founding members receive lifetime Estate access. Standard members receive 12 months of Estate tier access.",
   },
   {
     q: "What if I need more foundational work?",
     a: "Take the Core Truth Scorecard first. If your score puts you in the Foundation Builder band, we will point you to the right entry point before the cohort. We do not admit founders who are not ready.",
   },
   {
-    q: "What is the difference between Founding and Standard?",
-    a: "Founding seats are $497 and include lifetime Estate tier access to Core Truth House OS. Standard seats are $997 and include 12-month Estate access. Founding pricing closes when Cohort 01 fills.",
-  },
-  {
-    q: "Do I get access to Core Truth House OS?",
-    a: "Yes. Both seats include Estate tier access to the OS. Your 90-day Brand Operations plan lives inside it and is designed to be executed there.",
-  },
-  {
     q: "What happens after the cohort ends?",
     a: "Founding members retain lifetime Estate access and join The Core Truth House Residency. Standard members retain 12-month access. After 12 months, alumni pricing on Structure tier locks in at $67 per month.",
   },
+  {
+    q: "What is the difference between Founding and Standard?",
+    a: "Founding seats are $497 and include lifetime Estate tier access to Core Truth House OS. Standard seats are $997 and include 12-month Estate access. Founding pricing closes when Cohort 01 fills.",
+  },
 ];
 
-function Hero() {
+function Bullet({ children }) {
   return (
-    <section className="cth-cohort-hero">
-      <div className="cth-cohort-shell cth-cohort-hero-grid">
-        <div className="cth-cohort-hero-copy">
-          <p className="cth-cohort-eyebrow cth-cohort-eyebrow-gold">Core Truth House</p>
-          <h1>The Core Truth Cohort</h1>
-          <p className="cth-cohort-hero-sub">
-            A 14-day positioning sprint for solo founders who are{" "}
-            <span className="cth-cohort-accent">consistent but not converting.</span>
-          </p>
-          <p className="cth-cohort-hero-body">
-            You're showing up. You have depth, skill, and experience. But your positioning, messaging, or conversion path is leaking clarity. The Core Truth Cohort is a focused, high-touch sprint to repair what's costing you conversions and build a brand that finally performs.
-          </p>
-          <div className="cth-cohort-hero-ctas">
-            <Link to="/cohort/apply" className="cth-cohort-btn cth-cohort-btn-primary">
+    <li style={{ display: "flex", gap: 10, alignItems: "flex-start", color: "rgba(255,255,255,0.86)", fontSize: "0.98rem" }}>
+      <span style={{ color: "#C4A95B", fontWeight: 800, marginTop: 1 }}>✓</span>
+      <span>{children}</span>
+    </li>
+  );
+}
+
+export default function CoreTruthCohortPage() {
+  useEffect(() => {
+    document.title = "Core Truth Cohort | Core Truth House";
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "description");
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content", "The Core Truth Cohort is a 14-day positioning sprint for solo founders who are consistent but not converting.");
+  }, []);
+
+  return (
+    <>
+      <PublicHeader active="cohort" />
+      <main style={styles.page}>
+        <section style={styles.hero}>
+          <div style={styles.blueprintOverlay} aria-hidden="true" />
+          <div style={styles.heroInner} className="cth-cohort-hero-inner">
+            <div style={styles.heroCopy}>
+              <span style={styles.eyebrow}>Core Truth House</span>
+              <h1 style={styles.h1}>
+                The Core Truth <span style={{ color: "#C4A95B" }}>Cohort</span>
+              </h1>
+              <p style={styles.heroLead}>
+                A 14-day positioning sprint for solo founders who are{" "}
+                <span style={{ color: "#C4A95B", fontWeight: 700 }}>
+                  consistent but not converting
+                </span>.
+              </p>
+              <p style={styles.heroBody}>
+                You're showing up. You have depth, skill, and experience. But your positioning,
+                messaging, or conversion path is leaking clarity. The Core Truth Cohort is a focused,
+                high-touch sprint to repair what's costing you conversions and build a brand that finally performs.
+              </p>
+              <div style={styles.btnRow}>
+                <Link to="/cohort/apply" style={{ ...styles.btn, ...styles.btnPrimary }}>
+                  Apply for Cohort 01
+                </Link>
+                <a href="#seat-options" style={{ ...styles.btn, ...styles.btnSecondary }}>
+                  View Seat Options
+                </a>
+              </div>
+              <div style={styles.heroMeta}>
+                <span>• Four live sessions</span>
+                <span>• Async work inside the OS</span>
+                <span>• Core Truth Profile</span>
+                <span>• 90-day Brand Operations Plan</span>
+              </div>
+            </div>
+            <div style={styles.heroVisual}>
+              <div style={styles.heroGlow} aria-hidden="true" />
+              <img
+                src={doorwayAsset}
+                alt="Arched architectural doorway with an open red door"
+                style={styles.doorway}
+              />
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.featureStrip} aria-label="Cohort highlights">
+          <div style={styles.featureWrap}>
+            <div style={styles.featureGrid} className="cth-cohort-feature-grid">
+              {benefits.map((item, index) => (
+                <div
+                  key={item.label}
+                  style={{
+                    ...styles.featureItem,
+                    borderRight: index === benefits.length - 1 ? "none" : styles.featureItem.borderRight,
+                  }}
+                >
+                  <div style={styles.featureIcon}>{item.icon}</div>
+                  <strong style={styles.featureText}>{item.label}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.lightSection}>
+          <div style={styles.wrap}>
+            <div style={styles.sectionTag}>
+              <span style={styles.eyebrow}>Who This Is For</span>
+            </div>
+            <h2 style={styles.sectionTitle}>Built for Solo Founders Ready to Convert</h2>
+            <p style={styles.sectionCopy}>
+              This is for founders with real expertise who are visible enough to know the problem is not effort.
+              The repair happens in clarity, positioning, and conversion architecture.
+            </p>
+            <div style={styles.audienceGrid} className="cth-cohort-four-grid">
+              {audience.map((item) => (
+                <article key={item.title} style={styles.audienceCard}>
+                  <div style={styles.cardIcon}>{item.icon}</div>
+                  <h3 style={styles.cardTitle}>{item.title}</h3>
+                  <p style={styles.cardText}>{item.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.stepsSection}>
+          <div style={styles.wrap}>
+            <div style={styles.sectionTag}>
+              <span style={styles.eyebrow}>What Happens in the Sprint</span>
+            </div>
+            <div style={styles.stepsGrid} className="cth-cohort-four-grid">
+              {steps.map((step) => (
+                <article key={step.number}>
+                  <div style={styles.stepNumber}>{step.number}</div>
+                  <h3 style={styles.stepTitle}>{step.title}</h3>
+                  <p style={styles.cardText}>{step.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.pricingSection} id="seat-options">
+          <div style={styles.wrap}>
+            <div style={styles.sectionTag}>
+              <span style={styles.eyebrow}>Choose Your Seat</span>
+            </div>
+            <div style={styles.pricingGrid} className="cth-cohort-two-grid">
+              {seatOptions.map((seat) => (
+                <article
+                  key={seat.type}
+                  style={{
+                    ...styles.priceCard,
+                    ...(seat.type === "founding" ? styles.foundingCard : styles.standardCard),
+                  }}
+                >
+                  <span style={styles.priceLabel}>{seat.label}</span>
+                  <h3 style={styles.priceTitle}>{seat.title}</h3>
+                  <div style={styles.priceLine}>
+                    <div style={styles.priceValue}>{seat.price}</div>
+                    {seat.note ? <div style={styles.priceNote}>{seat.note}</div> : null}
+                  </div>
+                  <p style={styles.priceDescription}>{seat.description}</p>
+                  <ul style={styles.priceList}>
+                    {seat.bullets.map((bullet) => (
+                      <Bullet key={bullet}>{bullet}</Bullet>
+                    ))}
+                  </ul>
+                  <Link to={seat.href} style={{ ...styles.btn, ...styles.btnPrimary }}>
+                    {seat.cta}
+                  </Link>
+                  <p style={styles.cardFootnote}>{seat.footnote}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.outcomesSection}>
+          <div style={styles.wrap}>
+            <div style={styles.sectionTag}>
+              <span style={styles.eyebrow}>What You Leave With</span>
+            </div>
+            <div style={styles.outcomesGrid} className="cth-cohort-four-grid">
+              {outcomes.map((item) => (
+                <article key={item.text} style={styles.outcomeCard}>
+                  <div style={styles.cardIcon}>{item.icon}</div>
+                  <p style={{ margin: 0, fontSize: "0.98rem", color: "#2B1040" }}>{item.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.faqSection}>
+          <div style={styles.wrap}>
+            <div style={styles.sectionTag}>
+              <span style={styles.eyebrow}>Frequently Asked Questions</span>
+            </div>
+            <div style={styles.faqGrid} className="cth-cohort-two-grid">
+              {faqs.map((faq) => (
+                <article key={faq.q} style={styles.faqItem}>
+                  <h3 style={styles.faqQuestion}>{faq.q}</h3>
+                  <p style={styles.faqAnswer}>{faq.a}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.ctaBand}>
+          <div style={styles.blueprintOverlay} aria-hidden="true" />
+          <div style={styles.ctaInner} className="cth-cohort-cta-inner">
+            <div>
+              <span style={styles.eyebrow}>Core Truth House</span>
+              <h2 style={styles.ctaTitle}>The sentence costing you conversions can be repaired.</h2>
+              <p style={styles.ctaCopy}>
+                Join a focused group of founders for a 14-day sprint to clarify, position, and convert with confidence.
+              </p>
+            </div>
+            <Link to="/cohort/apply" style={{ ...styles.btn, ...styles.btnPrimary }}>
               Apply for Cohort 01
             </Link>
-            <a href="#pricing" className="cth-cohort-btn cth-cohort-btn-ghost">
-              View Seat Options
-            </a>
           </div>
-          <p className="cth-cohort-hero-meta">
-            Four live sessions &nbsp;•&nbsp; Async work inside the OS &nbsp;•&nbsp; Core Truth Profile &nbsp;•&nbsp; 90-day Brand Operations Plan
-          </p>
-        </div>
-        <div className="cth-cohort-hero-image">
-          <img src={HERO_IMAGE} alt="Architectural doorway, Core Truth House cohort." />
-        </div>
-      </div>
-    </section>
-  );
-}
+        </section>
 
-function FeatureStrip() {
-  return (
-    <section className="cth-cohort-strip">
-      <div className="cth-cohort-shell cth-cohort-strip-grid">
-        {FEATURE_STRIP.map(({ icon: Icon, label }) => (
-          <div key={label} className="cth-cohort-strip-item">
-            <Icon size={22} strokeWidth={1.5} />
-            <span>{label}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function WhoThisIsFor() {
-  return (
-    <section className="cth-cohort-section cth-cohort-ivory">
-      <div className="cth-cohort-shell">
-        <header className="cth-cohort-section-head">
-          <p className="cth-cohort-eyebrow cth-cohort-eyebrow-crimson">Who This Is For</p>
-          <h2>Built for Solo Founders Ready to Convert</h2>
-        </header>
-        <div className="cth-cohort-who-grid">
-          {WHO_CARDS.map(({ icon: Icon, title, body }) => (
-            <article key={title} className="cth-cohort-who-card">
-              <div className="cth-cohort-who-icon">
-                <Icon size={24} strokeWidth={1.4} />
-              </div>
-              <h3>{title}</h3>
-              <p>{body}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SprintPhases() {
-  return (
-    <section className="cth-cohort-section cth-cohort-ivory cth-cohort-phases">
-      <div className="cth-cohort-shell">
-        <header className="cth-cohort-section-head">
-          <p className="cth-cohort-eyebrow cth-cohort-eyebrow-crimson">What Happens in the Sprint</p>
-          <h2>Four Phases, 14 Days</h2>
-        </header>
-        <div className="cth-cohort-phase-grid">
-          {PHASES.map(({ num, title, body }) => (
-            <div key={num} className="cth-cohort-phase">
-              <span className="cth-cohort-phase-num">{num}</span>
-              <h3>{title}</h3>
-              <p>{body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Pricing() {
-  return (
-    <section id="pricing" className="cth-cohort-section cth-cohort-ivory">
-      <div className="cth-cohort-shell">
-        <header className="cth-cohort-section-head">
-          <p className="cth-cohort-eyebrow cth-cohort-eyebrow-crimson">Choose Your Seat</p>
-          <h2>Founding or Standard</h2>
-        </header>
-        <div className="cth-cohort-pricing-grid">
-          <article className="cth-cohort-price-card cth-cohort-price-founding">
-            <Crown className="cth-cohort-price-crown" size={28} strokeWidth={1.5} />
-            <p className="cth-cohort-price-tier">Founding Seat</p>
-            <p className="cth-cohort-price-amount">$497</p>
-            <p className="cth-cohort-price-sub">Founding seat in The Core Truth Cohort.</p>
-            <ul className="cth-cohort-price-list">
-              {FOUNDING_FEATURES.map((feat) => (
-                <li key={feat}>
-                  <Check size={16} strokeWidth={2} />
-                  <span>{feat}</span>
-                </li>
-              ))}
-            </ul>
-            <Link to="/cohort/apply" className="cth-cohort-btn cth-cohort-btn-primary cth-cohort-btn-block">
-              Claim Founding Seat
-            </Link>
-            <p className="cth-cohort-price-fineprint">
-              This pricing and lifetime access do not carry to Cohort 02.
-            </p>
-          </article>
-
-          <article
-            className="cth-cohort-price-card cth-cohort-price-standard"
-            style={{ backgroundImage: `linear-gradient(180deg, rgba(26,10,36,0.92), rgba(26,10,36,0.86)), url(${STANDARD_IMAGE})` }}
-          >
-            <Crown className="cth-cohort-price-crown" size={28} strokeWidth={1.5} />
-            <p className="cth-cohort-price-tier">Standard Seat</p>
-            <p className="cth-cohort-price-amount">$997 <span className="cth-cohort-price-amount-sub">one-time</span></p>
-            <p className="cth-cohort-price-sub">Seat in The Core Truth Cohort.</p>
-            <ul className="cth-cohort-price-list">
-              {STANDARD_FEATURES.map((feat) => (
-                <li key={feat}>
-                  <Check size={16} strokeWidth={2} />
-                  <span>{feat}</span>
-                </li>
-              ))}
-            </ul>
-            <Link to="/cohort/apply" className="cth-cohort-btn cth-cohort-btn-primary cth-cohort-btn-block">
-              Apply for Standard Seat
-            </Link>
-          </article>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function WhatYouLeaveWith() {
-  return (
-    <section className="cth-cohort-section cth-cohort-ivory">
-      <div className="cth-cohort-shell">
-        <header className="cth-cohort-section-head">
-          <p className="cth-cohort-eyebrow cth-cohort-eyebrow-crimson">What You Leave With</p>
-          <h2>Four Outcomes in Fourteen Days</h2>
-        </header>
-        <div className="cth-cohort-leave-grid">
-          {LEAVE_WITH.map(({ icon: Icon, body }) => (
-            <div key={body} className="cth-cohort-leave-item">
-              <div className="cth-cohort-leave-icon">
-                <Icon size={22} strokeWidth={1.4} />
-              </div>
-              <p>{body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FAQ() {
-  const [openIndex, setOpenIndex] = useState(0);
-  return (
-    <section className="cth-cohort-section cth-cohort-white">
-      <div className="cth-cohort-shell cth-cohort-faq-shell">
-        <header className="cth-cohort-section-head">
-          <p className="cth-cohort-eyebrow cth-cohort-eyebrow-crimson">Frequently Asked Questions</p>
-          <h2>What Founders Ask Before Applying</h2>
-        </header>
-        <div className="cth-cohort-faq-list">
-          {FAQS.map((item, idx) => {
-            const open = openIndex === idx;
-            return (
-              <div key={item.q} className={`cth-cohort-faq-item ${open ? "open" : ""}`}>
-                <button
-                  type="button"
-                  className="cth-cohort-faq-q"
-                  onClick={() => setOpenIndex(open ? -1 : idx)}
-                  aria-expanded={open}
-                >
-                  <span>{item.q}</span>
-                  {open ? <Minus size={18} strokeWidth={2} /> : <Plus size={18} strokeWidth={2} />}
-                </button>
-                {open ? <div className="cth-cohort-faq-a">{item.a}</div> : null}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FinalCTA() {
-  return (
-    <section className="cth-cohort-final">
-      <div className="cth-cohort-shell cth-cohort-final-grid">
-        <div className="cth-cohort-final-copy">
-          <h2>The sentence costing you conversions can be repaired.</h2>
-          <p>
-            Join a focused group of founders for a 14-day sprint to clarify, position, and convert with confidence.
-          </p>
-          <Link to="/cohort/apply" className="cth-cohort-btn cth-cohort-btn-primary">
-            Apply for Cohort 01
-          </Link>
-        </div>
-        <div className="cth-cohort-final-image">
-          <img src={HERO_IMAGE} alt="" aria-hidden="true" />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export default function CohortPage() {
-  return (
-    <div className="cth-cohort-page">
-      <PublicHeader active="cohort" />
-
-      <Hero />
-      <FeatureStrip />
-      <WhoThisIsFor />
-      <SprintPhases />
-      <Pricing />
-      <WhatYouLeaveWith />
-      <FAQ />
-      <FinalCTA />
-
+        <style>{`
+          @media (max-width: 1120px) {
+            .cth-cohort-hero-inner,
+            .cth-cohort-cta-inner {
+              grid-template-columns: 1fr !important;
+            }
+            .cth-cohort-feature-grid,
+            .cth-cohort-four-grid,
+            .cth-cohort-two-grid {
+              grid-template-columns: repeat(2, 1fr) !important;
+            }
+          }
+          @media (max-width: 760px) {
+            .cth-cohort-hero-inner {
+              width: min(100% - 28px, 100%) !important;
+              padding: 52px 0 36px !important;
+              min-height: auto !important;
+              gap: 28px !important;
+            }
+            .cth-cohort-cta-inner {
+              width: min(100% - 28px, 100%) !important;
+              padding: 64px 0 !important;
+            }
+            .cth-cohort-feature-grid,
+            .cth-cohort-four-grid,
+            .cth-cohort-two-grid {
+              grid-template-columns: 1fr !important;
+            }
+          }
+        `}</style>
+      </main>
       <PublicFooter />
-
-      <style>{`
-        .cth-cohort-page {
-          background: #f8f4f2;
-          color: #2b1040;
-          font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
-        }
-
-        .cth-cohort-shell {
-          width: min(1240px, calc(100vw - 96px));
-          margin: 0 auto;
-        }
-
-        .cth-cohort-page h1,
-        .cth-cohort-page h2,
-        .cth-cohort-page h3 {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-          margin: 0;
-        }
-
-        .cth-cohort-eyebrow {
-          margin: 0 0 14px;
-          font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-        }
-
-        .cth-cohort-eyebrow-gold {
-          color: #c4a95b;
-        }
-
-        .cth-cohort-eyebrow-crimson {
-          color: #af0024;
-        }
-
-        .cth-cohort-accent {
-          color: #e44966;
-          font-style: italic;
-        }
-
-        .cth-cohort-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 48px;
-          padding: 0 26px;
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: 850;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          text-decoration: none;
-          cursor: pointer;
-          transition: background 180ms ease, transform 180ms ease, border-color 180ms ease;
-        }
-
-        .cth-cohort-btn-primary {
-          background: #af0024;
-          color: #fff;
-          border: 1px solid #af0024;
-          box-shadow: 0 16px 32px rgba(175, 0, 36, 0.22);
-        }
-
-        .cth-cohort-btn-primary:hover {
-          background: #8e001d;
-          transform: translateY(-1px);
-        }
-
-        .cth-cohort-btn-ghost {
-          background: transparent;
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.72);
-        }
-
-        .cth-cohort-btn-ghost:hover {
-          border-color: #fff;
-          transform: translateY(-1px);
-        }
-
-        .cth-cohort-btn-block {
-          width: 100%;
-        }
-
-        /* HERO */
-        .cth-cohort-hero {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          background:
-            radial-gradient(circle at 12% 8%, rgba(175, 0, 36, 0.22), transparent 38%),
-            radial-gradient(circle at 88% 92%, rgba(196, 169, 91, 0.16), transparent 40%),
-            #0d0010;
-          color: #fff;
-          padding: 120px 0 80px;
-        }
-
-        .cth-cohort-hero-grid {
-          display: grid;
-          grid-template-columns: 1.05fr 0.95fr;
-          gap: 60px;
-          align-items: center;
-        }
-
-        .cth-cohort-hero-copy h1 {
-          font-size: clamp(2.5rem, 5vw, 4.4rem);
-          line-height: 1.05;
-          color: #fff;
-          margin-bottom: 22px;
-        }
-
-        .cth-cohort-hero-sub {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-size: clamp(1.1rem, 2vw, 1.5rem);
-          line-height: 1.4;
-          color: #fff;
-          font-style: italic;
-          margin: 0 0 20px;
-        }
-
-        .cth-cohort-hero-body {
-          font-size: 16px;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.78);
-          margin: 0 0 32px;
-          max-width: 560px;
-        }
-
-        .cth-cohort-hero-ctas {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 14px;
-          margin-bottom: 26px;
-        }
-
-        .cth-cohort-hero-meta {
-          font-size: 12px;
-          letter-spacing: 0.06em;
-          color: rgba(255, 255, 255, 0.58);
-          margin: 0;
-        }
-
-        .cth-cohort-hero-image img {
-          width: 100%;
-          height: auto;
-          max-height: 640px;
-          object-fit: cover;
-          border-radius: 6px;
-          box-shadow: 0 40px 80px rgba(0, 0, 0, 0.45);
-        }
-
-        /* STRIP */
-        .cth-cohort-strip {
-          background: #1a0a24;
-          color: #fff;
-          padding: 28px 0;
-        }
-
-        .cth-cohort-strip-grid {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 24px;
-        }
-
-        .cth-cohort-strip-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          color: #fff;
-          font-size: 11px;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          font-weight: 800;
-        }
-
-        .cth-cohort-strip-item svg {
-          color: #c4a95b;
-          flex-shrink: 0;
-        }
-
-        /* SECTIONS */
-        .cth-cohort-section {
-          padding: 96px 0;
-        }
-
-        .cth-cohort-ivory {
-          background: #f8f4f2;
-        }
-
-        .cth-cohort-white {
-          background: #ffffff;
-        }
-
-        .cth-cohort-section-head {
-          text-align: center;
-          margin-bottom: 56px;
-        }
-
-        .cth-cohort-section-head h2 {
-          font-size: clamp(2rem, 3.6vw, 3rem);
-          color: #2b1040;
-          line-height: 1.15;
-          max-width: 760px;
-          margin: 0 auto;
-        }
-
-        /* WHO */
-        .cth-cohort-who-grid {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 22px;
-        }
-
-        .cth-cohort-who-card {
-          background: #fff;
-          border: 1px solid rgba(216, 197, 195, 0.7);
-          border-radius: 6px;
-          padding: 32px 24px;
-          text-align: center;
-        }
-
-        .cth-cohort-who-icon {
-          width: 52px;
-          height: 52px;
-          border-radius: 999px;
-          margin: 0 auto 18px;
-          display: grid;
-          place-items: center;
-          background: rgba(175, 0, 36, 0.06);
-          color: #af0024;
-          border: 1px solid rgba(175, 0, 36, 0.18);
-        }
-
-        .cth-cohort-who-card h3 {
-          font-size: 17px;
-          line-height: 1.3;
-          color: #2b1040;
-          margin: 0 0 12px;
-        }
-
-        .cth-cohort-who-card p {
-          font-size: 14px;
-          line-height: 1.55;
-          color: #5b4a5b;
-          margin: 0;
-        }
-
-        /* PHASES */
-        .cth-cohort-phase-grid {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 32px;
-        }
-
-        .cth-cohort-phase {
-          padding-right: 16px;
-        }
-
-        .cth-cohort-phase-num {
-          display: block;
-          font-family: 'Playfair Display', Georgia, serif;
-          font-size: 56px;
-          line-height: 1;
-          color: #af0024;
-          margin-bottom: 18px;
-        }
-
-        .cth-cohort-phase h3 {
-          font-size: 22px;
-          color: #2b1040;
-          margin: 0 0 12px;
-        }
-
-        .cth-cohort-phase p {
-          font-size: 14.5px;
-          line-height: 1.6;
-          color: #4a3b4a;
-          margin: 0;
-        }
-
-        /* PRICING */
-        .cth-cohort-pricing-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 28px;
-          max-width: 980px;
-          margin: 0 auto;
-        }
-
-        .cth-cohort-price-card {
-          position: relative;
-          padding: 42px 36px 36px;
-          border-radius: 8px;
-          color: #fff;
-          background-size: cover;
-          background-position: center;
-        }
-
-        .cth-cohort-price-founding {
-          background: #6b0f1a;
-        }
-
-        .cth-cohort-price-standard {
-          background-color: #1a0a24;
-        }
-
-        .cth-cohort-price-crown {
-          color: #c4a95b;
-          margin-bottom: 18px;
-        }
-
-        .cth-cohort-price-tier {
-          font-size: 11px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          font-weight: 800;
-          margin: 0 0 14px;
-          color: rgba(255, 255, 255, 0.86);
-        }
-
-        .cth-cohort-price-amount {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-size: 56px;
-          line-height: 1;
-          margin: 0 0 12px;
-        }
-
-        .cth-cohort-price-founding .cth-cohort-price-amount {
-          color: #c4a95b;
-        }
-
-        .cth-cohort-price-amount-sub {
-          font-size: 16px;
-          font-family: 'DM Sans', system-ui, sans-serif;
-          font-style: italic;
-          color: rgba(255, 255, 255, 0.72);
-          margin-left: 6px;
-        }
-
-        .cth-cohort-price-sub {
-          margin: 0 0 24px;
-          font-size: 14px;
-          color: rgba(255, 255, 255, 0.76);
-        }
-
-        .cth-cohort-price-list {
-          list-style: none;
-          padding: 0;
-          margin: 0 0 28px;
-          display: grid;
-          gap: 11px;
-        }
-
-        .cth-cohort-price-list li {
-          display: flex;
-          align-items: flex-start;
-          gap: 11px;
-          font-size: 14.5px;
-          line-height: 1.5;
-          color: rgba(255, 255, 255, 0.92);
-        }
-
-        .cth-cohort-price-list svg {
-          color: #c4a95b;
-          margin-top: 3px;
-          flex-shrink: 0;
-        }
-
-        .cth-cohort-price-fineprint {
-          margin: 16px 0 0;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.56);
-          font-style: italic;
-        }
-
-        /* LEAVE WITH */
-        .cth-cohort-leave-grid {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 22px;
-        }
-
-        .cth-cohort-leave-item {
-          background: #fff;
-          border: 1px solid rgba(216, 197, 195, 0.7);
-          border-radius: 6px;
-          padding: 28px 22px;
-          text-align: center;
-        }
-
-        .cth-cohort-leave-icon {
-          width: 46px;
-          height: 46px;
-          border-radius: 999px;
-          margin: 0 auto 16px;
-          display: grid;
-          place-items: center;
-          color: #c4a95b;
-          background: rgba(196, 169, 91, 0.12);
-          border: 1px solid rgba(196, 169, 91, 0.32);
-        }
-
-        .cth-cohort-leave-item p {
-          font-size: 14.5px;
-          line-height: 1.55;
-          color: #2b1040;
-          margin: 0;
-        }
-
-        /* FAQ */
-        .cth-cohort-faq-shell {
-          max-width: 880px;
-        }
-
-        .cth-cohort-faq-list {
-          display: grid;
-          gap: 12px;
-        }
-
-        .cth-cohort-faq-item {
-          border: 1px solid rgba(216, 197, 195, 0.7);
-          border-radius: 6px;
-          background: #fff;
-          overflow: hidden;
-        }
-
-        .cth-cohort-faq-q {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          padding: 20px 24px;
-          border: 0;
-          background: transparent;
-          text-align: left;
-          font-family: 'Playfair Display', Georgia, serif;
-          font-size: 18px;
-          color: #2b1040;
-          cursor: pointer;
-        }
-
-        .cth-cohort-faq-q svg {
-          color: #af0024;
-          flex-shrink: 0;
-        }
-
-        .cth-cohort-faq-a {
-          padding: 0 24px 22px;
-          font-size: 15px;
-          line-height: 1.65;
-          color: #4a3b4a;
-        }
-
-        /* FINAL CTA */
-        .cth-cohort-final {
-          background:
-            radial-gradient(circle at 12% 92%, rgba(175, 0, 36, 0.26), transparent 38%),
-            radial-gradient(circle at 92% 8%, rgba(196, 169, 91, 0.14), transparent 40%),
-            #0d0010;
-          color: #fff;
-          padding: 96px 0;
-        }
-
-        .cth-cohort-final-grid {
-          display: grid;
-          grid-template-columns: 1.1fr 0.9fr;
-          gap: 48px;
-          align-items: center;
-        }
-
-        .cth-cohort-final-copy h2 {
-          font-size: clamp(1.9rem, 3.5vw, 2.8rem);
-          color: #fff;
-          line-height: 1.15;
-          margin: 0 0 22px;
-        }
-
-        .cth-cohort-final-copy p {
-          font-size: 15.5px;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.78);
-          margin: 0 0 30px;
-          max-width: 520px;
-        }
-
-        .cth-cohort-final-image img {
-          width: 100%;
-          height: auto;
-          max-height: 380px;
-          object-fit: cover;
-          border-radius: 6px;
-          opacity: 0.85;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 1100px) {
-          .cth-cohort-shell {
-            width: min(100% - 34px, 1240px);
-          }
-
-          .cth-cohort-hero-grid,
-          .cth-cohort-final-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .cth-cohort-hero {
-            min-height: auto;
-            padding: 100px 0 70px;
-          }
-
-          .cth-cohort-strip-grid,
-          .cth-cohort-who-grid,
-          .cth-cohort-phase-grid,
-          .cth-cohort-leave-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .cth-cohort-pricing-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .cth-cohort-section {
-            padding: 72px 0;
-          }
-
-          .cth-cohort-strip-grid,
-          .cth-cohort-who-grid,
-          .cth-cohort-phase-grid,
-          .cth-cohort-leave-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .cth-cohort-price-card {
-            padding: 34px 24px;
-          }
-
-          .cth-cohort-price-amount {
-            font-size: 46px;
-          }
-        }
-      `}</style>
-    </div>
+    </>
   );
 }
