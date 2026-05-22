@@ -50,6 +50,10 @@ export const API_PATHS = {
     status: "/api/public/status",
   },
 
+  scorecard: {
+    submit: "/api/scorecard/submit",
+  },
+
   onboarding: {
     progress: "/api/onboarding/progress",
     checklist: "/api/onboarding/checklist",

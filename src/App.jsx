@@ -20,6 +20,7 @@ const BlogJournalPage = lazy(() => import("./pages/BlogJournalPage"));
 const StorefrontPage = lazy(() => import("./pages/StorefrontPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const BrandDiagnosticPage = lazy(() => import("./pages/BrandDiagnosticPage"));
+const ScorecardPage = lazy(() => import("./pages/ScorecardPage"));
 
 function LoadingFallback() {
   return (
@@ -36,6 +37,8 @@ function PublicRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/brand-diagnostic" element={<BrandDiagnosticPage />} />
         <Route path="/brand-diagnostic/" element={<BrandDiagnosticPage />} />
+        <Route path="/scorecard" element={<ScorecardPage />} />
+        <Route path="/scorecard/" element={<ScorecardPage />} />
         <Route path="/tiers" element={<TiersPage />} />
         <Route path="/pricing" element={<TiersPage />} />
         <Route path="/methodology" element={<MethodologyPage />} />
