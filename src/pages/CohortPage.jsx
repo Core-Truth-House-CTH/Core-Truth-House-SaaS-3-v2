@@ -123,7 +123,9 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     minHeight: "560px",
-    background: "#140f2b",
+    background: "#0d0010",
+    borderRadius: "12px",
+    overflow: "hidden",
   },
   heroGlow: {
     position: "absolute",
@@ -596,7 +598,7 @@ export default function CoreTruthCohortPage() {
               </p>
               <div style={styles.btnRow}>
                 <Link to="/cohort/apply" style={{ ...styles.btn, ...styles.btnPrimary }}>
-                  Apply for Cohort 01
+                  Apply for Cohort
                 </Link>
                 <a href="#seat-options" style={{ ...styles.btn, ...styles.btnSecondary }}>
                   View Seat Options
@@ -757,7 +759,7 @@ export default function CoreTruthCohortPage() {
               </p>
             </div>
             <Link to="/cohort/apply" style={{ ...styles.btn, ...styles.btnPrimary }}>
-              Apply for Cohort 01
+              Apply for Cohort
             </Link>
           </div>
         </section>

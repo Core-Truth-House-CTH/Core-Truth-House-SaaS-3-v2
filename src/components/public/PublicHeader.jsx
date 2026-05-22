@@ -5,6 +5,7 @@ const navItems = [
  { label: "The System", to: "/methodology" },
  { label: "Tiers", to: "/tiers" },
  { label: "Studios", to: "/store" },
+ { label: "Cohort", to: "/cohort" },
  { label: "About", to: "/about" },
 ];
 

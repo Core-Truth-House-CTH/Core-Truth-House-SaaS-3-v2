@@ -176,7 +176,7 @@ export default function PublicFooter() {
  display: inline-flex;
  align-items: center;
  gap: 12px;
- color: var(--cth-white);
+ color: rgba(248, 241, 236, 1);
  text-decoration: none;
  font-family: 'Playfair Display', Georgia, serif;
  font-size: 25px;
