@@ -101,6 +101,30 @@ const routes = [
     schemaType: "CollectionPage",
   },
   {
+    route: "/cohort",
+    title: "The Core Truth Cohort | Core Truth House",
+    description:
+      "A 14-day positioning sprint for solo founders who are consistent but not converting. Four live sessions, async work inside Core Truth House OS, a Core Truth Profile, and a 90-day Brand Operations Plan.",
+    ogTitle: "The Core Truth Cohort",
+    ogDescription:
+      "A focused, high-touch sprint to repair what's costing you conversions and build a brand that finally performs. Founding seat $497, Standard seat $997.",
+    image: `${SITE}/cohort-assets/cth-cohort-hero-doorway.png`,
+    canonical: `${SITE}/cohort`,
+    schemaType: "WebPage",
+  },
+  {
+    route: "/cohort/apply",
+    title: "Apply for The Core Truth Cohort | Core Truth House",
+    description:
+      "Apply for your seat in The Core Truth Cohort. Applications are reviewed by hand. Eight founders admitted per cohort.",
+    ogTitle: "Apply for The Core Truth Cohort",
+    ogDescription:
+      "Tell us about where you are and what you are building. Applications reviewed by hand within 48 hours.",
+    image: `${SITE}/cohort-assets/cth-cohort-hero-doorway.png`,
+    canonical: `${SITE}/cohort/apply`,
+    schemaType: "WebPage",
+  },
+  {
     route: "/privacy",
     title: "Privacy Policy | Core Truth House",
     description:

@@ -230,8 +230,8 @@ export const APP_ROUTES = [
     label: "Cohort Community",
     icon: MessageCircle,
     group: "execution",
-    requiredPlan: null,
-    gateType: null,
+    requiredPlan: "estate",
+    gateType: "page",
     tooltip: "Private cohort rooms, member profiles, guided threads, and shared resources.",
   },
     {
