@@ -21,6 +21,8 @@ const StorefrontPage = lazy(() => import("./pages/StorefrontPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const BrandDiagnosticPage = lazy(() => import("./pages/BrandDiagnosticPage"));
 const ScorecardPage = lazy(() => import("./pages/ScorecardPage"));
+const CohortPage = lazy(() => import("./pages/CohortPage"));
+const CohortApplyPage = lazy(() => import("./pages/CohortApplyPage"));
 
 function LoadingFallback() {
   return (
@@ -39,6 +41,8 @@ function PublicRoutes() {
         <Route path="/brand-diagnostic/" element={<BrandDiagnosticPage />} />
         <Route path="/scorecard" element={<ScorecardPage />} />
         <Route path="/scorecard/" element={<ScorecardPage />} />
+        <Route path="/cohort" element={<CohortPage />} />
+        <Route path="/cohort/apply" element={<CohortApplyPage />} />
         <Route path="/tiers" element={<TiersPage />} />
         <Route path="/pricing" element={<TiersPage />} />
         <Route path="/methodology" element={<MethodologyPage />} />
