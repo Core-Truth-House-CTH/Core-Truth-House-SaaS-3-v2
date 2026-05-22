@@ -54,7 +54,6 @@ const pageRegistry = {
   "/audience/avatars/:id": AvatarEditor,
   "/brand-intelligence": BrandIntelligencePage,
   "/brand-health": BrandHealthDashboard,
-  "/scorecard": BrandHealthDashboard,
 
   "/strategic-os": StrategicOS,
   "/systems-builder": SystemsBuilder,

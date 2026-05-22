@@ -178,19 +178,6 @@ export const APP_ROUTES = [
       "Upgrade to Foundation to unlock Brand Health and track consistency as you generate content.",
   },
     {
-    path: "/scorecard",
-    label: "Brand Health",
-    icon: Activity,
-    group: "brandFoundation",
-    requiredPlan: "foundation",
-    gateType: "page",
-    hidden: true,
-    tooltip:
-      "Alias route for Brand Health.",
-    lockedTooltip:
-      "Upgrade to Foundation to unlock Brand Health and track consistency as you generate content.",
-  },
-    {
     path: "/systems-builder",
     label: "Structure",
     icon: Cog,
