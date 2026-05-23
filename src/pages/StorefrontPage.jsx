@@ -1284,8 +1284,7 @@ export default function StorefrontPage() {
 
  .cth-store-hero-grid,
  .cth-featured-grid,
- .cth-store-products-layout,
- .cth-store-cta-grid {
+ .cth-store-products-layout {
  grid-template-columns: 1fr;
  }
 
@@ -1369,6 +1368,7 @@ export default function StorefrontPage() {
 
  .cth-store-cta-grid {
  gap: 26px;
+ grid-template-columns: 1fr;
  }
 
  .cth-store-footer-bottom {
