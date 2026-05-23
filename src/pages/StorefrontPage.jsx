@@ -260,15 +260,20 @@ function CTA() {
  className="cth-store-cta-column"
  />
 
- <div className="cth-store-shell cth-store-cta-grid">
+ <div className="cth-store-shell cth-store-cta-inner">
+ <div className="cth-store-cta-seal">
  <Crest />
- <div>
- <h2>Not sure which resource fits the season your brand is in?</h2>
- <p>Start with the Brand Diagnostic. It will show your top structural gaps and point you toward the right next step.</p>
  </div>
+ <div className="cth-store-cta-copy">
+ <p className="cth-store-cta-eyebrow">Not sure where to start?</p>
+ <h2>Find the right system for your brand.</h2>
+ <span>Start with the Brand Diagnostic. It will show your top structural gaps and point you toward the right next step.</span>
+ </div>
+ <div className="cth-store-cta-actions">
  <a href="/brand-diagnostic/" className="cth-store-btn cth-store-btn-gold">
  Start Diagnostic <span>→</span>
  </a>
+ </div>
  </div>
  </section>
  );
@@ -1093,28 +1098,51 @@ export default function StorefrontPage() {
  mix-blend-mode: screen;
  }
 
- .cth-store-cta-grid {
+ .cth-store-cta-inner {
  display: grid;
- grid-template-columns: 160px 1fr auto;
- gap: 54px;
+ grid-template-columns: auto 1fr auto;
+ gap: clamp(24px, 4vw, 68px);
  align-items: center;
  }
 
- .cth-store-cta h2 {
- margin: 0 0 8px;
- max-width: 800px;
- font-family: Georgia, serif;
- color: var(--cth-on-dark);
- font-size: clamp(1.4rem, 2.2vw, 2.4rem);
- line-height: 1.1;
- letter-spacing: -0.05em;
- font-weight: 500;
+ .cth-store-cta-seal img {
+ width: 96px;
+ height: 96px;
+ object-fit: contain;
  }
 
- .cth-store-cta p {
- margin: 0;
+ .cth-store-cta-eyebrow {
+ margin: 0 0 6px;
+ color: var(--cth-gold);
+ font-size: 11px;
+ font-weight: 700;
+ letter-spacing: 0.16em;
+ text-transform: uppercase;
+ }
+
+ .cth-store-cta-copy h2 {
+ margin: 0 0 8px;
+ font-family: Georgia, serif;
+ color: var(--cth-on-dark);
+ font-size: clamp(1.6rem, 2.4vw, 2.8rem);
+ line-height: 1.05;
+ letter-spacing: -0.04em;
+ font-weight: 500;
+ max-width: 600px;
+ }
+
+ .cth-store-cta-copy span {
+ display: block;
  color: rgba(255,255,255,0.72);
  font-size: 14px;
+ max-width: 500px;
+ margin-top: 6px;
+ }
+
+ .cth-store-cta-actions {
+ min-width: 220px;
+ display: grid;
+ gap: 12px;
  }
 
  .cth-store-proof-strip {
@@ -1315,17 +1343,23 @@ export default function StorefrontPage() {
  }
 
  @media (max-width: 1180px) {
- .cth-store-cta-grid {
+ .cth-store-cta-inner {
  grid-template-columns: 1fr;
- gap: 28px;
  text-align: center;
  justify-items: center;
+ gap: 24px;
  }
- .cth-store-cta-grid > :first-child {
+ .cth-store-cta-seal {
  display: none;
  }
- .cth-store-cta p {
- text-align: center;
+ .cth-store-cta-copy h2 {
+ max-width: 100%;
+ }
+ .cth-store-cta-copy span {
+ max-width: 100%;
+ }
+ .cth-store-cta-actions {
+ width: 100%;
  }
  }
 
