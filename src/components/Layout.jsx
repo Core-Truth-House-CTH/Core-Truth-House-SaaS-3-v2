@@ -673,6 +673,13 @@ export function Sidebar() {
                   {showLabels && <span>{isDark ? "Light Mode" : "Dark Mode"}</span>}
                 </button>
 
+                {isSuperAdminRole && (
+                  <button data-testid="sidebar-switch-to-admin-btn" onClick={() => navigate("/admin/dashboard")} className="cth-sidebar-utility w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors">
+                    <ShieldAlert size={14} />
+                    {showLabels && <span>Switch to Admin</span>}
+                  </button>
+                )}
+
                 <button data-testid="sign-out-btn" onClick={() => signOut({ redirectUrl: "/" })} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-[var(--cth-app-accent)] hover:bg-[rgba(224,78,53,0.10)] text-xs font-semibold transition-colors">
                   <LogOut size={13} />
                   {showLabels && <span>Sign Out</span>}
