@@ -141,6 +141,8 @@ const styles = {
     zIndex: 1,
     width: "min(100%, 520px)",
     filter: "drop-shadow(0 26px 45px rgba(0,0,0,0.34))",
+    mixBlendMode: "luminosity",
+    backgroundColor: "transparent",
   },
   featureStrip: {
     marginTop: "-34px",
