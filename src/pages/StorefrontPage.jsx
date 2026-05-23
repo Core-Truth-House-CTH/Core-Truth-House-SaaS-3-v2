@@ -278,7 +278,7 @@ function CTA() {
 
 export default function StorefrontPage() {
  return (
- <main className="cth-store-page">
+ <main className="cth-store-page" data-cache-bust="v2">
  <PublicHeader active="store" />
  <Hero />
  <Benefits />
