@@ -133,9 +133,7 @@ export default function CohortJoinPage() {
     const tierLabel = invite?.cohort_tier === "founding" ? "founding" : "standard";
     const email = invite?.email || "";
     const redirectAfter = `/command-center?cohort_token=${encodeURIComponent(token)}`;
-    const signUpHref = email
-      ? `/sign-up?redirect_url=${encodeURIComponent(redirectAfter)}&email=${encodeURIComponent(email)}`
-      : `/sign-up?redirect_url=${encodeURIComponent(redirectAfter)}`;
+    const signUpHref = `/sign-up?redirect_url=${encodeURIComponent(redirectAfter)}`;
     const signInHref = `/sign-in?redirect_url=${encodeURIComponent(redirectAfter)}`;
 
     content = (

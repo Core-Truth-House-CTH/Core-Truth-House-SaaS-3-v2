@@ -336,8 +336,11 @@ export function SignUpPage() {
     return <div style={{ color: "white", padding: 20 }}>Clerk not configured</div>;
   }
 
+  const params = new URLSearchParams(window.location.search);
+  const redirectUrl = params.get("redirect_url") || "/command-center";
+
   if (isSignedIn) {
-    return <Navigate to="/command-center" replace />;
+    return <Navigate to={redirectUrl} replace />;
   }
 
   return (
@@ -346,7 +349,7 @@ export function SignUpPage() {
         routing="path"
         path="/sign-up"
         signInUrl="/sign-in"
-        forceRedirectUrl="/command-center"
+        forceRedirectUrl={redirectUrl}
       />
     </AuthShell>
   );
