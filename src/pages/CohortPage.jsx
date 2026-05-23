@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
 
-const doorwayAsset = "/cohort-assets/cth-cohort-hero-doorway.png";
+const doorwayAsset = "/cohort-assets/cth-cohort-hero-doorway-v2.png";
 
 const styles = {
   page: {
