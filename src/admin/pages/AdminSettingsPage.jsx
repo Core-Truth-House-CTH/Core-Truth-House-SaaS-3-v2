@@ -67,7 +67,7 @@ function SocialRoutingPanel() {
       const payload = res?.data && typeof res.data === "object" ? res.data : res;
       setRows(payload?.routing || []);
     } catch (err) {
-      setError(err?.response?.data?.detail || err?.message || "Could not load routing.");
+      setError(err?.payload?.detail || err?.message || "Could not load routing.");
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ function SocialRoutingPanel() {
       );
       setNotice(`Routing mode updated for ${workspaceId}`);
     } catch (err) {
-      setError(err?.response?.data?.detail || err?.message || "Update failed.");
+      setError(err?.payload?.detail || err?.message || "Update failed.");
     } finally {
       setSavingId("");
     }

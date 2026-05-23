@@ -346,7 +346,7 @@ function UsersPanel() {
       await load();
     } catch (err) {
       console.error("Failed to update user role:", err);
-      alert(err?.response?.data?.detail || "Failed to update user role");
+      alert(err?.payload?.detail || "Failed to update user role");
     } finally {
       setSaving(false);
     }
@@ -360,7 +360,7 @@ function UsersPanel() {
       await load();
     } catch (err) {
       console.error("Failed to remove user:", err);
-      alert(err?.response?.data?.detail || "Failed to remove user");
+      alert(err?.payload?.detail || err?.message || "Failed to remove user");
     } finally {
       setSaving(false);
     }

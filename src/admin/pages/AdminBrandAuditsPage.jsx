@@ -175,7 +175,7 @@ export default function AdminBrandAuditsPage() {
         setClicks(normalizeList(clicksRes.value, "clicks"));
       }
     } catch (err) {
-      setError(err?.response?.data?.detail || err?.message || "Unable to load diagnostic tracking data.");
+      setError(err?.payload?.detail || err?.message || "Unable to load diagnostic tracking data.");
     } finally {
       setLoading(false);
     }
@@ -257,7 +257,7 @@ export default function AdminBrandAuditsPage() {
         }
       }
     } catch (err) {
-      setError(err?.response?.data?.detail || err?.message || "Unable to create diagnostic tracking link.");
+      setError(err?.payload?.detail || err?.message || "Unable to create diagnostic tracking link.");
     } finally {
       setCreating(false);
     }

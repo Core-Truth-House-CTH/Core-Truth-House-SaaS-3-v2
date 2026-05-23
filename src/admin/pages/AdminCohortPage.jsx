@@ -44,7 +44,7 @@ export default function AdminCohortPage() {
       const { data } = await apiClient.get("/api/cohort/applications");
       setApplications(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err?.response?.data?.detail || err?.message || "Failed to load applications.");
+      setError(err?.payload?.detail || err?.message || "Failed to load applications.");
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ export default function AdminCohortPage() {
         await apiClient.post(`/api/cohort/applications/${applicationId}/reject`);
         await fetchApplications();
       } catch (err) {
-        window.alert(err?.response?.data?.detail || err?.message || "Failed to reject application.");
+        window.alert(err?.payload?.detail || err?.message || "Failed to reject application.");
       } finally {
         setRejecting(null);
       }
