@@ -1105,8 +1105,8 @@ export default function StorefrontPage() {
  max-width: 800px;
  font-family: Georgia, serif;
  color: var(--cth-on-dark);
- font-size: clamp(2rem, 3.1vw, 3.6rem);
- line-height: 1.02;
+ font-size: clamp(1.4rem, 2.2vw, 2.4rem);
+ line-height: 1.1;
  letter-spacing: -0.05em;
  font-weight: 500;
  }
