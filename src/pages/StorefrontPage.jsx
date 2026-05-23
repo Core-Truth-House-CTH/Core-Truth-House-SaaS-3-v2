@@ -1314,23 +1314,18 @@ export default function StorefrontPage() {
  }
  }
 
- @media (max-width: 1100px) {
+ @media (max-width: 1180px) {
  .cth-store-cta-grid {
- grid-template-columns: 1fr auto;
- gap: 32px;
+ grid-template-columns: 1fr;
+ gap: 28px;
+ text-align: center;
+ justify-items: center;
  }
  .cth-store-cta-grid > :first-child {
  display: none;
  }
- }
-
- @media (max-width: 900px) {
- .cth-store-cta-grid {
- grid-template-columns: 1fr;
- gap: 24px;
- }
- .cth-store-cta h2 {
- font-size: clamp(1.6rem, 4vw, 2.4rem);
+ .cth-store-cta p {
+ text-align: center;
  }
  }
 
