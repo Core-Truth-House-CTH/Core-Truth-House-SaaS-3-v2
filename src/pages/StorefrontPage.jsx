@@ -1314,6 +1314,26 @@ export default function StorefrontPage() {
  }
  }
 
+ @media (max-width: 1100px) {
+ .cth-store-cta-grid {
+ grid-template-columns: 1fr auto;
+ gap: 32px;
+ }
+ .cth-store-cta-grid > :first-child {
+ display: none;
+ }
+ }
+
+ @media (max-width: 900px) {
+ .cth-store-cta-grid {
+ grid-template-columns: 1fr;
+ gap: 24px;
+ }
+ .cth-store-cta h2 {
+ font-size: clamp(1.6rem, 4vw, 2.4rem);
+ }
+ }
+
  @media (max-width: 760px) {
  .cth-store-hero h1 {
  font-size: 3.8rem;
