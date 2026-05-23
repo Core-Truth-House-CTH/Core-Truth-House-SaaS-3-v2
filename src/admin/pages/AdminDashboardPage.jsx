@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../../lib/apiClient";
 import {
   LayoutDashboard,
   Users,
@@ -24,10 +24,6 @@ import {
   Building2,
   TrendingUp,
 } from "lucide-react";
-import { useUser } from "../../hooks/useAuth";
-
-const API = import.meta.env.VITE_BACKEND_URL;
-
 function AdminCard({ title, description, to, icon: Icon, tone = "rose" }) {
   const tones = {
     rose: "bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]",
@@ -117,26 +113,22 @@ function formatDollars(value) {
 }
 
 export default function AdminDashboardPage() {
-  const { user } = useUser();
-  const adminId = user?.id || "default";
-
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [overview, setOverview] = useState(null);
 
   const load = useCallback(async () => {
-    if (!API) return;
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/api/admin/overview?admin_id=${adminId}`);
-      setOverview(res.data || null);
+      const data = await apiClient.get("/api/admin/overview");
+      setOverview(data || null);
     } catch (err) {
       console.error("Failed to load admin dashboard overview:", err);
       setOverview(null);
     } finally {
       setLoading(false);
     }
-  }, [adminId]);
+  }, []);
 
   useEffect(() => {
     load();
