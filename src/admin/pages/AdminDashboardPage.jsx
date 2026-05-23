@@ -40,9 +40,9 @@ function AdminCard({ title, description, to, icon: Icon, tone = "rose" }) {
   return (
     <Link
       to={to}
-      className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-5 shadow-sm transition hover:border-[var(--cth-admin-muted)] hover:shadow-md"
+      className="rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-5 transition hover:border-[var(--cth-admin-muted)]"
     >
-      <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${tones[tone] || tones.rose}`}>
+      <div className={`flex h-11 w-11 items-center justify-center rounded ${tones[tone] || tones.rose}`}>
         <Icon size={20} />
       </div>
       <h3 className="mt-4 text-lg font-semibold text-[var(--cth-admin-ink)]">{title}</h3>
@@ -73,8 +73,8 @@ function StatCard({ icon: Icon, label, value, tone = "rose" }) {
   };
 
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-5 shadow-sm">
-      <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${tones[tone] || tones.rose}`}>
+    <div className="rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-5">
+      <div className={`flex h-11 w-11 items-center justify-center rounded ${tones[tone] || tones.rose}`}>
         <Icon size={20} />
       </div>
       <div className="mt-4 text-2xl font-semibold text-[var(--cth-admin-ink)]">{value}</div>
@@ -85,7 +85,7 @@ function StatCard({ icon: Icon, label, value, tone = "rose" }) {
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white shadow-sm overflow-hidden">
+    <div className="rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-admin-border)] px-5 py-4">
         <div>
           <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
@@ -103,7 +103,7 @@ function SmallButton({ onClick, children, disabled = false, icon: Icon = null })
     <button
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-2 text-xs text-[var(--cth-admin-ruby)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
+      className="inline-flex items-center gap-2 rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-2 text-xs text-[var(--cth-admin-ruby)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
     >
       {Icon ? <Icon size={13} /> : null}
       {children}
@@ -155,10 +155,10 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-6 shadow-sm">
+      <section className="rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]">
               <LayoutDashboard size={20} />
             </div>
             <div>

@@ -9,9 +9,9 @@ function NavItem({ item }) {
     <NavLink
       to={item.to}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+        `flex items-center gap-3 rounded px-4 py-3 text-sm font-medium transition ${
           isActive
-            ? "bg-[var(--cth-admin-accent)] text-white"
+            ? "bg-[rgba(224,78,53,0.10)] text-[var(--cth-admin-ink)] border-l-2 border-[var(--cth-admin-accent)]"
             : "text-[var(--cth-on-dark)] hover:bg-[var(--cth-sidebar-hover)]"
         }`
       }

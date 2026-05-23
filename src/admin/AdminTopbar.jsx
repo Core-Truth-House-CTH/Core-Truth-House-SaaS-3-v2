@@ -9,13 +9,13 @@ export default function AdminTopbar({ title = "Admin" }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <button className="h-11 w-11 rounded-full border border-[var(--cth-admin-border)] bg-white flex items-center justify-center text-[var(--cth-admin-ruby)]">
+        <button className="h-9 w-9 rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] flex items-center justify-center text-[var(--cth-admin-ink)]">
           <Bell size={18} />
         </button>
-        <button className="h-11 w-11 rounded-full border border-[var(--cth-admin-border)] bg-white flex items-center justify-center text-[var(--cth-admin-ruby)]">
+        <button className="h-9 w-9 rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] flex items-center justify-center text-[var(--cth-admin-ink)]">
           <Search size={18} />
         </button>
-        <button className="h-11 w-11 rounded-full border border-[var(--cth-admin-border)] bg-white flex items-center justify-center text-[var(--cth-admin-ruby)]">
+        <button className="h-9 w-9 rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] flex items-center justify-center text-[var(--cth-admin-ink)]">
           <UserCircle2 size={20} />
         </button>
       </div>
