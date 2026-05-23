@@ -89,7 +89,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("cth-theme");
-    const dark = savedTheme ? savedTheme === "dark" : true;
+    const dark = savedTheme ? savedTheme === "dark" : false;
     const mode = dark ? "dark" : "light";
     setIsDark(dark);
     applyThemeVarsFromPalette(dark ? COLORS.dark : COLORS.light, mode);
