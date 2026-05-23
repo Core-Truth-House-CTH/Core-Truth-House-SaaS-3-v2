@@ -23,6 +23,7 @@ const BrandDiagnosticPage = lazy(() => import("./pages/BrandDiagnosticPage"));
 const ScorecardPage = lazy(() => import("./pages/ScorecardPage"));
 const CohortPage = lazy(() => import("./pages/CohortPage"));
 const CohortApplyPage = lazy(() => import("./pages/CohortApplyPage"));
+const CohortWelcomePage = lazy(() => import("./pages/CohortWelcomePage"));
 
 function LoadingFallback() {
   return (
@@ -43,6 +44,7 @@ function PublicRoutes() {
         <Route path="/scorecard/" element={<ScorecardPage />} />
         <Route path="/cohort" element={<CohortPage />} />
         <Route path="/cohort/apply" element={<CohortApplyPage />} />
+        <Route path="/cohort/welcome" element={<CohortWelcomePage />} />
         <Route path="/tiers" element={<TiersPage />} />
         <Route path="/pricing" element={<TiersPage />} />
         <Route path="/methodology" element={<MethodologyPage />} />
