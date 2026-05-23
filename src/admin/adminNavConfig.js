@@ -6,6 +6,7 @@ import {
   Bell,
   ClipboardList,
     ClipboardCheck,
+  GraduationCap,
   FileStack,
   FileText,
   Handshake,
@@ -36,6 +37,7 @@ export const ADMIN_NAV_GROUPS = [
       { id: "help-desk", label: "Help Desk", to: "/admin/help-desk", icon: LifeBuoy, badge: "🚧" },
       { id: "notifications", label: "Notifications", to: "/admin/notifications", icon: Bell },
       { id: "onboarding", label: "Onboarding", to: "/admin/onboarding", icon: ClipboardList },
+      { id: "cohort", label: "Cohort", to: "/admin/cohort", icon: GraduationCap },
     ],
   },
   {

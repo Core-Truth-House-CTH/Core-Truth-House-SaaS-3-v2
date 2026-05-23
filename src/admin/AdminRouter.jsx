@@ -26,6 +26,7 @@ import AdminMetricsPage from "./pages/AdminMetricsPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
 import AdminStoreProductsPage from "./pages/AdminStoreProductsPage";
 import AdminStoreOrdersPage from "./pages/AdminStoreOrdersPage";
+import AdminCohortPage from "./pages/AdminCohortPage";
 
 export default function AdminRouter() {
   return (
@@ -42,6 +43,7 @@ export default function AdminRouter() {
           <Route path="help-desk" element={<AdminHelpDeskPage />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="onboarding" element={<AdminOnboardingPage />} />
+          <Route path="cohort" element={<AdminCohortPage />} />
 
           <Route path="pages" element={<AdminPagesPage />} />
           <Route path="blog" element={<AdminBlogPage />} />
