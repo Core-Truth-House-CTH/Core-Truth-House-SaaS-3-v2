@@ -4,7 +4,6 @@ import { useColors, useTheme } from "../context/ThemeContext";
 import { usePlan } from "../context/PlanContext";
 import { useUser, useClerk } from "../hooks/useAuth";
 import { useWorkspace } from "../context/WorkspaceContext";
-import { SIDEBAR_GROUPS, getRoutesByGroup } from "../config/routeConfig";
 import { SidebarTooltip } from "./ui/tooltip";
 import apiClient from "../lib/apiClient";
 import {
@@ -334,23 +333,118 @@ export function Sidebar() {
     : [];
 
   const routeGroups = useMemo(() => {
-    return SIDEBAR_GROUPS.map((group) => {
-      const baseItems = getRoutesByGroup(group.id).filter((item) => {
-        if (item.adminOnly && !isSuperAdminRole) return false;
-        if (item.superAdminOnly && !isSuperAdminRole) return false;
-        return true;
-      });
+    const role = String(userRole || "").toUpperCase();
+    const canSeeCohortManager =
+      role === "MANAGER" ||
+      role === "WORKSPACE_MANAGER" ||
+      isSuperAdmin === true;
 
-      const extraItems =
-        group.id === "platformAdmin" ? adminUtilityItems : [];
+    const structure = [
+      {
+        id: "dashboard",
+        label: "DASHBOARD",
+        items: [
+          { path: "/command-center", label: "Command Center", icon: LayoutDashboard },
+        ],
+      },
+      {
+        id: "foundation",
+        label: "FOUNDATION",
+        items: [
+          { path: "/brand-audit", label: "Brand Audit", icon: Search },
+          { path: "/brand-foundation", label: "Foundation", icon: BookOpen },
+          { path: "/brand-positioning", label: "Brand Positioning", icon: Target },
+          { path: "/messaging-structure", label: "Messaging Structure", icon: MessageCircle },
+          { path: "/audience", label: "Audience", icon: UsersRound },
+          { path: "/identity-studio", label: "Identity Studio", icon: Sparkles },
+          { path: "/strategic-os", label: "Strategic OS", icon: Zap },
+        ],
+      },
+      {
+        id: "structure",
+        label: "STRUCTURE",
+        items: [
+          { path: "/systems-builder", label: "Structure", icon: Workflow },
+          { path: "/customer-journey", label: "Customer Journey", icon: Layers },
+          { path: "/offer-builder", label: "Offers", icon: Package },
+          { path: "/campaign-builder", label: "Campaign Builder", icon: Megaphone },
+          { path: "/content-studio", label: "Content Studio", icon: PenTool },
+          { path: "/prompt-generator", label: "Prompt Generator", icon: Wand2 },
+        ],
+      },
+      {
+        id: "house",
+        label: "HOUSE",
+        items: [
+          { path: "/brand-studio", label: "Brand Studio", icon: Bot },
+          { path: "/media-studio", label: "Media Studio", icon: Image },
+          { path: "/crm", label: "CRM", icon: PhoneCall },
+          { path: "/blog-cms", label: "Blog", icon: FileText },
+          { path: "/prompt-hub", label: "Prompt Library", icon: Hash },
+        ],
+      },
+      {
+        id: "estate",
+        label: "ESTATE",
+        items: [
+          { path: "/calendar", label: "Calendar", icon: Calendar },
+          { path: "/social-media-manager", label: "Social Planner", icon: Share2 },
+          { path: "/community", label: "Cohort Community", icon: MessageCircle },
+          ...(canSeeCohortManager
+            ? [{ path: "/cohort-manager", label: "Cohort Manager", icon: Users }]
+            : []),
+        ],
+      },
+      {
+        id: "systems",
+        label: "SYSTEMS",
+        items: [
+          { path: "/automations", label: "Automations", icon: Workflow },
+          { path: "/tracking-links", label: "Tracking Links", icon: Share2 },
+          { path: "/integrations", label: "Integrations", icon: Globe },
+        ],
+      },
+      {
+        id: "workspace",
+        label: "WORKSPACE",
+        items: [
+          { path: "/documents", label: "Documents", icon: FolderOpen },
+          { path: "/media-assets", label: "Media Assets", icon: Image },
+          { path: "/saved-reports", label: "Saved Reports", icon: BarChart2 },
+          { path: "/workspace-controls", label: "Workspace Controls", icon: Settings },
+          { path: "/billing", label: "Plan & Billing", icon: CreditCard },
+          { path: "/members", label: "Members", icon: Users },
+          { path: "/settings", label: "Settings", icon: Settings },
+        ],
+      },
+      {
+        id: "support",
+        label: "SUPPORT",
+        items: [
+          { path: "/tutorials", label: "Tutorials", icon: PlayCircle },
+          { path: "/help-desk", label: "Help Desk", icon: HelpCircle },
+          { path: "/knowledge-base", label: "Knowledge Base", icon: BookOpen },
+          { path: "/release-notes", label: "Release Notes", icon: FileText },
+        ],
+      },
+      ...(isSuperAdmin === true
+        ? [
+            {
+              id: "admin",
+              label: "ADMIN",
+              items: [
+                { path: "/mail", label: "Mail", icon: Mail },
+                { path: "/platform-store", label: "Store", icon: Package },
+                { path: "/ai-keys", label: "AI API Keys", icon: Key },
+                { path: "/tutorials", label: "Video Tutorials", icon: Video },
+              ],
+            },
+          ]
+        : []),
+    ];
 
-      const items = [...baseItems, ...extraItems].filter(
-        (item) => !["/settings", "/billing"].includes(item.path)
-      );
-
-      return { ...group, items };
-    }).filter((group) => group.items.length > 0);
-  }, [isSuperAdminRole, adminUtilityItems]);
+    return structure.filter((group) => group.items.length > 0);
+  }, [userRole, isSuperAdmin]);
 
   return (
     <>
@@ -450,7 +544,7 @@ export function Sidebar() {
                     className="w-full flex items-center justify-between rounded-xl px-2.5 py-2 mb-1 group transition-colors hover:bg-[rgba(248,244,242,0.04)]"
                     data-testid={`nav-group-${group.id}`}
                   >
-                    <span className="text-[10px] font-bold uppercase tracking-widest transition-colors" style={{ color: "var(--cth-admin-tuscany)" }}>
+                    <span className="text-xs font-medium uppercase tracking-widest transition-colors" style={{ color: "var(--cth-command-muted)" }}>
                       {group.label}
                     </span>
                     {isGroupCollapsed ? (
@@ -465,7 +559,7 @@ export function Sidebar() {
                   <div className="space-y-1">
                     {group.items.map((item) => {
                       const active = isActive(item.path);
-                      const Icon = ICON_MAP[item.path] || Layers;
+                      const Icon = item.icon || ICON_MAP[item.path] || Layers;
                       const isLocked = !checkPlanAccess(item.path);
                       const isCollapsedView = sidebarCollapsed && !mobileOpen && !hoverExpanded;
 
@@ -522,21 +616,24 @@ export function Sidebar() {
                             <NavLink
                               to={item.path}
                               data-testid={`nav-${item.path.replace("/", "")}`}
-                              className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-xs font-medium transition-all group relative w-full ${
+                              className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-md text-xs font-medium transition-all group relative w-full ${
                                 active
-                                  ? "cth-sidebar-active border"
-                                  : "text-[rgba(248,244,242,0.76)] hover:text-white hover:bg-[rgba(248,244,242,0.08)] border border-transparent"
+                                  ? ""
+                                  : "text-[rgba(248,244,242,0.76)] hover:bg-[var(--cth-command-panel)] hover:text-[var(--cth-command-ink)]"
                               }`}
+                              style={active ? {
+                                background: "var(--cth-command-panel)",
+                                color: "var(--cth-command-ink)",
+                                borderLeft: "3px solid var(--cth-command-crimson)",
+                                paddingLeft: "calc(0.875rem - 3px)",
+                              } : undefined}
                             >
-                              {active && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full" style={{ background: "var(--cth-app-accent)" }} />
-                              )}
                               <Icon
                                 size={16}
                                 className={
                                   active
-                                    ? "text-white"
-                                    : "text-[rgba(248,244,242,0.42)] group-hover:text-white"
+                                    ? ""
+                                    : "text-[rgba(248,244,242,0.6)] group-hover:text-[var(--cth-command-ink)]"
                                 }
                               />
                               <span className="flex-1 truncate">{item.label}</span>

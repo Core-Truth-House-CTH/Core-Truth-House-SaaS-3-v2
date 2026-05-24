@@ -11,7 +11,6 @@ import {
  Compass,
  FileText,
  Grid2X2,
- Image,
  Layers3,
  Loader2,
  Megaphone,
@@ -95,78 +94,6 @@ const COMMAND_CENTER_CSS = `
  width: 100%;
 }
 
-.cth-command-hero {
- position: relative;
- overflow: hidden;
- min-height: clamp(270px, 25vw, 330px);
- background:
- linear-gradient(90deg, rgba(51,3,60,0.98) 0%, rgba(51,3,60,0.88) 42%, rgba(13,0,16,0.40) 66%, rgba(13,0,16,0.05) 100%),
- url('/command-center-assets/cth-command-center-hero-door-entrance.png') right center / auto 118% no-repeat,
- linear-gradient(135deg, #33033c 0%, #0d0010 100%);
- border-bottom: 1px solid rgba(216,197,195,0.65);
- isolation: isolate;
-}
-
-.cth-command-hero::before {
- content: "";
- position: absolute;
- inset: 0;
- background:
- linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
- linear-gradient(180deg, rgba(255,255,255,0.06) 1px, transparent 1px);
- background-size: 44px 44px;
- opacity: 0.28;
- pointer-events: none;
-}
-
-.cth-command-hero-inner {
- position: relative;
- z-index: 1;
- width: min(100%, 1480px);
- min-height: clamp(270px, 25vw, 330px);
- display: flex;
- align-items: center;
- padding: clamp(34px, 4.5vw, 64px) clamp(28px, 5vw, 64px);
-}
-
-.cth-command-hero-copy {
- max-width: 760px;
-}
-
-.cth-command-pill {
- display: inline-flex;
- align-items: center;
- gap: 9px;
- padding: 9px 15px;
- border-radius: 999px;
- background: rgba(255,255,255,0.10);
- color: var(--cc-gold);
- border: 1px solid rgba(255,255,255,0.12);
- font-size: 11px;
- font-weight: 900;
- letter-spacing: 0.26em;
- text-transform: uppercase;
-}
-
-.cth-command-hero h2 {
- margin: 24px 0 0;
- max-width: 820px;
- color: #fff;
- font-family: "Playfair Display", Georgia, serif;
- font-size: clamp(42px, 5.4vw, 72px);
- line-height: 0.98;
- letter-spacing: -0.045em;
- font-weight: 650;
-}
-
-.cth-command-hero p {
- margin: 24px 0 0;
- max-width: 650px;
- color: rgba(255,255,255,0.82);
- font-size: clamp(15px, 1.25vw, 18px);
- line-height: 1.75;
-}
-
 .cth-command-main {
  width: 100%;
  padding: clamp(24px, 3vw, 36px) clamp(24px, 4vw, 44px) 48px;
@@ -186,7 +113,7 @@ const COMMAND_CENTER_CSS = `
  gap: 0;
  overflow: hidden;
  border: 1px solid var(--cc-border);
- border-radius: 18px;
+ border-radius: 0;
  background: rgba(255,250,247,0.82);
  box-shadow: 0 18px 50px rgba(51,3,60,0.06);
 }
@@ -311,7 +238,7 @@ const COMMAND_CENTER_CSS = `
 
 .cth-command-best-move {
  min-height: 212px;
- border-radius: 4px;
+ border-radius: 0;
  background:
  radial-gradient(circle at top right, rgba(196,169,91,0.20), transparent 34%),
  linear-gradient(135deg, #33033c 0%, #19051f 68%, #0d0010 100%);
@@ -352,7 +279,7 @@ const COMMAND_CENTER_CSS = `
  width: 100%;
  min-height: 46px;
  border: 0;
- border-radius: 8px;
+ border-radius: 0;
  background: linear-gradient(135deg, #c4a95b, #b88d35);
  color: #fffaf7;
  font-size: 12px;
@@ -372,7 +299,7 @@ const COMMAND_CENTER_CSS = `
 .cth-command-panel {
  background: rgba(255,250,247,0.82);
  border: 1px solid var(--cc-border);
- border-radius: 4px;
+ border-radius: 0;
  box-shadow: 0 18px 50px rgba(51,3,60,0.055);
  padding: 28px 26px;
 }
@@ -430,12 +357,12 @@ const COMMAND_CENTER_CSS = `
 .cth-command-rhythm-row,
 .cth-command-memory-row {
  display: grid;
- grid-template-columns: 56px 1fr;
+ grid-template-columns: 56px minmax(0, 1fr);
  gap: 14px;
  align-items: center;
  min-height: 64px;
  border: 1px solid rgba(216,197,195,0.76);
- border-radius: 8px;
+ border-radius: 0;
  padding: 10px 12px;
  background: rgba(255,250,247,0.56);
 }
@@ -443,7 +370,7 @@ const COMMAND_CENTER_CSS = `
 .cth-command-letter {
  width: 48px;
  height: 48px;
- border-radius: 5px;
+ border-radius: 0;
  display: grid;
  place-items: center;
  color: #fff;
@@ -464,16 +391,17 @@ const COMMAND_CENTER_CSS = `
  color: var(--cc-ink);
  font-size: 14px;
  line-height: 1.35;
+ overflow-wrap: anywhere;
 }
 
 .cth-command-memory-row {
- grid-template-columns: 54px 1fr;
+ grid-template-columns: 54px minmax(0, 1fr);
 }
 
 .cth-command-memory-icon {
  width: 48px;
  height: 48px;
- border-radius: 6px;
+ border-radius: 0;
  display: grid;
  place-items: center;
  color: #9f1731;
@@ -527,7 +455,7 @@ const COMMAND_CENTER_CSS = `
  background: rgba(175,0,42,0.08);
  color: #8a0924;
  padding: 14px 16px;
- border-radius: 12px;
+ border-radius: 0;
  display: flex;
  gap: 8px;
  align-items: center;
@@ -554,13 +482,6 @@ const COMMAND_CENTER_CSS = `
  align-items: flex-start;
  flex-direction: column;
  padding: 22px;
- }
-
- .cth-command-hero {
- background:
- linear-gradient(90deg, rgba(51,3,60,0.97), rgba(13,0,16,0.72)),
- url('/command-center-assets/cth-command-center-hero-door-entrance.png') right bottom / auto 92% no-repeat,
- linear-gradient(135deg, #33033c 0%, #0d0010 100%);
  }
 
  .cth-command-main {
@@ -821,49 +742,6 @@ const COMMAND_CENTER_EXTENSION_CSS = `
  text-transform: uppercase;
 }
 
-.cth-command-founder-note {
- margin-top: 24px;
- display: grid;
- grid-template-columns: 76px 1fr auto;
- align-items: center;
- gap: 20px;
- background: rgba(255,250,247,.9);
- border: 1px solid var(--cc-border);
- box-shadow: 0 18px 50px rgba(51,3,60,.055);
- padding: 24px 28px;
-}
-
-.cth-command-founder-seal {
- width: 68px;
- height: 68px;
- border-radius: 999px;
- display: grid;
- place-items: center;
- background: linear-gradient(135deg, #c4a95b, #b88d35);
- color: #fff;
-}
-
-.cth-command-founder-note h3 {
- margin: 0;
- color: var(--cc-ink);
- font-family: "Playfair Display", Georgia, serif;
- font-size: 24px;
-}
-
-.cth-command-founder-note p {
- margin: 8px 0 0;
- color: #4d3852;
- line-height: 1.55;
-}
-
-.cth-command-founder-quote {
- color: var(--cc-gold);
- font-family: "Playfair Display", Georgia, serif;
- font-size: 70px;
- line-height: 1;
- opacity: .78;
-}
-
 @media (max-width: 1280px) {
  .cth-command-kpi-strip,
  .cth-command-extra-grid,
@@ -881,8 +759,7 @@ const COMMAND_CENTER_EXTENSION_CSS = `
  .cth-command-kpi-strip,
  .cth-command-extra-grid,
  .cth-command-wide-grid,
- .cth-command-insight-grid,
- .cth-command-founder-note {
+ .cth-command-insight-grid {
  grid-template-columns: 1fr;
  }
 
@@ -894,20 +771,8 @@ const COMMAND_CENTER_EXTENSION_CSS = `
  .cth-command-roadmap-stage {
  grid-template-columns: 1fr;
  }
-
- .cth-command-founder-quote {
- display: none;
- }
 }
 `;
-
-const MILESTONE_LABELS = {
- audit_complete: "Complete Brand Diagnostic",
- brand_memory_complete: "Define Core Messaging Pillars",
- foundation_complete: "Audit Website Copy & SEO",
- strategic_os_started: "Build Content Strategy Map",
- first_campaign_created: "Review Offer Architecture",
-};
 
 const METRIC_FALLBACKS = [
  {
@@ -1053,28 +918,6 @@ function MetricTile({ metric }) {
 }
 
 
-function cthBestMoveClamp(value, fallback = null) {
- const numeric = Number(value);
- if (!Number.isFinite(numeric)) return fallback;
- return Math.max(0, Math.min(100, Math.round(numeric)));
-}
-
-function cthBestMoveFirstScore(scoreBag, keys) {
- for (const key of keys) {
- const value = scoreBag?.[key];
- if (value !== undefined && value !== null && value !== "") {
- return cthBestMoveClamp(value, null);
- }
- }
- return null;
-}
-
-function cthBestMoveAverage(values) {
- const valid = values.filter((value) => Number.isFinite(Number(value)));
- if (!valid.length) return null;
- return cthBestMoveClamp(valid.reduce((sum, value) => sum + Number(value), 0) / valid.length, null);
-}
-
 function cthBestMoveDayIndex(length) {
  if (!length) return 0;
  const now = new Date();
@@ -1085,7 +928,7 @@ function cthBestMoveDayIndex(length) {
 
 function buildDailyBestMove({ latestAudit, progress }) {
  const scoreBag = latestAudit?.module_scores || latestAudit?.scores || {};
- const overall = cthBestMoveClamp(
+ const overall = clampCommandScore(
  latestAudit?.overall_score ??
  latestAudit?.overallScore ??
  latestAudit?.score ??
@@ -1093,19 +936,19 @@ function buildDailyBestMove({ latestAudit, progress }) {
  null
  );
 
- const clarity = cthBestMoveAverage([
- cthBestMoveFirstScore(scoreBag, ["brand_foundation", "foundation"]),
- cthBestMoveFirstScore(scoreBag, ["visual_identity", "identity"]),
+ const clarity = averageAuditScores([
+ firstAuditScore(scoreBag, ["brand_foundation", "foundation"]),
+ firstAuditScore(scoreBag, ["visual_identity", "identity"]),
  ]);
 
- const structure = cthBestMoveAverage([
- cthBestMoveFirstScore(scoreBag, ["offer_suite", "offers"]),
- cthBestMoveFirstScore(scoreBag, ["systems_and_sops", "systems"]),
+ const structure = averageAuditScores([
+ firstAuditScore(scoreBag, ["offer_suite", "offers"]),
+ firstAuditScore(scoreBag, ["systems_and_sops", "systems"]),
  ]);
 
- const execution = cthBestMoveAverage([
- cthBestMoveFirstScore(scoreBag, ["content_library", "content"]),
- cthBestMoveFirstScore(scoreBag, ["launch_readiness", "launch"]),
+ const execution = averageAuditScores([
+ firstAuditScore(scoreBag, ["content_library", "content"]),
+ firstAuditScore(scoreBag, ["launch_readiness", "launch"]),
  ]);
 
  const candidates = [];
@@ -1147,7 +990,7 @@ function buildDailyBestMove({ latestAudit, progress }) {
  }
 
  if (Number.isFinite(execution) && execution < 75) {
- const launchScore = cthBestMoveFirstScore(scoreBag, ["launch_readiness", "launch"]);
+ const launchScore = firstAuditScore(scoreBag, ["launch_readiness", "launch"]);
  candidates.push({
  key: "tighten-execution",
  priority: 100 - execution,
@@ -1938,10 +1781,10 @@ function WorkspaceSnapshotPanel({ navigate }) {
  ["Command Center", "/command-center", ShieldCheck, true],
  ["Foundation", "/brand-foundation", BookOpen],
  ["Structure", "/systems-builder", Layers3],
- ["Execution", "/content-studio", PenTool],
- ["Insights", "/brand-audit", BarChart3],
- ["Library", "/workspace-library", FileText],
- ["Help", "/tutorials", Compass],
+ ["House", "/brand-studio", PenTool],
+ ["Estate", "/calendar", CalendarDays],
+ ["Systems", "/automations", BarChart3],
+ ["Workspace", "/documents", FileText],
  ];
 
  return (
@@ -1995,24 +1838,7 @@ function UpcomingMilestonesPanel({ navigate }) {
  );
 }
 
-function FounderNotesPanel({ bestMove }) {
- return (
- <section className="cth-command-founder-note">
- <div className="cth-command-founder-seal"><PenTool size={32} /></div>
- <div>
- <h3>Founder Notes</h3>
- <p>
- Clarity compounds. Today’s strongest move is <strong>{bestMove?.title || "one focused brand decision"}</strong>.
- Stay focused on one strategic win at a time.
- </p>
- </div>
- <div className="cth-command-founder-quote">“</div>
- </section>
- );
-}
-
 function BrandOSPipeline({ progress, workspaceStats, latestAudit, navigate }) {
- void latestAudit;
  const safeProgress = progress || {};
  const safeStats = workspaceStats || {};
 
@@ -2020,7 +1846,7 @@ function BrandOSPipeline({ progress, workspaceStats, latestAudit, navigate }) {
    {
      id: "brand_core",
      number: 1,
-     label: "Brand Core",
+     label: "Foundation",
      icon: ShieldCheck,
      requiredPlan: "foundation",
      modules: [
@@ -2063,7 +1889,7 @@ function BrandOSPipeline({ progress, workspaceStats, latestAudit, navigate }) {
    {
      id: "strategy",
      number: 2,
-     label: "Strategy",
+     label: "Structure",
      icon: Compass,
      requiredPlan: "foundation",
      modules: [
@@ -2085,7 +1911,7 @@ function BrandOSPipeline({ progress, workspaceStats, latestAudit, navigate }) {
    {
      id: "systems",
      number: 3,
-     label: "Systems",
+     label: "House",
      icon: Layers3,
      requiredPlan: "structure",
      modules: [
@@ -2114,7 +1940,7 @@ function BrandOSPipeline({ progress, workspaceStats, latestAudit, navigate }) {
    {
      id: "content",
      number: 4,
-     label: "Content",
+     label: "Estate",
      icon: PenTool,
      requiredPlan: "structure",
      modules: [
@@ -2142,7 +1968,7 @@ function BrandOSPipeline({ progress, workspaceStats, latestAudit, navigate }) {
    {
      id: "launch",
      number: 5,
-     label: "Launch",
+     label: "Systems",
      icon: Megaphone,
      requiredPlan: "house",
      modules: [
@@ -2214,7 +2040,7 @@ function BrandOSPipeline({ progress, workspaceStats, latestAudit, navigate }) {
  const cardStyle = {
    background: "var(--cc-panel)",
    border: "1px solid var(--cc-border)",
-   borderRadius: 4,
+   borderRadius: 0,
    padding: 16,
    display: "flex",
    flexDirection: "column",
@@ -2347,7 +2173,7 @@ function BrandOSPipeline({ progress, workspaceStats, latestAudit, navigate }) {
                    background: "var(--cc-purple)",
                    color: "var(--cc-gold)",
                    border: "none",
-                   borderRadius: 3,
+                   borderRadius: 0,
                    padding: "6px 10px",
                    cursor: "pointer",
                    fontWeight: 600,
@@ -2509,39 +2335,7 @@ export default function CommandCenter() {
  </div>
  ) : (
  <>
- <section className="cth-command-hero">
- <div className="cth-command-hero-inner">
- <div className="cth-command-hero-copy">
- <div className="cth-command-pill">
- <ShieldCheck size={14} />
- Strategy. Clarity. Execution. Growth.
- </div>
- <h2>Welcome to Your Command Center</h2>
- <p>
- Everything you need to lead your brand with truth, build with intention, and scale with structure.
- </p>
- </div>
- </div>
- </section>
-
  <section className="cth-command-main">
- <KpiStrip
- overallScore={overallScore}
- workspaceStats={workspaceStats}
- progress={progress}
- healthMetrics={healthMetrics}
- />
- <div style={{ padding: "0 clamp(16px, 4vw, 48px)", marginBottom: 22 }}>
- <BrandOSPipeline
- progress={progress}
- workspaceStats={workspaceStats}
- latestAudit={latestAudit}
- navigate={navigate}
- />
- </div>
- <div style={{ padding: "0 clamp(16px, 4vw, 48px)", marginBottom: 22 }}>
- <BrandMemory navigate={navigate} workspaceStats={workspaceStats} />
- </div>
  <div className="cth-command-grid">
  <div className="cth-command-score-row">
  <ScorePanel score={overallScore} rating={rating} />
@@ -2549,7 +2343,22 @@ export default function CommandCenter() {
  <MetricTile key={metric.title} metric={metric} />
  ))}
  </div>
+ </div>
 
+ <KpiStrip
+ overallScore={overallScore}
+ workspaceStats={workspaceStats}
+ progress={progress}
+ healthMetrics={healthMetrics}
+ />
+
+ <div style={{ padding: "0 clamp(16px, 4vw, 48px)", marginBottom: 22 }}>
+ <BrandOSPipeline
+ progress={progress}
+ workspaceStats={workspaceStats}
+ latestAudit={latestAudit}
+ navigate={navigate}
+ />
  </div>
 
  <div className="cth-command-extra-grid">
@@ -2567,6 +2376,10 @@ export default function CommandCenter() {
  navigate={navigate}
  />
  <UpcomingMilestonesPanel navigate={navigate} />
+ </div>
+
+ <div style={{ padding: "0 clamp(16px, 4vw, 48px)", marginBottom: 22 }}>
+ <BrandMemory navigate={navigate} workspaceStats={workspaceStats} />
  </div>
 
  <div className="cth-command-extra-grid" style={{ gridTemplateColumns: "minmax(0, 0.9fr) minmax(0, 1.1fr)" }}>
