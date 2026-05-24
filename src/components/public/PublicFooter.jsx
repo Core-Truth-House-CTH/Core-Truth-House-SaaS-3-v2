@@ -43,10 +43,10 @@ const footerGroups = [
 ];
 
 const socialLinks = [
- { label: "Instagram", icon: "/brand-assets/social-icons/instagram.png", href: "#" },
- { label: "Facebook", icon: "/brand-assets/social-icons/facebook.png", href: "#" },
- { label: "TikTok", icon: "/brand-assets/social-icons/tiktok.png", href: "#" },
- { label: "Email", icon: "/brand-assets/social-icons/email.png", href: "mailto:hello@coretruthhouse.com" },
+ { label: "Instagram", icon: "/brand-assets/social-icons/instagram.png", href: "https://www.instagram.com/coretruthhouse/", external: true },
+ { label: "Facebook", icon: "/brand-assets/social-icons/facebook.png", href: "https://www.facebook.com/profile.php?id=61589383311165", external: true },
+ { label: "TikTok", icon: "/brand-assets/social-icons/tiktok.png", href: "#", external: true },
+ { label: "Email", icon: "/brand-assets/social-icons/email.png", href: "mailto:hello@coretruthhouse.com", external: false },
 ];
 
 function FooterLink({ link }) {
@@ -91,7 +91,12 @@ function SocialHandles() {
  <span>Social handles</span>
  <div className="cth-public-footer-socials" aria-label="Social links">
  {socialLinks.map((social) => (
- <a key={social.label} href={social.href} aria-label={social.label}>
+ <a
+ key={social.label}
+ href={social.href}
+ aria-label={social.label}
+ {...(social.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+ >
  <img src={social.icon} alt="" aria-hidden="true" />
  </a>
  ))}
