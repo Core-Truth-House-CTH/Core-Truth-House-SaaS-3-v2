@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, RefreshCw, RotateCcw } from 'lucide-react';
 
 import { DashboardLayout, TopBar } from '../components/Layout';
-import DashboardHero from '../components/shared/DashboardHero';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../lib/apiClient';
@@ -242,7 +241,7 @@ const SECTION_HEADING_STYLE = {
 const CONTENT_CARD_STYLE = {
   background: 'var(--cth-command-panel)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 0,
   padding: 28,
 };
 
@@ -275,7 +274,7 @@ function MetricTile({ label, value, accent, path, onNavigate }) {
       style={{
         background: 'var(--cth-command-panel)',
         border: `1px solid ${hovered ? 'var(--cth-command-crimson)' : 'var(--cth-command-border)'}`,
-        borderRadius: 14,
+        borderRadius: 0,
         padding: '20px 22px',
         display: 'flex',
         flexDirection: 'column',
@@ -523,6 +522,17 @@ export default function BrandAudit() {
 
   const nextMoves = useMemo(() => nextBestMovesFor(audit), [audit]);
 
+  const healthMetrics = useMemo(() => {
+    const scores = audit.moduleScores || {};
+    const avg = (a, b) => Math.round(((Number(a) || 0) + (Number(b) || 0)) / 2);
+    return [
+      { title: 'Clarity', score: avg(scores.brand_foundation, scores.visual_identity) },
+      { title: 'Structure', score: avg(scores.offer_suite, scores.systems_and_sops) },
+      { title: 'Execution', score: avg(scores.content_library, scores.launch_readiness) },
+      { title: 'Optimization', score: clampScore(audit.overallScore) },
+    ];
+  }, [audit]);
+
   const handleAuditComplete = async (result) => {
     const newAuditId = result?.audit_id || result?.auditId || '';
 
@@ -558,10 +568,9 @@ export default function BrandAudit() {
 
   return (
     <DashboardLayout>
-      <DashboardHero
-        imagePath="/dashboard-assets/cth-brand-audit-hero-door.png"
-      />
       <TopBar
+        title="Brand Audit"
+        subtitle="Your live brand health score"
         action={
           showIntake ? null : (
             <div className="flex items-center gap-3">
@@ -603,7 +612,7 @@ export default function BrandAudit() {
       >
         {error ? (
           <div
-            className="mb-5 rounded-2xl px-4 py-3 text-sm"
+            className="mb-5 px-4 py-3 text-sm"
             style={{
               background: 'color-mix(in srgb, var(--cth-danger) 10%, var(--cth-command-panel))',
               border: '1px solid color-mix(in srgb, var(--cth-danger) 25%, var(--cth-command-border))',
@@ -625,12 +634,112 @@ export default function BrandAudit() {
             </div>
           </div>
         ) : (
-          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6">
-            <ScorePanel
-              score={audit.overallScore}
-              rating={audit.rating}
-              message={scoreMessage(audit.overallScore)}
-            />
+          <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-8">
+            <div
+              className="grid grid-cols-1 md:grid-cols-[340px_minmax(0,1fr)]"
+              style={{
+                gap: 32,
+                background: 'var(--cth-command-panel)',
+                border: '1px solid var(--cth-command-border)',
+                padding: 28,
+                borderRadius: 0,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={SECTION_LABEL_STYLE}>Overall Score</p>
+                  <p
+                    style={{
+                      fontFamily: SERIF,
+                      fontSize: 64,
+                      fontWeight: 600,
+                      color: 'var(--cth-command-ink)',
+                      margin: '8px 0 0',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {audit.overallScore}
+                    <span
+                      style={{
+                        fontFamily: SANS,
+                        fontSize: 18,
+                        fontWeight: 400,
+                        color: 'var(--cth-command-muted)',
+                        marginLeft: 6,
+                      }}
+                    >
+                      /100
+                    </span>
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: SANS,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: 'var(--cth-command-ink)',
+                      margin: '12px 0 0',
+                    }}
+                  >
+                    {audit.rating}
+                  </p>
+                </div>
+                <div
+                  aria-hidden="true"
+                  style={{
+                    width: 100,
+                    height: 100,
+                    borderRadius: '50%',
+                    background: `conic-gradient(var(--cth-command-crimson) ${Math.max(0, Math.min(360, audit.overallScore * 3.6))}deg, var(--cth-command-blush) ${Math.max(0, Math.min(360, audit.overallScore * 3.6))}deg)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 8,
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '50%',
+                      background: 'var(--cth-command-panel)',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 18 }}>
+                {healthMetrics.map((metric) => (
+                  <div key={metric.title}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                      <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: 'var(--cth-command-ink)' }}>
+                        {metric.title}
+                      </span>
+                      <span style={{ fontFamily: SANS, fontSize: 13, color: 'var(--cth-command-muted)' }}>
+                        {metric.score}/100
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        height: 6,
+                        background: 'var(--cth-command-blush)',
+                        borderRadius: 999,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${metric.score}%`,
+                          background: 'var(--cth-command-crimson)',
+                          borderRadius: 999,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {(() => {
               const prev = audit.previousScore;
@@ -675,19 +784,6 @@ export default function BrandAudit() {
             })()}
 
             <div style={CONTENT_CARD_STYLE}>
-              <p style={SECTION_LABEL_STYLE}>AI Analysis</p>
-              <h2 style={SECTION_HEADING_STYLE}>Brand Audit Results</h2>
-              <div style={{ marginTop: 20 }}>
-                <AuditAnalysisText
-                  text={
-                    audit.aiAnalysisText ||
-                    'No analysis has been generated yet. Retake the audit to create a new answer-backed report.'
-                  }
-                />
-              </div>
-            </div>
-
-            <div style={CONTENT_CARD_STYLE}>
               <p style={SECTION_LABEL_STYLE}>Audit Summary</p>
               <h2 style={SECTION_HEADING_STYLE}>Module Scores</h2>
               <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -701,6 +797,19 @@ export default function BrandAudit() {
                     onNavigate={navigate}
                   />
                 ))}
+              </div>
+            </div>
+
+            <div style={CONTENT_CARD_STYLE}>
+              <p style={SECTION_LABEL_STYLE}>AI Analysis</p>
+              <h2 style={SECTION_HEADING_STYLE}>Brand Audit Results</h2>
+              <div style={{ marginTop: 20 }}>
+                <AuditAnalysisText
+                  text={
+                    audit.aiAnalysisText ||
+                    'No analysis has been generated yet. Retake the audit to create a new answer-backed report.'
+                  }
+                />
               </div>
             </div>
 
@@ -736,7 +845,7 @@ export default function BrandAudit() {
             style={{
               background: 'var(--cth-command-panel)',
               border: '1px solid var(--cth-command-border)',
-              borderRadius: 4,
+              borderRadius: 0,
               width: '100%',
               maxWidth: 480,
               padding: 28,
@@ -774,7 +883,7 @@ export default function BrandAudit() {
                   background: 'transparent',
                   color: 'var(--cth-command-ink)',
                   border: '1px solid var(--cth-command-border)',
-                  borderRadius: 4,
+                  borderRadius: 0,
                   padding: '10px 18px',
                   fontFamily: SANS,
                   fontSize: 13,
@@ -795,7 +904,7 @@ export default function BrandAudit() {
                   background: 'var(--cth-command-crimson)',
                   color: 'var(--cth-command-ivory)',
                   border: 'none',
-                  borderRadius: 4,
+                  borderRadius: 0,
                   padding: '10px 18px',
                   fontFamily: SANS,
                   fontSize: 13,
