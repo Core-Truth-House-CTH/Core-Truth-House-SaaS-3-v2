@@ -355,6 +355,7 @@ function StatusIcon({ status }) {
   );
 }
 
+// TODO: StatusPill uses Tailwind bg-emerald-500/10 / bg-amber-500/10 — migrate to --cth-command-* tokens in palette cleanup pass
 function StatusPill({ status }) {
   if (status === "complete") {
     return (
@@ -640,7 +641,7 @@ export default function BrandFoundation() {
       >
         {loadError ? (
           <div
-            className="mx-auto mt-5 max-w-7xl px-4 md:px-8"
+            className="mx-auto mt-5 max-w-[1200px] px-4 md:px-8"
             style={{ fontFamily: SANS }}
           >
             <div
