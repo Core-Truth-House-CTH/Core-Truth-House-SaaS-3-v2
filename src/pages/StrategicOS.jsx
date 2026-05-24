@@ -11,7 +11,6 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { useAuth } from "@clerk/react";
 
@@ -38,7 +37,7 @@ const PAGE_STYLE = {
 const CARD_STYLE = {
   background: "var(--cth-command-panel)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
 };
 
 const SECTION_LABEL_STYLE = {
@@ -102,7 +101,7 @@ const INPUT_STYLE = {
   background: "var(--cth-command-panel)",
   color: "var(--cth-command-ink)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "8px 12px",
   fontFamily: SANS,
   fontSize: 13,
@@ -121,7 +120,7 @@ const PRIMARY_CTA_STYLE = {
   background: "var(--cth-command-purple)",
   color: "var(--cth-command-gold)",
   border: "none",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "10px 18px",
   fontFamily: SANS,
   fontSize: 13,
@@ -138,7 +137,7 @@ const SECONDARY_BUTTON_STYLE = {
   background: "transparent",
   color: "var(--cth-command-ink)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "8px 14px",
   fontFamily: SANS,
   fontSize: 12,
@@ -153,7 +152,7 @@ const GENERATE_PAGE_BUTTON_STYLE = {
   background: "var(--cth-command-crimson)",
   color: "var(--cth-command-ivory)",
   border: "none",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "12px 22px",
   fontFamily: SANS,
   fontSize: 13,
@@ -169,7 +168,7 @@ const GENERATE_MODAL_BUTTON_STYLE = {
   background: "var(--cth-command-crimson)",
   color: "var(--cth-command-gold)",
   border: "none",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "10px 18px",
   fontFamily: SANS,
   fontSize: 13,
@@ -185,7 +184,7 @@ const DESTRUCTIVE_BUTTON_STYLE = {
   background: "var(--cth-command-crimson)",
   color: "var(--cth-command-ivory)",
   border: "none",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "10px 18px",
   fontFamily: SANS,
   fontSize: 13,
@@ -201,7 +200,7 @@ const MODAL_OUTLINE_BUTTON_STYLE = {
   background: "transparent",
   color: "var(--cth-command-ink)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "10px 18px",
   fontFamily: SANS,
   fontSize: 13,
@@ -416,10 +415,6 @@ function buildAnswersHash(stepState) {
   return stableStringify(payload);
 }
 
-function renderMarkdown(markdown = "") {
-  return DOMPurify.sanitize(marked.parse(String(markdown || "")));
-}
-
 function StepField({ field, value, onChange }) {
   if (field.type === "textarea") {
     return (
@@ -471,7 +466,7 @@ function StepField({ field, value, onChange }) {
                   ? "color-mix(in srgb, var(--cth-command-crimson) 8%, var(--cth-command-panel))"
                   : "var(--cth-command-panel)",
                 border: `1px solid ${checked ? "var(--cth-command-crimson)" : "var(--cth-command-border)"}`,
-                borderRadius: 4,
+                borderRadius: 0,
                 fontFamily: SANS,
                 fontSize: 12,
               }}
@@ -543,7 +538,7 @@ function StepCard({ id, step, values, expanded, saving, onToggle, onChange, lock
           <div
             className="flex h-9 w-9 shrink-0 items-center justify-center"
             style={{
-              borderRadius: 4,
+              borderRadius: 0,
               background: complete
                 ? "color-mix(in srgb, var(--cth-status-success-bright) 14%, transparent)"
                 : "color-mix(in srgb, var(--cth-command-crimson) 12%, transparent)",
@@ -584,7 +579,7 @@ function StepCard({ id, step, values, expanded, saving, onToggle, onChange, lock
             <div
               className="flex h-12 w-12 items-center justify-center"
               style={{
-                borderRadius: 4,
+                borderRadius: 0,
                 background: "color-mix(in srgb, var(--cth-command-crimson) 12%, transparent)",
                 color: "var(--cth-command-crimson)",
               }}
@@ -646,7 +641,7 @@ function StepCard({ id, step, values, expanded, saving, onToggle, onChange, lock
               className="inline-flex items-center gap-2"
               style={{
                 border: "1px solid var(--cth-command-border)",
-                borderRadius: 4,
+                borderRadius: 0,
                 padding: "6px 12px",
                 fontFamily: SANS,
                 fontSize: 11,
@@ -672,7 +667,7 @@ function StepCard({ id, step, values, expanded, saving, onToggle, onChange, lock
                     <span
                       className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center"
                       style={{
-                        borderRadius: 4,
+                        borderRadius: 0,
                         background: "var(--cth-command-crimson)",
                         color: "var(--cth-command-panel)",
                         fontFamily: SANS,
@@ -1249,7 +1244,7 @@ export default function StrategicOS() {
     <aside
       className="hidden md:flex"
       style={{
-        width: 260,
+        width: 240,
         flexShrink: 0,
         position: "sticky",
         top: 0,
@@ -1423,7 +1418,7 @@ export default function StrategicOS() {
               background: "transparent",
               color: "var(--cth-command-gold)",
               border: "1px solid var(--cth-command-gold)",
-              borderRadius: 4,
+              borderRadius: 0,
               padding: "8px 12px",
               fontFamily: SANS,
               fontSize: 11,
@@ -1450,7 +1445,7 @@ export default function StrategicOS() {
               letterSpacing: "0.18em",
               textTransform: "uppercase",
               padding: "8px 12px",
-              borderRadius: 4,
+              borderRadius: 0,
               textAlign: "center",
             }}
           >
@@ -1483,11 +1478,47 @@ export default function StrategicOS() {
         style={PAGE_STYLE}
         data-testid="strategic-os-page"
       >
+        {/* Mobile step nav - md:hidden */}
+        <div
+          className="md:hidden overflow-x-auto flex gap-2 px-4 py-3 border-b"
+          style={{ borderColor: "var(--cth-command-border)", background: "var(--cth-command-panel)" }}
+        >
+          {OS_STEP_INPUTS.map((step) => {
+            const stepNumber = getStepNumber(step);
+            const isActive = expandedStep === stepNumber;
+            const isDone =
+              getStepStatus(step, stepState[stepNumber]?.inputs || {}) === "complete";
+            const isLocked = isStepLocked(step, plan);
+            return (
+              <button
+                key={stepNumber}
+                onClick={() => !isLocked && jumpToStep(stepNumber)}
+                disabled={isLocked}
+                style={{
+                  flexShrink: 0,
+                  padding: "6px 14px",
+                  fontSize: 12,
+                  fontWeight: isActive ? 600 : 400,
+                  background: isActive ? "var(--cth-command-crimson)" : "var(--cth-command-blush)",
+                  color: isActive ? "#fff" : isLocked ? "var(--cth-command-muted)" : "var(--cth-command-ink)",
+                  border: "1px solid var(--cth-command-border)",
+                  borderRadius: 999,
+                  cursor: isLocked ? "not-allowed" : "pointer",
+                  whiteSpace: "nowrap",
+                  opacity: isLocked ? 0.5 : 1,
+                }}
+              >
+                {isDone ? "✓ " : ""}{stepNumber}. {step.stepName}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="flex">
           {sidebar}
 
           <main className="min-w-0 flex-1 px-4 py-7 md:px-8">
-            <div className="mx-auto grid w-full max-w-5xl gap-5">
+            <div className="mx-auto grid w-full max-w-[1200px] gap-8">
           {error ? (
             <div
               style={{
@@ -1933,7 +1964,7 @@ export default function StrategicOS() {
                   style={{
                     background: "var(--cth-command-panel)",
                     border: "1px solid var(--cth-command-border)",
-                    borderRadius: 4,
+                    borderRadius: 0,
                     padding: 24,
                     marginBottom: 16,
                   }}
@@ -2028,7 +2059,7 @@ export default function StrategicOS() {
                 style={{
                   background: "var(--cth-command-panel-soft)",
                   border: "1px solid var(--cth-command-border)",
-                  borderRadius: 4,
+                  borderRadius: 0,
                   padding: 24,
                   fontFamily: SANS,
                   fontSize: 14,
