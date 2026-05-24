@@ -99,22 +99,6 @@ const SECONDARY_BUTTON_STYLE = {
   gap: 8,
 };
 
-const TIER_PILL_STYLE = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "6px 14px",
-  borderRadius: 999,
-  border: "1px solid var(--cth-command-border)",
-  background: "var(--cth-command-panel)",
-  color: "var(--cth-command-muted)",
-  fontFamily: SANS,
-  fontSize: 12,
-  fontWeight: 600,
-  letterSpacing: "0.04em",
-  textTransform: "uppercase",
-};
-
 function parseLimitFromError(message) {
   if (typeof message !== "string") return null;
   const match = message.match(/(\d+)\s*\/\s*(\d+)/);
