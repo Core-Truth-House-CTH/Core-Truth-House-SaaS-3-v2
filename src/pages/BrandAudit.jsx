@@ -138,22 +138,6 @@ function hasAuditData(audit) {
   );
 }
 
-function scoreMessage(score) {
-  if (score >= 80) {
-    return 'Your brand has a strong baseline. The next leverage point is turning that foundation into repeatable systems, content, offers, and launch execution.';
-  }
-
-  if (score >= 60) {
-    return 'Your brand has useful structure, but one or more growth engines still need to be tightened before the strategy can compound.';
-  }
-
-  if (score >= 36) {
-    return 'Your brand is developing. The biggest opportunity is to clarify the foundation, strengthen the offer path, and close the gaps that are slowing momentum.';
-  }
-
-  return 'Your brand needs foundational work before deeper strategy, content, campaigns, or scaling will produce consistent results.';
-}
-
 function nextBestMovesFor(audit) {
   const score = audit.overallScore;
   const scores = audit.moduleScores || {};
@@ -344,103 +328,6 @@ function MetricTile({ label, value, accent, path, onNavigate }) {
         />
       ) : null}
     </button>
-  );
-}
-
-function ScorePanel({ score, rating, message }) {
-  const sweep = Math.max(0, Math.min(360, score * 3.6));
-
-  return (
-    <div
-      style={{
-        ...CONTENT_CARD_STYLE,
-        padding: '44px 28px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
-        gap: 22,
-      }}
-    >
-      <p style={SECTION_LABEL_STYLE}>Overall Score</p>
-
-      <div
-        style={{
-          width: 220,
-          height: 220,
-          borderRadius: '50%',
-          background: `conic-gradient(var(--cth-command-crimson) ${sweep}deg, var(--cth-command-blush) ${sweep}deg)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 12,
-        }}
-      >
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            borderRadius: '50%',
-            background: 'var(--cth-command-panel)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <span
-            style={{
-              fontFamily: SERIF,
-              fontSize: 72,
-              fontWeight: 600,
-              color: 'var(--cth-command-ink)',
-              lineHeight: 1,
-            }}
-          >
-            {score}
-          </span>
-          <span
-            style={{
-              fontFamily: SANS,
-              fontSize: 11,
-              color: 'var(--cth-command-muted)',
-              marginTop: 6,
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-            }}
-          >
-            /100
-          </span>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 540 }}>
-        <p
-          style={{
-            fontFamily: SERIF,
-            fontSize: 24,
-            fontWeight: 600,
-            color: 'var(--cth-command-ink)',
-            margin: 0,
-            lineHeight: 1.25,
-          }}
-        >
-          {rating}
-        </p>
-        <p
-          style={{
-            fontFamily: SANS,
-            fontSize: 14,
-            color: 'var(--cth-command-ink)',
-            opacity: 0.78,
-            lineHeight: 1.65,
-            margin: '10px 0 0',
-          }}
-        >
-          {message}
-        </p>
-      </div>
-    </div>
   );
 }
 
