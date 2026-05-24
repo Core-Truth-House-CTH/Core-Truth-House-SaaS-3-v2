@@ -7,6 +7,7 @@ import "./index.css";
 
 import { Toaster } from "./components/ui/toaster";
 import Chatbot from "./components/Chatbot";
+import ScrollToTop from "./components/ScrollToTop";
 import TiersPage from "./pages/TiersPage";
 
 const ProtectedApp = lazy(() => import("./ProtectedApp"));
@@ -78,6 +79,7 @@ function PublicRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Suspense fallback={<LoadingFallback />}>
         <PublicRoutes />
       </Suspense>
