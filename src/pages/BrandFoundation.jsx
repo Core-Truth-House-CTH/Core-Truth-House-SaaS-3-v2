@@ -3,7 +3,6 @@ import { DashboardLayout, TopBar } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
 import { BrandGuidelinesExportButton } from "../components/shared/BrandGuidelinesExport";
-import DashboardHero from "../components/shared/DashboardHero";
 import { getNextStep } from "../config/brandCoreNextStep";
 import apiClient from "../lib/apiClient";
 import {
@@ -594,7 +593,6 @@ export default function BrandFoundation() {
 
   return (
     <DashboardLayout>
-      <DashboardHero imagePath="/dashboard-assets/cth-foundation-hero-banner.png" />
       <TopBar
         title="Brand Foundation"
         subtitle="Define the core truth your brand is built on so every strategy, offer, and content decision pulls from the same source of truth."
@@ -660,9 +658,37 @@ export default function BrandFoundation() {
           </div>
         ) : null}
 
-        <div className="mx-auto flex max-w-7xl flex-col md:flex-row">
+        {/* Mobile field nav - visible only on mobile */}
+        <div className="md:hidden overflow-x-auto flex gap-2 px-4 py-3 border-b border-[var(--cth-command-border)] bg-[var(--cth-command-panel)]">
+          {FIELDS.map((field) => {
+            const isActive = activeField === field.id;
+            const isDone = getCompletionStatus(data[field.id], field.minLength) === "complete";
+            return (
+              <button
+                key={field.id}
+                onClick={() => handleFieldSwitch(field.id)}
+                style={{
+                  flexShrink: 0,
+                  padding: "6px 14px",
+                  fontSize: "12px",
+                  fontWeight: isActive ? 600 : 400,
+                  background: isActive ? "var(--cth-command-crimson)" : "var(--cth-command-blush)",
+                  color: isActive ? "#fff" : "var(--cth-command-ink)",
+                  border: "1px solid var(--cth-command-border)",
+                  borderRadius: 999,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {isDone ? "✓ " : ""}{field.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mx-auto flex max-w-[1200px] flex-col md:flex-row">
           {/* Left sidebar */}
-          <aside className="hidden w-72 shrink-0 md:block">
+          <aside className="hidden w-60 shrink-0 md:block">
             <div className="sticky top-0 px-5 py-6">
               <div style={SECTION_LABEL_STYLE}>Foundation Elements</div>
 
@@ -702,10 +728,11 @@ export default function BrandFoundation() {
                       data-testid={`field-nav-${field.id}`}
                       className="w-full px-4 py-3 text-left transition"
                       style={{
-                        ...CARD_STYLE,
-                        borderColor: isActive
-                          ? "var(--cth-command-crimson)"
-                          : "var(--cth-command-border)",
+                        background: isActive ? "var(--cth-command-panel)" : "transparent",
+                        border: "none",
+                        borderLeft: `3px solid ${isActive ? "var(--cth-command-crimson)" : "transparent"}`,
+                        borderRadius: 0,
+                        paddingLeft: 13,
                       }}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -743,7 +770,7 @@ export default function BrandFoundation() {
 
           {/* Right content area */}
           <main className="min-w-0 flex-1 px-4 py-5 md:px-8 md:py-8">
-            <div className="mx-auto max-w-3xl space-y-6">
+            <div className="mx-auto max-w-3xl space-y-8">
               {/* Active field card */}
               <div style={{ ...CARD_STYLE, padding: 28 }}>
                 {/* Field header */}
