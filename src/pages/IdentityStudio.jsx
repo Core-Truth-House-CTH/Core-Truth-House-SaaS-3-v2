@@ -143,7 +143,7 @@ const SECTION_SUBTEXT_STYLE = {
 const CARD_STYLE = {
   background: 'var(--cth-command-panel)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 0,
 };
 
 const FIELD_LABEL_STYLE = {
@@ -162,7 +162,7 @@ const INPUT_STYLE = {
   background: 'var(--cth-command-panel)',
   color: 'var(--cth-command-ink)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 0,
   padding: '8px 12px',
   fontFamily: SANS,
   fontSize: 13,
@@ -173,7 +173,7 @@ const PRIMARY_CTA_STYLE = {
   background: 'var(--cth-command-purple)',
   color: 'var(--cth-command-gold)',
   border: 'none',
-  borderRadius: 4,
+  borderRadius: 0,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -190,7 +190,7 @@ const SAVE_BUTTON_STYLE = {
   background: 'var(--cth-command-crimson)',
   color: 'var(--cth-command-panel)',
   border: 'none',
-  borderRadius: 4,
+  borderRadius: 0,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -631,7 +631,7 @@ function IdentityStudioContent() {
 
         {/* Main content */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="max-w-5xl mx-auto space-y-6">
+          <div className="max-w-[1200px] mx-auto space-y-8">
             {draftRecovery ? (
               <div
                 data-testid="identity-draft-recovery-banner"
@@ -639,7 +639,7 @@ function IdentityStudioContent() {
                 style={{
                   background: 'var(--cth-command-panel-soft)',
                   border: '1px solid var(--cth-command-gold)',
-                  borderRadius: 4,
+                  borderRadius: 0,
                   padding: '12px 20px',
                 }}
               >
@@ -663,7 +663,7 @@ function IdentityStudioContent() {
                       background: 'var(--cth-command-purple)',
                       color: 'var(--cth-command-gold)',
                       border: 'none',
-                      borderRadius: 4,
+                      borderRadius: 0,
                       padding: '8px 14px',
                       fontFamily: SANS,
                       fontSize: 12,
@@ -682,7 +682,7 @@ function IdentityStudioContent() {
                       background: 'transparent',
                       color: 'var(--cth-command-ink)',
                       border: '1px solid var(--cth-command-border)',
-                      borderRadius: 4,
+                      borderRadius: 0,
                       padding: '8px 14px',
                       fontFamily: SANS,
                       fontSize: 12,
@@ -718,6 +718,10 @@ function IdentityStudioContent() {
                   {colorsLen} colors
                 </div>
               </div>
+
+              <p style={{ fontSize: '13px', color: 'var(--cth-command-muted)', marginTop: '4px', marginBottom: '16px' }}>
+                Your brand colors create instant recognition. Consistent use builds visual trust over time.
+              </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {colors.map((color, index) => {
@@ -800,7 +804,7 @@ function IdentityStudioContent() {
                             color: 'var(--cth-command-ivory)',
                             background: 'rgba(13, 0, 16, 0.45)',
                             padding: '4px 8px',
-                            borderRadius: 4,
+                            borderRadius: 0,
                           }}
                         >
                           Click to change
@@ -865,7 +869,7 @@ function IdentityStudioContent() {
                                 background: 'transparent',
                                 color: 'var(--cth-command-crimson)',
                                 border: '1px solid var(--cth-command-border)',
-                                borderRadius: 4,
+                                borderRadius: 0,
                                 padding: '5px 10px',
                                 fontFamily: SANS,
                                 fontSize: 11,
@@ -947,6 +951,10 @@ function IdentityStudioContent() {
                   {fontsLen} styles
                 </div>
               </div>
+
+              <p style={{ fontSize: '13px', color: 'var(--cth-command-muted)', marginTop: '4px', marginBottom: '16px' }}>
+                Typography shapes how your brand feels before anyone reads a word. Choose fonts that match your positioning.
+              </p>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {fonts.map((font, index) => (
@@ -1119,6 +1127,10 @@ function IdentityStudioContent() {
                 </p>
               </div>
 
+              <p style={{ fontSize: '13px', color: 'var(--cth-command-muted)', marginTop: '4px', marginBottom: '16px' }}>
+                Upload your logo, brand marks, and core visual assets. These are referenced across your content and guidelines.
+              </p>
+
               <IdentityStudioAssets
                 workspaceId={activeWorkspace?.id || activeWorkspace?.workspace_id || ''}
                 assets={assets}
@@ -1169,7 +1181,7 @@ function IdentityStudioContent() {
               background: 'var(--cth-command-purple)',
               color: 'var(--cth-command-gold)',
               padding: '10px 18px',
-              borderRadius: 4,
+              borderRadius: 0,
               fontFamily: SANS,
               fontSize: 13,
               fontWeight: 600,
@@ -1192,7 +1204,7 @@ function IdentityStudioContent() {
               background: 'var(--cth-command-purple)',
               color: 'var(--cth-command-gold)',
               padding: '12px 20px',
-              borderRadius: 4,
+              borderRadius: 0,
               fontFamily: SANS,
               fontSize: 13,
               fontWeight: 600,
