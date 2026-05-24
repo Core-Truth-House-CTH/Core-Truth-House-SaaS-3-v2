@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Plus,
   RefreshCw,
+  Search,
   UsersRound,
 } from "lucide-react";
 import { DashboardLayout, TopBar } from "../components/Layout";
@@ -20,10 +21,17 @@ import AvatarCard from "../components/audience/AvatarCard";
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Playfair Display', serif";
 
-// TODO: Replace with centralized tier-resolution. Backend currently uses a
-// placeholder limit of 5 across all tiers; when billing centralizes the
-// tier-name -> limit mapping, read the real limit from the user's plan.
-const PLACEHOLDER_LIMIT = 5;
+const PLAN_AVATAR_LIMITS = {
+  foundation: 3,
+  structure: 5,
+  house: 10,
+  estate: Infinity,
+};
+
+function getAvatarLimitForPlan(plan) {
+  const tier = String(plan || "foundation").toLowerCase();
+  return PLAN_AVATAR_LIMITS[tier] ?? PLAN_AVATAR_LIMITS.foundation;
+}
 
 const PAGE_STYLE = {
   background: "var(--cth-command-blush)",
@@ -32,7 +40,7 @@ const PAGE_STYLE = {
 
 const BODY_WRAP_STYLE = {
   padding: "28px 24px 96px",
-  maxWidth: 1240,
+  maxWidth: 1200,
   margin: "0 auto",
   fontFamily: SANS,
 };
@@ -284,7 +292,9 @@ export default function Audience() {
   const [avatars, setAvatars] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [limit, setLimit] = useState(PLACEHOLDER_LIMIT);
+  const planLimit = getAvatarLimitForPlan(plan);
+  const [limit, setLimit] = useState(planLimit);
+  useEffect(() => { setLimit(planLimit); }, [planLimit]);
 
   const loadAvatars = useCallback(async () => {
     if (!activeWorkspaceId) return;
@@ -311,9 +321,39 @@ export default function Audience() {
   const used = avatars.length;
   const atLimit = used >= limit;
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const displayedAvatars = avatars
+    .filter((a) =>
+      !searchQuery ||
+      (a.name || a.avatar_name || "").toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortOrder === "name") return (a.name || "").localeCompare(b.name || "");
+      if (sortOrder === "oldest") return new Date(a.created_at) - new Date(b.created_at);
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
   const handleCreate = () => navigate("/audience/avatars/new");
   const handleUpgrade = () => navigate("/billing");
   const handleOpen = (id) => navigate(`/audience/avatars/${id}`);
+
+  const handleDeleteAvatar = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await apiClient.delete(`/api/audience/avatars/${deleteTarget.id}`);
+      setAvatars((prev) => prev.filter((a) => a.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error("Delete failed", err);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const headerAction = atLimit ? (
     <button type="button" onClick={handleUpgrade} style={UPGRADE_CTA_STYLE}>
@@ -331,7 +371,7 @@ export default function Audience() {
     <DashboardLayout>
       <TopBar
         title="Audience"
-        subtitle="Define the people you serve. Avatars feed into every campaign and AI-generated asset."
+        subtitle={`${avatars.length} avatar${avatars.length !== 1 ? "s" : ""} · ${used} of ${limit === Infinity ? "∞" : limit} used`}
         action={headerAction}
       />
 
@@ -341,20 +381,64 @@ export default function Audience() {
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              gap: 16,
-              marginBottom: 24,
-              flexWrap: "wrap",
+              gap: 12,
+              padding: "12px 0",
+              borderBottom: "1px solid var(--cth-command-border)",
+              marginBottom: 32,
             }}
           >
-            <span style={TIER_PILL_STYLE}>
-              <UsersRound size={13} style={{ color: "var(--cth-command-gold)" }} />
-              {used} of {limit} avatars used
-            </span>
+            <div style={{ position: "relative", flex: 1, maxWidth: 320 }}>
+              <Search
+                size={14}
+                style={{
+                  position: "absolute",
+                  left: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "var(--cth-command-muted)",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Search avatars..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: "100%",
+                  paddingLeft: 32,
+                  paddingRight: 12,
+                  paddingTop: 8,
+                  paddingBottom: 8,
+                  border: "1px solid var(--cth-command-border)",
+                  borderRadius: 0,
+                  background: "var(--cth-command-panel)",
+                  color: "var(--cth-command-ink)",
+                  fontSize: 13,
+                  outline: "none",
+                }}
+              />
+            </div>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              style={{
+                padding: "8px 12px",
+                border: "1px solid var(--cth-command-border)",
+                borderRadius: 0,
+                background: "var(--cth-command-panel)",
+                color: "var(--cth-command-ink)",
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="name">Name A-Z</option>
+            </select>
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <SkeletonCard />
               <SkeletonCard />
               <SkeletonCard />
@@ -364,12 +448,22 @@ export default function Audience() {
           ) : avatars.length === 0 ? (
             <EmptyState onCreate={handleCreate} />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {avatars.map((avatar) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayedAvatars.map((avatar) => (
                 <AvatarCard
                   key={avatar.id}
                   avatar={avatar}
-                  onOpen={() => handleOpen(avatar.id)}
+                  onOpen={() => navigate(`/audience/avatars/${avatar.id}`)}
+                  onEdit={() => navigate(`/audience/avatars/${avatar.id}`)}
+                  onDelete={() => setDeleteTarget(avatar)}
+                  onSetPrimary={async () => {
+                    try {
+                      await apiClient.post(`/api/audience/avatars/${avatar.id}/set-primary`);
+                      await loadAvatars();
+                    } catch (err) {
+                      console.error("Set primary failed", err);
+                    }
+                  }}
                 />
               ))}
             </div>
@@ -409,6 +503,75 @@ export default function Audience() {
           ) : null}
         </div>
       </div>
+      {deleteTarget && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 50,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              background: "var(--cth-command-panel)",
+              border: "1px solid var(--cth-command-border)",
+              padding: 32,
+              maxWidth: 400,
+              width: "90%",
+              borderRadius: 0,
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px", color: "var(--cth-command-ink)" }}>
+              Delete Avatar
+            </h3>
+            <p
+              style={{
+                margin: "0 0 24px",
+                color: "var(--cth-command-muted)",
+                fontSize: 14,
+              }}
+            >
+              Are you sure you want to delete{" "}
+              <strong>{deleteTarget.name || deleteTarget.avatar_name}</strong>?
+              This cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                style={{
+                  padding: "8px 16px",
+                  border: "1px solid var(--cth-command-border)",
+                  background: "transparent",
+                  color: "var(--cth-command-ink)",
+                  cursor: "pointer",
+                  borderRadius: 0,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAvatar}
+                disabled={deleting}
+                style={{
+                  padding: "8px 16px",
+                  border: "none",
+                  background: "var(--cth-command-crimson)",
+                  color: "#fff",
+                  cursor: deleting ? "not-allowed" : "pointer",
+                  borderRadius: 0,
+                }}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

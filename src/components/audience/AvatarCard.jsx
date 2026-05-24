@@ -117,7 +117,7 @@ const PROBLEM_PLACEHOLDER_STYLE = {
   opacity: 0.7,
 };
 
-export default function AvatarCard({ avatar, onOpen }) {
+export default function AvatarCard({ avatar, onOpen, onEdit, onDelete, onSetPrimary }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
 
@@ -186,6 +186,70 @@ export default function AvatarCard({ avatar, onOpen }) {
         <p style={PROBLEM_STYLE}>{problemText}</p>
       ) : (
         <p style={PROBLEM_PLACEHOLDER_STYLE}>No primary problem captured yet.</p>
+      )}
+
+      {(onEdit || onDelete || onSetPrimary) && (
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            marginTop: 12,
+            paddingTop: 12,
+            borderTop: "1px solid var(--cth-command-border)",
+          }}
+        >
+          {onEdit && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              style={{
+                flex: 1,
+                padding: 6,
+                fontSize: 12,
+                border: "1px solid var(--cth-command-border)",
+                background: "transparent",
+                color: "var(--cth-command-ink)",
+                cursor: "pointer",
+                borderRadius: 0,
+              }}
+            >
+              Edit
+            </button>
+          )}
+          {onSetPrimary && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onSetPrimary(); }}
+              style={{
+                flex: 1,
+                padding: 6,
+                fontSize: 12,
+                border: "1px solid var(--cth-command-border)",
+                background: "transparent",
+                color: "var(--cth-command-ink)",
+                cursor: "pointer",
+                borderRadius: 0,
+              }}
+            >
+              Primary
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              style={{
+                flex: 1,
+                padding: 6,
+                fontSize: 12,
+                border: "1px solid var(--cth-command-border)",
+                background: "transparent",
+                color: "var(--cth-command-crimson)",
+                cursor: "pointer",
+                borderRadius: 0,
+              }}
+            >
+              Delete
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
