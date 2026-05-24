@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useColors } from "../../context/ThemeContext";
 import apiClient from "../../lib/apiClient";
+import { useUser } from "../../hooks/useAuth";
 
 const CORE_TRUTH_HOUSE_WORKSPACE_ID = "e285aa0b-83b3-495d-9ac0-52e92ab64b42";
-const SELF_USER_ID = "user_3AtYAnxP5cAVnksOL7gxq1T2EaL";
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
@@ -312,6 +312,9 @@ function WorkspacesPanel() {
 }
 
 function UsersPanel() {
+  const { user } = useUser();
+  const selfId = user?.id || null;
+
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
@@ -353,13 +356,24 @@ function UsersPanel() {
   };
 
   const removeUser = async (userId) => {
-    if (!window.confirm("Remove this user from admin access? This will mark the user inactive.")) return;
+    console.log("[removeUser] called", { userId, selfId });
+    if (!window.confirm("Remove this user from admin access? This will mark the user inactive.")) {
+      console.log("[removeUser] cancelled at confirm");
+      return;
+    }
     setSaving(true);
     try {
-      await apiClient.delete(`/api/admin/users/${userId}`);
+      console.log("[removeUser] DELETE", `/api/admin/users/${userId}`);
+      const result = await apiClient.delete(`/api/admin/users/${userId}`);
+      console.log("[removeUser] success", result);
       await load();
     } catch (err) {
-      console.error("Failed to remove user:", err);
+      console.error("[removeUser] failed", {
+        message: err?.message,
+        status: err?.status,
+        payload: err?.payload,
+        url: err?.url,
+      });
       alert(err?.payload?.detail || err?.message || "Failed to remove user");
     } finally {
       setSaving(false);
@@ -411,7 +425,7 @@ function UsersPanel() {
               key: "actions",
               label: "Actions",
               render: (row) => {
-                const isSelf = row.id === SELF_USER_ID;
+                const isSelf = Boolean(selfId) && row.id === selfId;
                 const isReserved = row.id === "default";
                 return (
                   <div className="flex flex-wrap gap-2">
