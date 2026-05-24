@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
  AlertCircle,
  ArrowUpRight,
@@ -2375,6 +2375,34 @@ export default function CommandCenter() {
  const [latestAudit, setLatestAudit] = useState(null);
  const [workspaceStats, setWorkspaceStats] = useState(null);
  const [error, setError] = useState("");
+
+ const [searchParams, setSearchParams] = useSearchParams();
+ const redeemAttemptedRef = useRef(false);
+
+ useEffect(() => {
+ const cohortToken = searchParams.get("cohort_token");
+ if (!cohortToken || !activeWorkspaceId || redeemAttemptedRef.current) return;
+ redeemAttemptedRef.current = true;
+
+ (async () => {
+ try {
+ await apiClient.post(`/api/cohort/invite/${encodeURIComponent(cohortToken)}/redeem`);
+ console.log("[cohort] invite redeemed");
+ } catch (err) {
+ console.error("[cohort] redeem failed", {
+ message: err?.message,
+ status: err?.status,
+ payload: err?.payload,
+ });
+ const detail = err?.payload?.detail || err?.message || "Could not claim your cohort seat.";
+ alert(`Cohort claim failed: ${detail}\n\nPlease contact hello@coretruthhouse.com.`);
+ } finally {
+ const next = new URLSearchParams(searchParams);
+ next.delete("cohort_token");
+ setSearchParams(next, { replace: true });
+ }
+ })();
+ }, [searchParams, activeWorkspaceId, setSearchParams]);
 
  const displayName = useMemo(() => {
  return user?.fullName || user?.firstName || user?.name || activeWorkspace?.name || "there";

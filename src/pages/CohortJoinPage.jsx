@@ -23,14 +23,14 @@ export default function CohortJoinPage() {
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await apiClient.get(`/api/cohort/invite/${encodeURIComponent(token)}`);
+        const data = await apiClient.get(`/api/cohort/invite/${encodeURIComponent(token)}`);
         if (cancelled) return;
         setInvite(data);
         setStatus("valid");
       } catch (err) {
         if (cancelled) return;
         const msg =
-          err?.response?.data?.detail ||
+          err?.payload?.detail ||
           err?.message ||
           "This invite link is no longer valid.";
         setErrorMsg(msg);
