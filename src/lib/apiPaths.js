@@ -61,7 +61,6 @@ export const API_PATHS = {
   },
 
   audit: {
-    run: "/api/audit/run",
     latest: "/api/audit/latest",
     history: "/api/audit/history",
     byId: (auditId) => `/api/audit/${encode(auditId)}`,
