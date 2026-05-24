@@ -357,7 +357,7 @@ function UsersPanel() {
 
   const removeUser = async (userId) => {
     console.log("[removeUser] called", { userId, selfId });
-    if (!window.confirm("Remove this user from admin access? This will mark the user inactive.")) {
+    if (!window.confirm("Permanently delete this user from the system? This removes them from Mongo and Clerk and cannot be undone.")) {
       console.log("[removeUser] cancelled at confirm");
       return;
     }
