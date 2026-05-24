@@ -260,6 +260,7 @@ function StatusIcon({ status }) {
   );
 }
 
+// TODO: StatusPill uses Tailwind bg-emerald-500/10 / bg-amber-500/10 — migrate to --cth-command-* tokens in palette cleanup pass
 function StatusPill({ status }) {
   if (status === "complete") {
     return (
@@ -535,7 +536,7 @@ export default function BrandPositioning() {
       >
         {loadError ? (
           <div
-            className="mx-auto mt-5 max-w-7xl px-4 md:px-8"
+            className="mx-auto mt-5 max-w-[1200px] px-4 md:px-8"
             style={{ fontFamily: SANS }}
           >
             <div
@@ -553,9 +554,37 @@ export default function BrandPositioning() {
           </div>
         ) : null}
 
-        <div className="mx-auto flex max-w-7xl flex-col md:flex-row">
+        {/* Mobile field nav - visible only on mobile */}
+        <div className="md:hidden overflow-x-auto flex gap-2 px-4 py-3 border-b border-[var(--cth-command-border)] bg-[var(--cth-command-panel)]">
+          {FIELDS.map((field) => {
+            const isActive = activeField === field.id;
+            const isDone = getCompletionStatus(data[field.id], field.minLength) === "complete";
+            return (
+              <button
+                key={field.id}
+                onClick={() => handleFieldSwitch(field.id)}
+                style={{
+                  flexShrink: 0,
+                  padding: "6px 14px",
+                  fontSize: "12px",
+                  fontWeight: isActive ? 600 : 400,
+                  background: isActive ? "var(--cth-command-crimson)" : "var(--cth-command-blush)",
+                  color: isActive ? "#fff" : "var(--cth-command-ink)",
+                  border: "1px solid var(--cth-command-border)",
+                  borderRadius: 999,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {isDone ? "✓ " : ""}{field.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mx-auto flex max-w-[1200px] flex-col md:flex-row">
           {/* Left sidebar */}
-          <aside className="hidden w-72 shrink-0 md:block">
+          <aside className="hidden w-60 shrink-0 md:block">
             <div className="sticky top-0 px-5 py-6">
               <div style={SECTION_LABEL_STYLE}>Positioning Elements</div>
 
@@ -595,10 +624,11 @@ export default function BrandPositioning() {
                       data-testid={`field-nav-${field.id}`}
                       className="w-full px-4 py-3 text-left transition"
                       style={{
-                        ...CARD_STYLE,
-                        borderColor: isActive
-                          ? "var(--cth-command-crimson)"
-                          : "var(--cth-command-border)",
+                        background: isActive ? "var(--cth-command-panel)" : "transparent",
+                        border: "none",
+                        borderLeft: `3px solid ${isActive ? "var(--cth-command-crimson)" : "transparent"}`,
+                        borderRadius: 0,
+                        paddingLeft: 13,
                       }}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -635,7 +665,7 @@ export default function BrandPositioning() {
 
           {/* Right content area */}
           <main className="min-w-0 flex-1 px-4 py-5 md:px-8 md:py-8">
-            <div className="mx-auto max-w-3xl space-y-6">
+            <div className="mx-auto max-w-3xl space-y-8">
               {/* Active field card */}
               <div style={{ ...CARD_STYLE, padding: 28 }}>
                 {/* Field header */}
