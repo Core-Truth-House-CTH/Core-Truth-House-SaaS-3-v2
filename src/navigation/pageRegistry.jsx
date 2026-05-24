@@ -1,4 +1,7 @@
-import { lazy } from "react";
+import React, { lazy } from "react";
+import PlaceholderPage from "../pages/PlaceholderPage";
+
+const makePlaceholder = (title) => () => <PlaceholderPage title={title} />;
 
 const MethodologyPage = lazy(() => import("../pages/MethodologyPage"));
 const CommandCenter = lazy(() => import("../pages/CommandCenter"));
@@ -90,6 +93,19 @@ const pageRegistry = {
   "/settings": Settings,
 
   "/workspace": CommandCenter,
+
+  "/automations": makePlaceholder("Automations"),
+  "/tracking-links": makePlaceholder("Tracking Links"),
+  "/integrations": makePlaceholder("Integrations"),
+  "/media-assets": makePlaceholder("Media Assets"),
+  "/saved-reports": makePlaceholder("Saved Reports"),
+  "/workspace-controls": makePlaceholder("Workspace Controls"),
+  "/members": makePlaceholder("Members"),
+  "/help-desk": makePlaceholder("Help Desk"),
+  "/knowledge-base": makePlaceholder("Knowledge Base"),
+  "/release-notes": makePlaceholder("Release Notes"),
+  "/ai-keys": makePlaceholder("AI API Keys"),
+  "/platform-store": makePlaceholder("Store"),
 };
 
 const routeAliases = {

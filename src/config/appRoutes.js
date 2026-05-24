@@ -413,5 +413,19 @@ export const APP_ROUTES = [
     tooltip:
       "Workspace name, display preferences, notifications, and integrations.",
   },
+
+  // Placeholder pages — registered so React Router resolves them; content is "Coming soon"
+  { path: "/automations", label: "Automations", group: "placeholder", requiredPlan: null, gateType: null },
+  { path: "/tracking-links", label: "Tracking Links", group: "placeholder", requiredPlan: null, gateType: null },
+  { path: "/integrations", label: "Integrations", group: "placeholder", requiredPlan: null, gateType: null },
+  { path: "/media-assets", label: "Media Assets", group: "placeholder", requiredPlan: null, gateType: null },
+  { path: "/saved-reports", label: "Saved Reports", group: "placeholder", requiredPlan: null, gateType: null },
+  { path: "/workspace-controls", label: "Workspace Controls", group: "placeholder", requiredPlan: null, gateType: null },
+  { path: "/members", label: "Members", group: "placeholder", requiredPlan: null, gateType: null },
+  { path: "/help-desk", label: "Help Desk", group: "placeholder", requiredPlan: null, gateType: null },
+  { path: "/knowledge-base", label: "Knowledge Base", group: "placeholder", requiredPlan: null, gateType: null },
+  { path: "/release-notes", label: "Release Notes", group: "placeholder", requiredPlan: null, gateType: null },
+  { path: "/ai-keys", label: "AI API Keys", group: "placeholder", requiredPlan: null, gateType: null, superAdminOnly: true },
+  { path: "/platform-store", label: "Store", group: "placeholder", requiredPlan: null, gateType: null, superAdminOnly: true },
 ];
 
