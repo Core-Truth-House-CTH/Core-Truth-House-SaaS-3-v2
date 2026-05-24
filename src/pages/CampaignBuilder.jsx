@@ -1925,6 +1925,25 @@ function CampaignBuilderPageContent() {
  </div>
  ))}
  </div>
+
+ <hr style={{ border: "none", borderTop: "1px solid var(--cth-command-border)", margin: "24px 0" }} />
+
+ <TrackingLinkManager
+ title="Campaign Tracking Links"
+ subtitle="Create campaign-specific tracked links for CTAs, launch emails, funnels, and social posts."
+ defaultLabel={selected?.cta_primary || selected?.name || "Campaign CTA"}
+ defaultUrl={selected?.cta_url || selected?.landing_page_url || selected?.url || ""}
+ context={{
+ source: "campaign_builder",
+ campaign_id: selected?.id || selected?.campaign_id || "",
+ metadata: {
+ campaign_name: selected?.name || selected?.title || "",
+ campaign_goal: selected?.goal || "",
+ landing_page_url: selected?.landing_page_url || "",
+ cta_url: selected?.cta_url || "",
+ },
+ }}
+ />
 </div>
 )}
 
@@ -1957,23 +1976,6 @@ function CampaignBuilderPageContent() {
  />
 
  <hr style={{ border: "none", borderTop: "1px solid var(--cth-command-border)", margin: "24px 0" }} />
-
- <TrackingLinkManager
- title="Campaign Tracking Links"
- subtitle="Create campaign-specific tracked links for CTAs, launch emails, funnels, and social posts."
- defaultLabel={selected?.cta_primary || selected?.name || "Campaign CTA"}
- defaultUrl={selected?.cta_url || selected?.landing_page_url || selected?.url || ""}
- context={{
- source: "campaign_builder",
- campaign_id: selected?.id || selected?.campaign_id || "",
- metadata: {
- campaign_name: selected?.name || selected?.title || "",
- campaign_goal: selected?.goal || "",
- landing_page_url: selected?.landing_page_url || "",
- cta_url: selected?.cta_url || "",
- },
- }}
- />
 
 <CampaignLinkagePanels
  selected={selected}
