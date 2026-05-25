@@ -17,6 +17,7 @@ import {
   Clipboard,
   RefreshCw,
   Link2,
+  Search,
 } from 'lucide-react';
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import apiClient from '../lib/apiClient';
@@ -282,6 +283,10 @@ function OfferBuilderContent() {
   // Tracking links drawer state
   const [viewingTrackingLinks, setViewingTrackingLinks] = useState(null);
 
+  // Toolbar state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
+
   const offerCountSubtitle = useMemo(
     () => `${offers.length} offer${offers.length !== 1 ? 's' : ''} created`,
     [offers.length]
@@ -486,11 +491,48 @@ function OfferBuilderContent() {
     [offers]
   );
 
+  const displayedOffers = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return offers
+      .filter((o) =>
+        !q ||
+        (o.name || '').toLowerCase().includes(q) ||
+        (o.description || '').toLowerCase().includes(q)
+      )
+      .sort((a, b) => {
+        if (sortOrder === 'name') return (a.name || '').localeCompare(b.name || '');
+        if (sortOrder === 'price') return (b.price || 0) - (a.price || 0);
+        if (sortOrder === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+  }, [offers, searchQuery, sortOrder]);
+
   return (
     <DashboardLayout>
       <TopBar
         title="Offer Builder"
-        subtitle="Create and manage your irresistible offers"
+        subtitle={`${offers.length} offer${offers.length !== 1 ? 's' : ''}`}
+        action={
+          <button
+            type="button"
+            onClick={() => handleOpenModal()}
+            style={{
+              padding: '8px 16px',
+              background: 'var(--cth-command-crimson)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 0,
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <Plus size={14} /> New Offer
+          </button>
+        }
       />
 
       <div
@@ -498,7 +540,7 @@ function OfferBuilderContent() {
         style={PAGE_STYLE}
         data-testid="offer-builder-page"
       >
-        <div className="mx-auto max-w-[1200px] space-y-6">
+        <div className="mx-auto max-w-[1200px] space-y-8">
           {/* Stats header */}
           <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:justify-between">
             <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', flex: 1 }}>
@@ -611,14 +653,84 @@ function OfferBuilderContent() {
               </button>
             </div>
           ) : (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))',
-                gap: 20,
-              }}
-            >
-              {offers.map((offer) => (
+            <>
+              {/* Search + sort toolbar */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 0',
+                  borderBottom: '1px solid var(--cth-command-border)',
+                  marginBottom: '8px',
+                }}
+              >
+                <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
+                  <Search
+                    size={14}
+                    style={{
+                      position: 'absolute',
+                      left: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: 'var(--cth-command-muted)',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search offers..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      paddingLeft: '32px',
+                      paddingRight: '12px',
+                      paddingTop: '8px',
+                      paddingBottom: '8px',
+                      border: '1px solid var(--cth-command-border)',
+                      borderRadius: 0,
+                      background: 'var(--cth-command-panel)',
+                      color: 'var(--cth-command-ink)',
+                      fontSize: '13px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid var(--cth-command-border)',
+                    borderRadius: 0,
+                    background: 'var(--cth-command-panel)',
+                    color: 'var(--cth-command-ink)',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="name">Name A-Z</option>
+                  <option value="price">Price high-low</option>
+                </select>
+              </div>
+
+              {displayedOffers.length === 0 ? (
+                <div style={{ ...CARD_STYLE, padding: 40, textAlign: 'center' }}>
+                  <p style={{ ...MUTED_STYLE, fontSize: 13 }}>
+                    No offers match "{searchQuery}".
+                  </p>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))',
+                    gap: 20,
+                  }}
+                >
+                  {displayedOffers.map((offer) => (
                 <div
                   key={offer.id}
                   data-testid={`offer-card-${offer.id}`}
@@ -832,7 +944,9 @@ function OfferBuilderContent() {
                   </button>
                 </div>
               ))}
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
