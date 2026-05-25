@@ -495,7 +495,7 @@ const PRIMARY_CTA_STYLE = {
   background: "var(--cth-command-purple)",
   color: "var(--cth-command-gold)",
   border: "none",
-  borderRadius: 999,
+  borderRadius: 0,
   padding: "12px 22px",
   fontFamily: SANS,
   fontSize: 13,
@@ -509,7 +509,7 @@ const SECONDARY_BUTTON_STYLE = {
   background: "transparent",
   color: "var(--cth-command-ink)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 999,
+  borderRadius: 0,
   padding: "11px 20px",
   fontFamily: SANS,
   fontSize: 13,
@@ -583,7 +583,7 @@ function StatusDot({ status }) {
 function StatusPill({ status }) {
   if (status === "complete") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-500">
+      <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-500">
         <CheckCircle2 size={12} />
         Complete
       </span>
@@ -591,7 +591,7 @@ function StatusPill({ status }) {
   }
   if (status === "draft") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-500">
+      <span className="inline-flex items-center gap-1.5 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-500">
         <Loader2 size={12} />
         In progress
       </span>
@@ -599,7 +599,7 @@ function StatusPill({ status }) {
   }
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium"
       style={{ background: "var(--cth-command-panel-soft)", color: "var(--cth-command-muted)" }}
     >
       <FileText size={12} />
@@ -621,7 +621,7 @@ function LockedView() {
             <div
               className="mx-auto flex h-14 w-14 items-center justify-center"
               style={{
-                borderRadius: 999,
+                borderRadius: 0,
                 background: "color-mix(in srgb, var(--cth-command-crimson) 12%, transparent)",
                 color: "var(--cth-command-crimson)",
               }}
@@ -979,7 +979,7 @@ export default function CustomerJourney() {
         ) : null}
 
         <div className="mx-auto flex max-w-[1200px] flex-col md:flex-row">
-          <aside className="hidden w-72 shrink-0 md:block">
+          <aside className="hidden w-60 shrink-0 md:block">
             <div className="sticky top-0 px-5 py-6">
               <div style={SECTION_LABEL_STYLE}>Journey Stages</div>
 
@@ -1067,7 +1067,7 @@ export default function CustomerJourney() {
           </aside>
 
           <main className="min-w-0 flex-1 px-4 py-5 md:px-8 md:py-8">
-            <div className="mx-auto max-w-3xl space-y-6">
+            <div className="mx-auto max-w-3xl space-y-8">
               <div style={{ ...CARD_STYLE, padding: 28 }}>
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="flex items-start gap-3">
@@ -1371,7 +1371,7 @@ export default function CustomerJourney() {
                           background: "var(--cth-command-crimson)",
                           color: "var(--cth-command-panel)",
                           border: "none",
-                          borderRadius: 999,
+                          borderRadius: 0,
                           padding: "10px 18px",
                           fontFamily: SANS,
                           fontSize: 13,
@@ -1394,7 +1394,7 @@ export default function CustomerJourney() {
                           background: "transparent",
                           color: "var(--cth-command-muted)",
                           border: "none",
-                          borderRadius: 999,
+                          borderRadius: 0,
                           padding: "10px 18px",
                           fontFamily: SANS,
                           fontSize: 13,
