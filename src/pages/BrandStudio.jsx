@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Bot, Send, ChevronRight, Clock, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { DashboardLayout } from "../components/Layout";
+import { DashboardLayout, TopBar } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
@@ -19,7 +19,7 @@ const BRAND_STUDIO_CSS = `
 .cth-brand-studio {
   display: flex;
   gap: 1rem;
-  height: calc(100vh - 3rem);
+  height: calc(100vh - 7rem);
   min-height: 520px;
   background: var(--cth-admin-bg);
   color: var(--cth-admin-ink);
@@ -59,7 +59,7 @@ const BRAND_STUDIO_CSS = `
   margin-bottom: 0.3rem;
   border: none;
   border-left: 3px solid transparent;
-  border-radius: 10px;
+  border-radius: 0;
   background: transparent;
   color: var(--cth-admin-ink);
   cursor: pointer;
@@ -99,8 +99,9 @@ const BRAND_STUDIO_CSS = `
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 0.7rem;
-  border-radius: 10px;
+  border-radius: 0;
   color: var(--cth-admin-ink);
+  cursor: pointer;
 }
 .cth-bs-session-main { flex: 1; min-width: 0; }
 .cth-bs-session-title {
@@ -127,7 +128,7 @@ const BRAND_STUDIO_CSS = `
   flex-direction: column;
   background: var(--cth-admin-panel);
   border: 1px solid var(--cth-admin-border);
-  border-radius: 16px;
+  border-radius: 0;
   overflow: hidden;
 }
 .cth-bs-main-header {
@@ -209,7 +210,7 @@ const BRAND_STUDIO_CSS = `
   max-height: 160px;
   overflow-y: auto;
   padding: 0.6rem 0.75rem;
-  border-radius: 12px;
+  border-radius: 0;
   border: 1px solid var(--cth-admin-border);
   background: var(--cth-admin-bg);
   color: var(--cth-admin-ink);
@@ -224,7 +225,7 @@ const BRAND_STUDIO_CSS = `
   gap: 0.4rem;
   padding: 0.65rem 1rem;
   border: none;
-  border-radius: 12px;
+  border-radius: 0;
   background: var(--cth-admin-accent);
   color: var(--cth-admin-panel);
   font-size: 13px;
@@ -266,6 +267,8 @@ export default function BrandStudio() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessions, setSessions] = useState([]);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const threadRef = useRef(null);
   const textareaRef = useRef(null);
@@ -379,10 +382,20 @@ export default function BrandStudio() {
     }
   };
 
-  const deleteSession = async (e, session) => {
+  const requestDeleteSession = (e, session) => {
     e.stopPropagation();
+    if (!session) return;
+    setDeleteTarget(session);
+  };
+
+  const confirmDeleteSession = async () => {
+    const session = deleteTarget;
     const sid = session?.session_id || session?.id;
-    if (!sid) return;
+    if (!sid) {
+      setDeleteTarget(null);
+      return;
+    }
+    setDeleting(true);
     try {
       await apiClient.delete(API_PATHS.brandStudio.deleteSession(activeWorkspaceId, sid));
       setSessions((prev) => prev.filter((s) => (s.session_id || s.id) !== sid));
@@ -390,8 +403,11 @@ export default function BrandStudio() {
         setSessionId(null);
         setMessages([]);
       }
+      setDeleteTarget(null);
     } catch (err) {
       toast.error("Could not delete session.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -407,6 +423,7 @@ export default function BrandStudio() {
   return (
     <DashboardLayout>
       <style>{BRAND_STUDIO_CSS}</style>
+      <TopBar title="Brand Studio" subtitle="Your AI brand strategist" />
       <div className="cth-brand-studio" data-testid="brand-studio-page">
         <aside className="cth-bs-rail">
           <div className="cth-bs-rail-header">
@@ -455,7 +472,7 @@ export default function BrandStudio() {
                   </div>
                   <ChevronRight size={14} />
                   <button
-                    onClick={(e) => deleteSession(e, session)}
+                    onClick={(e) => requestDeleteSession(e, session)}
                     style={{
                       background: "none",
                       border: "none",
@@ -526,6 +543,70 @@ export default function BrandStudio() {
           </div>
         </section>
       </div>
+
+      {deleteTarget && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => !deleting && setDeleteTarget(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "var(--cth-command-panel)",
+              border: "1px solid var(--cth-command-border)",
+              padding: "32px",
+              maxWidth: "400px",
+              width: "90%",
+              borderRadius: 0,
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px", color: "var(--cth-command-ink)" }}>
+              Delete Session
+            </h3>
+            <p style={{ margin: "0 0 24px", color: "var(--cth-command-muted)", fontSize: "14px" }}>
+              Are you sure you want to delete <strong>{sessionTitle(deleteTarget)}</strong>? This cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                style={{
+                  padding: "8px 16px",
+                  border: "1px solid var(--cth-command-border)",
+                  background: "transparent",
+                  color: "var(--cth-command-ink)",
+                  cursor: "pointer",
+                  borderRadius: 0,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteSession}
+                disabled={deleting}
+                style={{
+                  padding: "8px 16px",
+                  border: "none",
+                  background: "var(--cth-command-crimson)",
+                  color: "#fff",
+                  cursor: deleting ? "not-allowed" : "pointer",
+                  borderRadius: 0,
+                }}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
