@@ -24,7 +24,7 @@ const PLAN_NORMALIZE = {
 };
 
 export function normalizePlan(plan) {
-  return PLAN_NORMALIZE[plan] || 'foundation';
+  return PLAN_NORMALIZE[plan] || 'free';
 }
 
 /**
