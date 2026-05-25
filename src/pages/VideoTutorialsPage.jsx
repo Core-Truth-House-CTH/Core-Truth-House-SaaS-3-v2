@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { DashboardLayout } from '../components/Layout';
-import { 
- PlayCircle, Clock, BookOpen, Filter, Search, 
- ChevronRight, Star, CheckCircle, Lock, X,
- Target, PenTool, Palette, Users, BarChart3, 
- FileText, Calendar, Settings, Rocket
+import React, { useCallback, useState } from 'react';
+import { DashboardLayout, TopBar } from '../components/Layout';
+import {
+ PlayCircle, Clock, BookOpen, Search,
+ Star, CheckCircle, X,
+ Target, PenTool, Palette, Users,
+ Settings, Rocket
 } from 'lucide-react';
 
 const VIDEO_CATEGORIES = [
@@ -242,32 +242,32 @@ const DIFFICULTY_CONFIG = {
  advanced: { label: 'Advanced', color: 'text-red-400', bg: 'bg-red-400/10' },
 };
 
-function VideoCard({ video, onClick }) {
+function VideoCard({ video, isCompleted, onClick }) {
  const difficulty = DIFFICULTY_CONFIG[video.difficulty];
- 
+
  return (
- <div 
+ <div
  onClick={onClick}
- className="group cursor-pointer rounded-2xl overflow-hidden border transition-all cth-card" style={{ borderColor: "var(--cth-admin-border)" }}
+ className="group cursor-pointer overflow-hidden border transition-all cth-card" style={{ borderColor: "var(--cth-admin-border)" }}
  data-testid={`video-card-${video.id}`}
  >
  {/* Thumbnail */}
  <div className={`aspect-video bg-gradient-to-br ${video.thumbnail} flex items-center justify-center relative`}>
  <PlayCircle size={48} className="text-white/80 group-hover:text-white group-hover:scale-110 transition-all" />
- 
+
  {video.featured && (
  <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--cth-admin-accent)] text-white text-[10px] font-medium">
  <Star size={10} fill="currentColor" /> Featured
  </div>
  )}
- 
- {video.completed && (
+
+ {isCompleted && (
  <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
  <CheckCircle size={14} className="text-white" />
  </div>
  )}
- 
- <div className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded bg-black/60 text-white text-xs">
+
+ <div className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-0.5 bg-black/60 text-white text-xs">
  <Clock size={10} /> {video.duration}
  </div>
  </div>
@@ -288,7 +288,7 @@ function VideoCard({ video, onClick }) {
  );
 }
 
-function VideoPlayer({ video, onClose }) {
+function VideoPlayer({ video, isCompleted, onToggleCompleted, onClose }) {
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
  <div className="w-full max-w-5xl mx-4">
@@ -298,34 +298,34 @@ function VideoPlayer({ video, onClose }) {
  <h3 className="text-xl font-semibold" style={{ color: "var(--cth-admin-panel)" }}>{video.title}</h3>
  <p className="text-sm" style={{ color: "rgba(248, 244, 242, 0.78)" }}>{video.description}</p>
  </div>
- <button 
- onClick={onClose} 
- className="p-2 rounded-lg transition-colors" style={{ color: "var(--cth-admin-panel)", background: "rgba(255,255,255,0.06)" }}
+ <button
+ onClick={onClose}
+ className="p-2 transition-colors" style={{ color: "var(--cth-admin-panel)", background: "rgba(255,255,255,0.06)" }}
  data-testid="close-video-player"
  >
  <X size={24} />
  </button>
  </div>
- 
+
  {/* Video Area */}
- <div className={`aspect-video bg-gradient-to-br ${video.thumbnail} rounded-2xl border border-white/10 flex items-center justify-center`}>
+ <div className={`aspect-video bg-gradient-to-br ${video.thumbnail} border border-white/10 flex items-center justify-center`}>
  <div className="text-center max-w-lg">
  <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-6">
  <PlayCircle size={48} className="text-white" />
  </div>
  <h4 className="text-2xl font-bold text-white mb-3">{video.title}</h4>
  <p className="mb-6" style={{ color: "rgba(248, 244, 242, 0.82)" }}>Duration: {video.duration}</p>
- <div className="p-4 rounded-xl backdrop-blur-sm" style={{ background: "rgba(20,15,43,0.38)" }}>
+ <div className="p-4 backdrop-blur-sm" style={{ background: "rgba(20,15,43,0.38)" }}>
  <p className="text-sm" style={{ color: "rgba(248, 244, 242, 0.72)" }}>
- Video tutorials are coming soon! We're creating high-quality, 
+ Video tutorials are coming soon! We're creating high-quality,
  step-by-step walkthroughs for every feature in Core Truth House OS.
  </p>
  </div>
  </div>
  </div>
- 
+
  {/* Video Info */}
- <div className="flex items-center justify-between mt-4 p-4 rounded-xl cth-card border" style={{ borderColor: "var(--cth-admin-border)" }}>
+ <div className="flex items-center justify-between mt-4 p-4 cth-card border" style={{ borderColor: "var(--cth-admin-border)" }}>
  <div className="flex items-center gap-4">
  <div className="flex items-center gap-2 text-sm cth-muted">
  <Clock size={14} /> {video.duration}
@@ -334,8 +334,18 @@ function VideoPlayer({ video, onClose }) {
  {DIFFICULTY_CONFIG[video.difficulty].label}
  </span>
  </div>
- <button className="cth-button-primary text-sm px-4 py-2 transition-colors">
- Mark as Completed
+ <button
+ onClick={onToggleCompleted}
+ data-testid="toggle-completed-btn"
+ className="cth-button-primary text-sm px-4 py-2 transition-colors inline-flex items-center gap-2"
+ >
+ {isCompleted ? (
+ <>
+ <CheckCircle size={14} /> Completed
+ </>
+ ) : (
+ 'Mark as Completed'
+ )}
  </button>
  </div>
  </div>
@@ -343,17 +353,39 @@ function VideoPlayer({ video, onClose }) {
  );
 }
 
+const COMPLETED_STORAGE_KEY = 'cth-tutorial-completed';
+
 export default function VideoTutorialsPage() {
  const [activeCategory, setActiveCategory] = useState('all');
  const [searchQuery, setSearchQuery] = useState('');
  const [selectedVideo, setSelectedVideo] = useState(null);
  const [difficultyFilter, setDifficultyFilter] = useState('all');
+ const [completed, setCompleted] = useState(() => {
+ if (typeof window === 'undefined') return {};
+ try {
+ return JSON.parse(window.localStorage.getItem(COMPLETED_STORAGE_KEY) || '{}');
+ } catch {
+ return {};
+ }
+ });
+
+ const toggleCompleted = useCallback((videoId) => {
+ setCompleted((prev) => {
+ const next = { ...prev, [videoId]: !prev[videoId] };
+ try {
+ window.localStorage.setItem(COMPLETED_STORAGE_KEY, JSON.stringify(next));
+ } catch {
+ /* ignore quota / unavailable storage */
+ }
+ return next;
+ });
+ }, []);
 
  // Filter tutorials
  const filteredTutorials = TUTORIALS.filter(video => {
  const matchesCategory = activeCategory === 'all' || video.category === activeCategory;
  const matchesDifficulty = difficultyFilter === 'all' || video.difficulty === difficultyFilter;
- const matchesSearch = !searchQuery || 
+ const matchesSearch = !searchQuery ||
  video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
  video.description.toLowerCase().includes(searchQuery.toLowerCase());
  return matchesCategory && matchesDifficulty && matchesSearch;
@@ -363,22 +395,13 @@ export default function VideoTutorialsPage() {
 
  return (
  <DashboardLayout>
+ <TopBar
+ title="Tutorials"
+ subtitle="Video guides for every part of Core Truth House"
+ />
  <div data-testid="video-tutorials-page" className="cth-page flex-1 overflow-y-auto">
- {/* Header */}
- <div className="border-b sticky top-0 z-30 backdrop-blur-xl" style={{ borderColor: 'var(--cth-admin-border)', background: 'rgba(248,244,242,0.94)' }}>
- <div className="max-w-7xl mx-auto px-6 py-5">
- <div className="flex items-center justify-between gap-4">
- <div>
- <h1 className="font-bold cth-heading text-xl flex items-center gap-2">
- <PlayCircle size={22} className="cth-text-accent" /> Video Tutorials
- </h1>
- <p className="text-xs cth-muted mt-0.5">
- {TUTORIALS.length} tutorials • Learn at your own pace
- </p>
- </div>
- 
- {/* Search */}
- <div className="flex items-center gap-3">
+ <div className="max-w-[1200px] mx-auto px-6 py-5">
+ <div className="flex items-center justify-end gap-3 mb-6">
  <div className="relative">
  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 cth-muted" />
  <input
@@ -386,16 +409,16 @@ export default function VideoTutorialsPage() {
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
  placeholder="Search tutorials..."
- className="cth-input w-64 text-sm rounded-xl pl-9 pr-4 py-2.5"
+ className="cth-input w-64 text-sm pl-9 pr-4 py-2.5"
  data-testid="tutorial-search"
  />
  </div>
- 
+
  {/* Difficulty Filter */}
  <select
  value={difficultyFilter}
  onChange={(e) => setDifficultyFilter(e.target.value)}
- className="cth-select text-sm rounded-xl px-3 py-2.5"
+ className="cth-select text-sm px-3 py-2.5"
  data-testid="difficulty-filter"
  >
  <option value="all">All Levels</option>
@@ -405,10 +428,8 @@ export default function VideoTutorialsPage() {
  </select>
  </div>
  </div>
- </div>
- </div>
 
- <div className="max-w-7xl mx-auto px-6 py-8">
+ <div className="max-w-[1200px] mx-auto px-6 py-8">
  {/* Featured Section */}
  {activeCategory === 'all' && !searchQuery && (
  <div className="mb-10">
@@ -417,9 +438,10 @@ export default function VideoTutorialsPage() {
  </h2>
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
  {featuredTutorials.map(video => (
- <VideoCard 
- key={video.id} 
- video={video} 
+ <VideoCard
+ key={video.id}
+ video={video}
+ isCompleted={!!completed[video.id]}
  onClick={() => setSelectedVideo(video)}
  />
  ))}
@@ -439,7 +461,7 @@ export default function VideoTutorialsPage() {
  <button
  key={cat.id}
  onClick={() => setActiveCategory(cat.id)}
- className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all ${
+ className={`flex items-center gap-2 px-4 py-2 text-sm whitespace-nowrap transition-all ${
  activeCategory === cat.id
  ? 'bg-[rgba(224,78,53,0.12)] text-[var(--cth-admin-accent)] border border-[rgba(224,78,53,0.24)]'
  : 'cth-card-muted cth-muted border border-[var(--cth-admin-border)] hover:opacity-80'
@@ -458,9 +480,10 @@ export default function VideoTutorialsPage() {
  {filteredTutorials.length > 0 ? (
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
  {filteredTutorials.map(video => (
- <VideoCard 
- key={video.id} 
- video={video} 
+ <VideoCard
+ key={video.id}
+ video={video}
+ isCompleted={!!completed[video.id]}
  onClick={() => setSelectedVideo(video)}
  />
  ))}
@@ -474,9 +497,9 @@ export default function VideoTutorialsPage() {
  )}
 
  {/* Learning Path Suggestion */}
- <div className="mt-12 p-6 rounded-2xl border" style={{ background: 'rgba(224,78,53,0.06)', borderColor: 'rgba(224,78,53,0.18)' }}>
+ <div className="mt-12 p-6 border" style={{ background: 'rgba(224,78,53,0.06)', borderColor: 'rgba(224,78,53,0.18)' }}>
  <div className="flex items-start gap-4">
- <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(224,78,53,0.14)' }}>
+ <div className="w-12 h-12 flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(224,78,53,0.14)' }}>
  <Rocket size={24} className="cth-text-accent" />
  </div>
  <div>
@@ -488,7 +511,7 @@ export default function VideoTutorialsPage() {
  {['Platform Overview', 'Brand Foundation Mastery', 'Strategic OS Masterclass', 'Content Studio Deep Dive', 'Campaign Builder Tutorial'].map((title, idx) => (
  <span 
  key={idx}
- className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg cth-card-muted text-sm cth-muted"
+ className="flex items-center gap-1.5 px-3 py-1.5 cth-card-muted text-sm cth-muted"
  >
  <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(224,78,53,0.14)', color: 'var(--cth-admin-accent)' }}>
  {idx + 1}
@@ -505,7 +528,12 @@ export default function VideoTutorialsPage() {
 
  {/* Video Player Modal */}
  {selectedVideo && (
- <VideoPlayer video={selectedVideo} onClose={() => setSelectedVideo(null)} />
+ <VideoPlayer
+ video={selectedVideo}
+ isCompleted={!!completed[selectedVideo.id]}
+ onToggleCompleted={() => toggleCompleted(selectedVideo.id)}
+ onClose={() => setSelectedVideo(null)}
+ />
  )}
  </DashboardLayout>
  );
