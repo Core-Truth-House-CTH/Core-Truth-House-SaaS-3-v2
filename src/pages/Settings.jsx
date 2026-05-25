@@ -25,7 +25,6 @@ import {
   Building2,
   Mail,
 } from 'lucide-react';
-import axios from 'axios';
 import { usePlan } from '../context/PlanContext';
 import { NotificationPreferences } from '../components/NotificationPreferences';
 import { IOSInstallInstructions } from '../pwa/PWAProvider';
@@ -33,8 +32,6 @@ import apiClient from "../lib/apiClient";
 import { toast } from 'sonner';
 import MailIntegrationsSettings from "../components/mail/MailIntegrationsSettings";
 import SocialConnectionsSection from "../components/SocialConnectionsSection";
-
-const API = `${import.meta.env.VITE_BACKEND_URL}/api`;
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Playfair Display', serif";
@@ -271,7 +268,7 @@ export default function Settings() {
   const [confirmRenameOpen, setConfirmRenameOpen] = useState(false);
   const [confirmRemoveDomainOpen, setConfirmRemoveDomainOpen] = useState(false);
 
-  const canUseDomain = isSuperAdmin || ['HOUSE', 'ESTATE'].includes(plan);
+  const canUseDomain = isSuperAdmin || ['house', 'estate'].includes(String(plan || '').toLowerCase());
 
   useEffect(() => {
     loadSettings();
@@ -329,7 +326,7 @@ export default function Settings() {
       setTimeout(() => setSaved(false), 2000);
       loadDomain();
     } catch (e) {
-      alert(e.response?.data?.detail || 'Failed to save domain');
+      toast.error(e.response?.data?.detail || 'Failed to save domain');
     } finally {
       setDomainSaving(false);
     }
@@ -356,7 +353,7 @@ export default function Settings() {
       setDomainInput('');
       setDnsResult(null);
     } catch {
-      alert('Failed to remove domain');
+      toast.error('Failed to remove domain');
     }
   };
 
@@ -410,7 +407,7 @@ export default function Settings() {
     setBrandNameSaving(true);
 
     try {
-      await axios.put(`${API}/workspaces/${activeWorkspace.id}`, {
+      await apiClient.put(`/workspaces/${activeWorkspace.id}`, {
         brand_name: brandName.trim(),
       });
 
@@ -419,7 +416,7 @@ export default function Settings() {
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
       console.error('Failed to save brand name:', e);
-      alert('Failed to save brand name. Please try again.');
+      toast.error('Failed to save brand name. Please try again.');
     } finally {
       setBrandNameSaving(false);
     }
@@ -529,7 +526,7 @@ export default function Settings() {
         style={PAGE_STYLE}
         data-testid="settings-page"
       >
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-[1200px]">
           <div className="flex flex-col gap-5 md:flex-row md:gap-6">
             <div className="md:w-[220px] md:shrink-0">{sidebar}</div>
 
