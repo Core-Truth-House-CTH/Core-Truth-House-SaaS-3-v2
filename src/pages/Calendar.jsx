@@ -20,23 +20,8 @@ import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
 const CTH_PAGE_COLORS = {
- darkest: "var(--cth-admin-bg)",
- darker: "var(--cth-admin-panel-alt)",
  cardBg: "var(--cth-admin-panel)",
- crimson: "var(--cth-command-crimson)",
- cinnabar: "var(--cth-command-crimson)",
  tuscany: "var(--cth-admin-tuscany)",
- ruby: "var(--cth-admin-ruby)",
- textPrimary: "var(--cth-admin-ink)",
- textSecondary: "var(--cth-admin-ruby)",
- textMuted: "var(--cth-admin-ink-soft, var(--cth-admin-muted))",
- border: "var(--cth-admin-border)",
- accent: "var(--cth-command-crimson)",
- sidebarStart: "var(--cth-admin-sidebar-start)",
- sidebarEnd: "var(--cth-admin-sidebar-end)",
- sidebarHover: "var(--cth-admin-sidebar-hover)",
- panel: "var(--cth-admin-panel)",
- appBg: "var(--cth-admin-bg)",
 };
 
 const CATEGORY_FALLBACKS = {
@@ -156,7 +141,7 @@ function EventChip({ event, categoryMeta, onOpen }) {
  e.stopPropagation();
  onOpen(event);
  }}
- className="w-full truncate rounded-md px-1.5 py-1 text-left text-[11px] font-medium"
+ className="w-full truncate px-1.5 py-1 text-left text-[11px] font-medium"
  style={chipStyle(categoryMeta)}
  title={event.title}
  >
@@ -187,7 +172,7 @@ function EventModal({
  <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
  <div
- className="relative z-10 w-full max-w-2xl rounded-2xl p-5"
+ className="relative z-10 w-full max-w-2xl p-5"
  style={{
  background: "var(--cth-admin-panel)",
  border: "1px solid var(--cth-admin-border)",
@@ -210,7 +195,7 @@ function EventModal({
 
  {error ? (
  <div
- className="mb-4 rounded-xl px-4 py-3 text-sm"
+ className="mb-4 px-4 py-3 text-sm"
  style={{
  background: "rgba(224,78,53,0.10)",
  border: "1px solid rgba(224,78,53,0.25)",
@@ -227,7 +212,7 @@ function EventModal({
  <input
  value={draft.title}
  onChange={(e) => onChange("title", e.target.value)}
- className="cth-input w-full rounded-xl px-3 py-3"
+ className="cth-input w-full px-3 py-3"
  style={{
  background: "var(--cth-admin-panel-alt)",
  border: "1px solid var(--cth-admin-border)",
@@ -248,7 +233,7 @@ function EventModal({
  onChange("color", selectedCategory.color);
  }
  }}
- className="cth-select w-full rounded-xl px-3 py-3"
+ className="cth-select w-full px-3 py-3"
  style={{
  background: "var(--cth-admin-panel-alt)",
  border: "1px solid var(--cth-admin-border)",
@@ -270,7 +255,7 @@ function EventModal({
  type="color"
  value={draft.color || "var(--cth-command-crimson)"}
  onChange={(e) => onChange("color", e.target.value)}
- className="h-11 w-14 rounded-lg border-0 bg-transparent"
+ className="h-11 w-14 border-0 bg-transparent"
  />
  <span className="text-sm cth-muted">{draft.color || "var(--cth-command-crimson)"}</span>
  </div>
@@ -282,7 +267,7 @@ function EventModal({
  type="datetime-local"
  value={toLocalInputValue(draft.start_time)}
  onChange={(e) => onChange("start_time", fromLocalInputValue(e.target.value))}
- className="cth-input w-full rounded-xl px-3 py-3"
+ className="cth-input w-full px-3 py-3"
  style={{
  background: "var(--cth-admin-panel-alt)",
  border: "1px solid var(--cth-admin-border)",
@@ -298,7 +283,7 @@ function EventModal({
  type="datetime-local"
  value={toLocalInputValue(draft.end_time)}
  onChange={(e) => onChange("end_time", fromLocalInputValue(e.target.value))}
- className="w-full rounded-xl px-3 py-3 cth-heading"
+ className="w-full px-3 py-3 cth-heading"
  style={{
  background: "var(--cth-admin-panel-alt)",
  border: "1px solid var(--cth-admin-border)",
@@ -312,7 +297,7 @@ function EventModal({
  <input
  value={draft.location || ""}
  onChange={(e) => onChange("location", e.target.value)}
- className="w-full rounded-xl px-3 py-3 cth-heading"
+ className="w-full px-3 py-3 cth-heading"
  style={{
  background: "var(--cth-admin-panel-alt)",
  border: "1px solid var(--cth-admin-border)",
@@ -325,7 +310,7 @@ function EventModal({
  <select
  value={draft.recurring || ""}
  onChange={(e) => onChange("recurring", e.target.value)}
- className="w-full rounded-xl px-3 py-3 cth-heading"
+ className="w-full px-3 py-3 cth-heading"
  style={{
  background: "var(--cth-admin-panel-alt)",
  border: "1px solid var(--cth-admin-border)",
@@ -345,7 +330,7 @@ function EventModal({
  rows={5}
  value={draft.description || ""}
  onChange={(e) => onChange("description", e.target.value)}
- className="w-full rounded-xl px-3 py-3 cth-heading"
+ className="w-full px-3 py-3 cth-heading"
  style={{
  background: "var(--cth-admin-panel-alt)",
  border: "1px solid var(--cth-admin-border)",
@@ -361,7 +346,7 @@ function EventModal({
  type="button"
  disabled={deleting}
  onClick={onDelete}
- className="inline-flex items-center gap-2 rounded-xl px-4 py-2"
+ className="inline-flex items-center gap-2 px-4 py-2"
  style={{
  background: "rgba(180,67,67,0.10)",
  border: "1px solid rgba(180,67,67,0.24)",
@@ -379,7 +364,7 @@ function EventModal({
  <button
  type="button"
  onClick={onClose}
- className="cth-button-secondary rounded-xl px-4 py-2" 
+ className="cth-button-secondary px-4 py-2" 
  >
  Cancel
  </button>
@@ -387,7 +372,7 @@ function EventModal({
  type="button"
  disabled={saving}
  onClick={onSave}
- className="cth-button-primary rounded-xl px-4 py-2 font-semibold"
+ className="cth-button-primary px-4 py-2 font-semibold"
  style={{ opacity: saving ? 0.7 : 1 }}
  >
  {saving ? "Saving..." : mode === "create" ? "Create Event" : "Save Changes"}
@@ -402,7 +387,7 @@ function EventModal({
 function EventListCard({ title, icon: Icon, events, categories, emptyText, onOpen }) {
  return (
  <div
- className="rounded-2xl p-4 cth-card"
+ className="p-4 cth-card"
  style={{
  background: "var(--cth-admin-panel)",
  border: "1px solid var(--cth-admin-border)",
@@ -414,7 +399,7 @@ function EventListCard({ title, icon: Icon, events, categories, emptyText, onOpe
  </div>
 
  {events.length === 0 ? (
- <div className="rounded-xl px-4 py-5 text-sm cth-muted" style={{ background: "var(--cth-admin-panel-alt)" }}>
+ <div className="px-4 py-5 text-sm cth-muted" style={{ background: "var(--cth-admin-panel-alt)" }}>
  {emptyText}
  </div>
  ) : (
@@ -430,7 +415,7 @@ function EventListCard({ title, icon: Icon, events, categories, emptyText, onOpe
  key={event.id}
  type="button"
  onClick={() => onOpen(event)}
- className="rounded-xl px-4 py-3 text-left cth-card-muted"
+ className="px-4 py-3 text-left cth-card-muted"
  style={{ background: "var(--cth-admin-panel-alt)" }}
  >
  <div className="mb-1 flex items-center justify-between gap-2">
@@ -504,6 +489,7 @@ export default function Calendar() {
  const [deleteBusy, setDeleteBusy] = useState(false);
  const [pageError, setPageError] = useState("");
  const [modalError, setModalError] = useState("");
+ const [deleteTarget, setDeleteTarget] = useState(null);
 
  const monthLabel = viewDate.toLocaleDateString([], {
  month: "long",
@@ -677,17 +663,18 @@ export default function Calendar() {
  }
  };
 
- const handleDelete = async () => {
+ const handleDelete = () => {
  if (!selectedEvent?.id) return;
+ setDeleteTarget(selectedEvent);
+ };
 
- const confirmed = window.confirm("Delete this event?");
- if (!confirmed) return;
-
+ const confirmDelete = async () => {
+ if (!deleteTarget?.id) return;
  setModalError("");
-
  try {
  setDeleteBusy(true);
- await apiClient.delete(API_PATHS.calendar.eventById(selectedEvent.id));
+ await apiClient.delete(API_PATHS.calendar.eventById(deleteTarget.id));
+ setDeleteTarget(null);
  closeModal();
  await loadCalendar({ silent: true });
  } catch (error) {
@@ -722,7 +709,7 @@ export default function Calendar() {
  <div className="px-4 py-5 md:px-7">
  {pageError ? (
  <div
- className="mb-4 rounded-xl px-4 py-3 text-sm"
+ className="mb-4 px-4 py-3 text-sm"
  style={{
  background: "rgba(224,78,53,0.10)",
  border: "1px solid rgba(224,78,53,0.25)",
@@ -735,7 +722,7 @@ export default function Calendar() {
 
  <div className="mb-5 grid gap-4 lg:grid-cols-[1fr_340px]">
  <div
- className="rounded-2xl p-4"
+ className="p-4"
  style={{
  background: colors.cardBg,
  border: `1px solid ${colors.tuscany}15`,
@@ -750,7 +737,7 @@ export default function Calendar() {
  new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1)
  )
  }
- className="rounded-xl p-2 cth-heading"
+ className="p-2 cth-heading"
  style={{ background: "var(--cth-admin-panel-alt)" }}
  >
  <ChevronLeft size={16} />
@@ -767,7 +754,7 @@ export default function Calendar() {
  new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1)
  )
  }
- className="rounded-xl p-2 cth-heading"
+ className="p-2 cth-heading"
  style={{ background: "var(--cth-admin-panel-alt)" }}
  >
  <ChevronRight size={16} />
@@ -784,7 +771,7 @@ export default function Calendar() {
  value={search}
  onChange={(e) => setSearch(e.target.value)}
  placeholder="Search events"
- className="rounded-xl py-2 pl-9 pr-3 text-sm cth-heading"
+ className="py-2 pl-9 pr-3 text-sm cth-heading"
  style={{
  background: "var(--cth-admin-panel-alt)",
  border: "1px solid var(--cth-admin-border)",
@@ -795,7 +782,7 @@ export default function Calendar() {
  <button
  type="button"
  onClick={() => loadCalendar({ silent: true })}
- className="inline-flex items-center gap-2 rounded-xl px-3 py-2 cth-heading"
+ className="inline-flex items-center gap-2 px-3 py-2 cth-heading"
  style={{ background: "var(--cth-admin-panel-alt)" }}
  >
  {refreshing ? (
@@ -808,8 +795,7 @@ export default function Calendar() {
  <button
  type="button"
  onClick={() => openCreateForDate(new Date())}
- className="inline-flex items-center gap-2 rounded-xl px-3 py-2 font-semibold cth-heading"
- className="cth-button-primary rounded-xl px-4 py-2 font-semibold"
+ className="cth-button-primary px-4 py-2 font-semibold inline-flex items-center gap-2"
  >
  <Plus size={15} />
  New Event
@@ -827,7 +813,7 @@ export default function Calendar() {
  {DAY_NAMES.map((day) => (
  <div
  key={day}
- className="rounded-lg px-2 py-2 text-center text-xs font-bold uppercase tracking-wide cth-muted"
+ className="px-2 py-2 text-center text-xs font-bold uppercase tracking-wide cth-muted"
  >
  {day}
  </div>
@@ -846,7 +832,7 @@ export default function Calendar() {
  key={dayKey}
  type="button"
  onClick={() => openCreateForDate(date)}
- className="min-h-[120px] rounded-xl p-2 text-left align-top"
+ className="min-h-[120px] p-2 text-left align-top"
  style={{
  background: inMonth ? "var(--cth-admin-panel-alt)" : "rgba(43,16,64,0.04)",
  border: isToday
@@ -897,7 +883,7 @@ export default function Calendar() {
 
  <div className="grid gap-4">
  <div
- className="rounded-2xl p-4"
+ className="p-4"
  style={{
  background: colors.cardBg,
  border: `1px solid ${colors.tuscany}15`,
@@ -909,21 +895,21 @@ export default function Calendar() {
  </div>
 
  <div className="grid gap-3">
- <div className="rounded-xl px-4 py-3" style={{ background: "var(--cth-admin-panel-alt)" }}>
+ <div className="px-4 py-3" style={{ background: "var(--cth-admin-panel-alt)" }}>
  <div className="text-xs uppercase tracking-wide cth-heading/50">Total Events</div>
  <div className="mt-1 text-xl font-bold cth-heading">
  {analytics?.total_events ?? events.length}
  </div>
  </div>
 
- <div className="rounded-xl px-4 py-3" style={{ background: "var(--cth-admin-panel-alt)" }}>
+ <div className="px-4 py-3" style={{ background: "var(--cth-admin-panel-alt)" }}>
  <div className="text-xs uppercase tracking-wide cth-heading/50">This Month</div>
  <div className="mt-1 text-xl font-bold cth-heading">
  {analytics?.events_this_month ?? 0}
  </div>
  </div>
 
- <div className="rounded-xl px-4 py-3" style={{ background: "var(--cth-admin-panel-alt)" }}>
+ <div className="px-4 py-3" style={{ background: "var(--cth-admin-panel-alt)" }}>
  <div className="text-xs uppercase tracking-wide cth-heading/50">Next 7 Days</div>
  <div className="mt-1 text-xl font-bold cth-heading">
  {analytics?.upcoming_7_days ?? upcomingEvents.length}
@@ -952,6 +938,68 @@ export default function Calendar() {
  </div>
  </div>
  </div>
+
+ {deleteTarget && (
+ <div
+ style={{
+ position: "fixed",
+ inset: 0,
+ background: "rgba(0,0,0,0.5)",
+ zIndex: 60,
+ display: "flex",
+ alignItems: "center",
+ justifyContent: "center",
+ }}
+ onClick={() => !deleteBusy && setDeleteTarget(null)}
+ >
+ <div
+ onClick={(e) => e.stopPropagation()}
+ style={{
+ background: "var(--cth-command-panel)",
+ border: "1px solid var(--cth-command-border)",
+ padding: "32px",
+ maxWidth: "400px",
+ width: "90%",
+ borderRadius: 0,
+ }}
+ >
+ <h3 style={{ margin: "0 0 8px", color: "var(--cth-command-ink)" }}>Delete Event</h3>
+ <p style={{ margin: "0 0 24px", color: "var(--cth-command-muted)", fontSize: "14px" }}>
+ Are you sure you want to delete <strong>{deleteTarget.title || "this event"}</strong>? This cannot be undone.
+ </p>
+ <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+ <button
+ onClick={() => setDeleteTarget(null)}
+ disabled={deleteBusy}
+ style={{
+ padding: "8px 16px",
+ border: "1px solid var(--cth-command-border)",
+ background: "transparent",
+ color: "var(--cth-command-ink)",
+ cursor: "pointer",
+ borderRadius: 0,
+ }}
+ >
+ Cancel
+ </button>
+ <button
+ onClick={confirmDelete}
+ disabled={deleteBusy}
+ style={{
+ padding: "8px 16px",
+ border: "none",
+ background: "var(--cth-command-crimson)",
+ color: "#fff",
+ cursor: deleteBusy ? "not-allowed" : "pointer",
+ borderRadius: 0,
+ }}
+ >
+ {deleteBusy ? "Deleting..." : "Delete"}
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
  </DashboardLayout>
  );
 }
