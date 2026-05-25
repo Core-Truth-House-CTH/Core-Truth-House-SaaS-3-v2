@@ -44,20 +44,20 @@ const PAGE_STYLE = {
 const PANEL_STYLE = {
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 4,
+ borderRadius: 0,
 };
 
 const SOFT_PANEL_STYLE = {
  background: "var(--cth-command-panel-soft)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 4,
+ borderRadius: 0,
 };
 
 const INPUT_STYLE = {
  width: "100%",
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 4,
+ borderRadius: 0,
  padding: "10px 12px",
  color: "var(--cth-command-ink)",
  fontFamily: SANS,
@@ -77,7 +77,7 @@ const PRIMARY_BUTTON_STYLE = {
  justifyContent: "center",
  gap: 8,
  padding: "10px 16px",
- borderRadius: 4,
+ borderRadius: 0,
  background: "var(--cth-command-purple)",
  color: "var(--cth-command-gold)",
  fontFamily: SANS,
@@ -93,7 +93,7 @@ const SECONDARY_BUTTON_STYLE = {
  justifyContent: "center",
  gap: 8,
  padding: "8px 14px",
- borderRadius: 4,
+ borderRadius: 0,
  background: "transparent",
  border: "1px solid var(--cth-command-border)",
  color: "var(--cth-command-ink)",
@@ -109,7 +109,7 @@ const DESTRUCTIVE_BUTTON_STYLE = {
  justifyContent: "center",
  gap: 8,
  padding: "10px 16px",
- borderRadius: 4,
+ borderRadius: 0,
  background: "var(--cth-command-crimson)",
  color: "var(--cth-command-ivory)",
  fontFamily: SANS,
@@ -279,7 +279,7 @@ function EmptyState({ text }) {
  style={{
  background: "var(--cth-command-panel-soft)",
  border: "1px dashed var(--cth-command-border)",
- borderRadius: 4,
+ borderRadius: 0,
  padding: "18px 16px",
  fontFamily: SANS,
  fontSize: 14,
@@ -390,7 +390,7 @@ function IconButton({ onClick, label, tone = "muted", children }) {
  justifyContent: "center",
  width: 32,
  height: 32,
- borderRadius: 4,
+ borderRadius: 0,
  background: "transparent",
  border: `1px solid ${hover ? "var(--cth-command-border)" : "transparent"}`,
  color: hover ? hoverColor : baseColor,
@@ -423,7 +423,7 @@ function DealCard({ deal, onOpen, onDelete }) {
  background: "var(--cth-command-panel)",
  border: `1px solid ${hover ? "var(--cth-command-crimson)" : "var(--cth-command-border)"}`,
  borderLeft: `3px solid ${accent}`,
- borderRadius: 4,
+ borderRadius: 0,
  padding: "14px 16px",
  cursor: "pointer",
  transition: "border-color 150ms ease",
@@ -505,7 +505,7 @@ function QuickAddCard({ title, icon: Icon, eyebrow, children }) {
  justifyContent: "center",
  background: "var(--cth-command-panel-soft)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 4,
+ borderRadius: 0,
  color: "var(--cth-command-crimson)",
  }}
  >
@@ -559,7 +559,7 @@ function ConfirmDeleteModal({ confirm, busy, onCancel, onConfirm }) {
  maxWidth: 480,
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 4,
+ borderRadius: 0,
  padding: 28,
  boxShadow: "0 30px 60px rgba(13,0,16,0.25)",
  }}
@@ -777,7 +777,7 @@ function Toast({ toast }) {
  zIndex: 70,
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-gold)",
- borderRadius: 4,
+ borderRadius: 0,
  padding: "12px 18px",
  boxShadow: "0 20px 40px rgba(13,0,16,0.18)",
  fontFamily: SANS,
@@ -1159,12 +1159,12 @@ export default function CRMSuite() {
  <TopBar title="CRM" subtitle="Workspace-scoped pipeline, contacts, activity, and notes." />
 
  <div style={PAGE_STYLE} className="px-4 py-6 md:px-7 md:py-8">
+ <div className="mx-auto w-full max-w-[1200px] space-y-8">
  {pageError ? (
  <div
  style={{
- marginBottom: 16,
  padding: "12px 16px",
- borderRadius: 4,
+ borderRadius: 0,
  background: "color-mix(in srgb, var(--cth-command-crimson) 10%, var(--cth-command-panel))",
  border: "1px solid var(--cth-command-crimson)",
  color: "var(--cth-command-crimson)",
@@ -1176,7 +1176,7 @@ export default function CRMSuite() {
  </div>
  ) : null}
 
- <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+ <div className="flex flex-wrap items-center justify-between gap-3">
  <div>
  <div style={EYEBROW_STYLE}>Customer Relationship Manager</div>
  <p
@@ -1237,7 +1237,7 @@ export default function CRMSuite() {
  </div>
  </div>
 
- <div className="mb-7 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+ <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
  <MetricTile icon={Users} label="Contacts" value={summary.contacts || 0} accent="var(--cth-command-purple)" />
  <MetricTile icon={BriefcaseBusiness} label="Deals" value={summary.deals || 0} accent="var(--cth-command-crimson)" />
  <MetricTile icon={BarChart3} label="Open Deals" value={summary.open_deals || 0} accent="var(--cth-command-gold)" />
@@ -1277,7 +1277,7 @@ export default function CRMSuite() {
  padding: "10px 12px",
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1738,6 +1738,7 @@ export default function CRMSuite() {
  </div>
  )}
  </Panel>
+ </div>
  </div>
  </div>
  </div>
