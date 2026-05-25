@@ -61,7 +61,7 @@ const SECTION_HEADING_STYLE = {
 const CARD_STYLE = {
   background: "var(--cth-command-panel)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
 };
 
 const PRIMARY_CTA_STYLE = {
@@ -334,7 +334,7 @@ function ContentTypeCard({ type, selected, onSelect }) {
       style={{
         textAlign: "left",
         padding: "18px 16px",
-        borderRadius: 6,
+        borderRadius: 0,
         background: selected
           ? "color-mix(in srgb, var(--cth-command-crimson) 6%, var(--cth-command-panel))"
           : "var(--cth-command-panel)",
@@ -353,7 +353,7 @@ function ContentTypeCard({ type, selected, onSelect }) {
         style={{
           width: 36,
           height: 36,
-          borderRadius: 8,
+          borderRadius: 0,
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
@@ -428,7 +428,7 @@ function Toast({ message }) {
         right: 24,
         zIndex: 1000,
         padding: "10px 16px",
-        borderRadius: 6,
+        borderRadius: 0,
         background: "var(--cth-command-ink)",
         color: "var(--cth-command-panel)",
         fontFamily: SANS,
@@ -837,7 +837,7 @@ export default function PromptGenerator() {
       <div className="flex-1 overflow-auto" style={PAGE_STYLE} data-testid="prompt-generator-page">
         <Toast message={toast} />
 
-        <div className="mx-auto max-w-6xl px-4 md:px-8 py-6">
+        <div className="mx-auto max-w-[1200px] px-4 md:px-8 py-6">
           {/* Tabs */}
           <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
             <TabPill active={tab === "photo"} onClick={() => handleTabChange("photo")}>

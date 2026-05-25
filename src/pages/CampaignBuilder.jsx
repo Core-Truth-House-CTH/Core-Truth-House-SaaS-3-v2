@@ -206,7 +206,7 @@ function StatusBadge({ status }) {
  color: c.color,
  background: c.bg,
  border: c.border,
- borderRadius: 4,
+ borderRadius: 0,
  fontSize: 11,
  letterSpacing: '0.14em',
  padding: '3px 8px',
@@ -227,7 +227,7 @@ function GoalBadge({ goal }) {
  color: 'var(--cth-command-ink)',
  background: 'var(--cth-command-panel-soft)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  fontSize: 11,
  letterSpacing: '0.14em',
  padding: '3px 8px',
@@ -256,7 +256,7 @@ function MAGNETProgress({ campaign }) {
  background: done ? 'var(--cth-command-crimson)' : 'var(--cth-command-panel-soft)',
  color: done ? 'var(--cth-command-ivory)' : 'var(--cth-command-muted)',
  border: done ? 'none' : '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  {step.letter}
@@ -334,7 +334,7 @@ function TabResults({ campaign, onSaveResults }) {
  <button
  onClick={handleSave}
  data-testid="save-results-btn"
- className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+ className={`flex items-center gap-1.5 px-3.5 py-1.5 border text-xs font-medium transition-all ${
  isSaved
  ? 'border-[var(--cth-command-crimson)]/15 bg-[var(--cth-command-crimson)]/10 text-[var(--cth-command-crimson)]'
  : 'border-[var(--cth-command-crimson)]/25 bg-[var(--cth-command-crimson)]/10 cth-text-accent'
@@ -345,7 +345,7 @@ function TabResults({ campaign, onSaveResults }) {
  </div>
 
  <div className="grid grid-cols-2 gap-3">
- <div className="p-5 cth-card-muted rounded-xl border border-[var(--cth-command-border)]">
+ <div className="p-5 cth-card-muted border border-[var(--cth-command-border)]">
  <p className="text-[9.5px] font-semibold uppercase tracking-widest cth-muted mb-2">Target</p>
  <input
  value={targetValue}
@@ -369,7 +369,7 @@ function TabResults({ campaign, onSaveResults }) {
  />
  </div>
 
- <div className="p-5 cth-card-muted rounded-xl border border-[var(--cth-command-border)]">
+ <div className="p-5 cth-card-muted border border-[var(--cth-command-border)]">
  <p className="text-[9.5px] font-semibold uppercase tracking-widest cth-muted mb-2">Actual</p>
  <input
  value={actual}
@@ -405,7 +405,7 @@ function TabResults({ campaign, onSaveResults }) {
  <button onClick={addMetric} className="text-[10.5px] cth-text-accent">+ Add metric</button>
  </div>
 
- <div className="cth-card-muted rounded-xl border border-[var(--cth-command-border)] overflow-hidden">
+ <div className="cth-card-muted border border-[var(--cth-command-border)] overflow-hidden">
  <div className="grid grid-cols-[1fr_100px_100px_80px] px-3.5 py-2 border-b border-[var(--cth-command-border)] cth-card-muted">
  {['Metric', 'Target', 'Actual', ''].map((h) => (
  <span key={h} className="text-[9px] font-semibold uppercase tracking-widest cth-muted">
@@ -457,7 +457,7 @@ function TabResults({ campaign, onSaveResults }) {
  <button onClick={addWeek} className="text-[10.5px] cth-text-accent">+ Add week</button>
  </div>
 
- <div className="cth-card-muted rounded-xl border border-[var(--cth-command-border)] overflow-hidden">
+ <div className="cth-card-muted border border-[var(--cth-command-border)] overflow-hidden">
  <div className="grid grid-cols-[100px_1fr_1fr_1fr] px-3.5 py-2 border-b border-[var(--cth-command-border)] cth-card-muted">
  {['Week', 'Reach', 'Engagements', 'Leads'].map((h) => (
  <span key={h} className="text-[9px] font-semibold uppercase tracking-widest cth-muted">
@@ -504,7 +504,7 @@ function CalendarPopulateModal({ campaign, onConfirm, onCancel }) {
 
  <div className="mb-4 space-y-1.5">
  {items.map((item) => (
- <div key={`${item.campaign_id}-${item.content_item_id}`} className="flex items-center gap-2.5 p-2.5 cth-card-muted rounded-lg border border-[var(--cth-command-border)]">
+ <div key={`${item.campaign_id}-${item.content_item_id}`} className="flex items-center gap-2.5 p-2.5 cth-card-muted border border-[var(--cth-command-border)]">
  <div className="flex-1 min-w-0">
  <p className="text-[11.5px] font-medium cth-muted truncate">{item.format}</p>
  <p className="text-[10px] cth-muted truncate">{item.platform} · {item.topic || 'No topic set'}</p>
@@ -515,7 +515,7 @@ function CalendarPopulateModal({ campaign, onConfirm, onCancel }) {
  </div>
 
  <div className="flex gap-2">
- <button onClick={onCancel} className="flex-1 py-2.5 rounded-lg border border-[var(--cth-command-border)] cth-muted text-xs">
+ <button onClick={onCancel} className="flex-1 py-2.5 border border-[var(--cth-command-border)] cth-muted text-xs">
  Cancel
  </button>
  <button onClick={() => onConfirm(items)} className="flex-[2] py-2.5 rounded bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold">
@@ -532,7 +532,7 @@ const LINKAGE_PANEL_STYLE = {
  padding: '20px 24px',
  background: 'var(--cth-command-panel, #fbf7f1)',
  border: '1px solid var(--cth-command-border, rgba(216,197,195,0.6))',
- borderRadius: 6,
+ borderRadius: 0,
 };
 const LINKAGE_EYEBROW_STYLE = {
  fontFamily: '"DM Sans", system-ui, sans-serif',
@@ -551,7 +551,7 @@ const LINKAGE_HEADING_STYLE = {
 };
 const LINKAGE_ADD_BTN_STYLE = {
  padding: '8px 16px',
- borderRadius: 4,
+ borderRadius: 0,
  backgroundColor: 'var(--cth-command-purple, #33033C)',
  color: 'var(--cth-command-gold, #C4A95B)',
  fontFamily: '"DM Sans", system-ui, sans-serif',
@@ -568,7 +568,7 @@ const LINKAGE_SOURCE_BADGE = {
  letterSpacing: '0.14em',
  textTransform: 'uppercase',
  padding: '3px 7px',
- borderRadius: 3,
+ borderRadius: 0,
  background: 'var(--cth-command-panel-soft, #f4eee5)',
  color: 'var(--cth-command-purple, #33033C)',
  border: '1px solid var(--cth-command-border, rgba(216,197,195,0.6))',
@@ -614,7 +614,7 @@ function CampaignLinkagePanels({
  const url = m.preview_url || m.file_url || m.url || '';
  const isVideo = m.media_type === 'video' || m.file_type?.startsWith?.('video');
  return (
- <div key={id} style={{ background: cardBg, border: cardBorder, borderRadius: 4, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+ <div key={id} style={{ background: cardBg, border: cardBorder, borderRadius: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
  <div style={{ aspectRatio: '4 / 3', background: 'var(--cth-command-panel, #fbf7f1)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
  {url ? (
  isVideo ? (
@@ -668,7 +668,7 @@ function CampaignLinkagePanels({
  ) : (
  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
  {linkedContent.map((c) => (
- <div key={c.id} style={{ background: cardBg, border: cardBorder, borderRadius: 4, padding: '12px 14px' }}>
+ <div key={c.id} style={{ background: cardBg, border: cardBorder, borderRadius: 0, padding: '12px 14px' }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
  <span style={LINKAGE_SOURCE_BADGE}>{c.content_type || 'Content'}</span>
  <span style={{ fontFamily: '"DM Sans", system-ui, sans-serif', fontSize: 13, fontWeight: 600, color: ink }}>{c.title || 'Untitled'}</span>
@@ -706,7 +706,7 @@ function CampaignLinkagePanels({
  };
  const sc = statusColors[p.status] || statusColors.draft;
  return (
- <div key={p.id} style={{ background: cardBg, border: cardBorder, borderRadius: 4, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+ <div key={p.id} style={{ background: cardBg, border: cardBorder, borderRadius: 0, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
  <div style={{ minWidth: 0, flex: 1 }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
  <span style={LINKAGE_SOURCE_BADGE}>{p.platform || 'Platform'}</span>
@@ -747,7 +747,7 @@ const EDIT_INPUT_STYLE = {
  padding: '10px 12px',
  background: 'var(--cth-command-panel)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  fontFamily: '"DM Sans", system-ui, sans-serif',
  fontSize: 14,
  color: 'var(--cth-command-ink)',
@@ -771,7 +771,7 @@ function OverviewEditForm({ draft, onChange, onTogglePlatform, onSave, onCancel 
  padding: 24,
  background: 'var(--cth-command-panel)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -905,7 +905,7 @@ function OverviewEditForm({ draft, onChange, onTogglePlatform, onSave, onCancel 
  border: checked
  ? '1px solid var(--cth-command-crimson)'
  : '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  fontFamily: '"DM Sans", system-ui, sans-serif',
  fontSize: 13,
  color: 'var(--cth-command-ink)',
@@ -937,7 +937,7 @@ function OverviewEditForm({ draft, onChange, onTogglePlatform, onSave, onCancel 
  background: 'transparent',
  color: 'var(--cth-command-ink)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  padding: '10px 18px',
  fontFamily: '"DM Sans", system-ui, sans-serif',
  fontSize: 13,
@@ -955,7 +955,7 @@ function OverviewEditForm({ draft, onChange, onTogglePlatform, onSave, onCancel 
  background: 'var(--cth-command-purple)',
  color: 'var(--cth-command-gold)',
  border: 'none',
- borderRadius: 4,
+ borderRadius: 0,
  padding: '10px 22px',
  fontFamily: '"DM Sans", system-ui, sans-serif',
  fontSize: 13,
@@ -1409,7 +1409,7 @@ function CampaignBuilderPageContent() {
  subtitle="MAGNET Framework — Mission · Audience · Gravity · Narrative · Engagement · Transaction"
  />
 
- <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+ <div className="mx-auto w-full max-w-[1200px] flex flex-col md:flex-row flex-1 overflow-hidden">
  <div className="md:w-64 flex-shrink-0 border-b md:border-b-0 md:border-r border-[var(--cth-command-border)] flex flex-col bg-[var(--cth-command-panel)]/85 backdrop-blur-sm">
  <div className="px-3.5 py-3 border-b border-[var(--cth-command-border)] space-y-2">
  <button
@@ -1422,7 +1422,7 @@ function CampaignBuilderPageContent() {
  background: 'var(--cth-command-purple)',
  color: 'var(--cth-command-gold)',
  border: 'none',
- borderRadius: 4,
+ borderRadius: 0,
  padding: '9px 12px',
  fontFamily: "'DM Sans', sans-serif",
  fontSize: 13,
@@ -1444,7 +1444,7 @@ function CampaignBuilderPageContent() {
  background: 'var(--cth-command-panel)',
  color: 'var(--cth-command-ink)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  padding: '8px 12px',
  fontFamily: "'DM Sans', sans-serif",
  fontSize: 13,
@@ -1462,7 +1462,7 @@ function CampaignBuilderPageContent() {
  background: 'var(--cth-command-panel)',
  color: 'var(--cth-command-ink)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  padding: '8px 12px',
  fontFamily: "'DM Sans', sans-serif",
  fontSize: 13,
@@ -1478,7 +1478,7 @@ function CampaignBuilderPageContent() {
  <select
  value={statusFilter}
  onChange={(e) => setStatusFilter(e.target.value)}
- className="w-full rounded-xl border border-[var(--cth-command-border)] bg-white/80 px-3 py-2.5 text-xs font-medium cth-heading focus:outline-none focus:border-[var(--cth-command-crimson)]"
+ className="w-full border border-[var(--cth-command-border)] bg-white/80 px-3 py-2.5 text-xs font-medium cth-heading focus:outline-none focus:border-[var(--cth-command-crimson)]"
  >
  <option value="all">All Campaigns</option>
  <option value="active">Active</option>
@@ -1510,7 +1510,7 @@ function CampaignBuilderPageContent() {
  style={{
  background: isActive ? 'rgba(175, 0, 42, 0.04)' : 'var(--cth-command-panel-soft)',
  border: isActive ? '1px solid var(--cth-command-crimson)' : '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  <div className="flex items-start justify-between mb-1.5">
@@ -1566,7 +1566,7 @@ function CampaignBuilderPageContent() {
  background: 'var(--cth-command-purple)',
  color: 'var(--cth-command-gold)',
  border: 'none',
- borderRadius: 4,
+ borderRadius: 0,
  fontFamily: '"DM Sans", system-ui, sans-serif',
  }}
  >
@@ -1582,7 +1582,7 @@ function CampaignBuilderPageContent() {
  border: '1px solid var(--cth-command-gold)',
  background: 'transparent',
  color: 'var(--cth-command-gold)',
- borderRadius: 4,
+ borderRadius: 0,
  fontFamily: '"DM Sans", system-ui, sans-serif',
  }}
  >
@@ -1597,7 +1597,7 @@ function CampaignBuilderPageContent() {
  background: 'var(--cth-command-crimson)',
  color: 'var(--cth-command-ivory)',
  border: 'none',
- borderRadius: 4,
+ borderRadius: 0,
  fontFamily: '"DM Sans", system-ui, sans-serif',
  }}
  >
@@ -1612,7 +1612,7 @@ function CampaignBuilderPageContent() {
  border: '1px solid var(--cth-command-border)',
  background: 'transparent',
  color: 'var(--cth-command-muted)',
- borderRadius: 4,
+ borderRadius: 0,
  fontFamily: '"DM Sans", system-ui, sans-serif',
  }}
  >
@@ -1688,7 +1688,7 @@ function CampaignBuilderPageContent() {
  padding: 16,
  background: 'var(--cth-command-panel)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  <p
@@ -1786,7 +1786,7 @@ function CampaignBuilderPageContent() {
  <p className="text-[10px] font-semibold uppercase tracking-widest cth-muted mb-2">
  Week {week} — {weekTypes[week]}
  </p>
- <div className="cth-card-muted rounded-xl border border-[var(--cth-command-border)] divide-y divide-white/[0.05]">
+ <div className="cth-card-muted border border-[var(--cth-command-border)] divide-y divide-white/[0.05]">
  {items.map((item) => (
  <div key={item.id} className="flex items-center justify-between px-4 py-3">
  <div>
@@ -1810,7 +1810,7 @@ function CampaignBuilderPageContent() {
  },
  })
  }
- className="text-[10.5px] px-2.5 py-1 rounded-md bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/20 cth-text-accent font-medium"
+ className="text-[10.5px] px-2.5 py-1 bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/20 cth-text-accent font-medium"
  >
  {item.status === 'pending' ? 'Generate' : 'View'}
  </button>
@@ -1884,7 +1884,7 @@ function CampaignBuilderPageContent() {
  {items.map((item) => (
  <div
  key={item.id}
- className="flex items-center justify-between rounded-lg border border-[var(--cth-command-border)] px-3 py-2"
+ className="flex items-center justify-between border border-[var(--cth-command-border)] px-3 py-2"
  >
  <div>
  <p className="text-xs font-medium cth-muted">{item.format || 'Content item'}</p>
@@ -1918,7 +1918,7 @@ function CampaignBuilderPageContent() {
  {idx + 1}
  </div>
  </div>
- <div className="flex-1 p-3 cth-card-muted rounded-lg border border-[var(--cth-command-border)] mb-1">
+ <div className="flex-1 p-3 cth-card-muted border border-[var(--cth-command-border)] mb-1">
  <p className="text-xs font-medium cth-muted">{step.label}</p>
  <p className="text-[10px] cth-muted capitalize">{(step.type || '').replace(/_/g, ' ')}</p>
  </div>
@@ -2000,7 +2000,7 @@ function CampaignBuilderPageContent() {
  type="button"
  onClick={() => setBriefModalOpen(true)}
  disabled={briefRegenerating}
- className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/20 text-[10.5px] cth-text-accent disabled:opacity-50"
+ className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/20 text-[10.5px] cth-text-accent disabled:opacity-50"
  >
  <RefreshCw size={12} />
  Regenerate Brief
@@ -2040,7 +2040,7 @@ function CampaignBuilderPageContent() {
  type="button"
  onClick={() => setHooksModalOpen(true)}
  disabled={hooksRegenerating}
- className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/20 text-[10.5px] cth-text-accent disabled:opacity-50"
+ className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/20 text-[10.5px] cth-text-accent disabled:opacity-50"
  >
  <RefreshCw size={12} />
  Regenerate Hooks
@@ -2079,7 +2079,7 @@ function CampaignBuilderPageContent() {
  style={{
  background: 'var(--cth-command-panel)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  padding: 16,
  }}
  >
@@ -2105,7 +2105,7 @@ function CampaignBuilderPageContent() {
  border: '1px solid var(--cth-command-border)',
  background: 'transparent',
  color: 'var(--cth-command-ink)',
- borderRadius: 4,
+ borderRadius: 0,
  fontFamily: '"DM Sans", system-ui, sans-serif',
  fontSize: 13,
  }}
@@ -2121,7 +2121,7 @@ function CampaignBuilderPageContent() {
  border: '1px solid var(--cth-command-border)',
  background: 'transparent',
  color: 'var(--cth-command-ink)',
- borderRadius: 4,
+ borderRadius: 0,
  fontFamily: '"DM Sans", system-ui, sans-serif',
  fontSize: 13,
  }}
@@ -2138,7 +2138,7 @@ function CampaignBuilderPageContent() {
  border: '1px solid var(--cth-command-border)',
  background: 'transparent',
  color: 'var(--cth-command-ink)',
- borderRadius: 4,
+ borderRadius: 0,
  fontFamily: '"DM Sans", system-ui, sans-serif',
  fontSize: 13,
  }}

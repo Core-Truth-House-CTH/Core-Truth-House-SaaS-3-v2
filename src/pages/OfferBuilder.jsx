@@ -32,7 +32,7 @@ const PAGE_STYLE = {
 const CARD_STYLE = {
   background: 'var(--cth-command-panel)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 0,
 };
 
 const SECTION_LABEL_STYLE = {
@@ -86,7 +86,7 @@ const INPUT_STYLE = {
   background: 'var(--cth-command-panel)',
   color: 'var(--cth-command-ink)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 0,
   padding: '10px 14px',
   fontFamily: SANS,
   fontSize: 13,
@@ -104,7 +104,7 @@ const PRIMARY_CTA_STYLE = {
   background: 'var(--cth-command-purple)',
   color: 'var(--cth-command-gold)',
   border: 'none',
-  borderRadius: 4,
+  borderRadius: 0,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -121,7 +121,7 @@ const SECONDARY_BUTTON_STYLE = {
   background: 'transparent',
   color: 'var(--cth-command-ink)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 0,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -137,7 +137,7 @@ const DESTRUCTIVE_BUTTON_STYLE = {
   background: 'var(--cth-command-crimson)',
   color: 'var(--cth-command-ivory)',
   border: 'none',
-  borderRadius: 4,
+  borderRadius: 0,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -153,7 +153,7 @@ const ICON_BUTTON_STYLE = {
   background: 'transparent',
   color: 'var(--cth-command-muted)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 0,
   padding: 8,
   cursor: 'pointer',
   display: 'inline-flex',
@@ -498,7 +498,7 @@ function OfferBuilderContent() {
         style={PAGE_STYLE}
         data-testid="offer-builder-page"
       >
-        <div className="mx-auto max-w-7xl space-y-6">
+        <div className="mx-auto max-w-[1200px] space-y-6">
           {/* Stats header */}
           <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:justify-between">
             <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', flex: 1 }}>

@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { DashboardLayout, TopBar } from "../components/Layout";
-import DashboardHero from "../components/shared/DashboardHero";
 import { useWorkspace } from "../context/WorkspaceContext";
 import apiClient from "../lib/apiClient";
 import {
@@ -31,7 +30,7 @@ const PAGE_STYLE = {
 const CARD_STYLE = {
   background: "var(--cth-command-panel)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
 };
 
 const SECTION_LABEL_STYLE = {
@@ -95,7 +94,7 @@ const INPUT_STYLE = {
   background: "var(--cth-command-panel)",
   color: "var(--cth-command-ink)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "10px 14px",
   fontFamily: SANS,
   fontSize: 13,
@@ -113,7 +112,7 @@ const PRIMARY_CTA_STYLE = {
   background: "var(--cth-command-purple)",
   color: "var(--cth-command-gold)",
   border: "none",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "10px 18px",
   fontFamily: SANS,
   fontSize: 13,
@@ -130,7 +129,7 @@ const SECONDARY_BUTTON_STYLE = {
   background: "transparent",
   color: "var(--cth-command-ink)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "10px 18px",
   fontFamily: SANS,
   fontSize: 13,
@@ -145,7 +144,7 @@ const DESTRUCTIVE_BUTTON_STYLE = {
   background: "var(--cth-command-crimson)",
   color: "var(--cth-command-ivory)",
   border: "none",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "10px 18px",
   fontFamily: SANS,
   fontSize: 13,
@@ -161,7 +160,7 @@ const ICON_BUTTON_STYLE = {
   background: "transparent",
   color: "var(--cth-command-muted)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: 8,
   cursor: "pointer",
   display: "inline-flex",
@@ -388,7 +387,7 @@ function CategoryBadge({ category }) {
       style={{
         background: "color-mix(in srgb, " + category.accent + " 12%, transparent)",
         color: category.accent,
-        borderRadius: 4,
+        borderRadius: 0,
         padding: "4px 10px",
         fontFamily: SANS,
         fontSize: 10,
@@ -799,7 +798,7 @@ export default function SystemsBuilder() {
           background: "var(--cth-command-purple)",
           color: "var(--cth-command-gold)",
           border: "1px solid var(--cth-command-purple)",
-          borderRadius: 4,
+          borderRadius: 0,
           padding: "8px 14px",
           fontFamily: SANS,
           fontSize: 12,
@@ -814,7 +813,7 @@ export default function SystemsBuilder() {
           background: "transparent",
           color: "var(--cth-command-muted)",
           border: "1px solid var(--cth-command-border)",
-          borderRadius: 4,
+          borderRadius: 0,
           padding: "8px 14px",
           fontFamily: SANS,
           fontSize: 12,
@@ -832,9 +831,6 @@ export default function SystemsBuilder() {
 
   return (
     <DashboardLayout>
-      <DashboardHero
-        imagePath="/dashboard-assets/cth-structure-hero-door.png"
-      />
       <TopBar />
 
       <div
@@ -842,7 +838,7 @@ export default function SystemsBuilder() {
         style={PAGE_STYLE}
         data-testid="systems-builder-page"
       >
-        <div className="mx-auto max-w-7xl space-y-6">
+        <div className="mx-auto max-w-[1200px] space-y-6">
           {/* Stats row */}
           <div className="grid gap-4 md:grid-cols-3">
             <StatTile
@@ -940,7 +936,7 @@ export default function SystemsBuilder() {
                   background: "var(--cth-command-panel)",
                   color: "var(--cth-command-ink)",
                   border: "1px solid var(--cth-command-border)",
-                  borderRadius: 4,
+                  borderRadius: 0,
                   padding: "8px 12px",
                   fontFamily: SANS,
                   fontSize: 13,
@@ -957,7 +953,7 @@ export default function SystemsBuilder() {
                   background: "var(--cth-command-panel)",
                   color: "var(--cth-command-ink)",
                   border: "1px solid var(--cth-command-border)",
-                  borderRadius: 4,
+                  borderRadius: 0,
                   padding: "8px 12px",
                   fontFamily: SANS,
                   fontSize: 13,

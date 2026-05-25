@@ -488,7 +488,7 @@ const FIELD_HEADING_STYLE = {
 const CARD_STYLE = {
   background: "var(--cth-command-panel)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
 };
 
 const PRIMARY_CTA_STYLE = {
@@ -526,7 +526,7 @@ const INPUT_STYLE = {
   lineHeight: 1.5,
   padding: "10px 12px",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
   outline: "none",
 };
 
@@ -962,7 +962,7 @@ export default function CustomerJourney() {
         data-testid="customer-journey-page"
       >
         {loadError ? (
-          <div className="mx-auto mt-5 max-w-7xl px-4 md:px-8" style={{ fontFamily: SANS }}>
+          <div className="mx-auto mt-5 max-w-[1200px] px-4 md:px-8" style={{ fontFamily: SANS }}>
             <div
               style={{
                 ...CARD_STYLE,
@@ -978,7 +978,7 @@ export default function CustomerJourney() {
           </div>
         ) : null}
 
-        <div className="mx-auto flex max-w-7xl flex-col md:flex-row">
+        <div className="mx-auto flex max-w-[1200px] flex-col md:flex-row">
           <aside className="hidden w-72 shrink-0 md:block">
             <div className="sticky top-0 px-5 py-6">
               <div style={SECTION_LABEL_STYLE}>Journey Stages</div>
@@ -991,7 +991,7 @@ export default function CustomerJourney() {
                   marginTop: 10,
                   background: "transparent",
                   border: "1px solid var(--cth-command-border)",
-                  borderRadius: 4,
+                  borderRadius: 0,
                   color: "var(--cth-command-muted)",
                   fontFamily: SANS,
                   fontSize: 11,
@@ -1074,7 +1074,7 @@ export default function CustomerJourney() {
                     <div
                       className="flex h-10 w-10 shrink-0 items-center justify-center"
                       style={{
-                        borderRadius: 4,
+                        borderRadius: 0,
                         background:
                           "color-mix(in srgb, var(--cth-command-crimson) 12%, transparent)",
                         color: "var(--cth-command-crimson)",
@@ -1270,7 +1270,7 @@ export default function CustomerJourney() {
                     style={{
                       marginTop: 16,
                       padding: "10px 14px",
-                      borderRadius: 4,
+                      borderRadius: 0,
                       border:
                         "1px solid color-mix(in srgb, var(--cth-danger) 25%, var(--cth-command-border))",
                       background:
@@ -1564,7 +1564,7 @@ export default function CustomerJourney() {
                   background: "transparent",
                   color: "var(--cth-command-ink)",
                   border: "1px solid var(--cth-command-border)",
-                  borderRadius: 4,
+                  borderRadius: 0,
                   padding: "10px 18px",
                   fontFamily: SANS,
                   fontSize: 13,
@@ -1582,7 +1582,7 @@ export default function CustomerJourney() {
                   background: "var(--cth-command-crimson)",
                   color: "var(--cth-command-ivory)",
                   border: "none",
-                  borderRadius: 4,
+                  borderRadius: 0,
                   padding: "10px 18px",
                   fontFamily: SANS,
                   fontSize: 13,
@@ -1756,7 +1756,7 @@ export default function CustomerJourney() {
                   background: "transparent",
                   color: "var(--cth-command-ink)",
                   border: "1px solid var(--cth-command-border)",
-                  borderRadius: 4,
+                  borderRadius: 0,
                   padding: "12px 22px",
                   fontFamily: SANS,
                   fontSize: 13,

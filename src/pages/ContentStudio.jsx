@@ -142,7 +142,7 @@ const PAGE_STYLE = {
 const CARD_STYLE = {
   background: "var(--cth-command-panel)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
 };
 
 const SECTION_LABEL_STYLE = {
@@ -196,7 +196,7 @@ const INPUT_STYLE = {
   background: "var(--cth-command-panel)",
   color: "var(--cth-command-ink)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "8px 12px",
   fontFamily: SANS,
   fontSize: 13,
@@ -214,7 +214,7 @@ const PRIMARY_CTA_STYLE = {
   background: "var(--cth-command-purple)",
   color: "var(--cth-command-gold)",
   border: "none",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "10px 18px",
   fontFamily: SANS,
   fontSize: 13,
@@ -232,7 +232,7 @@ const SECONDARY_BUTTON_STYLE = {
   background: "transparent",
   color: "var(--cth-command-ink)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "8px 14px",
   fontFamily: SANS,
   fontSize: 12,
@@ -300,7 +300,7 @@ function PlatformPreview({ content, contentType }) {
     <div style={{
       marginTop: 20,
       border: "1px solid var(--cth-command-border)",
-      borderRadius: 4,
+      borderRadius: 0,
       overflow: "hidden",
     }}>
       <div style={{
@@ -570,7 +570,7 @@ export default function ContentStudio() {
         style={PAGE_STYLE}
         data-testid="content-studio-page"
       >
-        <div className="mx-auto grid w-full max-w-7xl gap-5 lg:grid-cols-[420px_1fr]">
+        <div className="mx-auto grid w-full max-w-[1200px] gap-5 lg:grid-cols-[420px_1fr]">
           {/* Left: form */}
           <div style={{ ...CARD_STYLE, padding: 20 }}>
             {!usageLoading && limit !== Infinity && (
@@ -645,7 +645,7 @@ export default function ContentStudio() {
                 padding: "12px 16px",
                 background: "var(--cth-command-panel-soft)",
                 border: "1px solid var(--cth-command-border)",
-                borderRadius: 4,
+                borderRadius: 0,
                 display: "flex", alignItems: "center",
                 justifyContent: "space-between",
                 gap: 12,
@@ -660,7 +660,7 @@ export default function ContentStudio() {
                     : `You have used all ${limit} generations for this month.`}
                 </span>
                 <a href="/tiers" style={{
-                  padding: "7px 14px", borderRadius: 4,
+                  padding: "7px 14px", borderRadius: 0,
                   background: "var(--cth-command-purple)",
                   color: "var(--cth-command-gold)",
                   fontSize: 12,
@@ -938,7 +938,7 @@ export default function ContentStudio() {
                                 alignItems: "center",
                                 gap: 6,
                                 padding: "6px 14px",
-                                borderRadius: 4,
+                                borderRadius: 0,
                                 cursor: "pointer",
                                 fontSize: 12,
                                 fontFamily: '"DM Sans", system-ui, sans-serif',
@@ -972,7 +972,7 @@ export default function ContentStudio() {
                                 gap: 6,
                                 padding: "6px 10px",
                                 border: "1px solid var(--cth-command-border, rgba(216,197,195,0.6))",
-                                borderRadius: 4,
+                                borderRadius: 0,
                                 background: "transparent",
                                 color: "var(--cth-command-muted, #7a6a72)",
                                 fontFamily: '"DM Sans", system-ui, sans-serif',
@@ -1016,7 +1016,7 @@ export default function ContentStudio() {
           <div style={{
             background: "var(--cth-command-panel)",
             border: "1px solid var(--cth-command-border)",
-            borderRadius: 4,
+            borderRadius: 0,
             padding: "32px",
             width: "min(420px, 100%)",
           }}>
@@ -1040,7 +1040,7 @@ export default function ContentStudio() {
               <button
                 onClick={() => setDeleteTarget(null)}
                 style={{
-                  padding: "9px 18px", borderRadius: 4,
+                  padding: "9px 18px", borderRadius: 0,
                   border: "1px solid var(--cth-command-border)",
                   background: "none", color: "var(--cth-command-muted)",
                   fontFamily: '"DM Sans", system-ui, sans-serif',
@@ -1072,7 +1072,7 @@ export default function ContentStudio() {
                   }
                 }}
                 style={{
-                  padding: "9px 18px", borderRadius: 4, border: "none",
+                  padding: "9px 18px", borderRadius: 0, border: "none",
                   background: "var(--cth-crimson)", color: "#fff",
                   fontFamily: '"DM Sans", system-ui, sans-serif',
                   fontSize: 13, cursor: "pointer",
