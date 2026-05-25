@@ -4,8 +4,8 @@ import apiClient from '../lib/apiClient';
 import { toast } from 'sonner';
 import { DashboardLayout, TopBar } from '../components/Layout';
 import {
- Plus, Search, PenLine, Loader2, X, Trash2, Eye, Archive,
- FileText, Wand2, Tags, ChevronRight, Image, Images,
+ Plus, Search, PenLine, Loader2, X, Trash2, Archive,
+ Wand2, Tags, ChevronRight, Image, Images,
  Bold, Italic, Underline as UnderlineIcon, Heading1, Heading2,
  List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon,
  Undo2, Redo2
@@ -92,8 +92,6 @@ const STATUS_CONFIG = {
  archived: { label: 'Archived', color: 'var(--cth-brand-primary-deep)', bg: 'rgba(93,0,18,0.2)' },
 };
 
-const ALL_CATEGORIES = ['Brand Strategy', 'Content Strategy', 'Business Systems', 'Entrepreneurship', 'Brand Identity'];
-
 function slugify(title) {
  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
@@ -116,7 +114,7 @@ function PostCard({ post, onEdit, onPublish, onArchive, onDelete }) {
  style={{
  background: 'var(--cth-command-panel)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  <div className="flex items-start justify-between gap-4">
@@ -143,24 +141,24 @@ function PostCard({ post, onEdit, onPublish, onArchive, onDelete }) {
  </div>
  <div className="flex items-center gap-2 flex-shrink-0">
  <button data-testid={`edit-post-${post.id}`} onClick={() => onEdit(post)}
- className="text-xs px-3 py-1.5 rounded-lg border border-[var(--cth-command-border)] cth-muted hover:cth-heading hover:border-[rgba(224,78,53,0.3)] transition-all">
+ className="text-xs px-3 py-1.5 border border-[var(--cth-command-border)] cth-muted hover:cth-heading hover:border-[rgba(224,78,53,0.3)] transition-all">
  Edit
  </button>
  {post.status === 'draft' && (
  <button data-testid={`publish-post-${post.id}`} onClick={() => onPublish(post.id)}
- className="text-xs px-3 py-1.5 rounded-lg cth-heading transition-all hover:opacity-90"
+ className="text-xs px-3 py-1.5 cth-heading transition-all hover:opacity-90"
  style={{ background: "var(--cth-command-crimson)" }}>
  Publish
  </button>
  )}
  {post.status === 'published' && (
  <button onClick={() => onArchive(post.id)}
- className="text-xs px-3 py-1.5 rounded-lg border border-[var(--cth-command-border)] cth-muted hover:cth-muted transition-all">
+ className="text-xs px-3 py-1.5 border border-[var(--cth-command-border)] cth-muted hover:cth-muted transition-all">
  <Archive size={12} />
  </button>
  )}
- <button data-testid={`delete-post-${post.id}`} onClick={() => onDelete(post.id)}
- className="text-xs px-2 py-1.5 rounded-lg border border-[var(--cth-command-border)] cth-muted hover:text-red-400 hover:border-red-400/30 transition-all">
+ <button data-testid={`delete-post-${post.id}`} onClick={() => onDelete(post)}
+ className="text-xs px-2 py-1.5 border border-[var(--cth-command-border)] cth-muted hover:text-red-400 hover:border-red-400/30 transition-all">
  <Trash2 size={12} />
  </button>
  </div>
@@ -173,7 +171,7 @@ function RichTextToolbar({ editor }) {
  if (!editor) return null;
  const btn = (active, onClick, icon) => (
  <button type="button" onClick={onClick}
- className={`p-1.5 rounded-lg transition-colors ${active ? 'bg-[rgba(224,78,53,0.12)] cth-text-accent' : 'cth-muted hover:cth-heading hover:bg-[var(--cth-command-panel-soft)]'}`}>
+ className={`p-1.5 transition-colors ${active ? 'bg-[rgba(224,78,53,0.12)] cth-text-accent' : 'cth-muted hover:cth-heading hover:bg-[var(--cth-command-panel-soft)]'}`}>
  {icon}
  </button>
  );
@@ -332,14 +330,14 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  <div className="flex items-center gap-2">
  <select data-testid="post-status-select" value={draft.status}
  onChange={e => update('status', e.target.value)}
- className="text-xs rounded-lg px-3 py-1.5 border border-[var(--cth-command-border)] cth-card cth-muted focus:outline-none">
+ className="text-xs px-3 py-1.5 border border-[var(--cth-command-border)] cth-card cth-muted focus:outline-none">
  <option value="draft">Draft</option>
  <option value="scheduled">Scheduled</option>
  <option value="published">Published</option>
  <option value="archived">Archived</option>
  </select>
  <button data-testid="save-post-btn" onClick={() => onSave(draft)}
- className="text-xs px-4 py-1.5 rounded-lg cth-heading font-semibold hover:opacity-90"
+ className="text-xs px-4 py-1.5 cth-heading font-semibold hover:opacity-90"
  style={{ background: "var(--cth-command-crimson)" }}>
  Save
  </button>
@@ -360,7 +358,7 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  <div className="flex-1 overflow-y-auto p-6 space-y-5">
  {activeTab === 'content' && (
  <>
- <div className="rounded border border-[var(--cth-command-border)] cth-card overflow-hidden">
+ <div className="border border-[var(--cth-command-border)] cth-card overflow-hidden">
  <button onClick={() => setShowAiPanel(!showAiPanel)}
  className="w-full flex items-center justify-between px-5 py-3.5 text-left">
  <div className="flex items-center gap-2">
@@ -374,9 +372,9 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  <div className="px-5 pb-5 border-t border-[var(--cth-command-border)]">
  <textarea data-testid="ai-prompt-input" value={aiPrompt} onChange={e => setAiPrompt(e.target.value)}
  placeholder="e.g. Write a post about why entrepreneurs struggle with brand messaging..."
- rows={3} className="w-full mt-4 text-sm rounded-xl px-4 py-3 border border-[var(--cth-command-border)] cth-card-muted cth-heading placeholder-[color:var(--cth-command-muted)] resize-none focus:outline-none focus:border-[rgba(224,78,53,0.4)]" />
+ rows={3} className="w-full mt-4 text-sm px-4 py-3 border border-[var(--cth-command-border)] cth-card-muted cth-heading placeholder-[color:var(--cth-command-muted)] resize-none focus:outline-none focus:border-[rgba(224,78,53,0.4)]" />
  <button data-testid="generate-draft-btn" onClick={handleAiDraft} disabled={generating || !aiPrompt.trim()}
- className="mt-3 text-xs px-4 py-2 rounded-lg cth-heading font-semibold disabled:opacity-40"
+ className="mt-3 text-xs px-4 py-2 cth-heading font-semibold disabled:opacity-40"
  style={{ background: "var(--cth-command-crimson)" }}>
  {generating ? <><Loader2 size={12} className="inline animate-spin mr-1" />Generating...</> : 'Generate Draft'}
  </button>
@@ -388,19 +386,19 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  <label className="text-xs cth-text-accent font-medium uppercase tracking-widest mb-2 block">Title</label>
  <input data-testid="post-title-input" value={draft.title} onChange={e => handleTitleChange(e.target.value)}
  placeholder="Post title..."
- className="w-full text-lg font-semibold rounded-xl px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] focus:outline-none focus:border-[rgba(224,78,53,0.4)]" />
+ className="w-full text-lg font-semibold px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] focus:outline-none focus:border-[rgba(224,78,53,0.4)]" />
  </div>
 
  <div>
  <label className="text-xs cth-text-accent font-medium uppercase tracking-widest mb-2 block">Excerpt</label>
  <textarea data-testid="post-excerpt-input" value={draft.excerpt || ''} onChange={e => update('excerpt', e.target.value)}
  placeholder="Brief summary for post listings..." rows={2}
- className="w-full text-sm rounded-xl px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] resize-none focus:outline-none focus:border-[rgba(224,78,53,0.4)]" />
+ className="w-full text-sm px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] resize-none focus:outline-none focus:border-[rgba(224,78,53,0.4)]" />
  </div>
 
  <div>
  <label className="text-xs cth-text-accent font-medium uppercase tracking-widest mb-2 block">Content</label>
- <div className="rounded-xl border border-[var(--cth-command-border)] cth-card overflow-hidden">
+ <div className="border border-[var(--cth-command-border)] cth-card overflow-hidden">
  <RichTextToolbar editor={editor} />
  <EditorContent editor={editor} />
  </div>
@@ -412,10 +410,10 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  <div>
  <label className="text-xs cth-text-accent font-medium uppercase tracking-widest mb-2 block">Featured Image</label>
  {draft.featured_image && (
- <div className="mb-3 relative rounded-xl overflow-hidden border border-[var(--cth-command-border)]">
+ <div className="mb-3 relative overflow-hidden border border-[var(--cth-command-border)]">
  <img src={draft.featured_image} alt="Featured" className="w-full h-40 object-cover" />
  <button onClick={() => update('featured_image', '')}
- className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white hover:bg-red-500/80 transition-colors">
+ className="absolute top-2 right-2 p-1.5 bg-black/60 text-white hover:bg-red-500/80 transition-colors">
  <X size={14} />
  </button>
  </div>
@@ -435,7 +433,7 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  )}
  <input value={draft.featured_image || ''} onChange={e => update('featured_image', e.target.value)}
  placeholder="Or paste image URL..."
- className="w-full mt-2 text-sm rounded-xl px-4 py-2.5 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] focus:outline-none focus:border-[rgba(224,78,53,0.4)]" />
+ className="w-full mt-2 text-sm px-4 py-2.5 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] focus:outline-none focus:border-[rgba(224,78,53,0.4)]" />
  </div>
 
  <div>
@@ -452,8 +450,8 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  <input data-testid="tag-input" value={tagInput} onChange={e => setTagInput(e.target.value)}
  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
  placeholder="Add tag, press Enter..."
- className="flex-1 text-sm rounded-xl px-4 py-2.5 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] focus:outline-none" />
- <button onClick={addTag} className="text-xs px-3 py-2 rounded-xl border border-[var(--cth-command-border)] cth-muted hover:cth-heading">Add</button>
+ className="flex-1 text-sm px-4 py-2.5 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] focus:outline-none" />
+ <button onClick={addTag} className="text-xs px-3 py-2 border border-[var(--cth-command-border)] cth-muted hover:cth-heading">Add</button>
  </div>
  </div>
 
@@ -470,14 +468,14 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  {(draft.gallery_images || []).length > 0 && (
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-3" data-testid="media-gallery-grid">
  {(draft.gallery_images || []).map((img, idx) => (
- <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-[var(--cth-command-border)] hover:border-[rgba(224,78,53,0.3)] transition-colors">
+ <div key={idx} className="relative group aspect-square overflow-hidden border border-[var(--cth-command-border)] hover:border-[rgba(224,78,53,0.3)] transition-colors">
  <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
  <button
  onClick={() => {
  if (editor) editor.chain().focus().setImage({ src: img }).run();
  }}
- className="p-1.5 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-colors"
+ className="p-1.5 bg-white/20 text-white hover:bg-white/30 transition-colors"
  title="Insert into content"
  data-testid={`gallery-insert-${idx}`}
  >
@@ -488,14 +486,14 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  const newGallery = (draft.gallery_images || []).filter((_, i) => i !== idx);
  update('gallery_images', newGallery);
  }}
- className="p-1.5 rounded-lg bg-red-500/60 text-white hover:bg-red-500/80 transition-colors"
+ className="p-1.5 bg-red-500/60 text-white hover:bg-red-500/80 transition-colors"
  title="Remove from gallery"
  data-testid={`gallery-remove-${idx}`}
  >
  <X size={14} />
  </button>
  </div>
- <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[10px] bg-black/60 cth-muted">
+ <div className="absolute bottom-1 left-1 px-1.5 py-0.5 text-[10px] bg-black/60 cth-muted">
  {idx + 1}
  </div>
  </div>
@@ -548,7 +546,7 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  </div>
  <input value={draft.seo_title || ''} onChange={e => update('seo_title', e.target.value)}
  placeholder="How this post appears in search results..."
- className="w-full text-sm rounded-xl px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] focus:outline-none" />
+ className="w-full text-sm px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] focus:outline-none" />
  </div>
  <div>
  <div className="flex items-center justify-between mb-2">
@@ -559,12 +557,12 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  </div>
  <textarea value={draft.seo_description || ''} onChange={e => update('seo_description', e.target.value)}
  placeholder="The snippet shown below your title..." rows={3}
- className="w-full text-sm rounded-xl px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] resize-none focus:outline-none" />
+ className="w-full text-sm px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] resize-none focus:outline-none" />
  </div>
  {(draft.seo_title || draft.title) && (
  <div>
  <label className="text-xs cth-text-accent font-medium uppercase tracking-widest mb-3 block">Search Preview</label>
- <div className="p-4 rounded-xl cth-card border border-[var(--cth-command-border)]">
+ <div className="p-4 cth-card border border-[var(--cth-command-border)]">
  <p className="text-xs cth-muted mb-1">yourbrand.com / blog / {draft.slug || 'your-post-slug'}</p>
  <p className="text-sm font-semibold mb-1" style={{ color: 'color-mix(in srgb, var(--cth-status-info) 60%, white)' }}>{draft.seo_title || draft.title}</p>
  <p className="text-xs leading-relaxed" style={{ color: 'var(--cth-command-muted)' }}>{draft.seo_description || draft.excerpt || 'Post excerpt will appear here...'}</p>
@@ -580,14 +578,14 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  <label className="text-xs cth-text-accent font-medium uppercase tracking-widest mb-2 block">Publish Date</label>
  <input type="datetime-local" value={draft.publish_date ? draft.publish_date.slice(0, 16) : ''}
  onChange={e => update('publish_date', e.target.value ? new Date(e.target.value).toISOString() : '')}
- className="w-full text-sm rounded-xl px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading focus:outline-none"
+ className="w-full text-sm px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading focus:outline-none"
  style={{ colorScheme: 'dark' }} />
  </div>
  <div>
  <label className="text-xs cth-text-accent font-medium uppercase tracking-widest mb-2 block">Author Name</label>
  <input value={draft.author_name || ''} onChange={e => update('author_name', e.target.value)}
  placeholder="e.g. The Core Truth House Team"
- className="w-full text-sm rounded-xl px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] focus:outline-none" />
+ className="w-full text-sm px-4 py-3 border border-[var(--cth-command-border)] cth-card cth-heading placeholder-[color:var(--cth-command-muted)] focus:outline-none" />
  </div>
  </>
  )}
@@ -597,8 +595,7 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  );
 }
 
-// Blog CMS page content
-function BlogCMSContent({ embedded = false }) {
+export default function BlogCMS({ embedded = false }) {
  const LayoutWrapper = embedded ? React.Fragment : DashboardLayout;
  const { user } = useUser();
  const [loading, setLoading] = useState(true);
@@ -609,6 +606,8 @@ function BlogCMSContent({ embedded = false }) {
  const [sortOrder, setSortOrder] = useState('newest');
  const [editingPost, setEditingPost] = useState(null);
  const [generating, setGenerating] = useState(false);
+ const [deleteTarget, setDeleteTarget] = useState(null);
+ const [deleting, setDeleting] = useState(false);
 
  const userId = user?.id || 'default';
 
@@ -654,12 +653,21 @@ function BlogCMSContent({ embedded = false }) {
  } catch (err) { console.error('Archive failed:', err); }
  };
 
- const handleDelete = async (id) => {
- if (!window.confirm('Delete this article?')) return;
+ const handleDelete = (post) => setDeleteTarget(post);
+
+ const handleConfirmDelete = async () => {
+ if (!deleteTarget) return;
+ setDeleting(true);
  try {
- await apiClient.delete(`/api/blog/articles/${id}?user_id=${userId}`);
+ await apiClient.delete(`/api/blog/articles/${deleteTarget.id}?user_id=${userId}`);
+ setDeleteTarget(null);
  fetchData();
- } catch (err) { console.error('Delete failed:', err); }
+ } catch (err) {
+ console.error('Delete failed:', err);
+ toast.error('Could not delete article. Please try again.');
+ } finally {
+ setDeleting(false);
+ }
  };
 
  const handleGenerate = async (prompt) => {
@@ -720,7 +728,7 @@ function BlogCMSContent({ embedded = false }) {
  onClick={() => setEditingPost({})}
  className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold hover:opacity-90"
  style={{
- borderRadius: 4,
+ borderRadius: 0,
  background: 'var(--cth-command-purple)',
  color: 'var(--cth-command-gold)',
  border: 'none',
@@ -732,7 +740,7 @@ function BlogCMSContent({ embedded = false }) {
  }
  />
 
- <div className="max-w-6xl mx-auto px-4 py-5 md:px-6 md:py-8">
+ <div className="max-w-[1200px] mx-auto px-4 py-5 md:px-6 md:py-8">
  <div className="flex items-center gap-4 mb-6 flex-wrap">
  <div className="flex items-center gap-2 flex-wrap">
  {['all', 'draft', 'scheduled', 'published', 'archived'].map(s => {
@@ -745,8 +753,8 @@ function BlogCMSContent({ embedded = false }) {
  className="px-3 py-1.5 text-xs font-medium transition-all"
  style={
  active
- ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 4 }
- : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }
+ ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 0 }
+ : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }
  }
  >
  {s === 'all' ? 'All' : STATUS_CONFIG[s]?.label || s}
@@ -760,13 +768,13 @@ function BlogCMSContent({ embedded = false }) {
  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 cth-muted" />
  <input data-testid="blog-search-input" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
  placeholder="Search posts..."
- className="cth-input w-full text-sm rounded-xl pl-9 pr-4 py-2.5" />
+ className="cth-input w-full text-sm pl-9 pr-4 py-2.5" />
  </div>
  </div>
  <select
  value={sortOrder}
  onChange={e => setSortOrder(e.target.value)}
- className="text-sm rounded-xl px-3 py-2.5"
+ className="text-sm px-3 py-2.5"
  style={{
  background: 'var(--cth-command-panel, #fbf7f1)',
  border: '1px solid var(--cth-command-border, rgba(216,197,195,0.6))',
@@ -794,7 +802,7 @@ function BlogCMSContent({ embedded = false }) {
  </div>
  ) : (
  <div className="text-center py-20" data-testid="empty-blog-state">
- <div className="w-12 h-12 rounded mx-auto mb-4 flex items-center justify-center"
+ <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center"
  style={{ background: 'rgba(224,78,53,0.1)', border: '1px solid rgba(224,78,53,0.15)' }}>
  <PenLine size={22} className="cth-text-accent" />
  </div>
@@ -818,13 +826,70 @@ function BlogCMSContent({ embedded = false }) {
  <PostEditorDrawer post={editingPost} onClose={() => setEditingPost(null)}
  onSave={handleSave} generating={generating} onGenerate={handleGenerate} />
  )}
+
+ {deleteTarget && (
+ <div
+ style={{
+ position: 'fixed',
+ inset: 0,
+ background: 'rgba(0,0,0,0.5)',
+ zIndex: 60,
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center',
+ }}
+ onClick={() => !deleting && setDeleteTarget(null)}
+ >
+ <div
+ onClick={(e) => e.stopPropagation()}
+ style={{
+ background: 'var(--cth-command-panel)',
+ border: '1px solid var(--cth-command-border)',
+ padding: '32px',
+ maxWidth: '400px',
+ width: '90%',
+ borderRadius: 0,
+ }}
+ >
+ <h3 style={{ margin: '0 0 8px', color: 'var(--cth-command-ink)' }}>Delete Article</h3>
+ <p style={{ margin: '0 0 24px', color: 'var(--cth-command-muted)', fontSize: '14px' }}>
+ Are you sure you want to delete <strong>{deleteTarget.title || 'this article'}</strong>? This cannot be undone.
+ </p>
+ <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+ <button
+ onClick={() => setDeleteTarget(null)}
+ disabled={deleting}
+ style={{
+ padding: '8px 16px',
+ border: '1px solid var(--cth-command-border)',
+ background: 'transparent',
+ color: 'var(--cth-command-ink)',
+ cursor: 'pointer',
+ borderRadius: 0,
+ }}
+ >
+ Cancel
+ </button>
+ <button
+ onClick={handleConfirmDelete}
+ disabled={deleting}
+ style={{
+ padding: '8px 16px',
+ border: 'none',
+ background: 'var(--cth-command-crimson)',
+ color: '#fff',
+ cursor: deleting ? 'not-allowed' : 'pointer',
+ borderRadius: 0,
+ }}
+ >
+ {deleting ? 'Deleting...' : 'Delete'}
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
  </div>
  </LayoutWrapper>
  </>
  );
-}
-
-// Export with plan gate wrapper
-export default function BlogCMS({ embedded = false }) {
- return <BlogCMSContent embedded={embedded} />;
 }
