@@ -1867,34 +1867,39 @@ function WorkspaceSnapshotPanel({ navigate }) {
  );
 }
 
-function UpcomingMilestonesPanel({ navigate }) {
- const now = new Date();
- const makeDate = (days) => {
- const date = new Date(now);
- date.setDate(now.getDate() + days);
- return date;
- };
-
- const milestones = [
- ["Positioning Statement Final", makeDate(3)],
- ["Offer Framework Approval", makeDate(7)],
- ["Content Ecosystem Launch", makeDate(14)],
- ];
+function UpcomingMilestonesPanel({ navigate, upcomingEvents }) {
+ const events = Array.isArray(upcomingEvents) ? upcomingEvents : [];
+ const milestones = events
+ .map((event) => {
+ const raw = event?.start_time || event?.start || event?.date;
+ const parsed = raw ? new Date(raw) : null;
+ const date = parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+ const title = event?.title || event?.name || "Untitled event";
+ return date ? { title, date } : null;
+ })
+ .filter(Boolean);
 
  return (
  <section className="cth-command-extra-panel">
  <div className="cth-command-extra-title"><CalendarDays size={22} color="#9f1731" />Upcoming Milestones</div>
  <div className="cth-command-mini-list">
- {milestones.map(([label, date]) => (
- <div className="cth-command-mini-row" key={label}>
+ {milestones.length === 0 ? (
+ <div className="cth-command-mini-row" style={{ color: "var(--cc-muted)" }}>
+ <CalendarDays size={18} color="#9f1731" />
+ <div>No upcoming milestones — add events in Calendar</div>
+ </div>
+ ) : (
+ milestones.map(({ title, date }) => (
+ <div className="cth-command-mini-row" key={`${title}-${date.toISOString()}`}>
  <div className="cth-command-date-badge">
  <span>{date.toLocaleDateString(undefined, { month: "short" })}</span>
  <span>{date.getDate()}</span>
  </div>
- <div>{label}</div>
+ <div>{title}</div>
  <div className="cth-command-mini-time">{date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</div>
  </div>
- ))}
+ ))
+ )}
  </div>
  <button className="cth-command-link" type="button" onClick={() => navigate("/calendar")}>
  View full calendar <ArrowUpRight size={15} />
@@ -2260,12 +2265,13 @@ export default function CommandCenter() {
  const navigate = useNavigate();
  const { user } = useUser();
  const { activeWorkspaceId, activeWorkspace } = useWorkspace();
- const { healthData } = useBrandHealth();
+ const { healthData, registerRefreshCallback } = useBrandHealth();
 
  const [loading, setLoading] = useState(true);
  const [progress, setProgress] = useState({});
  const [latestAudit, setLatestAudit] = useState(null);
  const [workspaceStats, setWorkspaceStats] = useState(null);
+ const [upcomingEvents, setUpcomingEvents] = useState([]);
  const [error, setError] = useState("");
 
  const [searchParams, setSearchParams] = useSearchParams();
@@ -2325,9 +2331,10 @@ export default function CommandCenter() {
  },
  }),
  apiClient.get(API_PATHS.workspace.stats(activeWorkspaceId)),
+ apiClient.get(API_PATHS.calendar.upcoming, { params: { limit: 3 } }),
  ]);
 
- const [progressResult, auditResult, statsResult] = results;
+ const [progressResult, auditResult, statsResult, calendarResult] = results;
 
  if (progressResult.status === "fulfilled") {
  setProgress(progressResult.value || {});
@@ -2346,6 +2353,16 @@ export default function CommandCenter() {
  setWorkspaceStats(statsResult.value || null);
  }
 
+ if (calendarResult.status === "fulfilled") {
+ const events =
+ calendarResult.value?.events ||
+ calendarResult.value?.upcoming ||
+ [];
+ setUpcomingEvents(Array.isArray(events) ? events : []);
+ } else {
+ setUpcomingEvents([]);
+ }
+
  const failedAll = results.every((item) => item.status === "rejected");
  if (failedAll) {
  setError("Some workspace data could not load, but the Command Center is still available.");
@@ -2357,6 +2374,14 @@ export default function CommandCenter() {
  useEffect(() => {
  loadCommandCenter();
  }, [loadCommandCenter]);
+
+ // Re-run loadCommandCenter whenever any module triggers refreshBrandHealth().
+ // This keeps progress, workspaceStats, latestAudit, and upcomingEvents in sync
+ // with the live score without needing a manual refresh button.
+ useEffect(() => {
+ const unregister = registerRefreshCallback(loadCommandCenter);
+ return unregister;
+ }, [registerRefreshCallback, loadCommandCenter]);
 
  const overallScore = latestAudit?.overall_score ?? latestAudit?.scores?.overall ?? 78;
  const rating = latestAudit?.brand_health_rating || latestAudit?.rating || "Strong Foundation";
@@ -2444,7 +2469,7 @@ export default function CommandCenter() {
  bestMove={bestMove}
  navigate={navigate}
  />
- <UpcomingMilestonesPanel navigate={navigate} />
+ <UpcomingMilestonesPanel navigate={navigate} upcomingEvents={upcomingEvents} />
  </div>
 
  <div style={{ padding: "0 clamp(16px, 4vw, 48px)", marginBottom: 22 }}>
