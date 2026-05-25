@@ -12,7 +12,6 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
  Upload,
  Download,
@@ -22,8 +21,6 @@ import {
  FolderOpen,
  FileText,
  Image as ImageIcon,
- Database,
- Layers,
  ChevronRight,
 } from "lucide-react";
 
@@ -34,23 +31,11 @@ import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
 const CTH_PAGE_COLORS = {
- darkest: "var(--cth-admin-bg)",
- darker: "var(--cth-admin-panel-alt)",
  cardBg: "var(--cth-admin-panel)",
- crimson: "var(--cth-admin-accent)",
  cinnabar: "var(--cth-admin-accent)",
  tuscany: "var(--cth-admin-tuscany)",
- ruby: "var(--cth-admin-ruby)",
  textPrimary: "var(--cth-admin-ink)",
- textSecondary: "var(--cth-admin-ruby)",
  textMuted: "var(--cth-admin-ink-soft, var(--cth-admin-muted))",
- border: "var(--cth-admin-border)",
- accent: "var(--cth-admin-accent)",
- sidebarStart: "var(--cth-admin-sidebar-start)",
- sidebarEnd: "var(--cth-admin-sidebar-end)",
- sidebarHover: "var(--cth-admin-sidebar-hover)",
- panel: "var(--cth-admin-panel)",
- appBg: "var(--cth-admin-bg)",
 };
 
 const API = import.meta.env.VITE_BACKEND_URL || "";
@@ -170,7 +155,7 @@ function UploadDropzone({ onFilesSelected, uploading, colors }) {
  style={{
  border: `2px dashed ${dragging ? colors.cinnabar : `${colors.tuscany}33`}`,
  background: dragging ? `${colors.cinnabar}08` : colors.cardBg,
- borderRadius: 14,
+ borderRadius: 0,
  padding: "28px 24px",
  cursor: uploading ? "wait" : "pointer",
  transition: "all 0.2s ease",
@@ -195,7 +180,7 @@ function UploadDropzone({ onFilesSelected, uploading, colors }) {
  style={{
  width: 44,
  height: 44,
- borderRadius: 12,
+ borderRadius: 0,
  background: "color-mix(in srgb, var(--cth-admin-accent) 12%, var(--cth-admin-panel))",
  display: "flex",
  alignItems: "center",
@@ -223,7 +208,7 @@ function UploadDropzone({ onFilesSelected, uploading, colors }) {
  disabled={uploading}
  style={{
  border: "none",
- borderRadius: 10,
+ borderRadius: 0,
  padding: "10px 16px",
  background: "var(--cth-admin-accent)",
  color: "var(--cth-on-dark)",
@@ -244,7 +229,7 @@ function StatCard({ label, value, sub, color, colors }) {
  style={{
  background: colors.cardBg,
  border: `1px solid ${colors.tuscany}15`,
- borderRadius: 12,
+ borderRadius: 0,
  padding: "14px 16px",
  }}
  >
@@ -286,7 +271,6 @@ function StatCard({ label, value, sub, color, colors }) {
 }
 
 export default function TenantDataDashboard() {
- const navigate = useNavigate();
  const colors = CTH_PAGE_COLORS;
  const { activeWorkspace } = useWorkspace();
  const { user } = useUser();
@@ -306,6 +290,8 @@ export default function TenantDataDashboard() {
  const [uploadCategory, setUploadCategory] = useState("auto");
  const [sortBy, setSortBy] = useState("newest");
  const [message, setMessage] = useState(null);
+ const [deleteTarget, setDeleteTarget] = useState(null);
+ const [deleting, setDeleting] = useState(false);
 
  const showMessage = useCallback((text, isError = false) => {
  setMessage({ text, isError });
@@ -475,10 +461,13 @@ export default function TenantDataDashboard() {
  }
  };
 
- const handleDelete = async (doc) => {
- if (!window.confirm("Delete this file permanently?")) return;
+ const handleDelete = (doc) => setDeleteTarget(doc);
 
+ const confirmDelete = async () => {
+ if (!deleteTarget) return;
+ setDeleting(true);
  try {
+ const doc = deleteTarget;
  if (doc?.isMediaAsset) {
  await apiClient.delete(`/api/media-upload/assets/${doc.id}`);
  setMediaAssets((current) => current.filter((item) => (item.asset_id || item.id) !== doc.id));
@@ -487,11 +476,14 @@ export default function TenantDataDashboard() {
  setDocuments((current) => current.filter((item) => item.id !== doc.id));
  }
 
+ setDeleteTarget(null);
  await loadSummary();
  showMessage("File deleted");
  } catch (error) {
  console.error("Delete failed:", error);
  showMessage(error?.message || "Delete failed.", true);
+ } finally {
+ setDeleting(false);
  }
  };
 
@@ -641,17 +633,17 @@ export default function TenantDataDashboard() {
  return (
  <DashboardLayout>
  <TopBar
- title="Workspace Library"
+ title="Documents"
  subtitle="Your saved files, brand records, content, assets, and documents in one place"
  />
 
- <div style={{ padding: "24px 32px", maxWidth: 1240, margin: "0 auto", width: "100%" }}>
+ <div style={{ padding: "24px 32px", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
  {message ? (
  <div
  style={{
  marginBottom: 16,
  padding: "12px 14px",
- borderRadius: 10,
+ borderRadius: 0,
  background: message.isError ? "rgba(175,0,36,0.12)" : "rgba(16,185,129,0.12)",
  border: message.isError ? "1px solid rgba(175,0,36,0.3)" : "1px solid rgba(16,185,129,0.3)",
  color: message.isError ? "color-mix(in srgb, var(--cth-status-danger) 35%, white)" : "color-mix(in srgb, var(--cth-status-success-bright) 40%, white)",
@@ -699,7 +691,7 @@ export default function TenantDataDashboard() {
  style={{
  background: "transparent",
  border: `1px solid ${colors.tuscany}30`,
- borderRadius: 10,
+ borderRadius: 0,
  padding: "10px 14px",
  color: colors.textMuted,
  cursor: "pointer",
@@ -717,7 +709,7 @@ export default function TenantDataDashboard() {
  disabled={exporting}
  style={{
  border: "none",
- borderRadius: 10,
+ borderRadius: 0,
  padding: "10px 16px",
  background: "color-mix(in srgb, var(--cth-admin-accent) 12%, var(--cth-admin-panel))",
  color: colors.cinnabar,
@@ -746,7 +738,7 @@ export default function TenantDataDashboard() {
  style={{
  background: colors.cardBg,
  border: `1px solid ${colors.tuscany}15`,
- borderRadius: 18,
+ borderRadius: 0,
  padding: 16,
  position: "sticky",
  top: 24,
@@ -775,7 +767,7 @@ export default function TenantDataDashboard() {
  ? "color-mix(in srgb, var(--cth-admin-accent) 10%, var(--cth-admin-panel))"
  : "transparent",
  color: active ? colors.cinnabar : colors.textPrimary,
- borderRadius: 12,
+ borderRadius: 0,
  padding: "10px 12px",
  cursor: "pointer",
  fontWeight: active ? 700 : 500,
@@ -829,7 +821,7 @@ export default function TenantDataDashboard() {
  style={{
  minWidth: 220,
  padding: "10px 12px",
- borderRadius: 12,
+ borderRadius: 0,
  border: `1px solid ${colors.tuscany}20`,
  background: "var(--cth-admin-panel-alt)",
  color: colors.textPrimary,
@@ -855,7 +847,7 @@ export default function TenantDataDashboard() {
  style={{
  background: colors.cardBg,
  border: `1px solid ${colors.tuscany}15`,
- borderRadius: 18,
+ borderRadius: 0,
  padding: 18,
  }}
  >
@@ -878,7 +870,7 @@ export default function TenantDataDashboard() {
  style={{
  width: "100%",
  padding: "11px 12px 11px 38px",
- borderRadius: 12,
+ borderRadius: 0,
  border: `1px solid ${colors.tuscany}20`,
  background: "var(--cth-admin-panel-alt)",
  color: colors.textPrimary,
@@ -893,7 +885,7 @@ export default function TenantDataDashboard() {
  style={{
  minWidth: 160,
  padding: "11px 12px",
- borderRadius: 12,
+ borderRadius: 0,
  border: `1px solid ${colors.tuscany}20`,
  background: "var(--cth-admin-panel-alt)",
  color: colors.textPrimary,
@@ -917,7 +909,7 @@ export default function TenantDataDashboard() {
  textAlign: "center",
  color: colors.textMuted,
  border: `1px dashed ${colors.tuscany}25`,
- borderRadius: 12,
+ borderRadius: 0,
  }}
  >
  <FolderOpen size={28} style={{ marginBottom: 10, color: colors.tuscany }} />
@@ -958,7 +950,7 @@ export default function TenantDataDashboard() {
  style={{
  width: 34,
  height: 34,
- borderRadius: 10,
+ borderRadius: 0,
  background: `${colors.cinnabar}15`,
  display: "flex",
  alignItems: "center",
@@ -1025,7 +1017,7 @@ export default function TenantDataDashboard() {
  border: `1px solid ${colors.cinnabar}25`,
  background: "color-mix(in srgb, var(--cth-admin-accent) 8%, var(--cth-admin-panel))",
  color: colors.cinnabar,
- borderRadius: 8,
+ borderRadius: 0,
  padding: "7px 10px",
  cursor: "pointer",
  display: "inline-flex",
@@ -1043,7 +1035,7 @@ export default function TenantDataDashboard() {
  border: `1px solid rgba(175,0,36,0.28)`,
  background: "rgba(175,0,36,0.10)",
  color: "var(--cth-danger)",
- borderRadius: 8,
+ borderRadius: 0,
  padding: "7px 10px",
  cursor: "pointer",
  display: "inline-flex",
@@ -1067,6 +1059,70 @@ export default function TenantDataDashboard() {
  </div>
  </div>
  </div>
+
+ {deleteTarget && (
+ <div
+ style={{
+ position: "fixed",
+ inset: 0,
+ background: "rgba(0,0,0,0.5)",
+ zIndex: 60,
+ display: "flex",
+ alignItems: "center",
+ justifyContent: "center",
+ }}
+ onClick={() => !deleting && setDeleteTarget(null)}
+ >
+ <div
+ onClick={(e) => e.stopPropagation()}
+ style={{
+ background: "var(--cth-command-panel)",
+ border: "1px solid var(--cth-command-border)",
+ padding: "32px",
+ maxWidth: "400px",
+ width: "90%",
+ borderRadius: 0,
+ }}
+ >
+ <h3 style={{ margin: "0 0 8px", color: "var(--cth-command-ink)" }}>Delete File</h3>
+ <p style={{ margin: "0 0 24px", color: "var(--cth-command-muted)", fontSize: "14px" }}>
+ Are you sure you want to delete{" "}
+ <strong>{deleteTarget.title || deleteTarget.filename || "this file"}</strong>?
+ This cannot be undone.
+ </p>
+ <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+ <button
+ onClick={() => setDeleteTarget(null)}
+ disabled={deleting}
+ style={{
+ padding: "8px 16px",
+ border: "1px solid var(--cth-command-border)",
+ background: "transparent",
+ color: "var(--cth-command-ink)",
+ cursor: "pointer",
+ borderRadius: 0,
+ }}
+ >
+ Cancel
+ </button>
+ <button
+ onClick={confirmDelete}
+ disabled={deleting}
+ style={{
+ padding: "8px 16px",
+ border: "none",
+ background: "var(--cth-command-crimson)",
+ color: "#fff",
+ cursor: deleting ? "not-allowed" : "pointer",
+ borderRadius: 0,
+ }}
+ >
+ {deleting ? "Deleting..." : "Delete"}
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
  </DashboardLayout>
  );
 }
