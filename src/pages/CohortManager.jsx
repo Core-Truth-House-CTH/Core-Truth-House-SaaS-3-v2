@@ -12,7 +12,6 @@ import {
   Plus,
   Save,
   Trash2,
-  Users,
   X,
 } from "lucide-react";
 
@@ -324,6 +323,9 @@ export default function CohortManager() {
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingNoteText, setEditingNoteText] = useState("");
 
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   const memberById = useMemo(() => {
     const map = {};
     for (const m of members) map[m.id] = m;
@@ -438,16 +440,9 @@ export default function CohortManager() {
     }
   };
 
-  const handleDeleteSession = async (sessionId) => {
-    if (!window.confirm("Delete this session? This cannot be undone.")) return;
-    setActionError("");
-    try {
-      await apiClient.delete(`/api/cohort/sessions/${sessionId}`);
-      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    } catch (error) {
-      console.error("Delete session failed:", error);
-      setActionError(getErrorMessage(error, "Failed to delete session."));
-    }
+  const deleteSession = async (sessionId) => {
+    await apiClient.delete(`/api/cohort/sessions/${sessionId}`);
+    setSessions((prev) => prev.filter((s) => s.id !== sessionId));
   };
 
   const handleAddMember = async (event) => {
@@ -469,17 +464,10 @@ export default function CohortManager() {
     }
   };
 
-  const handleDeleteMember = async (memberId) => {
-    if (!window.confirm("Remove this member and their notes? This cannot be undone.")) return;
-    setActionError("");
-    try {
-      await apiClient.delete(`/api/cohort/members/${memberId}`);
-      setMembers((prev) => prev.filter((m) => m.id !== memberId));
-      setNotes((prev) => prev.filter((n) => n.member_id !== memberId));
-    } catch (error) {
-      console.error("Delete member failed:", error);
-      setActionError(getErrorMessage(error, "Failed to remove member."));
-    }
+  const deleteMember = async (memberId) => {
+    await apiClient.delete(`/api/cohort/members/${memberId}`);
+    setMembers((prev) => prev.filter((m) => m.id !== memberId));
+    setNotes((prev) => prev.filter((n) => n.member_id !== memberId));
   };
 
   const handleAddNote = async (event) => {
@@ -524,15 +512,27 @@ export default function CohortManager() {
     }
   };
 
-  const handleDeleteNote = async (noteId) => {
-    if (!window.confirm("Delete this note? This cannot be undone.")) return;
+  const deleteNote = async (noteId) => {
+    await apiClient.delete(`/api/cohort/notes/${noteId}`);
+    setNotes((prev) => prev.filter((n) => n.id !== noteId));
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
     setActionError("");
+    setDeleting(true);
     try {
-      await apiClient.delete(`/api/cohort/notes/${noteId}`);
-      setNotes((prev) => prev.filter((n) => n.id !== noteId));
+      if (deleteTarget.type === "session") await deleteSession(deleteTarget.id);
+      else if (deleteTarget.type === "member") await deleteMember(deleteTarget.id);
+      else if (deleteTarget.type === "note") await deleteNote(deleteTarget.id);
+      setDeleteTarget(null);
     } catch (error) {
-      console.error("Delete note failed:", error);
-      setActionError(getErrorMessage(error, "Failed to delete note."));
+      console.error("Delete failed:", error);
+      setActionError(
+        getErrorMessage(error, `Failed to delete ${deleteTarget.type}.`),
+      );
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -551,7 +551,7 @@ export default function CohortManager() {
       />
 
       <div className="flex-1 overflow-auto" style={PAGE_STYLE} data-testid="cohort-manager-page">
-        <div className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8 space-y-6">
+        <div className="mx-auto max-w-[1200px] px-4 py-6 md:px-8 md:py-8 space-y-6">
           {loadError ? (
             <div
               style={{
@@ -868,7 +868,13 @@ export default function CohortManager() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleDeleteSession(session.id)}
+                                onClick={() =>
+                                  setDeleteTarget({
+                                    type: "session",
+                                    id: session.id,
+                                    label: session.title,
+                                  })
+                                }
                                 aria-label="Delete session"
                                 style={ICON_BUTTON_STYLE}
                               >
@@ -1062,7 +1068,13 @@ export default function CohortManager() {
                             </div>
                             <button
                               type="button"
-                              onClick={() => handleDeleteMember(member.id)}
+                              onClick={() =>
+                                setDeleteTarget({
+                                  type: "member",
+                                  id: member.id,
+                                  label: member.name,
+                                })
+                              }
                               aria-label="Remove member"
                               style={ICON_BUTTON_STYLE}
                             >
@@ -1310,7 +1322,15 @@ export default function CohortManager() {
                               ) : null}
                               <button
                                 type="button"
-                                onClick={() => handleDeleteNote(note.id)}
+                                onClick={() =>
+                                  setDeleteTarget({
+                                    type: "note",
+                                    id: note.id,
+                                    label: member?.name
+                                      ? `note for ${member.name}`
+                                      : "this note",
+                                  })
+                                }
                                 aria-label="Delete note"
                                 style={ICON_BUTTON_STYLE}
                               >
@@ -1370,6 +1390,73 @@ export default function CohortManager() {
           )}
         </div>
       </div>
+
+      {deleteTarget && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => !deleting && setDeleteTarget(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "var(--cth-command-panel)",
+              border: "1px solid var(--cth-command-border)",
+              padding: "32px",
+              maxWidth: "400px",
+              width: "90%",
+              borderRadius: 4,
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px", color: "var(--cth-command-ink)", fontFamily: SERIF }}>
+              Delete {deleteTarget.type === "session" ? "Session" : deleteTarget.type === "member" ? "Member" : "Note"}
+            </h3>
+            <p style={{ margin: "0 0 24px", color: "var(--cth-command-muted)", fontSize: 14, fontFamily: SANS }}>
+              Are you sure you want to delete{" "}
+              <strong style={{ color: "var(--cth-command-ink)" }}>
+                {deleteTarget.label || `this ${deleteTarget.type}`}
+              </strong>
+              ?{" "}
+              {deleteTarget.type === "member"
+                ? "This removes the member and their notes. "
+                : ""}
+              This cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                style={SECONDARY_BUTTON_STYLE}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                style={{
+                  ...PRIMARY_CTA_STYLE,
+                  background: "var(--cth-command-crimson)",
+                  color: "#fff",
+                  cursor: deleting ? "not-allowed" : "pointer",
+                  opacity: deleting ? 0.7 : 1,
+                }}
+              >
+                {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
