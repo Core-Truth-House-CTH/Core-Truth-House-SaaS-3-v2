@@ -488,7 +488,7 @@ function CalendarPopulateModal({ campaign, onConfirm, onCancel }) {
 
  return (
  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6" data-testid="calendar-modal">
- <div className="cth-card border border-[var(--cth-command-border)] rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+ <div className="cth-card border border-[var(--cth-command-border)] p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
  <div className="flex items-center justify-between mb-1">
  <p className="text-base font-bold cth-heading" >
  Push to Calendar
@@ -518,7 +518,7 @@ function CalendarPopulateModal({ campaign, onConfirm, onCancel }) {
  <button onClick={onCancel} className="flex-1 py-2.5 border border-[var(--cth-command-border)] cth-muted text-xs">
  Cancel
  </button>
- <button onClick={() => onConfirm(items)} className="flex-[2] py-2.5 rounded bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold">
+ <button onClick={() => onConfirm(items)} className="flex-[2] py-2.5 bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold">
  Push {items.length} items to Calendar
  </button>
  </div>
@@ -994,6 +994,8 @@ function CampaignBuilderPageContent() {
  const [calendarDone, setCalendarDone] = useState({});
 
  const [linkedMedia, setLinkedMedia] = useState([]);
+ const [deleteTarget, setDeleteTarget] = useState(null);
+ const [deleting, setDeleting] = useState(false);
  const [linkedContent, setLinkedContent] = useState([]);
  const [linkedSocialPosts, setLinkedSocialPosts] = useState([]);
  const [linkageLoading, setLinkageLoading] = useState(false);
@@ -1185,12 +1187,17 @@ function CampaignBuilderPageContent() {
  }
  };
 
- const handleDelete = async (id) => {
+ const handleDelete = (id) => {
  const target = campaigns.find((c) => c.id === id);
- const label = target?.name ? `"${target.name}"` : 'this campaign';
- if (!window.confirm(`Delete ${label}? This cannot be undone.`)) return;
+ if (!target) return;
+ setDeleteTarget(target);
+ };
 
+ const handleConfirmDelete = async () => {
+ if (!deleteTarget) return;
+ const id = deleteTarget.id;
  const previous = campaigns;
+ setDeleting(true);
  setCampaigns((prev) => prev.filter((c) => c.id !== id));
  if (selectedId === id) {
  const remaining = previous.filter((c) => c.id !== id);
@@ -1198,11 +1205,14 @@ function CampaignBuilderPageContent() {
  }
  try {
  await apiClient.delete(`/api/campaigns/${id}`);
+ setDeleteTarget(null);
  } catch (e) {
  console.error('Delete failed:', e);
  setCampaigns(previous);
  setSelectedId(id);
- window.alert('Could not delete campaign. Please try again.');
+ toast.error('Could not delete campaign. Please try again.');
+ } finally {
+ setDeleting(false);
  }
  };
 
@@ -1407,10 +1417,31 @@ function CampaignBuilderPageContent() {
  <TopBar
  title="Campaign Builder"
  subtitle="MAGNET Framework — Mission · Audience · Gravity · Narrative · Engagement · Transaction"
+ action={
+ <button
+ type="button"
+ onClick={() => navigate('/campaign-setup')}
+ style={{
+ padding: '8px 16px',
+ background: 'var(--cth-command-crimson)',
+ color: '#fff',
+ border: 'none',
+ borderRadius: 0,
+ fontSize: '13px',
+ fontWeight: 600,
+ cursor: 'pointer',
+ display: 'flex',
+ alignItems: 'center',
+ gap: '6px',
+ }}
+ >
+ <Plus size={14} /> New Campaign
+ </button>
+ }
  />
 
  <div className="mx-auto w-full max-w-[1200px] flex flex-col md:flex-row flex-1 overflow-hidden">
- <div className="md:w-64 flex-shrink-0 border-b md:border-b-0 md:border-r border-[var(--cth-command-border)] flex flex-col bg-[var(--cth-command-panel)]/85 backdrop-blur-sm">
+ <div className="md:w-60 flex-shrink-0 border-b md:border-b-0 md:border-r border-[var(--cth-command-border)] flex flex-col bg-[var(--cth-command-panel)]/85 backdrop-blur-sm">
  <div className="px-3.5 py-3 border-b border-[var(--cth-command-border)] space-y-2">
  <button
  onClick={() => {
@@ -1543,7 +1574,7 @@ function CampaignBuilderPageContent() {
 
  {selected ? (
  <div className="flex flex-1 overflow-hidden bg-[var(--cth-command-panel)] pt-4 md:pt-6">
- <div className="flex-1 overflow-y-auto">
+ <div className="flex-1 overflow-y-auto space-y-8">
  <div className="px-5 py-5 md:px-8 md:py-7 border-b border-[var(--cth-command-border)] space-y-5">
  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
  <div>
@@ -1662,7 +1693,7 @@ function CampaignBuilderPageContent() {
  type="button"
  onClick={handleStartEditOverview}
  data-testid="edit-campaign-btn"
- className="inline-flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold"
+ className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
  style={{
  background: 'transparent',
  color: 'var(--cth-command-ink)',
@@ -1727,7 +1758,7 @@ function CampaignBuilderPageContent() {
  onClick={() => {
  navigate('/campaign-setup');
  }}
- className="flex items-center gap-2 px-4 py-2 rounded bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold shadow-sm"
+ className="flex items-center gap-2 px-4 py-2 bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold shadow-sm"
  >
  <Plus size={14} /> New Campaign
  </button>
@@ -1756,19 +1787,19 @@ function CampaignBuilderPageContent() {
 
  return (
  <div className="grid grid-cols-4 gap-3 mb-2">
- <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white/70 p-3 shadow-sm">
+ <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
  <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Checklist Items</p>
  <p className="text-lg font-semibold cth-heading">{allItems.length}</p>
  </div>
- <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white/70 p-3 shadow-sm">
+ <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
  <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Generated</p>
  <p className="text-lg font-semibold cth-heading">{generatedItems}</p>
  </div>
- <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white/70 p-3 shadow-sm">
+ <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
  <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Pending</p>
  <p className="text-lg font-semibold cth-heading">{pendingItems}</p>
  </div>
- <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white/70 p-3 shadow-sm">
+ <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
  <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Completion</p>
  <p className="text-lg font-semibold cth-heading">{completionPct}%</p>
  </div>
@@ -1837,19 +1868,19 @@ function CampaignBuilderPageContent() {
 
  return (
  <div className="grid grid-cols-4 gap-3">
- <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white/70 p-3 shadow-sm">
+ <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
  <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Checklist Items</p>
  <p className="text-lg font-semibold cth-heading">{allItems.length}</p>
  </div>
- <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white/70 p-3 shadow-sm">
+ <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
  <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Generated</p>
  <p className="text-lg font-semibold cth-heading">{completedItems}</p>
  </div>
- <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white/70 p-3 shadow-sm">
+ <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
  <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Pending</p>
  <p className="text-lg font-semibold cth-heading">{pendingItems}</p>
  </div>
- <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white/70 p-3 shadow-sm">
+ <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
  <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Completion</p>
  <p className="text-lg font-semibold cth-heading">{completionPct}%</p>
  </div>
@@ -1867,7 +1898,7 @@ function CampaignBuilderPageContent() {
  const completed = items.filter((item) => item.status === 'generated' || item.status === 'published' || item.status === 'complete').length;
 
  return (
- <div key={phase.id} className="rounded-2xl border border-[var(--cth-command-border)] bg-white/70 p-4 shadow-sm">
+ <div key={phase.id} className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4 shadow-sm">
  <div className="flex items-center justify-between mb-3">
  <div>
  <p className="text-sm font-semibold cth-heading">{phase.name}</p>
@@ -2008,20 +2039,20 @@ function CampaignBuilderPageContent() {
  )}
  </div>
  {selected.brief ? (
- <div className="p-5 rounded-2xl border border-[var(--cth-command-border)] bg-white/70 shadow-sm">
+ <div className="p-5 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] shadow-sm">
  <div
  className="cth-body text-sm cth-muted leading-relaxed [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mb-2 [&_p]:mb-3 [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:pl-5 [&_ol]:mb-3 [&_li]:mb-1"
  dangerouslySetInnerHTML={{ __html: renderedCampaignBrief }}
  />
  </div>
  ) : (
- <div className="p-6 rounded-2xl border border-[var(--cth-command-border)] bg-white/70 shadow-sm text-center">
+ <div className="p-6 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] shadow-sm text-center">
  <p className="text-sm cth-muted mb-4">No brief generated yet.</p>
  <button
  type="button"
  onClick={handleGenerateBrief}
  disabled={briefGenerating}
- className="inline-flex items-center gap-2 px-4 py-2.5 rounded bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold disabled:opacity-50"
+ className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold disabled:opacity-50"
  >
  {briefGenerating ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
  {briefGenerating ? 'Generating…' : 'Generate Brief'}
@@ -2048,7 +2079,7 @@ function CampaignBuilderPageContent() {
  )}
  </div>
  {(selected.generated_hooks || []).length > 0 ? (
- <div className="p-5 rounded-2xl border border-[var(--cth-command-border)] bg-white/70 shadow-sm">
+ <div className="p-5 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] shadow-sm">
  <ol className="space-y-2.5 list-decimal list-inside text-sm cth-muted leading-relaxed">
  {selected.generated_hooks.map((hook, i) => (
  <li key={i}>{hook}</li>
@@ -2056,13 +2087,13 @@ function CampaignBuilderPageContent() {
  </ol>
  </div>
  ) : (
- <div className="p-6 rounded-2xl border border-[var(--cth-command-border)] bg-white/70 shadow-sm text-center">
+ <div className="p-6 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] shadow-sm text-center">
  <p className="text-sm cth-muted mb-4">No hooks generated yet.</p>
  <button
  type="button"
  onClick={handleGenerateHooks}
  disabled={hooksGenerating}
- className="inline-flex items-center gap-2 px-4 py-2.5 rounded bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold disabled:opacity-50"
+ className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold disabled:opacity-50"
  >
  {hooksGenerating ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
  {hooksGenerating ? 'Generating…' : 'Generate Hooks'}
@@ -2153,7 +2184,7 @@ function CampaignBuilderPageContent() {
  </div>
  ) : (
  <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
- <div className="w-16 h-16 rounded-2xl bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/15 flex items-center justify-center mb-5">
+ <div className="w-16 h-16 bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/15 flex items-center justify-center mb-5">
  <span className="text-2xl font-black cth-text-accent/50">M</span>
  </div>
  <h3 className="text-base font-semibold cth-muted mb-2" >
@@ -2164,7 +2195,7 @@ function CampaignBuilderPageContent() {
  </p>
  <button
  onClick={() => navigate('/campaign-setup')}
- className="px-5 py-2.5 rounded bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-sm font-semibold"
+ className="px-5 py-2.5 bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-sm font-semibold"
  >
  Create Your First Campaign
  </button>
@@ -2172,6 +2203,66 @@ function CampaignBuilderPageContent() {
  )}
  </div>
  </div>
+
+ {deleteTarget && (
+ <div
+ style={{
+ position: 'fixed',
+ inset: 0,
+ background: 'rgba(0,0,0,0.5)',
+ zIndex: 50,
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center',
+ }}
+ >
+ <div
+ style={{
+ background: 'var(--cth-command-panel)',
+ border: '1px solid var(--cth-command-border)',
+ padding: '32px',
+ maxWidth: '400px',
+ width: '90%',
+ borderRadius: 0,
+ }}
+ >
+ <h3 style={{ margin: '0 0 8px', color: 'var(--cth-command-ink)' }}>Delete Campaign</h3>
+ <p style={{ margin: '0 0 24px', color: 'var(--cth-command-muted)', fontSize: '14px' }}>
+ Are you sure you want to delete <strong>{deleteTarget.name || deleteTarget.title}</strong>? This cannot be undone.
+ </p>
+ <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+ <button
+ onClick={() => setDeleteTarget(null)}
+ disabled={deleting}
+ style={{
+ padding: '8px 16px',
+ border: '1px solid var(--cth-command-border)',
+ background: 'transparent',
+ color: 'var(--cth-command-ink)',
+ cursor: 'pointer',
+ borderRadius: 0,
+ }}
+ >
+ Cancel
+ </button>
+ <button
+ onClick={handleConfirmDelete}
+ disabled={deleting}
+ style={{
+ padding: '8px 16px',
+ border: 'none',
+ background: 'var(--cth-command-crimson)',
+ color: '#fff',
+ cursor: deleting ? 'not-allowed' : 'pointer',
+ borderRadius: 0,
+ }}
+ >
+ {deleting ? 'Deleting...' : 'Delete'}
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
  </DashboardLayout>
  );
 }
