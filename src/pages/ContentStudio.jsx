@@ -563,6 +563,30 @@ export default function ContentStudio() {
       <TopBar
         title="Content Studio"
         subtitle="Generate, refine, and save content using your current brand system."
+        action={
+          <button
+            type="button"
+            disabled={generating}
+            onClick={handleGenerate}
+            style={{
+              padding: '8px 16px',
+              background: 'var(--cth-command-crimson)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 0,
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: generating ? 'not-allowed' : 'pointer',
+              opacity: generating ? 0.65 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            {generating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+            {generating ? 'Generating...' : 'Generate Content'}
+          </button>
+        }
       />
 
       <div
@@ -570,7 +594,7 @@ export default function ContentStudio() {
         style={PAGE_STYLE}
         data-testid="content-studio-page"
       >
-        <div className="mx-auto grid w-full max-w-[1200px] gap-5 lg:grid-cols-[420px_1fr]">
+        <div className="mx-auto grid w-full max-w-[1200px] gap-8 lg:grid-cols-[420px_1fr]">
           {/* Left: form */}
           <div style={{ ...CARD_STYLE, padding: 20 }}>
             {!usageLoading && limit !== Infinity && (

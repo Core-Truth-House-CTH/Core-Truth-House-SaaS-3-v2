@@ -68,7 +68,7 @@ const PRIMARY_CTA_STYLE = {
   background: "var(--cth-command-purple)",
   color: "var(--cth-command-gold)",
   border: "none",
-  borderRadius: 999,
+  borderRadius: 0,
   padding: "12px 22px",
   fontFamily: SANS,
   fontSize: 13,
@@ -82,7 +82,7 @@ const SECONDARY_BUTTON_STYLE = {
   background: "transparent",
   color: "var(--cth-command-ink)",
   border: "1px solid var(--cth-command-border)",
-  borderRadius: 999,
+  borderRadius: 0,
   padding: "11px 20px",
   fontFamily: SANS,
   fontSize: 13,
@@ -265,7 +265,7 @@ function LockedOverlay() {
             justifyContent: "center",
             width: 56,
             height: 56,
-            borderRadius: 999,
+            borderRadius: 0,
             background: "color-mix(in srgb, var(--cth-command-crimson) 12%, var(--cth-command-panel))",
             color: "var(--cth-command-crimson)",
             marginBottom: 22,
@@ -308,7 +308,7 @@ function TabPill({ children, active, onClick }) {
         fontSize: 13,
         fontWeight: 600,
         padding: "10px 22px",
-        borderRadius: 999,
+        borderRadius: 0,
         cursor: "pointer",
         border: active
           ? "1px solid var(--cth-command-crimson)"
@@ -494,7 +494,7 @@ function SavedPromptCard({ item, expanded, onToggle, onCopy, onDelete }) {
             letterSpacing: "0.06em",
             textTransform: "uppercase",
             padding: "3px 9px",
-            borderRadius: 999,
+            borderRadius: 0,
             background: isVideo
               ? "color-mix(in srgb, var(--cth-command-purple) 14%, var(--cth-command-panel))"
               : "color-mix(in srgb, var(--cth-command-crimson) 12%, var(--cth-command-panel))",
@@ -516,7 +516,7 @@ function SavedPromptCard({ item, expanded, onToggle, onCopy, onDelete }) {
               color: "var(--cth-command-muted)",
               padding: "3px 8px",
               border: "1px solid var(--cth-command-border)",
-              borderRadius: 999,
+              borderRadius: 0,
             }}
           >
             {item.output_format}
@@ -613,6 +613,8 @@ export default function PromptGenerator() {
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
   const [expandedSavedId, setExpandedSavedId] = useState(null);
   const [toast, setToast] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const isLocked = LOCKED_PLANS.has(String(plan || "").toLowerCase());
 
@@ -792,21 +794,32 @@ export default function PromptGenerator() {
   );
 
   const handleDeleteSaved = useCallback(
-    async (id) => {
-      if (!id || !workspaceId) return;
-      try {
-        await apiClient.delete(`/api/prompt-generator/saved/${id}`, {
-          params: { workspace_id: workspaceId },
-        });
-        showToast("Deleted");
-        setSaved((prev) => prev.filter((item) => item.id !== id));
-      } catch (err) {
-        console.warn("[PromptGenerator] Delete failed", err);
-        showToast("Delete failed");
-      }
+    (id) => {
+      const target = saved.find((item) => item.id === id);
+      if (!target) return;
+      setDeleteTarget(target);
     },
-    [workspaceId, showToast],
+    [saved],
   );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteTarget || !workspaceId) return;
+    const id = deleteTarget.id;
+    setDeleting(true);
+    try {
+      await apiClient.delete(`/api/prompt-generator/saved/${id}`, {
+        params: { workspace_id: workspaceId },
+      });
+      setSaved((prev) => prev.filter((item) => item.id !== id));
+      setDeleteTarget(null);
+      showToast("Deleted");
+    } catch (err) {
+      console.warn("[PromptGenerator] Delete failed", err);
+      showToast("Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteTarget, workspaceId, showToast]);
 
   if (isLocked) {
     return (
@@ -1124,6 +1137,66 @@ export default function PromptGenerator() {
           </div>
         </div>
       </div>
+
+      {deleteTarget && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 50,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              background: "var(--cth-command-panel)",
+              border: "1px solid var(--cth-command-border)",
+              padding: "32px",
+              maxWidth: "400px",
+              width: "90%",
+              borderRadius: 0,
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px", color: "var(--cth-command-ink)" }}>Delete Saved Prompt</h3>
+            <p style={{ margin: "0 0 24px", color: "var(--cth-command-muted)", fontSize: "14px" }}>
+              Are you sure you want to delete this saved prompt? This cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                style={{
+                  padding: "8px 16px",
+                  border: "1px solid var(--cth-command-border)",
+                  background: "transparent",
+                  color: "var(--cth-command-ink)",
+                  cursor: "pointer",
+                  borderRadius: 0,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                style={{
+                  padding: "8px 16px",
+                  border: "none",
+                  background: "var(--cth-command-crimson)",
+                  color: "#fff",
+                  cursor: deleting ? "not-allowed" : "pointer",
+                  borderRadius: 0,
+                }}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
