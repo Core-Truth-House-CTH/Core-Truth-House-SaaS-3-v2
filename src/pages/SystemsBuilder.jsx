@@ -595,6 +595,7 @@ export default function SystemsBuilder() {
   }
 
   function handleRemoveStep(index) {
+    if (!window.confirm("Remove this step?")) return;
     setFormData((prev) => {
       const steps = [...(prev.steps || [])];
       steps.splice(index, 1);
@@ -831,14 +832,38 @@ export default function SystemsBuilder() {
 
   return (
     <DashboardLayout>
-      <TopBar />
+      <TopBar
+        title="Systems Builder"
+        subtitle={`${systems.length} system${systems.length !== 1 ? 's' : ''}`}
+        action={
+          <button
+            type="button"
+            onClick={() => handleOpenModal()}
+            style={{
+              padding: '8px 16px',
+              background: 'var(--cth-command-crimson)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 0,
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <Plus size={14} /> New System
+          </button>
+        }
+      />
 
       <div
         className="flex-1 overflow-auto px-4 py-7 md:px-8"
         style={PAGE_STYLE}
         data-testid="systems-builder-page"
       >
-        <div className="mx-auto max-w-[1200px] space-y-6">
+        <div className="mx-auto max-w-[1200px] space-y-8">
           {/* Stats row */}
           <div className="grid gap-4 md:grid-cols-3">
             <StatTile
