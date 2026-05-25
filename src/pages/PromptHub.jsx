@@ -4,8 +4,9 @@ import apiClient from '../lib/apiClient';
 import { usePlan } from '../context/PlanContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { PLAN_ORDER } from '../config/routeConfig';
-import { DashboardLayout } from '../components/Layout';
-import { Search, Star, Trash2, Copy, Download, ShoppingBag, Wand2, Plus, ChevronRight, Check, Loader2, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { DashboardLayout, TopBar } from '../components/Layout';
+import { Search, Star, Copy, ShoppingBag, Wand2, ChevronRight, Check, Loader2, Sparkles } from 'lucide-react';
 import { PromptCard } from '../components/prompts/PromptCard';
 import { toast } from 'sonner';
 
@@ -147,6 +148,7 @@ export default function PromptHub() {
  const { user } = useUser();
  const { plan } = usePlan();
  const { activeWorkspaceId } = useWorkspace();
+ const navigate = useNavigate();
  const [activeTab, setActiveTab] = useState('library');
  const [prompts, setPrompts] = useState([]);
  const [loading, setLoading] = useState(true);
@@ -157,6 +159,8 @@ export default function PromptHub() {
  const [generatedResult, setGeneratedResult] = useState(null);
  const [copiedId, setCopiedId] = useState(null);
  const [showUpgradeModal, setShowUpgradeModal] = useState(null);
+ const [deleteTarget, setDeleteTarget] = useState(null);
+ const [deleting, setDeleting] = useState(false);
 
  const userId = user?.id || 'default';
  const isEstate = plan === 'estate';
@@ -194,14 +198,25 @@ export default function PromptHub() {
  }
  };
 
- const handleDeletePrompt = async (promptId) => {
- if (!window.confirm('Delete this prompt?')) return;
+ const handleDeletePrompt = (promptOrId) => {
+ const target = typeof promptOrId === 'object'
+ ? promptOrId
+ : prompts.find((p) => p.id === promptOrId) || { id: promptOrId };
+ setDeleteTarget(target);
+ };
+
+ const handleConfirmDeletePrompt = async () => {
+ if (!deleteTarget) return;
+ setDeleting(true);
  try {
- await apiClient.delete(`/api/prompts/${promptId}?user_id=${userId}`);
- setPrompts(prompts.filter(p => p.id !== promptId));
+ await apiClient.delete(`/api/prompts/${deleteTarget.id}?user_id=${userId}`);
+ setPrompts(prompts.filter(p => p.id !== deleteTarget.id));
+ setDeleteTarget(null);
  } catch (err) {
  console.error('Error deleting prompt:', err);
  toast.error("Could not delete prompt. Please try again.");
+ } finally {
+ setDeleting(false);
  }
  };
 
@@ -228,8 +243,8 @@ export default function PromptHub() {
  };
 
  const handleStorePurchase = () => {
- alert('Generator purchases coming soon. Upgrade your plan to get instant access.');
- window.location.href = '/billing';
+ toast.info('Redirecting to billing...');
+ navigate('/billing');
  };
 
  // Filter prompts by search
@@ -245,22 +260,21 @@ export default function PromptHub() {
 
  return (
  <DashboardLayout>
- <div className="space-y-6" data-testid="prompt-hub-page">
- {/* Header */}
- <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
- <div>
- <h1 className="text-2xl font-bold cth-heading">Prompt Hub</h1>
- <p className="text-sm cth-muted mt-1">Your AI prompt library, premium packs, and generators</p>
- </div>
- </div>
-
+ <TopBar
+ title="Prompt Hub"
+ subtitle="Your AI prompt library, premium packs, and generators"
+ />
+ <div
+ className="max-w-[1200px] mx-auto w-full px-4 py-6 md:px-7 md:py-8 space-y-8"
+ data-testid="prompt-hub-page"
+ >
  {/* Tabs */}
  <div className="flex gap-2 border-b pb-1" style={{ borderColor: "var(--cth-admin-border)" }}>
  {TABS.map(tab => (
  <button
  key={tab.id}
  onClick={() => setActiveTab(tab.id)}
- className={`flex items-center gap-2 px-4 py-2.5 rounded-t-lg transition-all text-sm font-medium ${
+ className={`flex items-center gap-2 px-4 py-2.5 transition-all text-sm font-medium ${
  activeTab === tab.id
  ? 'cth-card-muted cth-text-accent border-b-2 border-[var(--cth-admin-accent)]'
  : 'cth-muted hover:opacity-80 hover:bg-[var(--cth-admin-panel-alt)]'
@@ -284,7 +298,7 @@ export default function PromptHub() {
  placeholder="Search prompts..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="cth-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm"
+ className="cth-input w-full pl-10 pr-4 py-2.5 text-sm"
  />
  </div>
 
@@ -299,7 +313,7 @@ export default function PromptHub() {
  <p className="text-sm cth-muted mb-6">Use the generators to create your first prompts</p>
  <button
  onClick={() => setActiveTab('generators')}
- className="cth-button-primary px-6 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
+ className="cth-button-primary px-6 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity"
  >
  Go to Generators
  </button>
@@ -351,7 +365,7 @@ export default function PromptHub() {
  {/* TAB: Store (Generator Access) */}
  {activeTab === 'store' && (
  <div className="space-y-6">
- <div className="p-4 rounded-xl border" style={{ background: "rgba(224,78,53,0.06)", borderColor: "rgba(224,78,53,0.18)" }}>
+ <div className="p-4 border" style={{ background: "rgba(224,78,53,0.06)", borderColor: "rgba(224,78,53,0.18)" }}>
  <h3 className="cth-heading font-semibold mb-1">Generator Access</h3>
  <p className="text-sm cth-muted">Unlock individual generators with one-time purchases, or upgrade your plan for instant access to all.</p>
  </div>
@@ -365,12 +379,12 @@ export default function PromptHub() {
  return (
  <div
  key={gen.id}
- className="p-5 rounded-2xl border cth-card border-[var(--cth-admin-border)] transition-all"
+ className="p-5 border cth-card border-[var(--cth-admin-border)] transition-all"
  data-testid={`store-generator-${gen.id}`}
  >
  <div className="flex items-start justify-between mb-3">
  <div
- className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+ className="w-12 h-12 flex items-center justify-center text-2xl"
  style={{ background: `linear-gradient(135deg, ${gen.color}, ${gen.color}88)` }}
  >
  {gen.icon}
@@ -389,7 +403,7 @@ export default function PromptHub() {
  {isIncluded ? (
  <button
  onClick={() => setActiveTab('generators')}
- className="cth-button-secondary px-4 py-2 rounded-lg text-sm"
+ className="cth-button-secondary px-4 py-2 text-sm"
  >
  Use Generator
  </button>
@@ -397,7 +411,7 @@ export default function PromptHub() {
  <button
  data-testid={`store-buy-${gen.id}`}
  onClick={handleStorePurchase}
- className="cth-button-primary px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+ className="cth-button-primary px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity"
  >
  Get Access
  </button>
@@ -415,7 +429,7 @@ export default function PromptHub() {
  <div className="space-y-6">
  {!selectedGenerator ? (
  <>
- <div className="p-4 rounded-xl border" style={{ background: "rgba(224,78,53,0.06)", borderColor: "rgba(224,78,53,0.18)" }}>
+ <div className="p-4 border" style={{ background: "rgba(224,78,53,0.06)", borderColor: "rgba(224,78,53,0.18)" }}>
  <h3 className="cth-heading font-semibold mb-1">AI Prompt Generators</h3>
  <p className="text-sm cth-muted">Create professional prompts powered by your Brand Memory</p>
  </div>
@@ -435,7 +449,7 @@ export default function PromptHub() {
  setGeneratorInputs({});
  setGeneratedResult(null);
  }}
- className="p-5 rounded-2xl border text-left group relative overflow-hidden transition-all cth-card"
+ className="p-5 border text-left group relative overflow-hidden transition-all cth-card"
  style={{
  background: effectiveLocked ? 'var(--cth-admin-panel-alt)' : 'var(--cth-admin-panel)',
  borderColor: 'var(--cth-admin-border)',
@@ -450,7 +464,7 @@ export default function PromptHub() {
  )}
  <div className="flex items-start justify-between mb-3">
  <div
- className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+ className="w-12 h-12 flex items-center justify-center text-2xl"
  style={{ background: effectiveLocked ? 'var(--cth-admin-panel-alt)' : `linear-gradient(135deg, ${gen.color}, ${gen.color}88)` }}
  >
  {gen.icon}
@@ -486,7 +500,7 @@ export default function PromptHub() {
  {/* Generator header */}
  <div className="flex items-center gap-4">
  <div
- className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+ className="w-14 h-14 flex items-center justify-center text-2xl"
  style={{ background: `linear-gradient(135deg, ${selectedGenerator.color}, ${selectedGenerator.color}88)` }}
  >
  {selectedGenerator.icon}
@@ -509,7 +523,7 @@ export default function PromptHub() {
  placeholder={field.placeholder}
  value={generatorInputs[field.key] || ''}
  onChange={(e) => setGeneratorInputs({ ...generatorInputs, [field.key]: e.target.value })}
- className="cth-input w-full px-4 py-2.5 rounded-xl text-sm"
+ className="cth-input w-full px-4 py-2.5 text-sm"
  />
  </div>
  ))}
@@ -517,7 +531,7 @@ export default function PromptHub() {
  <button
  onClick={handleGeneratorSubmit}
  disabled={generating}
- className="cth-button-primary w-full mt-4 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+ className="cth-button-primary w-full mt-4 py-3 font-semibold transition-all flex items-center justify-center gap-2"
  style={{
  background: generating ? 'rgba(168,143,159,0.18)' : 'linear-gradient(135deg, var(--cth-admin-accent), var(--cth-admin-ruby))',
  cursor: generating ? 'not-allowed' : 'pointer'
@@ -540,7 +554,7 @@ export default function PromptHub() {
  {/* Output */}
  <div className="space-y-4">
  <h3 className="text-sm font-medium cth-muted uppercase tracking-wider">Output</h3>
- <div className="p-4 rounded-xl border min-h-[400px] cth-card-muted" style={{ borderColor: "var(--cth-admin-border)" }}>
+ <div className="p-4 border min-h-[400px] cth-card-muted" style={{ borderColor: "var(--cth-admin-border)" }}>
  {generatedResult ? (
  <div className="space-y-3">
  <div className="flex items-center justify-between">
@@ -587,7 +601,7 @@ export default function PromptHub() {
  {showUpgradeModal && (
  <div data-testid="upgrade-modal" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
  onClick={() => setShowUpgradeModal(null)}>
- <div style={{ background: 'var(--cth-admin-panel)', border: '1px solid rgba(224,78,53,0.24)', borderRadius: 20, padding: 32, maxWidth: 400, width: '100%' }}
+ <div style={{ background: 'var(--cth-admin-panel)', border: '1px solid rgba(224,78,53,0.24)', borderRadius: 0, padding: 32, maxWidth: 400, width: '100%' }}
  onClick={e => e.stopPropagation()}>
  <div style={{ fontSize: 36, marginBottom: 12 }}>{showUpgradeModal.icon}</div>
  <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--cth-admin-ink)', marginBottom: 8 }}>Upgrade to unlock</h2>
@@ -599,11 +613,74 @@ export default function PromptHub() {
  </p>
  <p style={{ fontSize: 13, color: 'var(--cth-admin-muted)', marginBottom: 24 }}>{showUpgradeModal.description}</p>
  <div style={{ display: 'flex', gap: 10 }}>
- <a href="/billing" data-testid="upgrade-modal-billing-link" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', borderRadius: 12, background: 'linear-gradient(135deg,var(--cth-admin-ruby),var(--cth-admin-accent))', color: 'white', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+ <a href="/billing" data-testid="upgrade-modal-billing-link" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', borderRadius: 0, background: 'linear-gradient(135deg,var(--cth-admin-ruby),var(--cth-admin-accent))', color: 'white', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
  View Plans & Upgrade
  </a>
- <button data-testid="upgrade-modal-close" onClick={() => setShowUpgradeModal(null)} style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--cth-admin-border)', background: 'transparent', color: 'var(--cth-admin-muted)', fontSize: 13, cursor: 'pointer' }}>
+ <button data-testid="upgrade-modal-close" onClick={() => setShowUpgradeModal(null)} style={{ padding: '12px 16px', borderRadius: 0, border: '1px solid var(--cth-admin-border)', background: 'transparent', color: 'var(--cth-admin-muted)', fontSize: 13, cursor: 'pointer' }}>
  Close
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+
+ {/* Delete Prompt Modal */}
+ {deleteTarget && (
+ <div
+ style={{
+ position: 'fixed',
+ inset: 0,
+ background: 'rgba(0,0,0,0.5)',
+ zIndex: 9100,
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center',
+ }}
+ onClick={() => !deleting && setDeleteTarget(null)}
+ >
+ <div
+ onClick={(e) => e.stopPropagation()}
+ style={{
+ background: 'var(--cth-command-panel)',
+ border: '1px solid var(--cth-command-border)',
+ padding: '32px',
+ maxWidth: '400px',
+ width: '90%',
+ borderRadius: 0,
+ }}
+ >
+ <h3 style={{ margin: '0 0 8px', color: 'var(--cth-command-ink)' }}>Delete Prompt</h3>
+ <p style={{ margin: '0 0 24px', color: 'var(--cth-command-muted)', fontSize: '14px' }}>
+ Are you sure you want to delete <strong>{deleteTarget.title || 'this prompt'}</strong>? This cannot be undone.
+ </p>
+ <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+ <button
+ onClick={() => setDeleteTarget(null)}
+ disabled={deleting}
+ style={{
+ padding: '8px 16px',
+ border: '1px solid var(--cth-command-border)',
+ background: 'transparent',
+ color: 'var(--cth-command-ink)',
+ cursor: 'pointer',
+ borderRadius: 0,
+ }}
+ >
+ Cancel
+ </button>
+ <button
+ onClick={handleConfirmDeletePrompt}
+ disabled={deleting}
+ style={{
+ padding: '8px 16px',
+ border: 'none',
+ background: 'var(--cth-command-crimson)',
+ color: '#fff',
+ cursor: deleting ? 'not-allowed' : 'pointer',
+ borderRadius: 0,
+ }}
+ >
+ {deleting ? 'Deleting...' : 'Delete'}
  </button>
  </div>
  </div>
