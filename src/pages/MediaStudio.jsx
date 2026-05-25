@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useLocation } from 'react-router-dom';
 import { DashboardLayout, TopBar } from '../components/Layout';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { usePlan } from '../context/PlanContext';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../lib/apiClient';
 import MediaStudioUploadPanel from '../components/shared/MediaStudioUploadZones';
@@ -127,7 +126,7 @@ function ProviderDropdown({ providers, selectedId, onSelect }) {
  style={{
  background: 'var(--cth-command-panel)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  <div className="flex items-center gap-2">
@@ -141,7 +140,7 @@ function ProviderDropdown({ providers, selectedId, onSelect }) {
  color: 'var(--cth-command-ink)',
  background: 'var(--cth-command-panel-soft)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  padding: '2px 6px',
  }}
  >
@@ -161,7 +160,7 @@ function ProviderDropdown({ providers, selectedId, onSelect }) {
  fontWeight: 600,
  color: 'var(--cth-command-gold)',
  background: 'var(--cth-command-purple)',
- borderRadius: 4,
+ borderRadius: 0,
  padding: '2px 6px',
  }}
  >
@@ -186,13 +185,13 @@ function ProviderDropdown({ providers, selectedId, onSelect }) {
  style={{
  background: 'var(--cth-command-panel)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  boxShadow: '0 12px 32px rgba(13,0,16,0.18)',
  }}
  data-testid="provider-dropdown-menu"
  >
  <div className="p-2 border-b border-[var(--cth-command-border)]">
- <div className="flex items-center gap-2 px-3 py-2 cth-card-muted rounded-lg">
+ <div className="flex items-center gap-2 px-3 py-2 cth-card-muted">
  <svg className="w-3.5 h-3.5 cth-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
  </svg>
@@ -292,10 +291,9 @@ function PlaceholderMedia({ index, type }) {
  );
 }
 
-function MediaStudioContent() {
+export default function MediaStudio() {
  const { activeWorkspace } = useWorkspace();
  const { userId } = useAuth();
- const { plan } = usePlan();
  const location = useLocation();
 
  const workspaceId = activeWorkspace?.id || activeWorkspace?.workspace_id || '';
@@ -358,6 +356,9 @@ function MediaStudioContent() {
  const watermarkInputRef = useRef(null);
 
  const [credits, setCredits] = useState({ remaining: 75, total: 75 });
+
+ const [deleteTarget, setDeleteTarget] = useState(null);
+ const [deleting, setDeleting] = useState(false);
 
  const [uploadData, setUploadData] = useState({
  referenceImage: null,
@@ -629,14 +630,24 @@ function MediaStudioContent() {
  }
  };
 
- const handleDelete = async (mediaId) => {
+ const handleDelete = (media) => {
+ const target = media && typeof media === 'object' ? media : { id: media };
+ setDeleteTarget(target);
+ };
+
+ const handleConfirmDelete = async () => {
+ if (!deleteTarget) return;
+ setDeleting(true);
  try {
- await apiClient.delete(`/api/media/${mediaId}`);
- setLibrary((prev) => prev.filter((m) => m.id !== mediaId));
+ await apiClient.delete(`/api/media/${deleteTarget.id}`);
+ setLibrary((prev) => prev.filter((m) => m.id !== deleteTarget.id));
  setSelectedMedia(null);
+ setDeleteTarget(null);
  } catch (err) {
  console.error('Media delete failed:', err);
  toast.error("Could not delete. Please try again.");
+ } finally {
+ setDeleting(false);
  }
  };
 
@@ -676,7 +687,7 @@ function MediaStudioContent() {
  style={{
  background: 'var(--cth-command-panel)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  padding: '6px 12px',
  }}
  >
@@ -707,7 +718,7 @@ function MediaStudioContent() {
  </div>
  <div
  className="w-16 h-1.5 overflow-hidden"
- style={{ background: 'var(--cth-command-border)', borderRadius: 4 }}
+ style={{ background: 'var(--cth-command-border)', borderRadius: 0 }}
  >
  <div
  className="h-full"
@@ -753,8 +764,8 @@ function MediaStudioContent() {
  className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium transition-all"
  style={
  mode === tab.id
- ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 4 }
- : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }
+ ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 0 }
+ : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }
  }
  >
  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -767,7 +778,7 @@ function MediaStudioContent() {
  </div>
 
  {mode !== 'watermark' && (
- <div className="p-4" style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }}>
+ <div className="p-4" style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }}>
  <p className="cth-kicker mb-2">Creative direction</p>
  <label className="cth-label">
  Prompt
@@ -795,7 +806,7 @@ function MediaStudioContent() {
  className="hidden"
  />
  {referenceImage ? (
- <div className="relative w-full h-24 rounded-lg overflow-hidden">
+ <div className="relative w-full h-24 overflow-hidden">
  <img src={URL.createObjectURL(referenceImage)} alt="Reference" className="w-full h-full object-cover" />
  <button
  onClick={() => setReferenceImage(null)}
@@ -813,7 +824,7 @@ function MediaStudioContent() {
  style={{
  background: 'var(--cth-command-panel-soft)',
  border: '1px dashed var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  color: 'var(--cth-command-muted)',
  fontFamily: '"DM Sans", system-ui, sans-serif',
  fontSize: 13,
@@ -830,7 +841,7 @@ function MediaStudioContent() {
  )}
 
  {mode !== 'watermark' && (
- <div className="p-4 relative" style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }}>
+ <div className="p-4 relative" style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }}>
  <p className="cth-kicker mb-2">Model</p>
  <label className="block text-[10px] font-semibold tracking-widest uppercase cth-muted mb-2">
  AI Model
@@ -848,7 +859,7 @@ function MediaStudioContent() {
  )}
 
  {mode === 'image' && (
- <div className="p-4" style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }}>
+ <div className="p-4" style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }}>
  <p className="cth-kicker mb-2">Visual style</p>
  <label className="block text-[10px] font-semibold tracking-widest uppercase cth-muted mb-2">
  Style
@@ -862,8 +873,8 @@ function MediaStudioContent() {
  className="px-3 py-2 text-xs font-medium transition-all"
  style={
  imageSettings.style === style.id
- ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 4 }
- : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }
+ ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 0 }
+ : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }
  }
  >
  {style.label}
@@ -874,13 +885,13 @@ function MediaStudioContent() {
  )}
 
  {mode === 'image' && (
- <div className="p-4" style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }}>
+ <div className="p-4" style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }}>
  <p className="cth-kicker mb-3">Reference assets</p>
  <MediaStudioUploadPanel onChange={setUploadData} workspaceId={workspaceId} userId={userId} />
  </div>
  )}
 
- <div className="p-4" style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }}>
+ <div className="p-4" style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }}>
  <p className="cth-kicker mb-2">Output settings</p>
  <label className="block text-[10px] font-semibold tracking-widest uppercase cth-muted mb-2">
  Aspect Ratio
@@ -900,8 +911,8 @@ function MediaStudioContent() {
  className="px-3 py-1.5 text-xs transition-all"
  style={
  active
- ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 4 }
- : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }
+ ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 0 }
+ : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }
  }
  >
  {ratio}
@@ -927,8 +938,8 @@ function MediaStudioContent() {
  className="flex-1 px-3 py-2 text-xs transition-all"
  style={
  active
- ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 4 }
- : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }
+ ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 0 }
+ : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }
  }
  >
  {dur}
@@ -957,7 +968,7 @@ function MediaStudioContent() {
  style={{
  background: 'var(--cth-command-panel-soft)',
  border: '1px dashed var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  color: 'var(--cth-command-muted)',
  fontFamily: '"DM Sans", system-ui, sans-serif',
  fontSize: 13,
@@ -978,7 +989,7 @@ function MediaStudioContent() {
  data-testid="watermark-text-input"
  placeholder="e.g. Core Truth House"
  className="w-full px-3.5 py-2.5 text-sm focus:outline-none transition-all"
- style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 4, color: 'var(--cth-command-ink)', fontFamily: '"DM Sans", system-ui, sans-serif' }}
+ style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 0, color: 'var(--cth-command-ink)', fontFamily: '"DM Sans", system-ui, sans-serif' }}
  />
  </div>
 
@@ -995,8 +1006,8 @@ function MediaStudioContent() {
  className="px-2 py-1.5 text-[10px] font-medium capitalize transition-all"
  style={
  active
- ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 4 }
- : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }
+ ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 0 }
+ : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }
  }
  >
  {pos.replace('-', ' ')}
@@ -1044,7 +1055,7 @@ function MediaStudioContent() {
  <button
  key={c}
  onClick={() => setWatermarkSettings((s) => ({ ...s, color: c }))}
- className={`w-8 h-8 rounded-lg border-2 transition-all ${watermarkSettings.color === c ? 'border-[var(--cth-command-crimson)] scale-110' : 'border-[var(--cth-command-border)]'}`}
+ className={`w-8 h-8 border-2 transition-all ${watermarkSettings.color === c ? 'border-[var(--cth-command-crimson)] scale-110' : 'border-[var(--cth-command-border)]'}`}
  style={{ backgroundColor: c }}
  data-testid={`watermark-color-${c.slice(1)}`}
  />
@@ -1061,7 +1072,7 @@ function MediaStudioContent() {
  background: 'var(--cth-command-purple)',
  color: 'var(--cth-command-gold)',
  border: 'none',
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  {isWatermarking ? (
@@ -1083,7 +1094,7 @@ function MediaStudioContent() {
  </button>
 
  {watermarkResult && (
- <div className="p-3 rounded-lg border" style={{ background: 'rgba(63,122,95,0.08)', borderColor: 'rgba(63,122,95,0.20)' }}>
+ <div className="p-3 border" style={{ background: 'rgba(63,122,95,0.08)', borderColor: 'rgba(63,122,95,0.20)' }}>
  <p className="text-xs font-medium" style={{ color: 'var(--cth-success)' }}>Watermark applied successfully!</p>
  {watermarkResult.image_url && (
  <a
@@ -1110,7 +1121,7 @@ function MediaStudioContent() {
  background: 'var(--cth-command-purple)',
  color: 'var(--cth-command-gold)',
  border: 'none',
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  {isGenerating ? (
@@ -1148,7 +1159,7 @@ function MediaStudioContent() {
  )}
 
  {generationError && (
- <div className="mt-4 p-3 rounded-lg border" style={{ background: 'rgba(180,67,67,0.08)', borderColor: 'rgba(180,67,67,0.20)' }}>
+ <div className="mt-4 p-3 border" style={{ background: 'rgba(180,67,67,0.08)', borderColor: 'rgba(180,67,67,0.20)' }}>
  <p className="text-xs" style={{ color: 'var(--cth-danger)' }}>{generationError}</p>
  </div>
  )}
@@ -1166,14 +1177,14 @@ function MediaStudioContent() {
  </div>
  <button
  onClick={() => setGeneratedResults([])}
- className="rounded-full px-3 py-1.5 text-xs cth-card-muted cth-muted hover:cth-heading"
+ className="px-3 py-1.5 text-xs cth-card-muted cth-muted hover:cth-heading"
  >
  Clear
  </button>
  </div>
 
  {generatedResults.map((media, idx) => (
- <div key={media.id} className="cth-card overflow-hidden rounded-[28px]">
+ <div key={media.id} className="cth-card overflow-hidden">
  <div className="border-b border-[var(--cth-command-border)] px-5 py-4">
  <div className="cth-row-between">
  <div className="min-w-0">
@@ -1185,15 +1196,15 @@ function MediaStudioContent() {
  {media.provider} • {media.dimensions}
  </p>
  </div>
- <div className="rounded-full px-3 py-1.5 text-xs cth-card-muted cth-muted">
+ <div className="px-3 py-1.5 text-xs cth-card-muted cth-muted">
  {media.is_saved ? 'Saved' : 'Ready to save'}
  </div>
  </div>
  </div>
 
  <div className="p-5">
- <div className="rounded-[26px] border border-[var(--cth-command-border)] bg-[var(--cth-command-panel-soft)] p-4">
- <div className="overflow-hidden rounded-[22px] bg-black/90">
+ <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel-soft)] p-4">
+ <div className="overflow-hidden bg-black/90">
  <div className="aspect-[4/5] md:aspect-video">
  {media.url ? (
  media.type === 'video' ? (
@@ -1223,7 +1234,7 @@ function MediaStudioContent() {
  {generatedResults.map((thumb, thumbIdx) => (
  <div
  key={thumb.id}
- className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel-soft)]"
+ className="h-20 w-20 shrink-0 overflow-hidden border border-[var(--cth-command-border)] bg-[var(--cth-command-panel-soft)]"
  >
  {thumb.url || thumb.thumbnail_url ? (
  thumb.type === 'video' ? (
@@ -1248,12 +1259,12 @@ function MediaStudioContent() {
  </div>
  )}
 
- <div className="mt-4 rounded-[22px] border border-[var(--cth-command-border)] bg-[var(--cth-command-panel-soft)] px-4 py-4">
+ <div className="mt-4 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel-soft)] px-4 py-4">
  <p className="mb-2 text-sm cth-heading">Prompt</p>
  <p className="text-sm cth-muted">{media.prompt}</p>
  </div>
 
- <div className="cth-row-between mt-4 rounded-[22px] border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-4">
+ <div className="cth-row-between mt-4 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-4 py-4">
  <div className="flex items-center gap-3 text-xs cth-muted">
  <span>{media.provider}</span>
  <span>•</span>
@@ -1265,7 +1276,7 @@ function MediaStudioContent() {
  <button
  onClick={() => handleDownload(media)}
  className="px-3 py-2 text-xs font-semibold transition-colors hover:opacity-80"
- style={{ background: 'transparent', border: '1px solid var(--cth-command-border)', color: 'var(--cth-command-ink)', borderRadius: 4 }}
+ style={{ background: 'transparent', border: '1px solid var(--cth-command-border)', color: 'var(--cth-command-ink)', borderRadius: 0 }}
  >
  Download
  </button>
@@ -1273,7 +1284,7 @@ function MediaStudioContent() {
  <button
  onClick={() => handleSave(media)}
  className="px-3 py-2 text-xs font-semibold transition-colors hover:opacity-90"
- style={{ background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 4 }}
+ style={{ background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 0 }}
  >
  Save to Library
  </button>
@@ -1290,7 +1301,7 @@ function MediaStudioContent() {
  style={{
  background: 'var(--cth-command-panel-soft)',
  border: '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  <svg
@@ -1357,7 +1368,7 @@ function MediaStudioContent() {
  <p className="cth-kicker mb-1">Saved assets</p>
  <h3 className="text-sm font-semibold cth-heading">Media Library</h3>
  </div>
- <span className="rounded-full px-2.5 py-1 text-[10px] cth-card-muted cth-muted">{library.length} items</span>
+ <span className="px-2.5 py-1 text-[10px] cth-card-muted cth-muted">{library.length} items</span>
  </div>
 
  <div className="flex gap-2 mb-4">
@@ -1369,8 +1380,8 @@ function MediaStudioContent() {
  className="flex-1 px-2 py-1.5 text-[10px] font-medium transition-all"
  style={
  libraryFilter === filter
- ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 4 }
- : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 4 }
+ ? { background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 0 }
+ : { background: 'transparent', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)', borderRadius: 0 }
  }
  >
  {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -1397,7 +1408,7 @@ function MediaStudioContent() {
  border: selectedMedia?.id === item.id
  ? '2px solid var(--cth-command-purple)'
  : '1px solid var(--cth-command-border)',
- borderRadius: 4,
+ borderRadius: 0,
  }}
  >
  {item.url || item.thumbnail_url ? (
@@ -1441,7 +1452,7 @@ function MediaStudioContent() {
  )}
 
  {selectedMedia && (
- <div className="cth-card mt-2 overflow-hidden rounded-[24px]">
+ <div className="cth-card mt-2 overflow-hidden">
  <div className="border-b border-[var(--cth-command-border)] px-4 py-3">
  <p className="cth-kicker mb-1">Selected asset</p>
  <h4 className="text-sm font-semibold cth-heading">
@@ -1450,7 +1461,7 @@ function MediaStudioContent() {
  </div>
 
  <div className="p-4">
- <div className="mb-4 overflow-hidden rounded-[18px] border border-[var(--cth-command-border)] bg-[var(--cth-command-panel-soft)]">
+ <div className="mb-4 overflow-hidden border border-[var(--cth-command-border)] bg-[var(--cth-command-panel-soft)]">
  <div className="aspect-square">
  {selectedMedia.url || selectedMedia.thumbnail_url ? (
  selectedMedia.type === 'video' ? (
@@ -1472,7 +1483,7 @@ function MediaStudioContent() {
  </div>
  </div>
 
- <div className="mb-3 rounded-[18px] border border-[var(--cth-command-border)] bg-[var(--cth-command-panel-soft)] px-3 py-3">
+ <div className="mb-3 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel-soft)] px-3 py-3">
  <p className="mb-2 line-clamp-3 text-xs cth-muted">{selectedMedia.prompt}</p>
  <div className="space-y-1 text-[10px] cth-muted">
  <div className="flex items-center justify-between">
@@ -1494,14 +1505,14 @@ function MediaStudioContent() {
  <button
  onClick={() => handleDownload(selectedMedia)}
  className="px-3 py-2.5 text-[10px] font-semibold transition-colors hover:opacity-80"
- style={{ background: 'transparent', border: '1px solid var(--cth-command-border)', color: 'var(--cth-command-ink)', borderRadius: 4 }}
+ style={{ background: 'transparent', border: '1px solid var(--cth-command-border)', color: 'var(--cth-command-ink)', borderRadius: 0 }}
  >
  Download
  </button>
  <button
- onClick={() => handleDelete(selectedMedia.id)}
+ onClick={() => handleDelete(selectedMedia)}
  className="px-3 py-2.5 text-[10px] font-semibold transition-colors hover:opacity-90"
- style={{ background: 'var(--cth-command-crimson)', color: 'var(--cth-command-ivory)', border: 'none', borderRadius: 4 }}
+ style={{ background: 'var(--cth-command-crimson)', color: 'var(--cth-command-ivory)', border: 'none', borderRadius: 0 }}
  >
  Delete
  </button>
@@ -1513,10 +1524,68 @@ function MediaStudioContent() {
  </div>
  </div>
  </div>
+
+ {deleteTarget && (
+ <div
+ style={{
+ position: 'fixed',
+ inset: 0,
+ background: 'rgba(0,0,0,0.5)',
+ zIndex: 60,
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center',
+ }}
+ onClick={() => !deleting && setDeleteTarget(null)}
+ >
+ <div
+ onClick={(e) => e.stopPropagation()}
+ style={{
+ background: 'var(--cth-command-panel)',
+ border: '1px solid var(--cth-command-border)',
+ padding: '32px',
+ maxWidth: '400px',
+ width: '90%',
+ borderRadius: 0,
+ }}
+ >
+ <h3 style={{ margin: '0 0 8px', color: 'var(--cth-command-ink)' }}>Delete Media</h3>
+ <p style={{ margin: '0 0 24px', color: 'var(--cth-command-muted)', fontSize: '14px' }}>
+ Are you sure you want to delete this {deleteTarget.type || 'asset'}? This cannot be undone.
+ </p>
+ <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+ <button
+ onClick={() => setDeleteTarget(null)}
+ disabled={deleting}
+ style={{
+ padding: '8px 16px',
+ border: '1px solid var(--cth-command-border)',
+ background: 'transparent',
+ color: 'var(--cth-command-ink)',
+ cursor: 'pointer',
+ borderRadius: 0,
+ }}
+ >
+ Cancel
+ </button>
+ <button
+ onClick={handleConfirmDelete}
+ disabled={deleting}
+ style={{
+ padding: '8px 16px',
+ border: 'none',
+ background: 'var(--cth-command-crimson)',
+ color: '#fff',
+ cursor: deleting ? 'not-allowed' : 'pointer',
+ borderRadius: 0,
+ }}
+ >
+ {deleting ? 'Deleting...' : 'Delete'}
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
  </DashboardLayout>
  );
-}
-
-export default function MediaStudio() {
- return <MediaStudioContent />;
 }
