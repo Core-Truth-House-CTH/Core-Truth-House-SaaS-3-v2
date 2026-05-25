@@ -801,7 +801,7 @@ const METRIC_FALLBACKS = [
  color: "#b93222",
  },
  {
- title: "Optimization",
+ title: "Identity",
  score: 76,
  label: "Room to Elevate",
  note: "Insights are present and should drive your next decisions.",
@@ -861,7 +861,7 @@ function buildHealthMetricsFromAudit(audit) {
  Clarity: clarity,
  Structure: structure,
  Execution: execution,
- Optimization: optimization,
+ Identity: optimization,
  };
 
  return METRIC_FALLBACKS.map((metric) => {
@@ -889,7 +889,7 @@ function buildHealthMetricsFromLive(healthData) {
  Clarity: Number.isFinite(Number(foundationScore)) ? foundationScore : null,
  Structure: averageAuditScores([offerScore, systemsScore]),
  Execution: Number.isFinite(Number(contentScore)) ? contentScore : null,
- Optimization: Number.isFinite(Number(identityScore)) ? identityScore : null,
+ Identity: Number.isFinite(Number(identityScore)) ? identityScore : null,
  };
 
  return METRIC_FALLBACKS.map((metric) => {
@@ -1525,7 +1525,7 @@ function KpiStrip({ overallScore, workspaceStats, progress, healthMetrics }) {
  ].filter(Boolean).length;
 
  const executionScore = getCommandMetricScore(healthMetrics, "Execution", 71);
- const optimizationScore = getCommandMetricScore(healthMetrics, "Optimization", overallScore || 78);
+ const optimizationScore = getCommandMetricScore(healthMetrics, "Identity", overallScore || 78);
  const momentumScore = Math.round((executionScore + optimizationScore) / 2);
 
  const cards = [
@@ -1638,7 +1638,7 @@ function buildRealInsightsOverview({ latestAudit, progress, workspaceStats, heal
  );
 
  const optimizationScore = firstNumber(
- getCommandMetricScore(healthMetrics, "Optimization", null),
+ getCommandMetricScore(healthMetrics, "Identity", null),
  latestAudit?.overall_score,
  scoreBag?.overall
  );
@@ -1820,8 +1820,8 @@ function StrategyRoadmapPanel({ healthMetrics }) {
  ["Brand Positioning", getCommandMetricScore(healthMetrics, "Clarity", 82), Target],
  ["Offer Architecture", getCommandMetricScore(healthMetrics, "Structure", 74), FileText],
  ["Content Ecosystem", getCommandMetricScore(healthMetrics, "Execution", 71), PenTool],
- ["Launch Authority", Math.round((getCommandMetricScore(healthMetrics, "Execution", 71) + getCommandMetricScore(healthMetrics, "Optimization", 76)) / 2), Megaphone],
- ["Measure & Optimize", getCommandMetricScore(healthMetrics, "Optimization", 76), BarChart3],
+ ["Launch Authority", Math.round((getCommandMetricScore(healthMetrics, "Execution", 71) + getCommandMetricScore(healthMetrics, "Identity", 76)) / 2), Megaphone],
+ ["Measure & Optimize", getCommandMetricScore(healthMetrics, "Identity", 76), BarChart3],
  ];
 
  return (
