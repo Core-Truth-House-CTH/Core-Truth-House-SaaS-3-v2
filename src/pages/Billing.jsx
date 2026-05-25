@@ -731,7 +731,7 @@ export default function Billing() {
         style={PAGE_STYLE}
         data-testid="billing-page"
       >
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-[1200px]">
           <StatusBanner status={status} />
 
           {loading ? (
