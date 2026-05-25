@@ -2385,6 +2385,14 @@ export default function CommandCenter() {
 
  const overallScore = latestAudit?.overall_score ?? latestAudit?.scores?.overall ?? 78;
  const rating = latestAudit?.brand_health_rating || latestAudit?.rating || "Strong Foundation";
+
+ // Score ring + rating prefer the live healthData calculation; fall back to
+ // latestAudit only if live data hasn't loaded yet. This keeps the visible
+ // number aligned with the launch pill (which is already live-only).
+ const displayScore = Number.isFinite(Number(healthData?.overall_score))
+ ? Number(healthData.overall_score)
+ : overallScore;
+ const displayRating = healthData?.rating || rating;
  const bestMove = useMemo(
  () => buildDailyBestMove({ latestAudit, progress }),
  [latestAudit, progress]
@@ -2432,7 +2440,7 @@ export default function CommandCenter() {
  <section className="cth-command-main">
  <div className="cth-command-grid">
  <div className="cth-command-score-row">
- <ScorePanel score={overallScore} rating={rating} healthData={healthData} />
+ <ScorePanel score={displayScore} rating={displayRating} healthData={healthData} />
  {healthMetrics.map((metric) => (
  <MetricTile key={metric.title} metric={metric} />
  ))}
