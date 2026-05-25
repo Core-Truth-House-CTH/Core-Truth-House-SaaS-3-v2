@@ -17,6 +17,7 @@ import { DashboardLayout, TopBar } from "../components/Layout";
 import apiClient from "../lib/apiClient";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
+import { useBrandHealth } from "../context/BrandHealthContext";
 import API_PATHS from "../lib/apiPaths";
 import PublishDrawer from "../components/content-studio/PublishDrawer";
 
@@ -387,6 +388,7 @@ function PlatformPreview({ content, contentType }) {
 export default function ContentStudio() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { refresh: refreshBrandHealth } = useBrandHealth();
   const campaignId = location.state?.campaignId || "";
   const contentItemId = location.state?.contentItemId || "";
   const [form, setForm] = useState(DEFAULT_FORM);
@@ -541,6 +543,7 @@ export default function ContentStudio() {
       });
 
       await loadLibrary();
+      refreshBrandHealth();
     } catch (error) {
       console.error("Failed to save content", error);
       setSaveError(error?.message || "Failed to save content.");
@@ -1088,6 +1091,7 @@ export default function ContentStudio() {
                       setGeneratedContent("");
                     }
                     await loadLibrary();
+                    refreshBrandHealth();
                   } catch (error) {
                     console.error("Failed to delete content", error);
                     setSaveError(error?.message || "Failed to delete content.");

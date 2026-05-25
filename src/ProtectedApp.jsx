@@ -8,6 +8,7 @@ import {
 import { ThemeProvider } from "./context/ThemeContext";
 import { WorkspaceProvider } from "./context/WorkspaceContext";
 import { PlanProvider } from "./context/PlanContext";
+import { BrandHealthProvider } from "./context/BrandHealthContext";
 
 import ApiClientBootstrap from "./components/ApiClientBootstrap";
 import { AppVersionBanner } from "./components/shared/useAppVersion";
@@ -142,7 +143,9 @@ function AppProviders({ children }) {
   return (
     <ThemeProvider>
       <WorkspaceProvider>
-        <PlanProvider>{children}</PlanProvider>
+        <PlanProvider>
+          <BrandHealthProvider>{children}</BrandHealthProvider>
+        </PlanProvider>
       </WorkspaceProvider>
     </ThemeProvider>
   );

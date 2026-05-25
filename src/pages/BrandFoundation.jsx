@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { DashboardLayout, TopBar } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
+import { useBrandHealth } from "../context/BrandHealthContext";
 import { BrandGuidelinesExportButton } from "../components/shared/BrandGuidelinesExport";
 import { getNextStep } from "../config/brandCoreNextStep";
 import apiClient from "../lib/apiClient";
@@ -389,6 +390,7 @@ function StatusPill({ status }) {
 export default function BrandFoundation() {
   const { currentWorkspace } = useWorkspace();
   const { plan } = usePlan();
+  const { refresh: refreshBrandHealth } = useBrandHealth();
 
   const workspaceId = currentWorkspace?.id || currentWorkspace?.workspace_id || "";
   const nextStep = getNextStep("/brand-foundation", plan);
@@ -462,7 +464,8 @@ export default function BrandFoundation() {
   const persistFoundation = useCallback(async (updated) => {
     const payload = buildFoundationPayload(updated);
     await apiClient.post("/api/persist/brand-foundation", payload);
-  }, []);
+    refreshBrandHealth();
+  }, [refreshBrandHealth]);
 
   const handleChange = useCallback(
     (value) => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DashboardLayout, TopBar } from '../components/Layout';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useBrandHealth } from '../context/BrandHealthContext';
 import { useUser } from '../hooks/useAuth';
 import {
   Package,
@@ -254,6 +255,7 @@ function StatTile({ label, value, subtitle }) {
 function OfferBuilderContent() {
   const { user } = useUser();
   const { currentWorkspace } = useWorkspace();
+  const { refresh: refreshBrandHealth } = useBrandHealth();
 
   const workspaceId =
     currentWorkspace?.id ||
@@ -398,6 +400,7 @@ function OfferBuilderContent() {
       }
 
       await loadOffers();
+      refreshBrandHealth();
       handleCloseModalImmediate();
     } catch (err) {
       console.error('Save error:', err);
@@ -422,6 +425,7 @@ function OfferBuilderContent() {
     try {
       await apiClient.delete(`/api/offers/${offer.id}`);
       await loadOffers();
+      refreshBrandHealth();
     } catch (err) {
       console.error('Delete error:', err);
       setError(err?.message || 'Failed to delete offer.');

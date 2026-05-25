@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { DashboardLayout, TopBar } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
+import { useBrandHealth } from "../context/BrandHealthContext";
 import apiClient from "../lib/apiClient";
 import {
   Cog,
@@ -483,6 +484,7 @@ function SystemCard({ system, onEdit, onDelete, onOpen }) {
 
 export default function SystemsBuilder() {
   const { currentWorkspace } = useWorkspace();
+  const { refresh: refreshBrandHealth } = useBrandHealth();
 
   const workspaceId =
     currentWorkspace?.id ||
@@ -706,6 +708,7 @@ export default function SystemsBuilder() {
       resetForm();
       setSearchQuery("");
       await loadSystems();
+      refreshBrandHealth();
     } catch (err) {
       console.error("Failed to save system:", err);
       setError(getErrorMessage(err, "Failed to save system."));
@@ -735,6 +738,7 @@ export default function SystemsBuilder() {
       setSuccessMessage("System deleted.");
       if (viewingSystem?.id === systemId) setViewingSystem(null);
       await loadSystems();
+      refreshBrandHealth();
     } catch (err) {
       console.error("Failed to delete system:", err);
       setError(getErrorMessage(err, "Failed to delete system."));

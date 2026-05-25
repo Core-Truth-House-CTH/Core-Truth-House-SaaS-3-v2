@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DashboardLayout, TopBar } from '../components/Layout';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { usePlan } from '../context/PlanContext';
+import { useBrandHealth } from '../context/BrandHealthContext';
 import { useUser } from '../hooks/useAuth';
 import { BrandGuidelinesExportButton } from '../components/shared/BrandGuidelinesExport';
 import IdentityStudioAssets from '../components/shared/IdentityStudioAssets';
@@ -216,6 +217,7 @@ function IdentityStudioContent() {
   const { activeWorkspace } = useWorkspace();
   const { plan } = usePlan();
   const { user } = useUser();
+  const { refresh: refreshBrandHealth } = useBrandHealth();
   const userId = user?.id;
   const nextStep = getNextStep('/identity-studio', plan);
   const nextStepHref = nextStep?.upgradeTo ? '/billing' : nextStep?.href;
@@ -353,12 +355,13 @@ function IdentityStudioContent() {
           prev.filter((asset) => (asset.asset_id || asset.id) !== assetId)
         );
         setHasUnsaved(true);
+        refreshBrandHealth();
       } catch (err) {
         console.error('Failed to delete asset:', err);
         throw err;
       }
     },
-    []
+    [refreshBrandHealth]
   );
 
   const handleSave = useCallback(async () => {
@@ -375,6 +378,7 @@ function IdentityStudioContent() {
       setHasUnsaved(false);
       setSaveToastVisible(true);
       setTimeout(() => setSaveToastVisible(false), 2500);
+      refreshBrandHealth();
       try {
         localStorage.removeItem(draftKey);
       } catch (e) {
@@ -387,7 +391,7 @@ function IdentityStudioContent() {
     } finally {
       setIsSaving(false);
     }
-  }, [userId, activeWorkspace, colors, fonts, assets, draftKey]);
+  }, [userId, activeWorkspace, colors, fonts, assets, draftKey, refreshBrandHealth]);
 
   const handleResetColor = useCallback(
     (index) => {

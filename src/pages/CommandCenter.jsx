@@ -24,6 +24,7 @@ import {
 
 import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
+import { useBrandHealth } from "../context/BrandHealthContext";
 import { useUser } from "../hooks/useAuth";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
@@ -876,6 +877,36 @@ function buildHealthMetricsFromAudit(audit) {
  });
 }
 
+function buildHealthMetricsFromLive(healthData) {
+ const modules = healthData?.modules || {};
+ const foundationScore = modules.brand_foundation?.score;
+ const offerScore = modules.offer_builder?.score;
+ const systemsScore = modules.systems_builder?.score;
+ const contentScore = modules.content_studio?.score;
+ const identityScore = modules.identity_studio?.score;
+
+ const liveScores = {
+ Clarity: Number.isFinite(Number(foundationScore)) ? foundationScore : null,
+ Structure: averageAuditScores([offerScore, systemsScore]),
+ Execution: Number.isFinite(Number(contentScore)) ? contentScore : null,
+ Optimization: Number.isFinite(Number(identityScore)) ? identityScore : null,
+ };
+
+ return METRIC_FALLBACKS.map((metric) => {
+ const liveScore = liveScores[metric.title];
+ const hasLiveScore = Number.isFinite(Number(liveScore));
+
+ return {
+ ...metric,
+ score: hasLiveScore ? clampCommandScore(liveScore, metric.score) : metric.score,
+ label: hasLiveScore ? "Live Score" : metric.label,
+ note: hasLiveScore
+ ? "Live from your saved work — updates as you complete modules."
+ : metric.note,
+ };
+ });
+}
+
 function ScoreRing() {
  return (
  <div className="cth-command-ring">
@@ -884,7 +915,13 @@ function ScoreRing() {
  );
 }
 
-function ScorePanel({ score, rating }) {
+function ScorePanel({ score, rating, healthData }) {
+ const showPill = !!healthData && Number.isFinite(Number(healthData.overall_score));
+ const launchReady = Boolean(healthData?.launch_ready);
+ const threshold = Number(healthData?.launch_threshold) || 60;
+ const overall = Number(healthData?.overall_score) || 0;
+ const ptsToGo = Math.max(0, threshold - overall);
+
  return (
  <div className="cth-command-score-main">
  <div className="cth-command-kicker">Brand Health Score</div>
@@ -897,6 +934,34 @@ function ScorePanel({ score, rating }) {
  </div>
  <ScoreRing />
  </div>
+ {showPill && (
+ <div
+ style={{
+ display: "inline-flex",
+ alignItems: "center",
+ gap: "6px",
+ padding: "4px 12px",
+ background: launchReady ? "rgba(34,197,94,0.1)" : "var(--cth-command-blush)",
+ border: `1px solid ${launchReady ? "rgba(34,197,94,0.4)" : "var(--cth-command-border)"}`,
+ borderRadius: 999,
+ fontSize: "11px",
+ fontWeight: 600,
+ color: launchReady ? "#16a34a" : "var(--cth-command-muted)",
+ marginTop: "8px",
+ width: "fit-content",
+ }}
+ >
+ <span
+ style={{
+ width: 6,
+ height: 6,
+ borderRadius: "50%",
+ background: launchReady ? "#16a34a" : "var(--cth-command-muted)",
+ }}
+ />
+ {launchReady ? "Launch Ready" : `${ptsToGo} pts to launch ready`}
+ </div>
+ )}
  </div>
  );
 }
@@ -2195,6 +2260,7 @@ export default function CommandCenter() {
  const navigate = useNavigate();
  const { user } = useUser();
  const { activeWorkspaceId, activeWorkspace } = useWorkspace();
+ const { healthData } = useBrandHealth();
 
  const [loading, setLoading] = useState(true);
  const [progress, setProgress] = useState({});
@@ -2298,7 +2364,10 @@ export default function CommandCenter() {
  () => buildDailyBestMove({ latestAudit, progress }),
  [latestAudit, progress]
  );
- const healthMetrics = useMemo(() => buildHealthMetricsFromAudit(latestAudit), [latestAudit]);
+ const healthMetrics = useMemo(
+ () => (healthData ? buildHealthMetricsFromLive(healthData) : buildHealthMetricsFromAudit(latestAudit)),
+ [healthData, latestAudit]
+ );
  const realInsights = useMemo(
  () => buildRealInsightsOverview({ latestAudit, progress, workspaceStats, healthMetrics }),
  [latestAudit, progress, workspaceStats, healthMetrics]
@@ -2338,7 +2407,7 @@ export default function CommandCenter() {
  <section className="cth-command-main">
  <div className="cth-command-grid">
  <div className="cth-command-score-row">
- <ScorePanel score={overallScore} rating={rating} />
+ <ScorePanel score={overallScore} rating={rating} healthData={healthData} />
  {healthMetrics.map((metric) => (
  <MetricTile key={metric.title} metric={metric} />
  ))}
