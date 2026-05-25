@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
  Archive,
  CheckCircle2,
- Clock,
  Copy,
  ExternalLink,
  FileText,
@@ -1366,27 +1365,7 @@ export default function MailSuite() {
  />
 
  <div style={PAGE_STYLE} className="px-4 py-6 md:px-7 md:py-8">
- <div style={{ marginBottom: 24, display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16 }}>
- <div style={{ minWidth: 0 }}>
- <Eyebrow>Mail Suite</Eyebrow>
- <h1
- style={{
- fontFamily: SERIF,
- fontSize: 28,
- fontWeight: 600,
- color: "var(--cth-command-ink)",
- margin: "8px 0 0",
- lineHeight: 1.2,
- letterSpacing: "-0.01em",
- }}
- >
- Communication Hub
- </h1>
- <p style={{ fontFamily: SANS, fontSize: 14, color: "var(--cth-command-muted)", margin: "8px 0 0", maxWidth: 640, lineHeight: 1.55 }}>
- Read inbound mail, monitor click signals, manage tracking links, and ship automations from one place.
- </p>
- </div>
-
+ <div style={{ marginBottom: 24, display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "flex-end", gap: 16 }}>
  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
  <button type="button" onClick={() => setActiveDrawer("templates")} style={SECONDARY_BUTTON_STYLE}>
  <Sparkles size={14} /> Templates
