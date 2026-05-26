@@ -6,6 +6,8 @@ import { useUser, useClerk } from "../hooks/useAuth";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { SidebarTooltip } from "./ui/tooltip";
 import apiClient from "../lib/apiClient";
+import AskTheHouseDrawer from "./ask-the-house/AskTheHouseDrawer";
+import { useAskTheHouse, getSurfaceFromPath } from "../context/AskTheHouseContext";
 import {
   Shield,
   Key,
@@ -878,6 +880,7 @@ export function Sidebar() {
 }
 
 export function TopBar({ title, subtitle, action }) {
+  const { toggle } = useAskTheHouse();
   return (
     <div className="cth-topbar sticky top-0 z-20 flex items-center justify-between px-4 py-3 md:px-7 md:py-5">
       <div className="min-w-0 flex-1">
@@ -905,6 +908,28 @@ export function TopBar({ title, subtitle, action }) {
 
       <div className="ml-3 flex items-center gap-2 md:gap-3 flex-shrink-0">
         {action}
+        <button
+          onClick={toggle}
+          title="Ask the House"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "6px 12px",
+            background: "var(--cth-command-purple)",
+            color: "var(--cth-command-gold)",
+            border: "1px solid var(--cth-command-border)",
+            borderRadius: 0,
+            fontSize: "12px",
+            fontWeight: 600,
+            fontFamily: '"DM Sans", system-ui, sans-serif',
+            letterSpacing: "0.05em",
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Ask the House
+        </button>
         <NotificationBell />
       </div>
     </div>
@@ -912,6 +937,10 @@ export function TopBar({ title, subtitle, action }) {
 }
 
 export function DashboardLayout({ children }) {
+  const { isOpen, close, sectionId } = useAskTheHouse();
+  const location = useLocation();
+  const surface = getSurfaceFromPath(location.pathname);
+
   return (
     <div className="cth-app-shell">
       <Sidebar />
@@ -922,6 +951,12 @@ export function DashboardLayout({ children }) {
           </div>
         </div>
       </div>
+      <AskTheHouseDrawer
+        open={isOpen}
+        onClose={close}
+        surface={surface}
+        sectionId={sectionId}
+      />
     </div>
   );
 }
