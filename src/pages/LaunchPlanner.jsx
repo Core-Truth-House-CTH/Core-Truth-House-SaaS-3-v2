@@ -285,7 +285,7 @@ function LaunchPlannerContent() {
  <DashboardLayout>
  <TopBar
  title="Launch Planner"
- subtitle="Plan launches on top of the live Campaigns backend"
+ subtitle="Plan and track your launches. Active launches count toward your Brand Health Score."
  />
 
  <div className="flex-1 overflow-auto px-4 py-4 md:px-7 md:py-6">
