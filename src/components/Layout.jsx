@@ -67,6 +67,8 @@ import {
 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import HelpCenter from "./help/HelpCenter";
+import AskTheHouseDrawer from "./AskTheHouseDrawer";
+import { useAskTheHouse } from "../context/AskTheHouseContext";
 
 const ICON_MAP = {
   "/admin": ShieldAlert,
@@ -878,6 +880,8 @@ export function Sidebar() {
 }
 
 export function TopBar({ title, subtitle, action }) {
+  const { toggle } = useAskTheHouse();
+
   return (
     <div className="cth-topbar sticky top-0 z-20 flex items-center justify-between px-4 py-3 md:px-7 md:py-5">
       <div className="min-w-0 flex-1">
@@ -905,6 +909,36 @@ export function TopBar({ title, subtitle, action }) {
 
       <div className="ml-3 flex items-center gap-2 md:gap-3 flex-shrink-0">
         {action}
+        <button
+          type="button"
+          onClick={toggle}
+          data-testid="ask-the-house-trigger"
+          className="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors"
+          style={{
+            background: "var(--cth-command-purple, #33033c)",
+            color: "var(--cth-gold, #c4a95b)",
+            border: "1px solid var(--cth-gold, #c4a95b)",
+            letterSpacing: "0.08em",
+          }}
+          title="Ask the House"
+        >
+          <Sparkles size={13} />
+          <span>Ask the House</span>
+        </button>
+        <button
+          type="button"
+          onClick={toggle}
+          data-testid="ask-the-house-trigger-mobile"
+          className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-md"
+          style={{
+            background: "var(--cth-command-purple, #33033c)",
+            color: "var(--cth-gold, #c4a95b)",
+            border: "1px solid var(--cth-gold, #c4a95b)",
+          }}
+          aria-label="Ask the House"
+        >
+          <Sparkles size={15} />
+        </button>
         <NotificationBell />
       </div>
     </div>
@@ -922,6 +956,7 @@ export function DashboardLayout({ children }) {
           </div>
         </div>
       </div>
+      <AskTheHouseDrawer />
     </div>
   );
 }

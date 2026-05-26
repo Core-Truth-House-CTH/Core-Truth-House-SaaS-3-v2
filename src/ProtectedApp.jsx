@@ -9,6 +9,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { WorkspaceProvider } from "./context/WorkspaceContext";
 import { PlanProvider } from "./context/PlanContext";
 import { BrandHealthProvider } from "./context/BrandHealthContext";
+import { AskTheHouseProvider } from "./context/AskTheHouseContext";
 
 import ApiClientBootstrap from "./components/ApiClientBootstrap";
 import { AppVersionBanner } from "./components/shared/useAppVersion";
@@ -144,7 +145,9 @@ function AppProviders({ children }) {
     <ThemeProvider>
       <WorkspaceProvider>
         <PlanProvider>
-          <BrandHealthProvider>{children}</BrandHealthProvider>
+          <BrandHealthProvider>
+            <AskTheHouseProvider>{children}</AskTheHouseProvider>
+          </BrandHealthProvider>
         </PlanProvider>
       </WorkspaceProvider>
     </ThemeProvider>
