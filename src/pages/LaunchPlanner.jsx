@@ -12,9 +12,7 @@ import {
  Target,
  Trash2,
  X,
- Sparkles,
  Loader2,
- FileText,
 } from 'lucide-react';
 import apiClient from '../lib/apiClient';
 
@@ -84,37 +82,15 @@ const DEFAULT_PHASES = [
  },
 ];
 
-function serializePlannerState(phases) {
- return JSON.stringify({
- launch_planner_version: 1,
- phases,
- });
-}
-
-function deserializePlannerState(notes) {
- if (!notes || typeof notes !== 'string') return DEFAULT_PHASES;
-
- try {
- const parsed = JSON.parse(notes);
- if (Array.isArray(parsed?.phases)) {
- return parsed.phases;
- }
- return DEFAULT_PHASES;
- } catch {
- return DEFAULT_PHASES;
- }
-}
-
-function mapCampaignToLaunch(campaign) {
+function normalizeLaunch(launch) {
  return {
- id: campaign.id,
- name: campaign.name || 'Untitled Launch',
- launch_date: campaign.start_date || campaign.end_date || null,
- phases: deserializePlannerState(campaign.notes),
- status: campaign.status || 'draft',
- brief: campaign.brief || '',
- generated_hooks: Array.isArray(campaign.generated_hooks) ? campaign.generated_hooks : [],
- raw: campaign,
+ id: launch.id,
+ name: launch.name || 'Untitled Launch',
+ launch_date: launch.launch_date || null,
+ phases: Array.isArray(launch.phases) && launch.phases.length > 0
+ ? launch.phases
+ : DEFAULT_PHASES,
+ status: launch.status || 'planning',
  };
 }
 
@@ -134,8 +110,6 @@ function LaunchPlannerContent() {
  const [showNewLaunchModal, setShowNewLaunchModal] = useState(false);
  const [newLaunchName, setNewLaunchName] = useState('');
  const [newLaunchDate, setNewLaunchDate] = useState('');
- const [generatingBrief, setGeneratingBrief] = useState(false);
- const [generatingHooks, setGeneratingHooks] = useState(false);
  const [error, setError] = useState('');
 
  const activeLaunch = useMemo(
@@ -158,25 +132,16 @@ function LaunchPlannerContent() {
  setError('');
 
  try {
- const response = await apiClient.get('/api/campaigns', {
- params: {
- user_id: userId,
- workspace_id: workspaceId,
- },
- });
+ const response = await apiClient.get('/api/launches');
+ const items = Array.isArray(response) ? response.map(normalizeLaunch) : [];
 
- const campaigns = Array.isArray(response?.campaigns) ? response.campaigns : [];
- const launchCampaigns = campaigns
- .filter((item) => item.goal === 'offer_launch')
- .map(mapCampaignToLaunch);
+ setLaunches(items);
 
- setLaunches(launchCampaigns);
-
- if (launchCampaigns.length > 0) {
+ if (items.length > 0) {
  setActiveLaunchId((current) =>
- current && launchCampaigns.some((item) => item.id === current)
+ current && items.some((item) => item.id === current)
  ? current
- : launchCampaigns[0].id
+ : items[0].id
  );
  } else {
  setActiveLaunchId('');
@@ -190,27 +155,18 @@ function LaunchPlannerContent() {
  }
 
  async function handleCreateLaunch() {
- if (!newLaunchName.trim() || !workspaceId || !userId) return;
-
- const phases = DEFAULT_PHASES;
-
- const payload = {
- user_id: userId,
- workspace_id: workspaceId,
- name: newLaunchName.trim(),
- goal: 'offer_launch',
- start_date: newLaunchDate || null,
- end_date: newLaunchDate || null,
- status: 'draft',
- notes: serializePlannerState(phases),
- };
+ if (!newLaunchName.trim()) return;
 
  try {
- const created = await apiClient.post('/api/campaigns', payload);
- const mapped = mapCampaignToLaunch(created);
+ const response = await apiClient.post('/api/launches', {
+ name: newLaunchName.trim(),
+ launch_date: newLaunchDate || null,
+ phases: DEFAULT_PHASES,
+ });
+ const created = normalizeLaunch(response);
 
- setLaunches((current) => [mapped, ...current]);
- setActiveLaunchId(mapped.id);
+ setLaunches((current) => [created, ...current]);
+ setActiveLaunchId(created.id);
  setShowNewLaunchModal(false);
  setNewLaunchName('');
  setNewLaunchDate('');
@@ -224,13 +180,11 @@ function LaunchPlannerContent() {
  const launch = launches.find((item) => item.id === launchId);
  if (!launch) return;
 
- const notes = serializePlannerState(phases);
-
- const updatedCampaign = await apiClient.put(`/api/campaigns/${launchId}`, {
- notes,
+ const response = await apiClient.put(`/api/launches/${launchId}`, {
+ phases,
  });
 
- const mapped = mapCampaignToLaunch(updatedCampaign);
+ const mapped = normalizeLaunch(response);
 
  setLaunches((current) =>
  current.map((item) => (item.id === launchId ? mapped : item))
@@ -301,61 +255,13 @@ function LaunchPlannerContent() {
  if (!window.confirm('Are you sure you want to delete this launch?')) return;
 
  try {
- await apiClient.delete(`/api/campaigns/${launchId}`);
+ await apiClient.delete(`/api/launches/${launchId}`);
  const remaining = launches.filter((item) => item.id !== launchId);
  setLaunches(remaining);
  setActiveLaunchId(remaining[0]?.id || '');
  } catch (err) {
  console.error('Failed to delete launch:', err);
  setError(err?.message || 'Failed to delete launch.');
- }
- }
-
- async function handleGenerateBrief() {
- if (!activeLaunch) return;
- setGeneratingBrief(true);
- setError('');
-
- try {
- const response = await apiClient.post(`/api/campaigns/${activeLaunch.id}/generate-brief`, {});
- const brief = response?.brief || '';
-
- setLaunches((current) =>
- current.map((item) =>
- item.id === activeLaunch.id
- ? { ...item, brief }
- : item
- )
- );
- } catch (err) {
- console.error('Failed to generate launch brief:', err);
- setError(err?.message || 'Failed to generate launch brief.');
- } finally {
- setGeneratingBrief(false);
- }
- }
-
- async function handleGenerateHooks() {
- if (!activeLaunch) return;
- setGeneratingHooks(true);
- setError('');
-
- try {
- const response = await apiClient.post(`/api/campaigns/${activeLaunch.id}/generate-hooks`, {});
- const hooks = Array.isArray(response?.hooks) ? response.hooks : [];
-
- setLaunches((current) =>
- current.map((item) =>
- item.id === activeLaunch.id
- ? { ...item, generated_hooks: hooks }
- : item
- )
- );
- } catch (err) {
- console.error('Failed to generate launch hooks:', err);
- setError(err?.message || 'Failed to generate launch hooks.');
- } finally {
- setGeneratingHooks(false);
  }
  }
 
@@ -561,49 +467,6 @@ function LaunchPlannerContent() {
  ) : null}
  </div>
 
- <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
- <button
- onClick={handleGenerateBrief}
- disabled={generatingBrief}
- style={{
- padding: '10px 14px',
- borderRadius: 8,
- border: `1px solid ${colors.tuscany}33`,
- background: colors.darkest,
- color: 'white',
- fontSize: 12,
- fontWeight: 600,
- cursor: generatingBrief ? 'wait' : 'pointer',
- display: 'flex',
- alignItems: 'center',
- gap: 6,
- }}
- >
- {generatingBrief ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <FileText size={14} />}
- Generate Brief
- </button>
-
- <button
- onClick={handleGenerateHooks}
- disabled={generatingHooks}
- style={{
- padding: '10px 14px',
- borderRadius: 8,
- border: 'none',
- background: "var(--cth-admin-accent)",
- color: 'white',
- fontSize: 12,
- fontWeight: 600,
- cursor: generatingHooks ? 'wait' : 'pointer',
- display: 'flex',
- alignItems: 'center',
- gap: 6,
- }}
- >
- {generatingHooks ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={14} />}
- Generate Hooks
- </button>
- </div>
  </div>
 
  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -743,61 +606,6 @@ function LaunchPlannerContent() {
  })}
  </div>
 
- {(activeLaunch.brief || activeLaunch.generated_hooks?.length > 0) ? (
- <div
- style={{
- marginTop: 20,
- display: 'grid',
- gridTemplateColumns: '1fr 1fr',
- gap: 16,
- }}
- >
- <div
- style={{
- background: colors.cardBg,
- border: `1px solid ${colors.tuscany}22`,
- borderRadius: 16,
- padding: 18,
- }}
- >
- <div style={{ fontSize: 13, fontWeight: 700, color: colors.textPrimary, marginBottom: 10 }}>
- Launch Brief
- </div>
- <div style={{ whiteSpace: 'pre-wrap', fontSize: 12, lineHeight: 1.7, color: colors.textMuted }}>
- {activeLaunch.brief || 'No brief generated yet.'}
- </div>
- </div>
-
- <div
- style={{
- background: colors.cardBg,
- border: `1px solid ${colors.tuscany}22`,
- borderRadius: 16,
- padding: 18,
- }}
- >
- <div style={{ fontSize: 13, fontWeight: 700, color: colors.textPrimary, marginBottom: 10 }}>
- Generated Hooks
- </div>
- {activeLaunch.generated_hooks?.length > 0 ? (
- <ul style={{ margin: 0, paddingLeft: 18 }}>
- {activeLaunch.generated_hooks.map((hook, index) => (
- <li
- key={`${index}-${hook}`}
- style={{ color: colors.textMuted, fontSize: 12, lineHeight: 1.7, marginBottom: 6 }}
- >
- {hook}
- </li>
- ))}
- </ul>
- ) : (
- <div style={{ fontSize: 12, color: colors.textMuted }}>
- No hooks generated yet.
- </div>
- )}
- </div>
- </div>
- ) : null}
  </>
  ) : null}
  </div>
