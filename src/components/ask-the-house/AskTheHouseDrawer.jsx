@@ -73,34 +73,34 @@ export default function AskTheHouseDrawer({
     setSessionsOpen(false);
   }, [open]);
 
-  // Load context + sessions when drawer opens or surface/section changes
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
+  // Load context + sessions. Extracted so the retry button can call it too.
+  const loadContext = async () => {
+    if (!activeWorkspace?.id) return;
     setContextLoading(true);
-
     const ctxParams = new URLSearchParams({ surface });
     if (sectionId) ctxParams.set("section_id", sectionId);
+    try {
+      const [ctxRes, sessRes] = await Promise.all([
+        apiClient.get(`/api/ask-the-house/context?${ctxParams.toString()}`),
+        apiClient.get("/api/ask-the-house/sessions"),
+      ]);
+      setCaps(ctxRes?.data?.capabilities || null);
+      setNextRoom(ctxRes?.data?.next_room || null);
+      const list = Array.isArray(sessRes?.data) ? sessRes.data : [];
+      setSessions(list.filter((s) => s.surface === surface));
+    } catch {
+      setCaps(null);
+    } finally {
+      setContextLoading(false);
+    }
+  };
 
-    Promise.all([
-      apiClient.get(`/api/ask-the-house/context?${ctxParams.toString()}`),
-      apiClient.get("/api/ask-the-house/sessions"),
-    ])
-      .then(([ctxRes, sessRes]) => {
-        if (cancelled) return;
-        setCaps(ctxRes?.data?.capabilities || null);
-        setNextRoom(ctxRes?.data?.next_room || null);
-        const list = Array.isArray(sessRes?.data) ? sessRes.data : [];
-        setSessions(list.filter((s) => s.surface === surface));
-      })
-      .catch(() => {
-        if (!cancelled) setCaps(null);
-      })
-      .finally(() => {
-        if (!cancelled) setContextLoading(false);
-      });
-
-    return () => { cancelled = true; };
+  // Gate the fetch on workspace being resolved — prevents the auth-race that
+  // caused /context to 401 and the drawer to render an upgrade card.
+  useEffect(() => {
+    if (!open || !activeWorkspace?.id) return;
+    loadContext();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, surface, sectionId, activeWorkspace?.id]);
 
   // Autoscroll
@@ -128,7 +128,7 @@ export default function AskTheHouseDrawer({
   };
 
   const modeCaps = (chosen) => {
-    if (!caps) return { locked: true };
+    if (!caps) return { locked: false, unknown: true };
     if (chosen === "guide") return { locked: !caps.can_guide };
     if (chosen === "review") return { locked: !caps.can_review };
     if (chosen === "generate") return { locked: !caps.can_generate };
@@ -360,6 +360,30 @@ export default function AskTheHouseDrawer({
               <Loader2 size={16} className="animate-spin" />
               Loading…
             </div>
+          ) : !caps ? (
+            <div style={{ padding: "32px 24px", textAlign: "center", margin: "auto 0" }}>
+              <p style={{
+                color: "var(--cth-command-muted)",
+                fontSize: 14, fontFamily: SANS,
+                marginBottom: 16, lineHeight: 1.5,
+              }}>
+                Could not load your Brand Architect. Check your connection and try again.
+              </p>
+              <button
+                onClick={loadContext}
+                style={{
+                  padding: "8px 20px",
+                  background: "var(--cth-command-purple)",
+                  color: "var(--cth-command-gold)",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  fontFamily: SANS,
+                }}
+              >
+                Retry
+              </button>
+            </div>
           ) : bodyLocked ? (
             <div style={{ textAlign: "center", padding: "32px 0", margin: "auto 0" }}>
               <Lock size={32} style={{
@@ -421,7 +445,7 @@ export default function AskTheHouseDrawer({
           <div ref={messagesEndRef} />
         </div>
 
-        {!bodyLocked && nextRoom && (
+        {!bodyLocked && caps && nextRoom && (
           <div style={{
             padding: "10px 24px",
             borderTop: "1px solid var(--cth-command-border)",
@@ -437,7 +461,7 @@ export default function AskTheHouseDrawer({
           </div>
         )}
 
-        {!bodyLocked && (
+        {!bodyLocked && caps && (
           <div style={{
             padding: "12px 24px 16px",
             borderTop: "1px solid var(--cth-command-border)",
