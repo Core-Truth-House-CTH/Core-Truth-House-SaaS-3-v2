@@ -41,7 +41,8 @@ export default function AskTheHouseDrawer({
   sectionId,
   currentDraft,
 }) {
-  const { activeWorkspace } = useWorkspace();
+  const { activeWorkspace, activeWorkspaceId } = useWorkspace();
+  const wsId = activeWorkspace?.id || activeWorkspaceId;
   const [contextLoading, setContextLoading] = useState(true);
   const [caps, setCaps] = useState(null);
   const [nextRoom, setNextRoom] = useState(null);
@@ -75,7 +76,7 @@ export default function AskTheHouseDrawer({
 
   // Load context + sessions. Extracted so the retry button can call it too.
   const loadContext = async () => {
-    if (!activeWorkspace?.id) return;
+    if (!wsId) return;
     setContextLoading(true);
     const ctxParams = new URLSearchParams({ surface });
     if (sectionId) ctxParams.set("section_id", sectionId);
@@ -98,10 +99,10 @@ export default function AskTheHouseDrawer({
   // Gate the fetch on workspace being resolved — prevents the auth-race that
   // caused /context to 401 and the drawer to render an upgrade card.
   useEffect(() => {
-    if (!open || !activeWorkspace?.id) return;
+    if (!open || !wsId) return;
     loadContext();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, surface, sectionId, activeWorkspace?.id]);
+  }, [open, surface, sectionId, wsId]);
 
   // Autoscroll
   useEffect(() => {
