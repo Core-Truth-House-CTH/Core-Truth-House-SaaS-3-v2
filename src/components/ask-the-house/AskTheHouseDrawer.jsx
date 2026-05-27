@@ -85,9 +85,9 @@ export default function AskTheHouseDrawer({
         apiClient.get(`/api/ask-the-house/context?${ctxParams.toString()}`),
         apiClient.get("/api/ask-the-house/sessions"),
       ]);
-      setCaps(ctxRes?.data?.capabilities || null);
-      setNextRoom(ctxRes?.data?.next_room || null);
-      const list = Array.isArray(sessRes?.data) ? sessRes.data : [];
+      setCaps(ctxRes?.capabilities || null);
+      setNextRoom(ctxRes?.next_room || null);
+      const list = Array.isArray(sessRes) ? sessRes : [];
       setSessions(list.filter((s) => s.surface === surface));
     } catch {
       setCaps(null);
@@ -114,7 +114,7 @@ export default function AskTheHouseDrawer({
     setSessionsOpen(false);
     try {
       const res = await apiClient.get(`/api/ask-the-house/sessions/${sid}`);
-      const msgs = Array.isArray(res?.data) ? res.data : [];
+      const msgs = Array.isArray(res) ? res : [];
       setMessages(msgs.map((m) => ({ role: m.role, content: m.content })));
     } catch {
       setMessages([]);
@@ -155,7 +155,7 @@ export default function AskTheHouseDrawer({
         section_id: sectionId || null,
         current_draft: currentDraft || null,
       });
-      const data = res?.data || {};
+      const data = res || {};
       if (data.session_id && !sessionId) setSessionId(data.session_id);
       if (data.upgrade_required) {
         setToast(data.message || "Upgrade required.");
