@@ -15,6 +15,7 @@ import {
   Compass,
   ContactRound,
   Copy,
+  Download,
   Facebook,
   FileText,
   Hash,
@@ -140,6 +141,69 @@ function formatTime(iso) {
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
+
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes < 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+function formatFileDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString(
+    undefined,
+    sameYear
+      ? { month: "short", day: "numeric" }
+      : { month: "short", day: "numeric", year: "numeric" }
+  );
+}
+
+const FILE_CATEGORY_BY_EXT = {
+  ".pdf": "document",
+  ".docx": "document",
+  ".xlsx": "document",
+  ".pptx": "document",
+  ".txt": "document",
+  ".csv": "document",
+  ".md": "document",
+  ".png": "image",
+  ".jpg": "image",
+  ".jpeg": "image",
+  ".webp": "image",
+  ".gif": "image",
+  ".mp4": "video",
+  ".mov": "video",
+  ".mp3": "audio",
+  ".zip": "archive",
+};
+
+function fileCategoryFromExt(ext) {
+  if (!ext) return "other";
+  return FILE_CATEGORY_BY_EXT[String(ext).toLowerCase()] || "other";
+}
+
+const FILE_CATEGORY_COLORS = {
+  document: "var(--cth-command-purple)",
+  image: "var(--cth-command-gold)",
+  video: "var(--cth-command-crimson)",
+  audio: "var(--cth-command-cinnabar)",
+  archive: "var(--cth-command-muted)",
+  other: "var(--cth-command-muted)",
+};
+
+const FILE_CATEGORY_ICONS = {
+  document: FileText,
+  image: ImagePlus,
+  video: Video,
+  audio: Music,
+  archive: FileText,
+  other: FileText,
+};
 
 function initials(name, fallback = "CM") {
   const clean = String(name || "").trim();
@@ -2375,72 +2439,167 @@ function EventsTab({ events, isAdmin, onCreate, onUpdate, onDelete }) {
 }
 
 // =========================================================
-// Files tab — UI only, no backend wired yet
+// Files tab — list, upload, download, delete with server-side search
 // =========================================================
 
-function FilesTab() {
+function FilesTab({ files, viewerId, isAdmin, onUpload, onDelete, onDownload, error, uploading }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
+      setSearchResults(null);
+      setSearching(false);
+      return undefined;
+    }
+    setSearching(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await apiClient.get(
+          `/api/community/files?q=${encodeURIComponent(trimmed)}&limit=200`
+        );
+        setSearchResults(pickItems(response, "files", []));
+      } catch (err) {
+        console.error("File search failed", err);
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
+  const visibleFiles = useMemo(() => {
+    if (searchResults === null) return files || [];
+    const knownIds = new Set((files || []).map((f) => f.id));
+    return searchResults.filter((f) => knownIds.has(f.id));
+  }, [searchResults, files]);
+
+  function handleUploadClick() {
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileSelected(event) {
+    const selected = event.target.files?.[0];
+    event.target.value = "";
+    if (selected) await onUpload(selected);
+  }
+
+  const headerPill = {
+    background: "var(--cth-command-ink)",
+    color: "var(--cth-command-panel)",
+  };
+
   return (
-    <section
-      className="space-y-4 rounded-xl p-4 sm:p-5"
-      style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" }}
-    >
+    <section className="space-y-4 rounded-xl p-4 sm:p-5"
+      style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" }}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="font-serif text-xl font-bold" style={{ color: "var(--cth-command-ink)" }}>
           Files
         </h2>
         <div className="flex items-center gap-2">
-          {/* TODO: wire search to filter the result of GET /api/community/files (backend endpoint to be created) */}
-          <div
-            className="flex items-center gap-2 rounded-md px-2.5 py-1.5"
-            style={{ background: "var(--cth-command-blush)", border: "1px solid var(--cth-command-border)" }}
-          >
+          <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5"
+            style={{ background: "var(--cth-command-blush)", border: "1px solid var(--cth-command-border)" }}>
             <Search size={13} style={{ color: "var(--cth-command-muted)" }} />
-            <input
-              type="text"
+            <input type="text" value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search files"
               className="bg-transparent text-xs outline-none placeholder:text-[color:var(--cth-command-muted)]"
-              style={{ color: "var(--cth-command-ink)", width: 140 }}
-            />
+              style={{ color: "var(--cth-command-ink)", width: 160 }} />
+            {searching ? (
+              <Loader2 size={12} className="animate-spin"
+                style={{ color: "var(--cth-command-muted)" }} />
+            ) : null}
           </div>
-          {/* TODO: wire upload to POST /api/community/files (multipart form-data) — backend endpoint to be created */}
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
-            style={{ background: "var(--cth-command-crimson)", color: "#fff" }}
-          >
-            <Upload size={13} /> Upload file
+          <input ref={fileInputRef} type="file" className="hidden"
+            onChange={handleFileSelected} />
+          <button type="button" onClick={handleUploadClick} disabled={uploading}
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+            style={{ background: "var(--cth-command-crimson)", color: "var(--cth-command-panel)" }}>
+            {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+            {uploading ? "Uploading" : "Upload file"}
           </button>
         </div>
       </div>
 
+      {error ? (
+        <p className="text-xs" style={{ color: "var(--cth-command-crimson)" }}>{error}</p>
+      ) : null}
+
       <div style={{ borderTop: "1px solid var(--cth-command-border)" }} />
 
       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em]">
-        <div
-          className="flex-1 rounded-full px-3 py-1.5"
-          style={{ background: "var(--cth-command-ink)", color: "var(--cth-command-panel)" }}
-        >
-          File name
-        </div>
-        <div
-          className="rounded-full px-3 py-1.5 text-center"
-          style={{ background: "var(--cth-command-ink)", color: "var(--cth-command-panel)", width: 110 }}
-        >
-          Type
-        </div>
-        <div
-          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5"
-          style={{ background: "var(--cth-command-ink)", color: "var(--cth-command-panel)", width: 170 }}
-        >
-          Last modified <ChevronDown size={11} />
-        </div>
+        <div className="flex-1 rounded-full px-3 py-1.5" style={headerPill}>File</div>
+        <div className="rounded-full px-3 py-1.5 text-center" style={{ ...headerPill, width: 80 }}>Type</div>
+        <div className="rounded-full px-3 py-1.5 text-center" style={{ ...headerPill, width: 80 }}>Size</div>
+        <div className="rounded-full px-3 py-1.5 text-center" style={{ ...headerPill, width: 140 }}>Uploaded by</div>
+        <div className="rounded-full px-3 py-1.5 text-center" style={{ ...headerPill, width: 110 }}>Date</div>
+        <div className="rounded-full px-3 py-1.5 text-center" style={{ ...headerPill, width: 80 }}>Actions</div>
       </div>
 
-      <div className="py-14 text-center">
-        <p className="text-sm" style={{ color: "var(--cth-command-muted)" }}>
-          No files shared yet.
-        </p>
-      </div>
+      {visibleFiles.length ? (
+        <ul className="space-y-2">
+          {visibleFiles.map((file) => {
+            const category = fileCategoryFromExt(file.extension);
+            const Icon = FILE_CATEGORY_ICONS[category] || FileText;
+            const color = FILE_CATEGORY_COLORS[category] || "var(--cth-command-muted)";
+            const canDelete = isAdmin === true || file.uploader_user_id === viewerId;
+            const extLabel = String(file.extension || "").replace(/^\./, "").toUpperCase() || "FILE";
+            return (
+              <li key={file.id} className="flex items-center gap-2 rounded-md p-2"
+                style={{ background: "var(--cth-command-blush)", border: "1px solid var(--cth-command-border)" }}>
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <Icon size={16} style={{ color, flexShrink: 0 }} />
+                  <span className="truncate text-xs font-semibold"
+                    style={{ color: "var(--cth-command-ink)" }} title={file.filename}>
+                    {file.filename}
+                  </span>
+                </div>
+                <div className="text-center text-[11px] font-semibold uppercase"
+                  style={{ width: 80, color }}>
+                  {extLabel}
+                </div>
+                <div className="text-center text-[11px]"
+                  style={{ width: 80, color: "var(--cth-command-muted)" }}>
+                  {formatFileSize(file.size_bytes)}
+                </div>
+                <div className="truncate text-center text-[11px]"
+                  style={{ width: 140, color: "var(--cth-command-ink)" }}
+                  title={file.uploader_name || ""}>
+                  {file.uploader_name || "—"}
+                </div>
+                <div className="text-center text-[11px]"
+                  style={{ width: 110, color: "var(--cth-command-muted)" }}>
+                  {formatFileDate(file.created_at)}
+                </div>
+                <div className="flex items-center justify-center gap-1" style={{ width: 80 }}>
+                  <button type="button" onClick={() => onDownload(file)} title="Download"
+                    className="rounded-md p-1.5 transition-colors hover:bg-[var(--cth-command-panel-soft)]"
+                    style={{ color: "var(--cth-command-muted)" }}>
+                    <Download size={13} />
+                  </button>
+                  {canDelete ? (
+                    <button type="button" onClick={() => onDelete(file)} title="Delete"
+                      className="rounded-md p-1.5 transition-colors hover:bg-[var(--cth-command-panel-soft)]"
+                      style={{ color: "var(--cth-command-muted)" }}>
+                      <Trash2 size={13} />
+                    </button>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <div className="py-14 text-center">
+          <p className="text-sm" style={{ color: "var(--cth-command-muted)" }}>
+            {searchQuery.trim() ? "No files match that search." : "No files shared yet."}
+          </p>
+        </div>
+      )}
     </section>
   );
 }
@@ -2507,6 +2666,9 @@ export default function CommunityPage() {
   const [members, setMembers] = useState([]);
   const [threads, setThreads] = useState([]);
   const [events, setEvents] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [filesError, setFilesError] = useState("");
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   // UI
   const [activeTab, setActiveTab] = useState("discussion");
@@ -2597,13 +2759,14 @@ export default function CommunityPage() {
       const eventsFromIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const eventsToIso = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
       const eventsUrl = `/api/community/events?from=${encodeURIComponent(eventsFromIso)}&to=${encodeURIComponent(eventsToIso)}&limit=200`;
-      const [settingsRes, channelsRes, threadsRes, membersRes, resourcesRes, eventsRes] = await Promise.all([
+      const [settingsRes, channelsRes, threadsRes, membersRes, resourcesRes, eventsRes, filesRes] = await Promise.all([
         apiClient.get("/api/community/settings").catch(() => null),
         apiClient.get("/api/community/channels").catch(() => null),
         apiClient.get("/api/community/threads").catch(() => null),
         apiClient.get("/api/community/members").catch(() => null),
         apiClient.get("/api/community/resources").catch(() => null),
         apiClient.get(eventsUrl).catch(() => null),
+        apiClient.get("/api/community/files?limit=200").catch(() => null),
       ]);
       if (settingsRes) setSettings(settingsRes);
       const nextChannels = pickItems(channelsRes, "channels", []);
@@ -2612,6 +2775,7 @@ export default function CommunityPage() {
       setMembers(pickItems(membersRes, "members", []));
       setResources(pickItems(resourcesRes, "resources", []));
       setEvents(pickItems(eventsRes, "events", []));
+      setFiles(pickItems(filesRes, "files", []));
       if (!activeChannelIdManual) {
         const firstOpen = nextChannels.find((c) => !c.locked && c.status !== "archived");
         if (firstOpen) setActiveChannelId(firstOpen.id);
@@ -2990,6 +3154,94 @@ export default function CommunityPage() {
     }
   }
 
+  async function handleUploadFile(file) {
+    setFilesError("");
+    setUploadingFile(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const url = typeof apiClient.buildApiUrl === "function"
+        ? apiClient.buildApiUrl("/api/community/files")
+        : "/api/community/files";
+      const headers = typeof apiClient.getAuthHeaders === "function"
+        ? await apiClient.getAuthHeaders({ isFormData: true })
+        : {};
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: formData,
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        let message = `Upload failed (${response.status})`;
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed?.detail) message = parsed.detail;
+        } catch { /* not JSON */ }
+        throw new Error(message);
+      }
+      const data = await response.json();
+      const newFile = data?.file;
+      if (newFile) {
+        setFiles((current) => [newFile, ...current]);
+      } else {
+        await loadAll({ silent: true });
+      }
+      return true;
+    } catch (err) {
+      console.error("File upload failed", err);
+      setFilesError(err?.message || "Could not upload file.");
+      return false;
+    } finally {
+      setUploadingFile(false);
+    }
+  }
+
+  async function handleDeleteFile(file) {
+    if (!window.confirm(`Delete "${file.filename}"? This cannot be undone.`)) return;
+    setFilesError("");
+    const snapshot = files;
+    setFiles((current) => current.filter((f) => f.id !== file.id));
+    try {
+      await apiClient.delete(`/api/community/files/${file.id}`);
+    } catch (err) {
+      console.error("File delete failed", err);
+      setFiles(snapshot);
+      setFilesError(err?.message || "Could not delete file.");
+    }
+  }
+
+  async function handleDownloadFile(file) {
+    setFilesError("");
+    try {
+      const url = typeof apiClient.buildApiUrl === "function"
+        ? apiClient.buildApiUrl(`/api/community/files/${file.id}/download`)
+        : `/api/community/files/${file.id}/download`;
+      const headers = typeof apiClient.getAuthHeaders === "function"
+        ? await apiClient.getAuthHeaders()
+        : {};
+      const response = await fetch(url, {
+        method: "GET",
+        headers,
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error(`Download failed (${response.status})`);
+      const blob = await response.blob();
+      const objectUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = file.filename || "download";
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      window.URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error("File download failed", err);
+      setFilesError(err?.message || "Could not download file.");
+    }
+  }
+
   function handleSignOut() {
     if (typeof signOut === "function") signOut();
   }
@@ -3274,7 +3526,18 @@ export default function CommunityPage() {
           />
         ) : null}
 
-        {activeTab === "files" ? <FilesTab /> : null}
+        {activeTab === "files" ? (
+          <FilesTab
+            files={files}
+            viewerId={viewerId}
+            isAdmin={isAdmin}
+            onUpload={handleUploadFile}
+            onDelete={handleDeleteFile}
+            onDownload={handleDownloadFile}
+            error={filesError}
+            uploading={uploadingFile}
+          />
+        ) : null}
 
         <div className="h-8" />
       </main>
