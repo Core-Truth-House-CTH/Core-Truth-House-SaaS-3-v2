@@ -10,7 +10,6 @@ const AskTheHouseContext = createContext(null);
 
 const PATH_TO_SURFACE = {
   "/command-center": "command_center",
-  "/workspace": "command_center",
   "/brand-foundation": "brand_foundation",
   "/brand-memory": "brand_foundation",
   "/brand-positioning": "brand_positioning",

@@ -3,7 +3,6 @@ import PlaceholderPage from "../pages/PlaceholderPage";
 
 const makePlaceholder = (title) => () => <PlaceholderPage title={title} />;
 
-const MethodologyPage = lazy(() => import("../pages/MethodologyPage"));
 const CommandCenter = lazy(() => import("../pages/CommandCenter"));
 const Billing = lazy(() => import("../pages/Billing"));
 const BrandIntelligencePage = lazy(() => import("../pages/BrandIntelligencePage"));
@@ -79,7 +78,6 @@ const pageRegistry = {
   "/community": CommunityPage,
   "/cohort-manager": CohortManager,
 
-  "/methodology": MethodologyPage,
   "/crm": CRMSuite,
   "/mail": MailSuite,
   "/analytics": Analytics,
@@ -91,8 +89,6 @@ const pageRegistry = {
     "/workspace-library": TenantDataDashboardV2,
   "/billing": Billing,
   "/settings": Settings,
-
-  "/workspace": CommandCenter,
 
   "/automations": makePlaceholder("Automations"),
   "/tracking-links": makePlaceholder("Tracking Links"),
