@@ -9,6 +9,9 @@ import {
   Calendar as CalendarIcon,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
   Compass,
   ContactRound,
   Copy,
@@ -24,6 +27,7 @@ import {
   Lock,
   LogOut,
   Mail,
+  MapPin,
   Menu,
   MessageCircle,
   MessageSquare,
@@ -101,7 +105,41 @@ const EMOJIS = [
   "⚡", "🌟", "💼", "📈", "🎯", "🏆", "🤝", "👀",
 ];
 
+const EVENT_TYPE_LABELS = {
+  office_hours: "Office Hours",
+  workshop: "Workshop",
+  cohort_call: "Cohort Call",
+  deadline: "Deadline",
+  other: "Other",
+};
+
+const EVENT_TYPE_COLORS = {
+  office_hours: "var(--cth-command-gold)",
+  workshop: "var(--cth-command-purple)",
+  cohort_call: "var(--cth-command-crimson)",
+  deadline: "var(--cth-command-cinnabar)",
+  other: "var(--cth-command-muted)",
+};
+
 function classNames(...items) { return items.filter(Boolean).join(" "); }
+
+function ymd(year, month, day) {
+  return `${String(year).padStart(4, "0")}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function eventDateKey(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return ymd(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function formatTime(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
 
 function initials(name, fallback = "CM") {
   const clean = String(name || "").trim();
@@ -1843,72 +1881,495 @@ function AboutTab({ settings, members, threads }) {
 }
 
 // =========================================================
-// Events tab — pure calendar grid, no library
+// Events tab — calendar with month nav, event chips, detail panel, admin CRUD
 // =========================================================
 
-function EventsTab() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const firstWeekday = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+function EventDetailCard({ event, isAdmin, onEdit, onDelete }) {
+  const typeLabel = EVENT_TYPE_LABELS[event.event_type] || "Event";
+  const typeColor = EVENT_TYPE_COLORS[event.event_type] || "var(--cth-command-muted)";
+  const startLabel = event.all_day ? "All day" : formatTime(event.starts_at);
+  const endLabel = !event.all_day && event.ends_at ? formatTime(event.ends_at) : "";
+  const timeLabel = event.all_day ? "All day" : (endLabel ? `${startLabel} – ${endLabel}` : startLabel);
+
+  return (
+    <li className="rounded-md p-3"
+      style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" }}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]"
+              style={{ background: typeColor, color: "var(--cth-command-panel)" }}>
+              {typeLabel}
+            </span>
+            <h4 className="min-w-0 truncate font-serif text-sm font-semibold" style={{ color: "var(--cth-command-ink)" }}>
+              {event.title}
+            </h4>
+          </div>
+        </div>
+        {isAdmin ? (
+          <div className="flex shrink-0 items-center gap-1">
+            <button type="button" onClick={onEdit} title="Edit"
+              className="rounded-md p-1.5 transition-colors hover:bg-[var(--cth-command-panel-soft)]"
+              style={{ color: "var(--cth-command-muted)" }}>
+              <PenTool size={13} />
+            </button>
+            <button type="button" onClick={onDelete} title="Delete"
+              className="rounded-md p-1.5 transition-colors hover:bg-[var(--cth-command-panel-soft)]"
+              style={{ color: "var(--cth-command-muted)" }}>
+              <Trash2 size={13} />
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-2 space-y-1 text-xs" style={{ color: "var(--cth-command-ink)" }}>
+        <div className="flex items-center gap-1.5">
+          <Clock size={12} style={{ color: "var(--cth-command-muted)" }} />
+          <span>{timeLabel}</span>
+        </div>
+        {event.location ? (
+          <div className="flex items-center gap-1.5">
+            <MapPin size={12} style={{ color: "var(--cth-command-muted)" }} />
+            <span className="truncate">{event.location}</span>
+          </div>
+        ) : null}
+        {event.meeting_url ? (
+          <div className="flex items-center gap-1.5">
+            <Video size={12} style={{ color: "var(--cth-command-muted)" }} />
+            <a href={event.meeting_url} target="_blank" rel="noreferrer"
+              className="truncate underline" style={{ color: "var(--cth-command-crimson)" }}>
+              {event.meeting_url}
+            </a>
+          </div>
+        ) : null}
+      </div>
+
+      {event.description ? (
+        <p className="mt-2 whitespace-pre-wrap text-[12px] leading-5" style={{ color: "var(--cth-command-ink)" }}>
+          {event.description}
+        </p>
+      ) : null}
+    </li>
+  );
+}
+
+function EventModal({ mode, event, initialDate, onClose, onSubmit }) {
+  const isEdit = mode === "edit";
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const [form, setForm] = useState(() => {
+    if (isEdit && event) {
+      const start = event.starts_at ? new Date(event.starts_at) : null;
+      const end = event.ends_at ? new Date(event.ends_at) : null;
+      const pad = (n) => String(n).padStart(2, "0");
+      const localYmd = (d) => d ? `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` : "";
+      const localHm = (d) => d ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : "";
+      return {
+        title: event.title || "",
+        description: event.description || "",
+        date: localYmd(start),
+        startTime: localHm(start),
+        endTime: localHm(end),
+        allDay: !!event.all_day,
+        location: event.location || "",
+        meetingUrl: event.meeting_url || "",
+        eventType: event.event_type || "other",
+      };
+    }
+    return {
+      title: "",
+      description: "",
+      date: initialDate || "",
+      startTime: "09:00",
+      endTime: "10:00",
+      allDay: false,
+      location: "",
+      meetingUrl: "",
+      eventType: "other",
+    };
+  });
+
+  function update(key, value) { setForm((current) => ({ ...current, [key]: value })); }
+
+  async function handleSubmit(submitEvent) {
+    submitEvent.preventDefault();
+    setError("");
+    const title = form.title.trim();
+    if (!title) { setError("Title is required."); return; }
+    if (!form.date) { setError("Date is required."); return; }
+
+    let startsIso;
+    let endsIso = null;
+    if (form.allDay) {
+      const startLocal = new Date(`${form.date}T00:00:00`);
+      if (Number.isNaN(startLocal.getTime())) { setError("Invalid date."); return; }
+      startsIso = startLocal.toISOString();
+    } else {
+      if (!form.startTime) { setError("Start time is required."); return; }
+      const startLocal = new Date(`${form.date}T${form.startTime}:00`);
+      if (Number.isNaN(startLocal.getTime())) { setError("Invalid start time."); return; }
+      startsIso = startLocal.toISOString();
+      if (form.endTime) {
+        const endLocal = new Date(`${form.date}T${form.endTime}:00`);
+        if (Number.isNaN(endLocal.getTime())) { setError("Invalid end time."); return; }
+        if (endLocal.getTime() < startLocal.getTime()) {
+          setError("End time must be on or after start time.");
+          return;
+        }
+        endsIso = endLocal.toISOString();
+      }
+    }
+
+    const payload = {
+      title,
+      description: form.description.trim(),
+      starts_at: startsIso,
+      ends_at: endsIso,
+      all_day: !!form.allDay,
+      location: form.location.trim(),
+      meeting_url: form.meetingUrl.trim(),
+      event_type: form.eventType,
+    };
+
+    setSubmitting(true);
+    try {
+      const ok = await onSubmit(payload);
+      if (!ok) setError("Could not save event.");
+    } catch (err) {
+      setError(err?.message || "Could not save event.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const inputStyle = {
+    background: "var(--cth-command-blush)",
+    border: "1px solid var(--cth-command-border)",
+    color: "var(--cth-command-ink)",
+  };
+
+  return (
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4"
+      style={{ background: "rgba(13,0,16,0.55)" }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md overflow-hidden rounded-2xl"
+        style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" }}>
+        <div className="flex items-center justify-between px-5 py-4"
+          style={{ borderBottom: "1px solid var(--cth-command-border)" }}>
+          <h3 className="font-serif text-base font-semibold" style={{ color: "var(--cth-command-ink)" }}>
+            {isEdit ? "Edit event" : "Create event"}
+          </h3>
+          <button type="button" onClick={onClose}
+            className="rounded-full p-1" style={{ color: "var(--cth-command-muted)" }}>
+            <X size={14} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="max-h-[70vh] space-y-3 overflow-y-auto px-5 py-4 text-sm">
+          <input type="text" value={form.title} onChange={(e) => update("title", e.target.value)}
+            placeholder="Title" maxLength={180}
+            className="w-full rounded-md px-2.5 py-1.5 text-sm outline-none" style={inputStyle} />
+
+          <textarea value={form.description} onChange={(e) => update("description", e.target.value)}
+            placeholder="Description (optional)" rows={3} maxLength={4000}
+            className="w-full resize-y rounded-md px-2.5 py-1.5 text-sm outline-none" style={inputStyle} />
+
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-[11px] font-semibold" style={{ color: "var(--cth-command-muted)" }}>
+              Date
+              <input type="date" value={form.date} onChange={(e) => update("date", e.target.value)}
+                className="mt-1 w-full rounded-md px-2 py-1.5 text-xs outline-none" style={inputStyle} />
+            </label>
+            <label className="text-[11px] font-semibold" style={{ color: "var(--cth-command-muted)" }}>
+              Type
+              <select value={form.eventType} onChange={(e) => update("eventType", e.target.value)}
+                className="mt-1 w-full rounded-md px-2 py-1.5 text-xs outline-none" style={inputStyle}>
+                {Object.entries(EVENT_TYPE_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label className="flex items-center gap-1.5 text-xs" style={{ color: "var(--cth-command-muted)" }}>
+            <input type="checkbox" checked={form.allDay}
+              onChange={(e) => update("allDay", e.target.checked)} />
+            All-day event
+          </label>
+
+          {!form.allDay ? (
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-[11px] font-semibold" style={{ color: "var(--cth-command-muted)" }}>
+                Start time
+                <input type="time" value={form.startTime}
+                  onChange={(e) => update("startTime", e.target.value)}
+                  className="mt-1 w-full rounded-md px-2 py-1.5 text-xs outline-none" style={inputStyle} />
+              </label>
+              <label className="text-[11px] font-semibold" style={{ color: "var(--cth-command-muted)" }}>
+                End time
+                <input type="time" value={form.endTime}
+                  onChange={(e) => update("endTime", e.target.value)}
+                  className="mt-1 w-full rounded-md px-2 py-1.5 text-xs outline-none" style={inputStyle} />
+              </label>
+            </div>
+          ) : null}
+
+          <input type="text" value={form.location} onChange={(e) => update("location", e.target.value)}
+            placeholder="Location (optional)" maxLength={500}
+            className="w-full rounded-md px-2.5 py-1.5 text-sm outline-none" style={inputStyle} />
+
+          <input type="url" value={form.meetingUrl} onChange={(e) => update("meetingUrl", e.target.value)}
+            placeholder="Meeting URL (optional)" maxLength={1000}
+            className="w-full rounded-md px-2.5 py-1.5 text-sm outline-none" style={inputStyle} />
+
+          {error ? (
+            <p className="text-xs" style={{ color: "var(--cth-command-crimson)" }}>{error}</p>
+          ) : null}
+        </form>
+
+        <div className="flex items-center justify-end gap-2 px-5 py-3"
+          style={{ borderTop: "1px solid var(--cth-command-border)" }}>
+          <button type="button" onClick={onClose}
+            className="rounded-md px-3 py-1.5 text-xs font-semibold"
+            style={{ color: "var(--cth-command-muted)" }}>
+            Cancel
+          </button>
+          <button type="button" onClick={handleSubmit} disabled={submitting}
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+            style={{ background: "var(--cth-command-crimson)", color: "var(--cth-command-panel)" }}>
+            {submitting ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+            {isEdit ? "Save changes" : "Create event"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EventsTab({ events, isAdmin, onCreate, onUpdate, onDelete }) {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [modalState, setModalState] = useState(null);
+
+  const firstWeekday = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const cells = [];
   for (let i = 0; i < firstWeekday; i += 1) cells.push(null);
   for (let d = 1; d <= daysInMonth; d += 1) cells.push(d);
   while (cells.length % 7 !== 0) cells.push(null);
-  const monthName = now.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+  const monthName = new Date(viewYear, viewMonth, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const isToday = (d) => d === now.getDate();
+
+  const eventsByDay = useMemo(() => {
+    const map = new Map();
+    (events || []).forEach((event) => {
+      const key = eventDateKey(event.starts_at);
+      if (!key) return;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(event);
+    });
+    map.forEach((list) => list.sort((a, b) => (a.starts_at || "").localeCompare(b.starts_at || "")));
+    return map;
+  }, [events]);
+
+  const isViewingTodaysMonth = viewYear === today.getFullYear() && viewMonth === today.getMonth();
+  const isToday = (day) => isViewingTodaysMonth && day === today.getDate();
+
+  const selectedEvents = selectedDate ? (eventsByDay.get(selectedDate) || []) : [];
+  const selectedDateLabel = selectedDate
+    ? new Date(`${selectedDate}T12:00:00`).toLocaleDateString(undefined, {
+        weekday: "long", month: "long", day: "numeric", year: "numeric",
+      })
+    : "";
+
+  function goPrev() {
+    setSelectedDate(null);
+    if (viewMonth === 0) { setViewYear((y) => y - 1); setViewMonth(11); }
+    else setViewMonth((m) => m - 1);
+  }
+  function goNext() {
+    setSelectedDate(null);
+    if (viewMonth === 11) { setViewYear((y) => y + 1); setViewMonth(0); }
+    else setViewMonth((m) => m + 1);
+  }
+  function goToday() {
+    setSelectedDate(null);
+    setViewYear(today.getFullYear());
+    setViewMonth(today.getMonth());
+  }
 
   return (
-    <section
-      className="rounded-xl p-4 sm:p-5"
-      style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" }}
-    >
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="font-serif text-base font-semibold" style={{ color: "var(--cth-command-ink)" }}>{monthName}</h2>
-        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px]"
-          style={{ background: "var(--cth-command-panel-soft)", color: "var(--cth-command-muted)", border: "1px solid var(--cth-command-border)" }}>
-          <CalendarIcon size={11} /> No events scheduled yet
-        </span>
+    <section className="rounded-xl p-4 sm:p-5"
+      style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" }}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={goPrev} title="Previous month"
+            className="rounded-md p-1.5 transition-colors hover:bg-[var(--cth-command-panel-soft)]"
+            style={{ color: "var(--cth-command-muted)" }}>
+            <ChevronLeft size={16} />
+          </button>
+          <h2 className="min-w-[180px] text-center font-serif text-base font-semibold"
+            style={{ color: "var(--cth-command-ink)" }}>
+            {monthName}
+          </h2>
+          <button type="button" onClick={goNext} title="Next month"
+            className="rounded-md p-1.5 transition-colors hover:bg-[var(--cth-command-panel-soft)]"
+            style={{ color: "var(--cth-command-muted)" }}>
+            <ChevronRight size={16} />
+          </button>
+          {!isViewingTodaysMonth ? (
+            <button type="button" onClick={goToday}
+              className="ml-1 rounded-md px-2 py-1 text-[11px] font-semibold transition-colors hover:bg-[var(--cth-command-panel-soft)]"
+              style={{ color: "var(--cth-command-muted)" }}>
+              Today
+            </button>
+          ) : null}
+        </div>
+        {isAdmin ? (
+          <button type="button" onClick={() => setModalState({ mode: "create", initialDate: selectedDate || "" })}
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
+            style={{ background: "var(--cth-command-crimson)", color: "var(--cth-command-panel)" }}>
+            <Plus size={13} /> Create event
+          </button>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-7 gap-1.5">
         {weekdays.map((day) => (
-          <div key={day} className="text-center text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--cth-command-muted)" }}>
+          <div key={day} className="text-center text-[10px] font-semibold uppercase tracking-[0.12em]"
+            style={{ color: "var(--cth-command-muted)" }}>
             {day}
           </div>
         ))}
-        {cells.map((day, index) => (
-          <div
-            key={index}
-            className="aspect-square rounded-md p-1.5"
-            style={{
-              background: day ? "var(--cth-command-blush)" : "transparent",
-              border: day ? "1px solid var(--cth-command-border)" : "none",
-            }}
-          >
-            {day ? (
-              <span
-                className={classNames(
-                  "inline-grid h-5 w-5 place-items-center rounded-full text-[11px] font-semibold",
-                  isToday(day) ? "" : ""
-                )}
-                style={{
-                  background: isToday(day) ? "var(--cth-command-crimson)" : "transparent",
-                  color: isToday(day) ? "#fff" : "var(--cth-command-ink)",
-                }}
-              >
-                {day}
-              </span>
-            ) : null}
-          </div>
-        ))}
+        {cells.map((day, index) => {
+          if (!day) {
+            return <div key={`pad-${index}`} className="aspect-square rounded-md" style={{ background: "transparent" }} />;
+          }
+          const key = ymd(viewYear, viewMonth, day);
+          const dayEvents = eventsByDay.get(key) || [];
+          const isSelected = selectedDate === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setSelectedDate((current) => current === key ? null : key)}
+              className="flex aspect-square flex-col items-stretch rounded-md p-1 text-left transition-colors hover:bg-[var(--cth-command-panel-soft)]"
+              style={{
+                background: "var(--cth-command-blush)",
+                border: isSelected
+                  ? "1px solid var(--cth-command-crimson)"
+                  : "1px solid var(--cth-command-border)",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className="inline-grid h-5 w-5 place-items-center rounded-full text-[11px] font-semibold"
+                  style={{
+                    background: isToday(day) ? "var(--cth-command-crimson)" : "transparent",
+                    color: isToday(day) ? "var(--cth-command-panel)" : "var(--cth-command-ink)",
+                  }}
+                >
+                  {day}
+                </span>
+                {dayEvents.length > 0 ? (
+                  <span className="text-[9px] font-semibold"
+                    style={{ color: "var(--cth-command-muted)" }}>
+                    {dayEvents.length}
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-0.5 flex flex-1 flex-col gap-0.5 overflow-hidden">
+                {dayEvents.slice(0, 2).map((event) => (
+                  <div key={event.id}
+                    className="truncate rounded-sm px-1 py-0.5 text-[9px] font-semibold leading-tight"
+                    style={{
+                      background: EVENT_TYPE_COLORS[event.event_type] || "var(--cth-command-muted)",
+                      color: "var(--cth-command-panel)",
+                    }}>
+                    {event.title}
+                  </div>
+                ))}
+                {dayEvents.length > 2 ? (
+                  <div className="text-[9px]" style={{ color: "var(--cth-command-muted)" }}>
+                    +{dayEvents.length - 2} more
+                  </div>
+                ) : null}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      <p className="mt-5 text-center text-sm" style={{ color: "var(--cth-command-muted)" }}>
-        No events scheduled yet. Office hours, workshops, and cohort meetings will appear here.
-      </p>
+      {selectedDate ? (
+        <div className="mt-5 rounded-lg p-4"
+          style={{ background: "var(--cth-command-blush)", border: "1px solid var(--cth-command-border)" }}>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="font-serif text-sm font-semibold" style={{ color: "var(--cth-command-ink)" }}>
+              {selectedDateLabel}
+            </h3>
+            <div className="flex items-center gap-2">
+              {isAdmin ? (
+                <button type="button"
+                  onClick={() => setModalState({ mode: "create", initialDate: selectedDate })}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold"
+                  style={{
+                    background: "var(--cth-command-panel)",
+                    color: "var(--cth-command-ink)",
+                    border: "1px solid var(--cth-command-border)",
+                  }}>
+                  <Plus size={11} /> Add event
+                </button>
+              ) : null}
+              <button type="button" onClick={() => setSelectedDate(null)}
+                className="rounded-full p-1" style={{ color: "var(--cth-command-muted)" }}>
+                <X size={13} />
+              </button>
+            </div>
+          </div>
+          {selectedEvents.length ? (
+            <ul className="space-y-3">
+              {selectedEvents.map((event) => (
+                <EventDetailCard key={event.id} event={event} isAdmin={isAdmin}
+                  onEdit={() => setModalState({ mode: "edit", event })}
+                  onDelete={() => onDelete(event)} />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs" style={{ color: "var(--cth-command-muted)" }}>
+              No events on this day.
+            </p>
+          )}
+        </div>
+      ) : null}
+
+      {!selectedDate && !(events && events.length) ? (
+        <p className="mt-5 text-center text-sm" style={{ color: "var(--cth-command-muted)" }}>
+          No events scheduled yet. Office hours, workshops, and cohort meetings will appear here.
+        </p>
+      ) : null}
+
+      {modalState ? (
+        <EventModal
+          mode={modalState.mode}
+          event={modalState.mode === "edit" ? modalState.event : null}
+          initialDate={modalState.mode === "create" ? (modalState.initialDate || "") : ""}
+          onClose={() => setModalState(null)}
+          onSubmit={async (payload) => {
+            if (modalState.mode === "create") {
+              const ok = await onCreate(payload);
+              if (ok) setModalState(null);
+              return ok;
+            }
+            const ok = await onUpdate(modalState.event.id, payload);
+            if (ok) setModalState(null);
+            return ok;
+          }}
+        />
+      ) : null}
     </section>
   );
 }
@@ -2045,6 +2506,7 @@ export default function CommunityPage() {
   const [resources, setResources] = useState([]);
   const [members, setMembers] = useState([]);
   const [threads, setThreads] = useState([]);
+  const [events, setEvents] = useState([]);
 
   // UI
   const [activeTab, setActiveTab] = useState("discussion");
@@ -2132,12 +2594,16 @@ export default function CommunityPage() {
     if (!silent) setLoading(true);
     if (!silent) setError("");
     try {
-      const [settingsRes, channelsRes, threadsRes, membersRes, resourcesRes] = await Promise.all([
+      const eventsFromIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const eventsToIso = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+      const eventsUrl = `/api/community/events?from=${encodeURIComponent(eventsFromIso)}&to=${encodeURIComponent(eventsToIso)}&limit=200`;
+      const [settingsRes, channelsRes, threadsRes, membersRes, resourcesRes, eventsRes] = await Promise.all([
         apiClient.get("/api/community/settings").catch(() => null),
         apiClient.get("/api/community/channels").catch(() => null),
         apiClient.get("/api/community/threads").catch(() => null),
         apiClient.get("/api/community/members").catch(() => null),
         apiClient.get("/api/community/resources").catch(() => null),
+        apiClient.get(eventsUrl).catch(() => null),
       ]);
       if (settingsRes) setSettings(settingsRes);
       const nextChannels = pickItems(channelsRes, "channels", []);
@@ -2145,6 +2611,7 @@ export default function CommunityPage() {
       setThreads(pickItems(threadsRes, "threads", []));
       setMembers(pickItems(membersRes, "members", []));
       setResources(pickItems(resourcesRes, "resources", []));
+      setEvents(pickItems(eventsRes, "events", []));
       if (!activeChannelIdManual) {
         const firstOpen = nextChannels.find((c) => !c.locked && c.status !== "archived");
         if (firstOpen) setActiveChannelId(firstOpen.id);
@@ -2472,6 +2939,57 @@ export default function CommunityPage() {
     }
   }
 
+  async function handleCreateEvent(payload) {
+    setError("");
+    try {
+      const response = await apiClient.post("/api/community/events", payload);
+      const newEvent = response?.event;
+      if (newEvent) {
+        setEvents((current) =>
+          [...current, newEvent].sort((a, b) => (a.starts_at || "").localeCompare(b.starts_at || ""))
+        );
+      } else {
+        await loadAll({ silent: true });
+      }
+      return true;
+    } catch (err) {
+      console.error("Event create failed", err);
+      setError(err?.message || "Could not create event.");
+      return false;
+    }
+  }
+
+  async function handleUpdateEvent(eventId, patch) {
+    setError("");
+    try {
+      const response = await apiClient.patch(`/api/community/events/${eventId}`, patch);
+      const updated = response?.event;
+      if (updated) {
+        setEvents((current) => current.map((event) => (event.id === eventId ? updated : event)));
+      } else {
+        await loadAll({ silent: true });
+      }
+      return true;
+    } catch (err) {
+      console.error("Event update failed", err);
+      setError(err?.message || "Could not update event.");
+      return false;
+    }
+  }
+
+  async function handleDeleteEvent(event) {
+    if (!window.confirm(`Delete "${event.title}"? This cannot be undone.`)) return;
+    const snapshot = events;
+    setEvents((current) => current.filter((e) => e.id !== event.id));
+    try {
+      await apiClient.delete(`/api/community/events/${event.id}`);
+    } catch (err) {
+      console.error("Event delete failed", err);
+      setEvents(snapshot);
+      setError(err?.message || "Could not delete event.");
+    }
+  }
+
   function handleSignOut() {
     if (typeof signOut === "function") signOut();
   }
@@ -2746,7 +3264,15 @@ export default function CommunityPage() {
           </div>
         ) : null}
 
-        {activeTab === "events" ? <EventsTab /> : null}
+        {activeTab === "events" ? (
+          <EventsTab
+            events={events}
+            isAdmin={isAdmin}
+            onCreate={handleCreateEvent}
+            onUpdate={handleUpdateEvent}
+            onDelete={handleDeleteEvent}
+          />
+        ) : null}
 
         {activeTab === "files" ? <FilesTab /> : null}
 
