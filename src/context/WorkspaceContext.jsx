@@ -92,6 +92,39 @@ export function WorkspaceProvider({ children }) {
 
   const storageKeys = LIVE_STORAGE_KEYS;
 
+  const provisionResolveRef = useRef(null);
+  if (provisionResolveRef.current === null && apiClient.provisionGate === null) {
+    const gate = new Promise((resolve) => {
+      provisionResolveRef.current = resolve;
+    });
+    apiClient.setProvisionGate(gate);
+    setTimeout(() => {
+      if (provisionResolveRef.current) {
+        console.warn("[WorkspaceProvider] Provision gate timed out after 4s - releasing");
+        provisionResolveRef.current();
+        provisionResolveRef.current = null;
+      }
+    }, 4000);
+    try {
+      const warmId =
+        safeGetStorage(LIVE_STORAGE_KEYS.activeWorkspaceId) ||
+        safeGetStorage(LIVE_STORAGE_KEYS.workspaceId);
+      if (warmId && provisionResolveRef.current) {
+        provisionResolveRef.current();
+        provisionResolveRef.current = null;
+      }
+    } catch (_) {
+      // storage read failed; let the fetch or safety timeout release the gate
+    }
+  }
+
+  const releaseGate = useCallback(() => {
+    if (provisionResolveRef.current) {
+      provisionResolveRef.current();
+      provisionResolveRef.current = null;
+    }
+  }, []);
+
   const getStoredWorkspaceId = useCallback(() => {
     return (
       safeGetStorage(storageKeys.activeWorkspaceId) ||
@@ -199,6 +232,7 @@ export function WorkspaceProvider({ children }) {
       if (!HAS_CLERK) {
         setLoading(false);
         setInitialized(true);
+        releaseGate();
         return [];
       }
 
@@ -210,12 +244,14 @@ export function WorkspaceProvider({ children }) {
         clearWorkspaceState();
         setLoading(false);
         setInitialized(true);
+        releaseGate();
         return [];
       }
 
       if (typeof auth?.getToken !== "function") {
         setLoading(false);
         setInitialized(true);
+        releaseGate();
         return [];
       }
 
@@ -260,6 +296,7 @@ export function WorkspaceProvider({ children }) {
               Authorization: `Bearer ${token}`,
             },
             workspace: false,
+            skipProvisionGate: true,
           }
         );
 
@@ -302,12 +339,14 @@ export function WorkspaceProvider({ children }) {
           setLoading(false);
           setInitialized(true);
         }
+        releaseGate();
       }
     },
     [
       auth,
       clearWorkspaceState,
       resolveAndApplyActiveWorkspace,
+      releaseGate,
     ]
   );
 

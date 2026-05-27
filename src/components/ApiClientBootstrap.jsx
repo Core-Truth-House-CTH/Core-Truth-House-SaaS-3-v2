@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import apiClient, { configureApiClient } from "../lib/apiClient";
+import { useEffect } from "react";
+import { configureApiClient } from "../lib/apiClient";
 
 function getStoredWorkspaceId() {
   try {
@@ -43,34 +43,8 @@ export default function ApiClientBootstrap({
   getWorkspaceId,
   onUnauthorized,
   onForbidden,
-  isAuthLoaded = true,
-  isSignedIn = false,
   children,
 }) {
-  const provisionStartedRef = useRef(false);
-  const provisionResolveRef = useRef(null);
-  const provisionTimeoutRef = useRef(null);
-
-  if (provisionResolveRef.current === null && apiClient.provisionGate === null) {
-    const gate = new Promise((resolve) => {
-      provisionResolveRef.current = resolve;
-      // Hard timeout - release gate after 10s no matter what so a stalled
-      // Clerk session or backend cannot freeze every API call indefinitely.
-      // Cleared in releaseGate() once provisioning resolves successfully.
-      provisionTimeoutRef.current = setTimeout(() => {
-        if (provisionResolveRef.current) {
-          console.warn(
-            "[ApiClientBootstrap] Provision gate timed out after 4s - releasing"
-          );
-          provisionResolveRef.current();
-          provisionResolveRef.current = null;
-        }
-        provisionTimeoutRef.current = null;
-      }, 4000);
-    });
-    apiClient.setProvisionGate(gate);
-  }
-
   useEffect(() => {
     configureApiClient({
       getToken: async () => {
@@ -130,58 +104,6 @@ export default function ApiClientBootstrap({
       },
     });
   }, [getToken, getWorkspaceId, onUnauthorized, onForbidden]);
-
-  useEffect(() => {
-    if (!isAuthLoaded) return;
-    if (provisionStartedRef.current) return;
-
-    const releaseGate = () => {
-      if (provisionTimeoutRef.current !== null) {
-        clearTimeout(provisionTimeoutRef.current);
-        provisionTimeoutRef.current = null;
-      }
-      if (provisionResolveRef.current) {
-        provisionResolveRef.current();
-        provisionResolveRef.current = null;
-      }
-    };
-
-    if (!isSignedIn) {
-      provisionStartedRef.current = true;
-      releaseGate();
-      return;
-    }
-
-    provisionStartedRef.current = true;
-
-    const runProvisioning = async () => {
-      const controller = new AbortController();
-      const fetchTimeout = setTimeout(() => {
-        controller.abort();
-        console.warn(
-          "[ApiClientBootstrap] Provisioning fetch timed out after 3s"
-        );
-      }, 3000);
-
-      try {
-        await apiClient.get("/api/workspaces/mine", {
-          workspace: false,
-          skipProvisionGate: true,
-          signal: controller.signal,
-        });
-      } catch (error) {
-        console.warn(
-          "[ApiClientBootstrap] Provisioning call failed; releasing gate",
-          error
-        );
-      } finally {
-        clearTimeout(fetchTimeout);
-        releaseGate();
-      }
-    };
-
-    runProvisioning();
-  }, [isAuthLoaded, isSignedIn]);
 
   return children || null;
 }
