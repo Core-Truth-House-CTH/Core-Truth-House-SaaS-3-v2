@@ -1513,136 +1513,234 @@ function PinnedStrip({ resources }) {
 }
 
 // =========================================================
-// Desktop sidebar (used on Discussion + Wins tabs)
+// Discussion / Wins three-column sidebars
 // =========================================================
 
-function CommunitySidebar({ settings, members, resources, isAdmin, onOpenSettings }) {
-  const cardStyle = { background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" };
-  const [aboutExpanded, setAboutExpanded] = useState(false);
-  const aboutText = settings?.cohort_description || "A private cohort space. Share progress, ask focused questions, connect your work back to the system.";
+function SidebarNavItem({ icon: Icon, label, active, onClick }) {
   return (
-    <aside className="order-2 space-y-3 md:order-1 md:sticky md:top-[120px] md:self-start">
-      <section className="rounded-xl p-4" style={cardStyle}>
-        <h3 className="font-serif text-sm font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--cth-command-muted)" }}>
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-semibold transition-colors"
+      style={{
+        background: active ? "var(--cth-command-purple)" : "transparent",
+        color: active ? "var(--cth-command-gold)" : "var(--cth-command-panel)",
+      }}
+    >
+      <Icon size={13} />
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
+function DiscussionLeftSidebar({
+  cohortName,
+  memberCount,
+  channels,
+  activeChannelId,
+  onChooseChannel,
+  navFilter,
+  onChangeNavFilter,
+  onCreatePostClick,
+}) {
+  return (
+    <aside
+      className="self-start rounded-xl p-3"
+      style={{
+        background: "var(--cth-command-ink)",
+        position: "sticky",
+        top: 120,
+        height: "calc(100vh - 120px)",
+        overflowY: "auto",
+      }}
+    >
+      <div className="px-1 pb-2">
+        <p
+          className="font-serif text-sm font-semibold leading-tight"
+          style={{ color: "var(--cth-command-gold)" }}
+        >
+          {cohortName}
+        </p>
+        <p
+          className="mt-0.5 text-[11px]"
+          style={{ color: "var(--cth-command-blush)" }}
+        >
+          {memberCount} member{memberCount === 1 ? "" : "s"}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onCreatePostClick}
+        className="mb-3 inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
+        style={{ background: "var(--cth-command-crimson)", color: "var(--cth-command-panel)" }}
+      >
+        <Plus size={12} /> Create post
+      </button>
+      <nav className="space-y-0.5">
+        <SidebarNavItem
+          icon={Hash}
+          label="All Posts"
+          active={navFilter === "all"}
+          onClick={() => onChangeNavFilter("all")}
+        />
+        <SidebarNavItem
+          icon={UserRound}
+          label="My Posts"
+          active={navFilter === "mine"}
+          onClick={() => onChangeNavFilter("mine")}
+        />
+      </nav>
+      <div
+        className="my-3"
+        style={{ borderTop: "1px solid var(--cth-command-purple)" }}
+      />
+      <p
+        className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em]"
+        style={{ color: "var(--cth-command-gold)" }}
+      >
+        Channels
+      </p>
+      {channels.length ? (
+        <div className="flex flex-wrap gap-1.5 px-1">
+          {channels.map((channel) => {
+            const active = channel.id === activeChannelId;
+            return (
+              <button
+                key={channel.id}
+                type="button"
+                disabled={channel.locked}
+                onClick={() => onChooseChannel(channel.id)}
+                className="inline-flex max-w-full items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold disabled:opacity-40"
+                style={{
+                  background: active ? "var(--cth-command-crimson)" : "var(--cth-command-purple)",
+                  color: active ? "var(--cth-command-panel)" : "var(--cth-command-gold)",
+                }}
+              >
+                {channel.locked ? <Lock size={10} /> : <Hash size={10} />}
+                <span className="truncate">{channel.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="px-2 text-[11px]" style={{ color: "var(--cth-command-blush)" }}>
+          No channels yet.
+        </p>
+      )}
+    </aside>
+  );
+}
+
+function DiscussionRightSidebar({ settings, members, threads, channels }) {
+  const cardStyle = {
+    background: "var(--cth-command-panel)",
+    border: "1px solid var(--cth-command-border)",
+  };
+  const cohortDescription =
+    settings?.cohort_description ||
+    "A private cohort space. Share progress, ask focused questions, connect your work back to the system.";
+  const activeNow = members.slice(0, 8);
+
+  return (
+    <aside
+      className="space-y-3 self-start"
+      style={{
+        position: "sticky",
+        top: 120,
+        height: "calc(100vh - 120px)",
+        overflowY: "auto",
+      }}
+    >
+      <section className="rounded-xl p-3" style={cardStyle}>
+        <h3
+          className="font-serif text-[11px] font-semibold uppercase tracking-[0.14em]"
+          style={{ color: "var(--cth-command-muted)" }}
+        >
           About
         </h3>
         <p
-          className="mt-2 text-xs leading-6"
-          style={{
-            color: "var(--cth-command-ink)",
-            display: aboutExpanded ? "block" : "-webkit-box",
-            WebkitLineClamp: aboutExpanded ? "unset" : 3,
-            WebkitBoxOrient: "vertical",
-            overflow: aboutExpanded ? "visible" : "hidden",
-          }}
+          className="mt-2 text-xs leading-5"
+          style={{ color: "var(--cth-command-ink)" }}
         >
-          {aboutText}
+          {cohortDescription}
         </p>
-        <button
-          type="button"
-          onClick={() => setAboutExpanded((v) => !v)}
-          className="mt-1.5 text-[11px] font-semibold hover:underline"
-          style={{ color: "var(--cth-command-muted)" }}
+        <div
+          className="mt-3 flex items-center justify-between border-t pt-2 text-[11px]"
+          style={{ borderColor: "var(--cth-command-border)", color: "var(--cth-command-muted)" }}
         >
-          {aboutExpanded ? "See less" : "See more"}
-        </button>
-        {settings?.social_links && SOCIAL_PROVIDERS.some((p) => settings.social_links[p.key]) ? (
-          <div className="mt-3 flex items-center gap-1 border-t pt-3" style={{ borderColor: "var(--cth-command-border)" }}>
-            {SOCIAL_PROVIDERS.map((provider) => {
-              const url = settings.social_links?.[provider.key];
-              if (!url) return null;
-              return (
-                <a
-                  key={provider.key}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={provider.label}
-                  className="rounded-md p-1.5 transition-colors hover:bg-[var(--cth-command-panel-soft)]"
-                  style={{ color: "var(--cth-command-muted)" }}
-                >
-                  <provider.icon size={14} />
-                </a>
-              );
-            })}
-          </div>
-        ) : null}
+          <span>
+            {members.length} member{members.length === 1 ? "" : "s"}
+          </span>
+          <span>
+            {threads.length} post{threads.length === 1 ? "" : "s"}
+          </span>
+        </div>
       </section>
 
-      <section className="rounded-xl p-4" style={cardStyle}>
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-serif text-sm font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--cth-command-muted)" }}>
-            Members
-          </h3>
-          <span className="text-[11px]" style={{ color: "var(--cth-command-muted)" }}>{members.length}</span>
-        </div>
-        {members.length ? (
-          <ul className="space-y-2">
-            {members.slice(0, 6).map((member) => (
+      <section className="rounded-xl p-3" style={cardStyle}>
+        <h3
+          className="font-serif text-[11px] font-semibold uppercase tracking-[0.14em]"
+          style={{ color: "var(--cth-command-muted)" }}
+        >
+          Active Now
+        </h3>
+        {activeNow.length ? (
+          <ul className="mt-2 space-y-2">
+            {activeNow.map((member) => (
               <li key={member.user_id || member.id} className="flex items-center gap-2">
-                <Avatar name={member.display_name || member.name} profileImage={member.profile_image_url} size={28} />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold" style={{ color: "var(--cth-command-ink)" }}>
-                    {member.display_name || member.name || "Cohort Member"}
-                  </p>
-                  <p className="truncate text-[10px]" style={{ color: "var(--cth-command-muted)" }}>
-                    {member.role || member.cohort_stage || "Member"}
-                  </p>
-                </div>
+                <Avatar
+                  name={member.display_name || member.name}
+                  profileImage={member.profile_image_url}
+                  size={24}
+                />
+                <p
+                  className="truncate text-[11px] font-semibold"
+                  style={{ color: "var(--cth-command-ink)" }}
+                >
+                  {member.display_name || member.name || "Cohort Member"}
+                </p>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-xs" style={{ color: "var(--cth-command-muted)" }}>No members yet.</p>
+          <p
+            className="mt-2 text-[11px]"
+            style={{ color: "var(--cth-command-muted)" }}
+          >
+            No members yet.
+          </p>
         )}
       </section>
 
-      <section className="rounded-xl p-4" style={cardStyle}>
-        <h3 className="mb-3 inline-flex items-center gap-1.5 font-serif text-sm font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--cth-command-muted)" }}>
-          <Pin size={11} /> Pinned
+      <section className="rounded-xl p-3" style={cardStyle}>
+        <h3
+          className="font-serif text-[11px] font-semibold uppercase tracking-[0.14em]"
+          style={{ color: "var(--cth-command-muted)" }}
+        >
+          Post Types
         </h3>
-        {resources.length ? (
-          <ul className="space-y-1.5">
-            {resources.map((resource) => {
-              const inner = (
-                <span className="flex items-center gap-2 text-xs">
-                  <FileText size={12} style={{ color: "var(--cth-command-crimson)" }} />
-                  <span className="truncate" style={{ color: "var(--cth-command-ink)" }}>{resource.title}</span>
-                </span>
-              );
-              return resource.url ? (
-                <li key={resource.id}>
-                  <a href={resource.url} target="_blank" rel="noreferrer"
-                    className="block rounded px-2 py-1.5 hover:bg-[var(--cth-command-panel-soft)]">
-                    {inner}
-                  </a>
-                </li>
-              ) : (
-                <li key={resource.id} className="rounded px-2 py-1.5">{inner}</li>
-              );
-            })}
+        {channels.length ? (
+          <ul className="mt-2 space-y-1">
+            {channels.map((channel) => (
+              <li
+                key={channel.id}
+                className="flex items-center gap-1.5 text-[11px]"
+                style={{ color: "var(--cth-command-ink)" }}
+              >
+                <Hash size={11} style={{ color: "var(--cth-command-crimson)" }} />
+                <span className="truncate">{channel.name}</span>
+              </li>
+            ))}
           </ul>
         ) : (
-          <p className="text-xs" style={{ color: "var(--cth-command-muted)" }}>No pinned resources yet.</p>
+          <p
+            className="mt-2 text-[11px]"
+            style={{ color: "var(--cth-command-muted)" }}
+          >
+            No channels yet.
+          </p>
         )}
       </section>
-
-      {isAdmin === true ? (
-        <section className="rounded-xl p-4"
-          style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-crimson)" }}>
-          <h3 className="mb-2 inline-flex items-center gap-1.5 font-serif text-sm font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--cth-command-crimson)" }}>
-            <Settings size={11} /> Admin
-          </h3>
-          <p className="mb-3 text-[11px]" style={{ color: "var(--cth-command-muted)" }}>
-            Settings, channels, resources, and member access.
-          </p>
-          <button type="button" onClick={onOpenSettings}
-            className="inline-flex w-full items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-semibold"
-            style={{ background: "var(--cth-command-crimson)", color: "#fff" }}>
-            <Settings size={12} /> Open settings
-          </button>
-        </section>
-      ) : null}
     </aside>
   );
 }
@@ -1975,6 +2073,16 @@ export default function CommunityPage() {
   const [messagesByThread, setMessagesByThread] = useState({});
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [commentPosting, setCommentPosting] = useState(false);
+
+  // Discussion / Wins three-column local view state
+  const [navFilter, setNavFilter] = useState("all");
+  const composerRef = useRef(null);
+  function focusComposer() {
+    const textarea = composerRef.current?.querySelector("textarea");
+    if (!textarea) return;
+    textarea.scrollIntoView({ behavior: "smooth", block: "center" });
+    textarea.focus();
+  }
 
   const viewerId = user?.id || "";
   const viewerName = user?.fullName || user?.firstName || user?.primaryEmailAddress?.emailAddress || "You";
@@ -2465,124 +2573,176 @@ export default function CommunityPage() {
         ) : null}
 
         {activeTab === "discussion" ? (
-          <div className="grid gap-4 md:grid-cols-[260px_minmax(0,1fr)]">
-            <CommunitySidebar
-              settings={settings}
-              members={members}
-              resources={resources}
-              isAdmin={isAdmin}
-              onOpenSettings={() => setSettingsDrawerOpen(true)}
-            />
-            <div className="order-1 space-y-3 md:order-2">
-            <PostComposer
-              viewerName={viewerName}
-              viewerAvatar={viewerAvatar}
+          <div className="grid gap-4 grid-cols-[200px_minmax(0,1fr)_200px]">
+            <DiscussionLeftSidebar
+              cohortName={cohortName}
+              memberCount={members.length}
               channels={channels}
               activeChannelId={activeChannelId}
-              onChangeChannel={chooseChannel}
-              onPost={handleCreatePost}
-              posting={posting}
-              disabled={!activeChannelId && !loading}
-              disabledReason="No channel available yet."
+              onChooseChannel={chooseChannel}
+              navFilter={navFilter}
+              onChangeNavFilter={setNavFilter}
+              onCreatePostClick={focusComposer}
             />
+            <div className="space-y-3">
+              <div ref={composerRef}>
+                <PostComposer
+                  viewerName={viewerName}
+                  viewerAvatar={viewerAvatar}
+                  channels={channels}
+                  activeChannelId={activeChannelId}
+                  onChangeChannel={chooseChannel}
+                  onPost={handleCreatePost}
+                  posting={posting}
+                  disabled={!activeChannelId && !loading}
+                  disabledReason="No channel available yet."
+                />
+              </div>
 
-            {loading && !threads.length ? (
-              <div className="rounded-xl p-5 text-sm"
-                style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", color: "var(--cth-command-muted)" }}>
-                <Loader2 size={14} className="mr-2 inline-block animate-spin" /> Loading...
-              </div>
-            ) : searchFiltered.length ? (
-              searchFiltered.map((thread) => {
-                const author = membersById.get(thread.author_user_id);
-                const isOwnPost = thread.author_user_id === viewerId;
-                return (
-                  <ThreadCard
-                    key={thread.id}
-                    thread={thread}
-                    authorName={isOwnPost ? viewerName : (author?.display_name || author?.name || "Cohort Member")}
-                    authorAvatar={isOwnPost ? viewerAvatar : author?.profile_image_url}
-                    isAdmin={isAdmin}
-                    expanded={expandedThreadId === thread.id}
-                    messages={messagesByThread[thread.id] || []}
-                    messagesLoading={expandedThreadId === thread.id && messagesLoading}
-                    viewerName={viewerName}
-                    viewerAvatar={viewerAvatar}
-                    membersById={membersById}
-                    onToggleLikeThread={handleToggleLikeThread}
-                    onToggleExpand={handleToggleExpand}
-                    onPostComment={handlePostComment}
-                    onToggleLikeMessage={handleToggleLikeMessage}
-                    onPin={handlePin}
-                    onDelete={handleDelete}
-                    commentPosting={commentPosting && expandedThreadId === thread.id}
-                  />
-                );
-              })
-            ) : (
-              <div className="rounded-xl p-5 text-center"
-                style={{ background: "var(--cth-command-panel)", border: "1px dashed var(--cth-command-border)" }}>
-                <p className="font-serif text-base font-semibold" style={{ color: "var(--cth-command-ink)" }}>
-                  {searchQuery ? "No posts match that search." : "No posts yet."}
-                </p>
-                {!searchQuery ? (
-                  <p className="mt-1 text-xs" style={{ color: "var(--cth-command-muted)" }}>Be the first to share progress.</p>
-                ) : null}
-              </div>
-            )}
+              {(() => {
+                const visible = navFilter === "mine"
+                  ? searchFiltered.filter((t) => t.author_user_id === viewerId)
+                  : searchFiltered;
+                if (loading && !threads.length) {
+                  return (
+                    <div className="rounded-xl p-5 text-sm"
+                      style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", color: "var(--cth-command-muted)" }}>
+                      <Loader2 size={14} className="mr-2 inline-block animate-spin" /> Loading...
+                    </div>
+                  );
+                }
+                if (!visible.length) {
+                  return (
+                    <div className="rounded-xl p-5 text-center"
+                      style={{ background: "var(--cth-command-panel)", border: "1px dashed var(--cth-command-border)" }}>
+                      <p className="font-serif text-base font-semibold" style={{ color: "var(--cth-command-ink)" }}>
+                        {searchQuery
+                          ? "No posts match that search."
+                          : navFilter === "mine"
+                            ? "You haven't posted yet."
+                            : "No posts yet."}
+                      </p>
+                      {!searchQuery && navFilter !== "mine" ? (
+                        <p className="mt-1 text-xs" style={{ color: "var(--cth-command-muted)" }}>Be the first to share progress.</p>
+                      ) : null}
+                    </div>
+                  );
+                }
+                return visible.map((thread) => {
+                  const author = membersById.get(thread.author_user_id);
+                  const isOwnPost = thread.author_user_id === viewerId;
+                  return (
+                    <ThreadCard
+                      key={thread.id}
+                      thread={thread}
+                      authorName={isOwnPost ? viewerName : (author?.display_name || author?.name || "Cohort Member")}
+                      authorAvatar={isOwnPost ? viewerAvatar : author?.profile_image_url}
+                      isAdmin={isAdmin}
+                      expanded={expandedThreadId === thread.id}
+                      messages={messagesByThread[thread.id] || []}
+                      messagesLoading={expandedThreadId === thread.id && messagesLoading}
+                      viewerName={viewerName}
+                      viewerAvatar={viewerAvatar}
+                      membersById={membersById}
+                      onToggleLikeThread={handleToggleLikeThread}
+                      onToggleExpand={handleToggleExpand}
+                      onPostComment={handlePostComment}
+                      onToggleLikeMessage={handleToggleLikeMessage}
+                      onPin={handlePin}
+                      onDelete={handleDelete}
+                      commentPosting={commentPosting && expandedThreadId === thread.id}
+                    />
+                  );
+                });
+              })()}
             </div>
+            <DiscussionRightSidebar
+              settings={settings}
+              members={members}
+              threads={threads}
+              channels={channels}
+            />
           </div>
         ) : null}
 
         {activeTab === "wins" ? (
-          <div className="grid gap-4 md:grid-cols-[260px_minmax(0,1fr)]">
-            <CommunitySidebar
+          <div className="grid gap-4 grid-cols-[200px_minmax(0,1fr)_200px]">
+            <DiscussionLeftSidebar
+              cohortName={cohortName}
+              memberCount={members.length}
+              channels={channels}
+              activeChannelId={activeChannelId}
+              onChooseChannel={chooseChannel}
+              navFilter={navFilter}
+              onChangeNavFilter={setNavFilter}
+              onCreatePostClick={focusComposer}
+            />
+            <div className="space-y-3">
+              <div ref={composerRef}>
+                <PostComposer
+                  viewerName={viewerName}
+                  viewerAvatar={viewerAvatar}
+                  channels={channels}
+                  activeChannelId={activeChannelId}
+                  onChangeChannel={chooseChannel}
+                  onPost={handleCreatePost}
+                  posting={posting}
+                  disabled={!activeChannelId && !loading}
+                  disabledReason="No channel available yet."
+                />
+              </div>
+
+              {(() => {
+                const visible = navFilter === "mine"
+                  ? winsThreads.filter((t) => t.author_user_id === viewerId)
+                  : winsThreads;
+                if (!visible.length) {
+                  return (
+                    <div className="rounded-xl p-5 text-center"
+                      style={{ background: "var(--cth-command-panel)", border: "1px dashed var(--cth-command-border)" }}>
+                      <p className="font-serif text-base font-semibold" style={{ color: "var(--cth-command-ink)" }}>
+                        {navFilter === "mine" ? "You haven't posted to wins yet." : "No wins yet."}
+                      </p>
+                      <p className="mt-1 text-xs" style={{ color: "var(--cth-command-muted)" }}>
+                        Pin a thread or post to the wins channel to feature it here.
+                      </p>
+                    </div>
+                  );
+                }
+                return visible.map((thread) => {
+                  const author = membersById.get(thread.author_user_id);
+                  const isOwnPost = thread.author_user_id === viewerId;
+                  return (
+                    <ThreadCard
+                      key={thread.id}
+                      thread={thread}
+                      authorName={isOwnPost ? viewerName : (author?.display_name || author?.name || "Cohort Member")}
+                      authorAvatar={isOwnPost ? viewerAvatar : author?.profile_image_url}
+                      isAdmin={isAdmin}
+                      expanded={expandedThreadId === thread.id}
+                      messages={messagesByThread[thread.id] || []}
+                      messagesLoading={expandedThreadId === thread.id && messagesLoading}
+                      viewerName={viewerName}
+                      viewerAvatar={viewerAvatar}
+                      membersById={membersById}
+                      onToggleLikeThread={handleToggleLikeThread}
+                      onToggleExpand={handleToggleExpand}
+                      onPostComment={handlePostComment}
+                      onToggleLikeMessage={handleToggleLikeMessage}
+                      onPin={handlePin}
+                      onDelete={handleDelete}
+                      commentPosting={commentPosting && expandedThreadId === thread.id}
+                    />
+                  );
+                });
+              })()}
+            </div>
+            <DiscussionRightSidebar
               settings={settings}
               members={members}
-              resources={resources}
-              isAdmin={isAdmin}
-              onOpenSettings={() => setSettingsDrawerOpen(true)}
+              threads={threads}
+              channels={channels}
             />
-            <div className="order-1 space-y-3 md:order-2">
-            <p className="text-xs" style={{ color: "var(--cth-command-muted)" }}>
-              Pinned posts and updates from the wins channel.
-            </p>
-            {winsThreads.length ? (
-              winsThreads.map((thread) => {
-                const author = membersById.get(thread.author_user_id);
-                const isOwnPost = thread.author_user_id === viewerId;
-                return (
-                  <ThreadCard
-                    key={thread.id}
-                    thread={thread}
-                    authorName={isOwnPost ? viewerName : (author?.display_name || author?.name || "Cohort Member")}
-                    authorAvatar={isOwnPost ? viewerAvatar : author?.profile_image_url}
-                    isAdmin={isAdmin}
-                    expanded={expandedThreadId === thread.id}
-                    messages={messagesByThread[thread.id] || []}
-                    messagesLoading={expandedThreadId === thread.id && messagesLoading}
-                    viewerName={viewerName}
-                    viewerAvatar={viewerAvatar}
-                    membersById={membersById}
-                    onToggleLikeThread={handleToggleLikeThread}
-                    onToggleExpand={handleToggleExpand}
-                    onPostComment={handlePostComment}
-                    onToggleLikeMessage={handleToggleLikeMessage}
-                    onPin={handlePin}
-                    onDelete={handleDelete}
-                    commentPosting={commentPosting && expandedThreadId === thread.id}
-                  />
-                );
-              })
-            ) : (
-              <div className="rounded-xl p-5 text-center"
-                style={{ background: "var(--cth-command-panel)", border: "1px dashed var(--cth-command-border)" }}>
-                <p className="font-serif text-base font-semibold" style={{ color: "var(--cth-command-ink)" }}>No wins yet.</p>
-                <p className="mt-1 text-xs" style={{ color: "var(--cth-command-muted)" }}>
-                  Pin a thread or post to the wins channel to feature it here.
-                </p>
-              </div>
-            )}
-            </div>
           </div>
         ) : null}
 
