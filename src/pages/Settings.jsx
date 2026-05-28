@@ -14,7 +14,6 @@ import {
   Save,
   Bell,
   CreditCard,
-  Shield,
   ChevronRight,
   Check,
   CheckCircle,
@@ -449,7 +448,6 @@ export default function Settings() {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'mail', label: 'Mail Integrations', icon: Mail },
     ...(canUseDomain ? [{ id: 'domain', label: 'Custom Domain', icon: Link2 }] : []),
-    { id: 'team', label: 'Team', icon: Shield },
     { id: 'billing', label: 'Billing & Plan', icon: CreditCard },
   ];
 
@@ -909,19 +907,6 @@ export default function Settings() {
                       </div>
                     </>
                   )}
-                </div>
-              )}
-
-              {activeTab === 'team' && (
-                <div className="mb-5" style={{ ...CARD_STYLE, padding: 24 }}>
-                  <h2 style={SECTION_HEADING_STYLE}>Team Management</h2>
-                  <p style={{ ...MUTED_STYLE, marginTop: 8, marginBottom: 20 }}>
-                    Invite members, manage roles, and track team activity.
-                  </p>
-
-                  <Link to="/team" data-testid="go-to-team-btn" style={PRIMARY_CTA_STYLE}>
-                    Go to Team Management <ChevronRight size={15} />
-                  </Link>
                 </div>
               )}
 
