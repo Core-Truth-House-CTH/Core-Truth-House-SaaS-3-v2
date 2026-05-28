@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import apiClient from "../lib/apiClient";
 import {
   BookOpen,
   Search,
@@ -8,7 +7,11 @@ import {
   Compass,
   Building2,
   Crown,
+  Loader2,
 } from "lucide-react";
+
+import { DashboardLayout, TopBar } from "../components/Layout";
+import apiClient from "../lib/apiClient";
 
 const SECTION_META = {
   quickStart: { title: "Start Here", icon: Compass },
@@ -31,6 +34,14 @@ const SECTION_KEY_ALIASES = {
   house: "house",
   "estate-tier": "estate",
   estate: "estate",
+};
+
+const TIER_STYLES = {
+  All: { background: "var(--cth-command-panel-soft)", color: "var(--cth-command-muted)" },
+  Foundation: { background: "var(--cth-command-purple)", color: "var(--cth-command-panel)" },
+  Structure: { background: "var(--cth-command-gold)", color: "var(--cth-command-ink)" },
+  House: { background: "var(--cth-command-crimson)", color: "var(--cth-command-panel)" },
+  Estate: { background: "var(--cth-command-ink)", color: "var(--cth-command-panel)" },
 };
 
 function normalizeSectionKey(value) {
@@ -81,11 +92,32 @@ function flattenSections(sections) {
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
-    <div className="rounded-2xl border border-[var(--cth-border)] bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-border)] px-5 py-4">
+    <div
+      className="overflow-hidden rounded-xl"
+      style={{
+        background: "var(--cth-command-panel)",
+        border: "1px solid var(--cth-command-border)",
+      }}
+    >
+      <div
+        className="flex items-center justify-between gap-3 px-5 py-4"
+        style={{ borderBottom: "1px solid var(--cth-command-border)" }}
+      >
         <div>
-          <div className="text-sm font-semibold text-[var(--cth-ink)]">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-muted)]">{subtitle}</div> : null}
+          <div
+            className="font-serif text-sm font-semibold"
+            style={{ color: "var(--cth-command-ink)" }}
+          >
+            {title}
+          </div>
+          {subtitle ? (
+            <div
+              className="mt-1 text-xs"
+              style={{ color: "var(--cth-command-muted)" }}
+            >
+              {subtitle}
+            </div>
+          ) : null}
         </div>
         {actions}
       </div>
@@ -96,13 +128,20 @@ function PanelCard({ title, subtitle, children, actions = null }) {
 
 function SearchInput({ value, onChange }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-[var(--cth-border)] bg-white px-3 py-2">
-      <Search size={15} className="text-[var(--cth-muted)]" />
+    <div
+      className="flex items-center gap-2 rounded-md px-3 py-2"
+      style={{
+        background: "var(--cth-command-blush)",
+        border: "1px solid var(--cth-command-border)",
+      }}
+    >
+      <Search size={15} style={{ color: "var(--cth-command-muted)" }} />
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search guides and docs..."
-        className="w-full bg-transparent text-sm text-[var(--cth-ink)] outline-none placeholder:text-[var(--cth-muted)]"
+        className="w-full bg-transparent text-sm outline-none"
+        style={{ color: "var(--cth-command-ink)" }}
       />
     </div>
   );
@@ -114,16 +153,11 @@ function TierBadge({ tier }) {
     .replace("Structure+", "Structure")
     .replace("House+", "House");
 
-  const styles = {
-    All: "bg-[var(--cth-admin-panel-alt)] text-[var(--cth-admin-muted)]",
-    Foundation: "bg-[rgba(45,106,79,0.12)] text-[var(--cth-status-success)]",
-    Structure: "bg-[var(--cth-kb-structure-bg)] text-[var(--cth-kb-structure-text)]",
-    House: "bg-[rgba(118,59,91,0.12)] text-[var(--cth-admin-ruby)]",
-    Estate: "bg-[var(--cth-kb-estate-bg)] text-[var(--cth-kb-estate-text)]",
-  };
-
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold ${styles[normalizedTier] || styles.All}`}>
+    <span
+      className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]"
+      style={TIER_STYLES[normalizedTier] || TIER_STYLES.All}
+    >
       {normalizedTier}
     </span>
   );
@@ -133,12 +167,13 @@ function SectionTab({ section, active, count = 0, onClick }) {
   const Icon = section.icon;
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
-        active
-          ? "bg-[var(--cth-ink)] text-[var(--cth-on-dark)]"
-          : "text-[var(--cth-ink-soft)] hover:bg-[var(--cth-blush)] hover:text-[var(--cth-ink)]"
-      }`}
+      className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-left text-sm transition-colors"
+      style={{
+        background: active ? "var(--cth-command-purple)" : "transparent",
+        color: active ? "var(--cth-command-panel)" : "var(--cth-command-ink)",
+      }}
     >
       <span className="flex items-center gap-2.5 min-w-0">
         <Icon size={16} />
@@ -146,11 +181,13 @@ function SectionTab({ section, active, count = 0, onClick }) {
       </span>
 
       <span
-        className={`inline-flex min-w-[24px] items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-          active
-            ? "bg-[var(--cth-on-dark)] text-[var(--cth-ink)]"
-            : "bg-[var(--cth-blush)] text-[var(--cth-ink-soft)]"
-        }`}
+        className="inline-flex min-w-[24px] items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold"
+        style={{
+          background: active
+            ? "var(--cth-command-panel)"
+            : "var(--cth-command-blush)",
+          color: active ? "var(--cth-command-ink)" : "var(--cth-command-muted)",
+        }}
       >
         {count}
       </span>
@@ -192,15 +229,19 @@ export default function KnowledgeBasePage() {
     };
   }, []);
 
-  const totalArticleCount = useMemo(() => flattenSections(sections).length, [sections]);
-  const sectionArticleCount = sections?.[activeSection]?.articles?.length || 0;
+  const totalArticleCount = useMemo(
+    () => flattenSections(sections).length,
+    [sections]
+  );
 
   const searchResults = useMemo(() => {
     if (query.trim().length < 2) return [];
     const q = query.trim().toLowerCase();
 
     return flattenSections(sections).filter((article) => {
-      const haystack = `${article.title} ${article.section} ${article.body.join(" ")}`.toLowerCase();
+      const haystack = `${article.title} ${article.section} ${article.body.join(
+        " "
+      )}`.toLowerCase();
       return haystack.includes(q);
     });
   }, [query, sections]);
@@ -216,156 +257,212 @@ export default function KnowledgeBasePage() {
     null;
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--cth-admin-ruby)_12%,var(--cth-admin-panel))] text-[var(--cth-admin-ruby)]">
-            <BookOpen size={20} />
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">Member</p>
-            <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-admin-ink)]">Knowledge Base</h2>
-          </div>
-        </div>
+    <DashboardLayout>
+      <TopBar
+        title="Knowledge Base"
+        subtitle="Browse guides, references, and how-tos curated by the Core Truth House team."
+      />
 
-        <p className="mt-3 max-w-3xl text-sm text-[var(--cth-admin-muted)]">
-          Browse guides, references, and how-tos curated by the Core Truth House team.
-        </p>
+      <main className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6">
+        <div className="grid gap-4 xl:grid-cols-[260px_1fr]">
+          <PanelCard title="Browse" subtitle="Search and explore by category">
+            <div className="space-y-4">
+              <SearchInput
+                value={query}
+                onChange={(value) => {
+                  setQuery(value);
+                  setSelectedArticleId(null);
+                }}
+              />
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-[color-mix(in_srgb,var(--cth-admin-ruby)_12%,var(--cth-admin-panel))] px-3 py-1 text-xs font-semibold text-[var(--cth-admin-ruby)]">
-            Total Articles: {totalArticleCount}
-          </span>
-          <span className="inline-flex items-center rounded-full bg-[var(--cth-admin-panel-alt)] px-3 py-1 text-xs font-semibold text-[var(--cth-admin-muted)]">
-            This Section: {sectionArticleCount}
-          </span>
-        </div>
-      </section>
+              {query.trim().length < 2 ? (
+                <div className="space-y-3">
+                  {Object.entries(SECTION_META).map(([sectionKey, sectionValue]) => {
+                    const sectionArticles =
+                      sections?.[sectionKey]?.articles || [];
+                    const isActiveSection = activeSection === sectionKey;
+                    const sectionCount = sectionArticles.length;
 
-      <div className="grid gap-4 xl:grid-cols-[260px_1fr]">
-        <PanelCard title="Browse" subtitle="Search and explore by category">
-          <div className="space-y-4">
-            <SearchInput
-              value={query}
-              onChange={(value) => {
-                setQuery(value);
-                setSelectedArticleId(null);
-              }}
-            />
+                    return (
+                      <div key={sectionKey} className="space-y-2">
+                        <SectionTab
+                          section={sectionValue}
+                          active={isActiveSection}
+                          count={sectionCount}
+                          onClick={() => {
+                            setActiveSection(sectionKey);
+                            setSelectedArticleId(null);
+                          }}
+                        />
 
-            {query.trim().length < 2 ? (
-              <div className="space-y-3">
-                {Object.entries(SECTION_META).map(([sectionKey, sectionValue]) => {
-                  const sectionArticles = sections?.[sectionKey]?.articles || [];
-                  const isActiveSection = activeSection === sectionKey;
-                  const sectionCount = sectionArticles.length;
+                        {isActiveSection ? (
+                          <div
+                            className="ml-2 space-y-1.5 pl-3"
+                            style={{
+                              borderLeft:
+                                "1px solid var(--cth-command-border)",
+                            }}
+                          >
+                            {sectionArticles.length === 0 ? (
+                              <div
+                                className="text-xs"
+                                style={{ color: "var(--cth-command-muted)" }}
+                              >
+                                No articles in this section.
+                              </div>
+                            ) : (
+                              sectionArticles.map((article) => {
+                                const isSelected =
+                                  selectedArticleId === article.id ||
+                                  (!selectedArticleId &&
+                                    activeArticle?.id === article.id);
 
-                  return (
-                    <div key={sectionKey} className="space-y-2">
-                      <SectionTab
-                        section={sectionValue}
-                        active={isActiveSection}
-                        count={sectionCount}
-                        onClick={() => {
-                          setActiveSection(sectionKey);
-                          setSelectedArticleId(null);
-                        }}
-                      />
-
-                      {isActiveSection ? (
-                        <div className="ml-2 space-y-1.5 border-l border-[var(--cth-border)] pl-3">
-                          {sectionArticles.length === 0 ? (
-                            <div className="text-xs text-[var(--cth-muted)]">No articles in this section.</div>
-                          ) : (
-                            sectionArticles.map((article) => {
-                              const isSelected =
-                                selectedArticleId === article.id ||
-                                (!selectedArticleId && activeArticle?.id === article.id);
-
-                              return (
-                                <button
-                                  key={article.id}
-                                  onClick={() => {
-                                    setActiveSection(sectionKey);
-                                    setSelectedArticleId(article.id);
-                                  }}
-                                  className={`w-full rounded-lg border px-2.5 py-2 text-left transition ${
-                                    isSelected
-                                      ? "border-[var(--cth-border)] bg-[var(--cth-blush)]"
-                                      : "border-transparent bg-transparent hover:border-[var(--cth-border)] hover:bg-[var(--cth-blush)]"
-                                  }`}
-                                >
-                                  <div className="text-[13px] font-medium leading-5 text-[var(--cth-ink)] line-clamp-2">
-                                    {article.title}
-                                  </div>
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                      ) : null}
+                                return (
+                                  <button
+                                    key={article.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveSection(sectionKey);
+                                      setSelectedArticleId(article.id);
+                                    }}
+                                    className="w-full rounded-md px-2.5 py-2 text-left transition"
+                                    style={{
+                                      background: isSelected
+                                        ? "var(--cth-command-blush)"
+                                        : "transparent",
+                                      border: isSelected
+                                        ? "1px solid var(--cth-command-border)"
+                                        : "1px solid transparent",
+                                    }}
+                                  >
+                                    <div
+                                      className="text-[13px] font-medium leading-5 line-clamp-2"
+                                      style={{
+                                        color: "var(--cth-command-ink)",
+                                      }}
+                                    >
+                                      {article.title}
+                                    </div>
+                                  </button>
+                                );
+                              })
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {searchResults.length === 0 ? (
+                    <div
+                      className="text-sm"
+                      style={{ color: "var(--cth-command-muted)" }}
+                    >
+                      No help articles found.
                     </div>
-                  );
-                })}
+                  ) : (
+                    searchResults.slice(0, 10).map((article) => (
+                      <button
+                        key={article.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveSection(article.sectionKey);
+                          setSelectedArticleId(article.id);
+                          setQuery("");
+                        }}
+                        className="w-full flex items-center justify-between gap-3 rounded-md px-3 py-3 text-left"
+                        style={{
+                          background: "var(--cth-command-blush)",
+                          border: "1px solid var(--cth-command-border)",
+                        }}
+                      >
+                        <div>
+                          <p
+                            className="text-sm"
+                            style={{ color: "var(--cth-command-ink)" }}
+                          >
+                            {article.title}
+                          </p>
+                          <p
+                            className="text-xs"
+                            style={{ color: "var(--cth-command-muted)" }}
+                          >
+                            {article.section}
+                          </p>
+                        </div>
+                        <ArrowRight
+                          size={14}
+                          style={{ color: "var(--cth-command-muted)" }}
+                        />
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </PanelCard>
+
+          <PanelCard
+            title={activeArticle ? activeArticle.title : "Knowledge Article"}
+            subtitle={
+              activeArticle
+                ? `${activeArticle.section} • ${activeArticle.duration}`
+                : "Select an article"
+            }
+            actions={
+              activeArticle ? <TierBadge tier={activeArticle.tier} /> : null
+            }
+          >
+            {loading ? (
+              <div
+                className="flex items-center gap-2 text-sm"
+                style={{ color: "var(--cth-command-muted)" }}
+              >
+                <Loader2 size={14} className="animate-spin" /> Loading...
+              </div>
+            ) : loadError ? (
+              <div
+                className="text-sm"
+                style={{ color: "var(--cth-command-crimson)" }}
+              >
+                {loadError}
+              </div>
+            ) : !activeArticle ? (
+              <div
+                className="text-sm"
+                style={{ color: "var(--cth-command-muted)" }}
+              >
+                {totalArticleCount === 0
+                  ? "No published articles are available yet. Check back soon."
+                  : "No article selected."}
               </div>
             ) : (
-              <div className="space-y-2">
-                {searchResults.length === 0 ? (
-                  <div className="text-sm text-[var(--cth-muted)]">No help articles found.</div>
+              <div className="space-y-4">
+                {activeArticle.body.length === 0 ? (
+                  <p
+                    className="text-sm"
+                    style={{ color: "var(--cth-command-muted)" }}
+                  >
+                    This article has no content yet.
+                  </p>
                 ) : (
-                  searchResults.slice(0, 10).map((article) => (
-                    <button
-                      key={article.id}
-                      onClick={() => {
-                        setActiveSection(article.sectionKey);
-                        setSelectedArticleId(article.id);
-                        setQuery("");
-                      }}
-                      className="w-full flex items-center justify-between gap-3 rounded-xl border border-[var(--cth-border)] bg-[var(--cth-blush)] px-3 py-3 text-left hover:border-[var(--cth-ruby)]"
+                  activeArticle.body.map((paragraph, index) => (
+                    <p
+                      key={index}
+                      className="text-sm leading-8"
+                      style={{ color: "var(--cth-command-ink)" }}
                     >
-                      <div>
-                        <p className="text-sm text-[var(--cth-ink)]">{article.title}</p>
-                        <p className="text-xs text-[var(--cth-muted)]">{article.section}</p>
-                      </div>
-                      <ArrowRight size={14} className="text-[var(--cth-muted)]" />
-                    </button>
+                      {paragraph}
+                    </p>
                   ))
                 )}
               </div>
             )}
-          </div>
-        </PanelCard>
-
-        <PanelCard
-          title={activeArticle ? activeArticle.title : "Knowledge Article"}
-          subtitle={activeArticle ? `${activeArticle.section} • ${activeArticle.duration}` : "Select an article"}
-          actions={activeArticle ? <TierBadge tier={activeArticle.tier} /> : null}
-        >
-          {loading ? (
-            <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
-          ) : loadError ? (
-            <div className="text-sm text-[var(--cth-status-danger-deep)]">{loadError}</div>
-          ) : !activeArticle ? (
-            <div className="text-sm text-[var(--cth-admin-muted)]">
-              {totalArticleCount === 0
-                ? "No published articles are available yet. Check back soon."
-                : "No article selected."}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {activeArticle.body.length === 0 ? (
-                <p className="text-sm text-[var(--cth-admin-muted)]">This article has no content yet.</p>
-              ) : (
-                activeArticle.body.map((paragraph, index) => (
-                  <p key={index} className="text-sm leading-8 text-[var(--cth-copy-body-soft)]">
-                    {paragraph}
-                  </p>
-                ))
-              )}
-            </div>
-          )}
-        </PanelCard>
-      </div>
-    </div>
+          </PanelCard>
+        </div>
+      </main>
+    </DashboardLayout>
   );
 }
