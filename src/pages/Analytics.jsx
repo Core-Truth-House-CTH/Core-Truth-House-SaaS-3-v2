@@ -9,6 +9,7 @@ import {
  Shield,
  Sparkles,
  TrendingUp,
+ Radar,
 } from "lucide-react";
 import {
  Area,
@@ -268,6 +269,126 @@ function UpgradeCard({ heading, body, ctaLabel }) {
  );
 }
 
+const ANALYTICS_TABS = [
+ { key: "overview", label: "Overview", icon: BarChart3 },
+ { key: "buyerSignals", label: "Buyer Signals", icon: Radar },
+];
+
+function AnalyticsTabBar({ value, onChange }) {
+ return (
+ <div
+ style={{
+ display: "inline-flex",
+ gap: 4,
+ padding: 4,
+ borderRadius: 4,
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-border)",
+ }}
+ >
+ {ANALYTICS_TABS.map((tab) => {
+ const Icon = tab.icon;
+ const active = value === tab.key;
+ return (
+ <button
+ key={tab.key}
+ type="button"
+ onClick={() => onChange(tab.key)}
+ style={{
+ display: "inline-flex",
+ alignItems: "center",
+ gap: 8,
+ padding: "8px 14px",
+ borderRadius: 4,
+ background: active ? "var(--cth-command-purple)" : "transparent",
+ color: active ? "var(--cth-command-gold)" : "var(--cth-command-ink)",
+ fontFamily: "'DM Sans', sans-serif",
+ fontSize: 13,
+ fontWeight: 600,
+ border: "none",
+ cursor: "pointer",
+ transition: "background 150ms ease, color 150ms ease",
+ }}
+ >
+ <Icon size={14} /> {tab.label}
+ </button>
+ );
+ })}
+ </div>
+ );
+}
+
+// Canonical levels mirror backend buyer_signals.py SIGNAL_LEVELS.
+const SIGNAL_LEVELS = [
+ { value: 1, label: "Recognition" },
+ { value: 2, label: "Problem Ownership" },
+ { value: 3, label: "Solution Curiosity" },
+ { value: 4, label: "Offer Curiosity" },
+ { value: 5, label: "Purchase Movement" },
+];
+
+// Read-only reporting surface. Trends + distribution populate once signals are
+// confirmed in the Signal Inbox; no confirmed data exists yet, so this is an
+// intentional placeholder rather than a live chart.
+function BuyerSignalsPanel() {
+ const cardStyle = {
+ background: "var(--cth-command-panel)",
+ border: "1px solid var(--cth-command-border)",
+ borderRadius: 4,
+ padding: "20px",
+ };
+ return (
+ <div className="px-4 py-5 md:px-7">
+ <div
+ className="mb-4 rounded-xl px-4 py-3 text-xs"
+ style={{
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-border)",
+ color: "var(--cth-command-muted)",
+ }}
+ >
+ Read-only reporting. Signal trends and level distribution populate here once
+ you confirm signals in the Signal Inbox.
+ </div>
+
+ <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+ <div style={cardStyle}>
+ <div className="mb-3 flex items-center gap-2">
+ <TrendingUp size={16} style={{ color: "var(--cth-command-crimson)" }} />
+ <h3 className="text-sm font-semibold cth-heading">Signal Trends</h3>
+ </div>
+ <EmptyChart text="No confirmed signals yet. Trends over time will appear here." />
+ </div>
+
+ <div style={cardStyle}>
+ <div className="mb-3 flex items-center gap-2">
+ <Radar size={16} style={{ color: "var(--cth-command-purple)" }} />
+ <h3 className="text-sm font-semibold cth-heading">Level Distribution</h3>
+ </div>
+ <div className="space-y-2">
+ {SIGNAL_LEVELS.map((lvl) => (
+ <div key={lvl.value} className="flex items-center gap-3">
+ <div className="w-40 shrink-0 text-xs cth-muted">
+ {lvl.value} · {lvl.label}
+ </div>
+ <div
+ className="h-2 flex-1 rounded-full"
+ style={{ background: "var(--cth-command-panel-soft)" }}
+ />
+ <div className="w-8 shrink-0 text-right text-xs cth-muted">0</div>
+ </div>
+ ))}
+ </div>
+ <p className="mt-3 text-xs cth-muted">
+ Counts reflect confirmed signals by level. All zero until the first
+ confirmation lands.
+ </p>
+ </div>
+ </div>
+ </div>
+ );
+}
+
 export default function Analytics() {
  const colors = useColors();
  const { plan } = usePlan();
@@ -282,6 +403,7 @@ export default function Analytics() {
 
  const [loading, setLoading] = useState(true);
  const [pageError, setPageError] = useState("");
+ const [activeTab, setActiveTab] = useState("overview");
 
  const [overview, setOverview] = useState(null);
  const [brandProgress, setBrandProgress] = useState([]);
@@ -439,7 +561,13 @@ export default function Analytics() {
  subtitle="Track your brand system, content usage, and momentum over time."
  />
 
- <div className="px-4 py-5 md:px-7">
+ <div className="px-4 pt-5 md:px-7">
+ <AnalyticsTabBar value={activeTab} onChange={setActiveTab} />
+ </div>
+
+ {activeTab === "buyerSignals" ? <BuyerSignalsPanel /> : null}
+
+ <div className="px-4 py-5 md:px-7" style={{ display: activeTab === "overview" ? undefined : "none" }}>
  {pageError ? (
  <div
  className="mb-4 rounded-xl px-4 py-3 text-sm"

@@ -29,6 +29,7 @@ import {
   Wand2,
     UsersRound,
   Map,
+  Radar,
 } from "lucide-react";
 
 export const APP_ROUTES = [
@@ -185,6 +186,16 @@ export const APP_ROUTES = [
     requiredPlan: "structure",
     gateType: "page",
     tooltip: "Build SOPs, workflows, and operational systems.",
+  },
+    {
+    path: "/signal-inbox",
+    label: "Signal Inbox",
+    icon: Radar,
+    group: "systems",
+    requiredPlan: "structure",
+    gateType: "page",
+    tooltip: "Read, confirm, and dismiss pending buyer signals as they come in.",
+    lockedTooltip: "Upgrade to Structure to unlock the Signal Inbox.",
   },
     {
     path: "/customer-journey",

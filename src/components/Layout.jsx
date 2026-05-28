@@ -66,6 +66,7 @@ import {
   X,
   Database,
   MessageCircle,
+  Radar,
 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 
@@ -399,6 +400,7 @@ export function Sidebar() {
         id: "systems",
         label: "SYSTEMS",
         items: [
+          { path: "/signal-inbox", label: "Signal Inbox", icon: Radar },
           ...(isAdmin
             ? [{ path: "/automations", label: "Automations", icon: Workflow }]
             : []),

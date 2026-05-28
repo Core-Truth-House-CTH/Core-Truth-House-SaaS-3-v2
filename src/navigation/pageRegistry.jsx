@@ -15,6 +15,7 @@ const AvatarEditor = lazy(() => import("../pages/AvatarEditor"));
 const BrandHealthDashboard = lazy(() => import("../pages/BrandHealthDashboard"));
 const StrategicOS = lazy(() => import("../pages/StrategicOS"));
 const SystemsBuilder = lazy(() => import("../pages/SystemsBuilder"));
+const SignalInbox = lazy(() => import("../pages/SignalInbox"));
 const CustomerJourney = lazy(() => import("../pages/CustomerJourney"));
 const Analytics = lazy(() => import("../pages/Analytics"));
 const BlogCMS = lazy(() => import("../pages/BlogCMS"));
@@ -65,6 +66,7 @@ const pageRegistry = {
 
   "/strategic-os": StrategicOS,
   "/systems-builder": SystemsBuilder,
+  "/signal-inbox": SignalInbox,
   "/customer-journey": CustomerJourney,
 
   "/content-studio": ContentStudio,

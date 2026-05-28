@@ -79,6 +79,14 @@ export const API_PATHS = {
     report: buildPath.bind(null, "/api/analytics/report"),
   },
 
+  buyerSignals: {
+    meta: "/api/buyer-signals/meta",
+    inbox: (query) => buildPath("/api/buyer-signals/inbox", query || {}),
+    list: (query) => buildPath("/api/buyer-signals/", query || {}),
+    create: "/api/buyer-signals/",
+    byId: (signalId) => `/api/buyer-signals/${encode(signalId)}`,
+  },
+
   workspace: {
     stats: (workspaceId) => `/api/workspace/${encode(workspaceId)}/stats`,
     detail: (workspaceId) => `/api/workspace/${encode(workspaceId)}`,
