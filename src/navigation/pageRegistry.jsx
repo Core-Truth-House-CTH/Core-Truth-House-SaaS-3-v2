@@ -40,6 +40,7 @@ const PromptGenerator = lazy(() => import("../pages/PromptGenerator"));
 const BrandStudio = lazy(() => import("../pages/BrandStudio"));
 const Automations = lazy(() => import("../pages/Automations"));
 const Integrations = lazy(() => import("../pages/Integrations"));
+const Members = lazy(() => import("../pages/Members"));
 
 const FirstCampaign = CampaignBuilder;
 
@@ -98,7 +99,7 @@ const pageRegistry = {
   "/media-assets": makePlaceholder("Media Assets"),
   "/saved-reports": makePlaceholder("Saved Reports"),
   "/workspace-controls": makePlaceholder("Workspace Controls"),
-  "/members": makePlaceholder("Members"),
+  "/members": Members,
   "/help-desk": makePlaceholder("Help Desk"),
   "/knowledge-base": makePlaceholder("Knowledge Base"),
   "/release-notes": makePlaceholder("Release Notes"),
