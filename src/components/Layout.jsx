@@ -411,8 +411,7 @@ export function Sidebar() {
         id: "workspace",
         label: "WORKSPACE",
         items: [
-          { path: "/documents", label: "Documents", icon: FolderOpen },
-          { path: "/media-assets", label: "Media Assets", icon: Image },
+          { path: "/workspace-library", label: "Workspace Library", icon: FolderOpen },
           { path: "/saved-reports", label: "Saved Reports", icon: BarChart2 },
           { path: "/workspace-controls", label: "Workspace Controls", icon: Settings },
           { path: "/billing", label: "Plan & Billing", icon: CreditCard },
