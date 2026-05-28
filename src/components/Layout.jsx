@@ -401,7 +401,9 @@ export function Sidebar() {
         id: "systems",
         label: "SYSTEMS",
         items: [
-          { path: "/automations", label: "Automations", icon: Workflow },
+          ...(isAdmin
+            ? [{ path: "/automations", label: "Automations", icon: Workflow }]
+            : []),
           { path: "/tracking-links", label: "Tracking Links", icon: Share2 },
           { path: "/integrations", label: "Integrations", icon: Globe },
         ],
