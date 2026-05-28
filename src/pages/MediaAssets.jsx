@@ -105,14 +105,6 @@ function extensionOf(filename) {
   return idx >= 0 ? raw.slice(idx + 1).toLowerCase() : "";
 }
 
-function resolvePreviewUrl(asset) {
-  const raw = String(asset?.preview_url || "");
-  if (!raw) return "";
-  if (/^https?:\/\//i.test(raw)) return raw;
-  if (typeof apiClient.buildApiUrl === "function") return apiClient.buildApiUrl(raw);
-  return raw;
-}
-
 function useAuthedBlobUrl(path) {
   const [blobUrl, setBlobUrl] = useState("");
 
@@ -538,26 +530,58 @@ export default function MediaAssets() {
     }
   }
 
-  function handleOpenAsset(asset) {
+  async function fetchAssetBlobUrl(asset) {
+    const raw = String(asset?.preview_url || "");
+    if (!raw) return "";
+    const fullUrl = typeof apiClient.buildApiUrl === "function"
+      ? apiClient.buildApiUrl(raw)
+      : raw;
+    const headers = typeof apiClient.getAuthHeaders === "function"
+      ? await apiClient.getAuthHeaders()
+      : {};
+    const response = await fetch(fullUrl, {
+      method: "GET",
+      headers,
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const blob = await response.blob();
+    return window.URL.createObjectURL(blob);
+  }
+
+  async function handleOpenAsset(asset) {
     if (assetType(asset) === "image") {
       setPreviewAsset(asset);
-    } else {
-      const url = resolvePreviewUrl(asset);
-      if (url) window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    setError("");
+    try {
+      const objectUrl = await fetchAssetBlobUrl(asset);
+      if (!objectUrl) return;
+      window.open(objectUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => window.URL.revokeObjectURL(objectUrl), 60_000);
+    } catch (err) {
+      console.error("Open asset failed", err);
+      setError(err?.message || "Could not open this asset.");
     }
   }
 
-  function handleDownload(asset) {
-    const url = resolvePreviewUrl(asset);
-    if (!url) return;
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = asset.filename || "download";
-    anchor.target = "_blank";
-    anchor.rel = "noopener noreferrer";
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
+  async function handleDownload(asset) {
+    setError("");
+    try {
+      const objectUrl = await fetchAssetBlobUrl(asset);
+      if (!objectUrl) return;
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = asset.filename || "download";
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      window.URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error("Download failed", err);
+      setError(err?.message || "Could not download this asset.");
+    }
   }
 
   async function handleDelete(asset) {
