@@ -39,6 +39,7 @@ const PromptHub = lazy(() => import("../pages/PromptHub"));
 const PromptGenerator = lazy(() => import("../pages/PromptGenerator"));
 const BrandStudio = lazy(() => import("../pages/BrandStudio"));
 const Automations = lazy(() => import("../pages/Automations"));
+const Integrations = lazy(() => import("../pages/Integrations"));
 
 const FirstCampaign = CampaignBuilder;
 
@@ -93,7 +94,7 @@ const pageRegistry = {
 
   "/automations": Automations,
   "/tracking-links": makePlaceholder("Tracking Links"),
-  "/integrations": makePlaceholder("Integrations"),
+  "/integrations": Integrations,
   "/media-assets": makePlaceholder("Media Assets"),
   "/saved-reports": makePlaceholder("Saved Reports"),
   "/workspace-controls": makePlaceholder("Workspace Controls"),
