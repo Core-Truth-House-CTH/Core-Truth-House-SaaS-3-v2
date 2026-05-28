@@ -459,7 +459,7 @@ export function Sidebar() {
 
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-30 md:hidden p-2 rounded-lg bg-[var(--cth-admin-panel)] border border-[var(--cth-admin-border)] text-[var(--cth-admin-ink)]"
+        className="fixed top-4 left-4 z-30 md:hidden p-2 rounded-lg bg-[var(--cth-command-ivory)] border border-[var(--cth-command-border)] text-[var(--cth-command-ink)]"
         data-testid="mobile-menu-btn"
       >
         <Menu size={20} />
@@ -472,8 +472,8 @@ export function Sidebar() {
           mobileOpen ? "fixed left-0 top-0 z-50 w-[240px]" : "hidden md:flex"
         } ${isHoverOverlay ? "absolute left-0 top-0 z-40 shadow-2xl" : "md:relative md:flex"}`}
         style={{
-          background: "linear-gradient(180deg, var(--cth-admin-sidebar-start), var(--cth-admin-sidebar-end))",
-          borderColor: "var(--cth-admin-border-dark)",
+          background: "linear-gradient(180deg, var(--cth-command-ink), var(--cth-command-night))",
+          borderColor: "var(--cth-command-ink)",
         }}
         data-testid="sidebar"
       >
@@ -493,10 +493,10 @@ export function Sidebar() {
             />
             {showLabels && (
               <div className="min-w-0">
-                <p className="font-bold text-[13px] leading-tight truncate tracking-[0.01em]" style={{ color: "var(--cth-admin-panel)" }}>
+                <p className="font-bold text-[13px] leading-tight truncate tracking-[0.01em]" style={{ color: "var(--cth-command-ivory)" }}>
                   Core Truth House
                 </p>
-                <p className="text-[10px] uppercase tracking-[0.18em]" style={{ color: "var(--cth-admin-tuscany)" }}>
+                <p className="text-[10px] uppercase tracking-[0.18em]" style={{ color: "var(--cth-command-border)" }}>
                   Brand OS
                 </p>
               </div>
@@ -508,7 +508,7 @@ export function Sidebar() {
               onClick={() =>
                 mobileOpen ? setMobileOpen(false) : (setSidebarCollapsed(!sidebarCollapsed), setHoverExpanded(false))
               }
-              className="hidden rounded-xl border border-[rgba(199,160,157,0.16)] bg-[rgba(248,244,242,0.05)] p-2 text-[var(--cth-admin-tuscany)] transition-colors md:flex hover:bg-[rgba(248,244,242,0.10)]" style={{ color: "var(--cth-admin-tuscany)" }}
+              className="hidden rounded-xl border border-[rgba(199,160,157,0.16)] bg-[rgba(248,244,242,0.05)] p-2 text-[var(--cth-command-border)] transition-colors md:flex hover:bg-[rgba(248,244,242,0.10)]" style={{ color: "var(--cth-command-border)" }}
               data-testid="sidebar-collapse-btn"
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -520,7 +520,7 @@ export function Sidebar() {
         {sidebarCollapsed && !mobileOpen && (
           <button
             onClick={() => setSidebarCollapsed(false)}
-            className="mx-auto my-2 rounded-xl border border-[rgba(199,160,157,0.16)] bg-[rgba(248,244,242,0.05)] p-2 text-[var(--cth-admin-tuscany)] transition-colors hover:bg-[rgba(248,244,242,0.10)]" style={{ color: "var(--cth-admin-tuscany)" }}
+            className="mx-auto my-2 rounded-xl border border-[rgba(199,160,157,0.16)] bg-[rgba(248,244,242,0.05)] p-2 text-[var(--cth-command-border)] transition-colors hover:bg-[rgba(248,244,242,0.10)]" style={{ color: "var(--cth-command-border)" }}
             data-testid="sidebar-expand-btn"
             title="Expand sidebar"
           >
@@ -549,9 +549,9 @@ export function Sidebar() {
                       {group.label}
                     </span>
                     {isGroupCollapsed ? (
-                      <ChevronRight size={10} style={{ color: "var(--cth-admin-tuscany)" }} />
+                      <ChevronRight size={10} style={{ color: "var(--cth-command-border)" }} />
                     ) : (
-                      <ChevronDown size={10} style={{ color: "var(--cth-admin-tuscany)" }} />
+                      <ChevronDown size={10} style={{ color: "var(--cth-command-border)" }} />
                     )}
                   </button>
                 )}
@@ -639,7 +639,7 @@ export function Sidebar() {
                               />
                               <span className="flex-1 truncate">{item.label}</span>
                               {item.badge && (
-                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--cth-admin-accent)]/20 text-white border border-[var(--cth-admin-accent)]/20 flex-shrink-0">
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--cth-command-cinnabar)]/20 text-white border border-[var(--cth-command-cinnabar)]/20 flex-shrink-0">
                                   {item.badge}
                                 </span>
                               )}

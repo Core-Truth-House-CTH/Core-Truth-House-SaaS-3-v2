@@ -75,7 +75,7 @@ export default function Chatbot() {
           isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
         }`}
         style={{ 
-          background: 'var(--cth-admin-accent)',
+          background: 'var(--cth-command-cinnabar)',
           boxShadow: '0 8px 32px rgba(224,78,53,0.28)'
         }}
         data-testid="chatbot-trigger"
@@ -91,8 +91,8 @@ export default function Chatbot() {
             : 'scale-95 opacity-0 translate-y-4 pointer-events-none'
         }`}
         style={{ 
-          background: 'var(--cth-admin-panel)',
-          border: '1px solid var(--cth-admin-border)',
+          background: 'var(--cth-command-ivory)',
+          border: '1px solid var(--cth-command-border)',
           boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
           maxHeight: 'calc(100vh - 120px)'
         }}
@@ -102,7 +102,7 @@ export default function Chatbot() {
         <div 
           className="px-4 py-3 flex items-center justify-between"
           style={{ 
-            background: 'var(--cth-admin-accent)',
+            background: 'var(--cth-command-cinnabar)',
           }}
         >
           <div className="flex items-center gap-3">
@@ -119,7 +119,7 @@ export default function Chatbot() {
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-[var(--cth-admin-panel-alt)] transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[var(--cth-command-panel-soft)] transition-colors"
           >
             <X className="w-5 h-5 cth-heading" />
           </button>
@@ -139,8 +139,8 @@ export default function Chatbot() {
                 <div 
                   className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
                     msg.role === 'user' 
-                      ? 'bg-[color-mix(in_srgb,var(--cth-admin-accent)_18%,transparent)]' 
-                      : 'bg-[color-mix(in_srgb,var(--cth-admin-ruby)_18%,transparent)]'
+                      ? 'bg-[color-mix(in_srgb,var(--cth-command-cinnabar)_18%,transparent)]' 
+                      : 'bg-[color-mix(in_srgb,var(--cth-command-purple)_18%,transparent)]'
                   }`}
                 >
                   {msg.role === 'user' 
@@ -152,7 +152,7 @@ export default function Chatbot() {
                   className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'cth-button-primary rounded-tr-sm'
-                      : 'cth-card-muted cth-muted rounded-tl-sm border border-[var(--cth-admin-border)]'
+                      : 'cth-card-muted cth-muted rounded-tl-sm border border-[var(--cth-command-border)]'
                   }`}
                 >
                   {msg.content}
@@ -162,14 +162,14 @@ export default function Chatbot() {
             
             {loading && (
               <div className="flex gap-2">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--cth-admin-ruby) 18%, transparent)' }}>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--cth-command-purple) 18%, transparent)' }}>
                   <Sparkles className="w-3.5 h-3.5 cth-muted" />
                 </div>
-                <div className="cth-card-muted border border-[var(--cth-admin-border)] p-3 rounded-2xl rounded-tl-sm">
+                <div className="cth-card-muted border border-[var(--cth-command-border)] p-3 rounded-2xl rounded-tl-sm">
                   <div className="flex gap-1">
-                    <span className="w-2 h-2 rounded-full bg-[var(--cth-admin-accent)] animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-[var(--cth-admin-accent)] animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-[var(--cth-admin-accent)] animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-[var(--cth-command-cinnabar)] animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-[var(--cth-command-cinnabar)] animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-[var(--cth-command-cinnabar)] animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function Chatbot() {
         )}
 
         {/* Input */}
-        <div className="p-3 border-t border-[var(--cth-admin-border)]">
+        <div className="p-3 border-t border-[var(--cth-command-border)]">
           <div className="flex gap-2">
             <input
               type="text"
@@ -215,7 +215,7 @@ export default function Chatbot() {
               disabled={!input.trim() || loading}
               className="w-10 h-10 rounded-xl flex items-center justify-center transition-all disabled:opacity-50"
               style={{ 
-                background: input.trim() && !loading ? 'var(--cth-admin-accent)' : 'var(--cth-admin-panel-alt)',
+                background: input.trim() && !loading ? 'var(--cth-command-cinnabar)' : 'var(--cth-command-panel-soft)',
                 cursor: input.trim() && !loading ? 'pointer' : 'not-allowed'
               }}
             >

@@ -18,8 +18,8 @@ function WallLoading() {
     <div
       style={{
         minHeight: "100vh",
-        background: "var(--cth-admin-bg, #efe7e3)",
-        color: "var(--cth-admin-ink, #2b1040)",
+        background: "var(--cth-command-blush, #efe7e3)",
+        color: "var(--cth-command-ink, #2b1040)",
         padding: "48px 24px",
         fontFamily: '"DM Sans", system-ui, sans-serif',
       }}

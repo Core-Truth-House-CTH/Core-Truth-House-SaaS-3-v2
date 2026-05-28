@@ -24,24 +24,24 @@ function toApiUrl(url) {
 // ─────────────────────────────────────────────────────────────
 
 const C = {
-  bg:      'var(--cth-admin-bg)',
-  card:    'var(--cth-admin-panel)',
-  cardHov: 'var(--cth-admin-panel-alt)',
-  panel:   'var(--cth-admin-panel)',
-  border:  'var(--cth-admin-border)',
+  bg:      'var(--cth-command-blush)',
+  card:    'var(--cth-command-ivory)',
+  cardHov: 'var(--cth-command-panel-soft)',
+  panel:   'var(--cth-command-ivory)',
+  border:  'var(--cth-command-border)',
   borderA: 'rgba(224,78,53,0.35)',
-  accent:  'var(--cth-admin-accent)',
-  purple:  'var(--cth-admin-ruby)',
-  white:   'var(--cth-admin-ink)',
-  t70:     'var(--cth-admin-ink)',
-  t60:     'var(--cth-admin-ink-soft)',
-  t50:     'var(--cth-admin-ink-soft)',
-  t40:     'var(--cth-admin-muted)',
-  t30:     'var(--cth-admin-muted)',
-  t25:     'var(--cth-admin-muted)',
-  t20:     'var(--cth-admin-muted)',
+  accent:  'var(--cth-command-cinnabar)',
+  purple:  'var(--cth-command-purple)',
+  white:   'var(--cth-command-ink)',
+  t70:     'var(--cth-command-ink)',
+  t60:     'var(--cth-command-muted)',
+  t50:     'var(--cth-command-muted)',
+  t40:     'var(--cth-command-muted)',
+  t30:     'var(--cth-command-muted)',
+  t25:     'var(--cth-command-muted)',
+  t20:     'var(--cth-command-muted)',
   t10:     'rgba(43,16,64,0.08)',
-  t08:     'var(--cth-admin-panel-alt)',
+  t08:     'var(--cth-command-panel-soft)',
   green:   'var(--cth-success)',
   red:     'var(--cth-danger)',
   font:    "'DM Sans', sans-serif",
@@ -361,8 +361,8 @@ export function AITwinUpload({ photos = [], onChange, workspaceId = '', userId =
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {count > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: isReady ? C.green : 'var(--cth-status-warning)' }} />
-              <span style={{ fontSize: 10, color: isReady ? C.green : 'var(--cth-status-warning)', fontFamily: C.font }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: isReady ? C.green : 'var(--cth-command-warning)' }} />
+              <span style={{ fontSize: 10, color: isReady ? C.green : 'var(--cth-command-warning)', fontFamily: C.font }}>
                 {count}/{MAX_PHOTOS} {isReady ? '— ready' : `— need ${MIN_PHOTOS - count} more`}
               </span>
             </div>

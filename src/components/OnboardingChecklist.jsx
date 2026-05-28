@@ -88,17 +88,17 @@ function WelcomeModal({ userFirstName, onStart, onDismiss }) {
       onClick={(e) => e.target === e.currentTarget && onDismiss()}
     >
       <div style={{ width: '100%', maxWidth: 480, borderRadius: 24, overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.7)', background: 'var(--cth-surface-deep)', border: '1px solid var(--cth-brand-primary-soft)' }}>
-        <div style={{ height: 4, background: 'linear-gradient(90deg, var(--cth-brand-primary), var(--cth-admin-accent), var(--cth-admin-muted))' }} />
+        <div style={{ height: 4, background: 'linear-gradient(90deg, var(--cth-brand-primary), var(--cth-command-cinnabar), var(--cth-command-muted))' }} />
         <div style={{ padding: 32 }}>
           {/* Badge */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 99, background: 'var(--cth-brand-primary-soft)', border: '1px solid var(--cth-brand-primary-deep)', marginBottom: 24 }}>
-            <Sparkles size={13} style={{ color: 'var(--cth-admin-accent)' }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cth-admin-muted)' }}>Quick Start</span>
+            <Sparkles size={13} style={{ color: 'var(--cth-command-cinnabar)' }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cth-command-muted)' }}>Quick Start</span>
           </div>
 
           <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--cth-on-dark)', marginBottom: 12, fontFamily: "'Playfair Display', Georgia, serif", lineHeight: 1.25 }}>
             Welcome to Core Truth House,{' '}
-            <span style={{ color: 'var(--cth-admin-accent)' }}>{userFirstName}.</span>
+            <span style={{ color: 'var(--cth-command-cinnabar)' }}>{userFirstName}.</span>
           </h1>
           <p style={{ fontSize: 14, color: 'rgba(248,245,250,0.6)', marginBottom: 28, lineHeight: 1.7 }}>
             Your brand house is open. Your Quick Start gets you from setup to your first published content in 30 minutes.
@@ -106,7 +106,7 @@ function WelcomeModal({ userFirstName, onStart, onDismiss }) {
 
           {/* 30-day goals */}
           <div style={{ borderRadius: 16, padding: 20, marginBottom: 24, background: 'var(--cth-surface-raised)', border: '1px solid var(--cth-brand-primary-soft)' }}>
-            <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cth-admin-accent)', marginBottom: 14 }}>Your 30-Day Goals</p>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cth-command-cinnabar)', marginBottom: 14 }}>Your 30-Day Goals</p>
             {[
               'Brand Foundation completed',
               'Offer documented in Offer Builder',
@@ -114,7 +114,7 @@ function WelcomeModal({ userFirstName, onStart, onDismiss }) {
               'Content Calendar populated for the month',
             ].map((goal) => (
               <div key={goal} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--cth-admin-accent)', flexShrink: 0 }} />
+                <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--cth-command-cinnabar)', flexShrink: 0 }} />
                 <span style={{ fontSize: 13, color: 'rgba(248,245,250,0.7)' }}>{goal}</span>
               </div>
             ))}
@@ -122,7 +122,7 @@ function WelcomeModal({ userFirstName, onStart, onDismiss }) {
 
           {/* Time */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, borderRadius: 12, padding: '12px 18px', background: 'var(--cth-surface-raised-strong)', border: '1px solid var(--cth-brand-primary-soft)', marginBottom: 28 }}>
-            <span style={{ fontSize: 24, fontWeight: 800, color: 'var(--cth-admin-accent)' }}>30</span>
+            <span style={{ fontSize: 24, fontWeight: 800, color: 'var(--cth-command-cinnabar)' }}>30</span>
             <div>
               <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--cth-on-dark)', margin: 0 }}>minutes to your first content</p>
               <p style={{ fontSize: 12, color: 'rgba(248,245,250,0.4)', margin: 0 }}>Five steps. One clear path.</p>
@@ -133,7 +133,7 @@ function WelcomeModal({ userFirstName, onStart, onDismiss }) {
             <button
               onClick={onStart}
               data-testid="onboarding-start-btn"
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px 20px', borderRadius: 12, fontWeight: 700, color: 'var(--cth-on-dark)', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, var(--cth-brand-primary), var(--cth-admin-accent))', fontSize: 14 }}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px 20px', borderRadius: 12, fontWeight: 700, color: 'var(--cth-on-dark)', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, var(--cth-brand-primary), var(--cth-command-cinnabar))', fontSize: 14 }}
             >
               Start Quick Start <ArrowRight size={16} />
             </button>
@@ -164,7 +164,7 @@ function StepModal({ steps, progress, currentIdx, onNext, onPrev, onGo, onDismis
       onClick={(e) => e.target === e.currentTarget && onDismiss()}
     >
       <div style={{ width: '100%', maxWidth: 480, borderRadius: 24, overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.7)', background: 'var(--cth-surface-deep)', border: '1px solid var(--cth-brand-primary-soft)' }}>
-        <div style={{ height: 4, background: 'linear-gradient(90deg, var(--cth-brand-primary), var(--cth-admin-accent), var(--cth-admin-muted))' }} />
+        <div style={{ height: 4, background: 'linear-gradient(90deg, var(--cth-brand-primary), var(--cth-command-cinnabar), var(--cth-command-muted))' }} />
 
         {/* Progress dots */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '20px 28px 8px' }}>
@@ -176,24 +176,24 @@ function StepModal({ steps, progress, currentIdx, onNext, onPrev, onGo, onDismis
                 borderRadius: 3,
                 transition: 'all 0.3s ease',
                 width: i === currentIdx ? 28 : 6,
-                background: progress[s.id] ? 'var(--cth-status-success)' : i === currentIdx ? 'var(--cth-admin-accent)' : 'var(--cth-brand-primary-soft)',
+                background: progress[s.id] ? 'var(--cth-command-success)' : i === currentIdx ? 'var(--cth-command-cinnabar)' : 'var(--cth-brand-primary-soft)',
               }}
             />
           ))}
-          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--cth-admin-muted)' }}>{currentIdx + 1} of {total}</span>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--cth-command-muted)' }}>{currentIdx + 1} of {total}</span>
         </div>
 
         <div style={{ padding: '16px 28px 28px' }}>
           {/* Icon + title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--cth-brand-primary-soft)', color: 'var(--cth-admin-accent)', flexShrink: 0 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--cth-brand-primary-soft)', color: 'var(--cth-command-cinnabar)', flexShrink: 0 }}>
               <Icon size={22} />
             </div>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--cth-admin-muted)', margin: 0 }}>Step {currentIdx + 1}</p>
+              <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--cth-command-muted)', margin: 0 }}>Step {currentIdx + 1}</p>
               <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--cth-on-dark)', margin: 0, lineHeight: 1.25 }}>{step.title}</h2>
             </div>
-            {done && <CheckCircle2 size={18} style={{ color: 'var(--cth-status-success)', marginLeft: 'auto', flexShrink: 0 }} />}
+            {done && <CheckCircle2 size={18} style={{ color: 'var(--cth-command-success)', marginLeft: 'auto', flexShrink: 0 }} />}
           </div>
 
           {/* Description */}
@@ -201,18 +201,18 @@ function StepModal({ steps, progress, currentIdx, onNext, onPrev, onGo, onDismis
 
           {/* Tip */}
           <div style={{ borderRadius: 12, padding: '12px 16px', marginBottom: 18, background: 'var(--cth-surface-raised)', border: '1px solid var(--cth-brand-primary-deep)' }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--cth-admin-accent)', margin: '0 0 6px' }}>TIP</p>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--cth-command-cinnabar)', margin: '0 0 6px' }}>TIP</p>
             <p style={{ fontSize: 12, color: 'rgba(248,245,250,0.6)', lineHeight: 1.65, margin: 0 }}>{step.tip}</p>
           </div>
 
           {/* Meta */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 22 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cth-admin-accent)' }} />
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cth-command-cinnabar)' }} />
               <span style={{ fontSize: 12, color: 'rgba(248,245,250,0.5)' }}>{step.minutesEstimate} min</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={13} style={{ color: 'var(--cth-status-success)' }} />
+              <CheckCircle2 size={13} style={{ color: 'var(--cth-command-success)' }} />
               <span style={{ fontSize: 12, color: 'rgba(248,245,250,0.5)' }}>{step.successCriteria}</span>
             </div>
           </div>
@@ -222,7 +222,7 @@ function StepModal({ steps, progress, currentIdx, onNext, onPrev, onGo, onDismis
             <button
               onClick={onPrev}
               disabled={currentIdx === 0}
-              style={{ padding: '12px', borderRadius: 12, border: '1px solid var(--cth-brand-primary-soft)', background: 'var(--cth-surface-raised)', color: 'var(--cth-admin-muted)', cursor: currentIdx === 0 ? 'not-allowed' : 'pointer', opacity: currentIdx === 0 ? 0.3 : 1, display: 'flex', alignItems: 'center' }}
+              style={{ padding: '12px', borderRadius: 12, border: '1px solid var(--cth-brand-primary-soft)', background: 'var(--cth-surface-raised)', color: 'var(--cth-command-muted)', cursor: currentIdx === 0 ? 'not-allowed' : 'pointer', opacity: currentIdx === 0 ? 0.3 : 1, display: 'flex', alignItems: 'center' }}
             >
               <ChevronLeft size={20} />
             </button>
@@ -232,18 +232,18 @@ function StepModal({ steps, progress, currentIdx, onNext, onPrev, onGo, onDismis
               data-testid={`onboarding-step-${step.id}-btn`}
               style={{
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                padding: '12px 16px', borderRadius: 12, fontWeight: 700, fontSize: 13, cursor: 'pointer', border: done ? '1px solid var(--cth-status-success)' : 'none',
-                background: done ? 'color-mix(in srgb, var(--cth-status-success) 55%, var(--cth-surface-night))' : 'linear-gradient(135deg, var(--cth-brand-primary), var(--cth-admin-accent))',
-                color: done ? 'color-mix(in srgb, var(--cth-status-success-bright) 70%, white)' : 'var(--cth-white)',
+                padding: '12px 16px', borderRadius: 12, fontWeight: 700, fontSize: 13, cursor: 'pointer', border: done ? '1px solid var(--cth-command-success)' : 'none',
+                background: done ? 'color-mix(in srgb, var(--cth-command-success) 55%, var(--cth-surface-night))' : 'linear-gradient(135deg, var(--cth-brand-primary), var(--cth-command-cinnabar))',
+                color: done ? 'color-mix(in srgb, var(--cth-command-success) 70%, white)' : 'var(--cth-white)',
               }}
             >
-              {done ? <><CheckCircle2 size={15} style={{ color: 'var(--cth-status-success)' }} /> Complete — Review Again</> : <>{step.cta} <ArrowRight size={15} /></>}
+              {done ? <><CheckCircle2 size={15} style={{ color: 'var(--cth-command-success)' }} /> Complete — Review Again</> : <>{step.cta} <ArrowRight size={15} /></>}
             </button>
 
             <button
               onClick={onNext}
               disabled={currentIdx === total - 1}
-              style={{ padding: '12px', borderRadius: 12, border: '1px solid var(--cth-brand-primary-soft)', background: 'var(--cth-surface-raised)', color: 'var(--cth-admin-muted)', cursor: currentIdx === total - 1 ? 'not-allowed' : 'pointer', opacity: currentIdx === total - 1 ? 0.3 : 1, display: 'flex', alignItems: 'center' }}
+              style={{ padding: '12px', borderRadius: 12, border: '1px solid var(--cth-brand-primary-soft)', background: 'var(--cth-surface-raised)', color: 'var(--cth-command-muted)', cursor: currentIdx === total - 1 ? 'not-allowed' : 'pointer', opacity: currentIdx === total - 1 ? 0.3 : 1, display: 'flex', alignItems: 'center' }}
             >
               <ChevronRight size={20} />
             </button>
@@ -350,7 +350,7 @@ export function OnboardingChecklist({ metrics, upcomingEvents, userFirstName, us
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: 'var(--cth-surface-strong)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Trophy size={16} style={{ color: 'var(--cth-admin-accent)' }} />
+                <Trophy size={16} style={{ color: 'var(--cth-command-cinnabar)' }} />
                 <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--cth-on-dark)' }}>Your Quick Start</span>
               </div>
               <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(248,245,250,0.5)', display: 'flex' }}>
@@ -362,10 +362,10 @@ export function OnboardingChecklist({ metrics, upcomingEvents, userFirstName, us
             <div style={{ padding: '14px 18px 8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 11, color: 'rgba(248,245,250,0.5)' }}>{completed} of {total} complete</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cth-admin-accent)' }}>{pct}%</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cth-command-cinnabar)' }}>{pct}%</span>
               </div>
               <div style={{ height: 5, borderRadius: 3, background: 'var(--cth-brand-primary-soft)' }}>
-                <div style={{ height: '100%', borderRadius: 3, transition: 'width 0.5s ease', width: `${pct}%`, background: 'linear-gradient(90deg, var(--cth-brand-primary), var(--cth-admin-accent))' }} />
+                <div style={{ height: '100%', borderRadius: 3, transition: 'width 0.5s ease', width: `${pct}%`, background: 'linear-gradient(90deg, var(--cth-brand-primary), var(--cth-command-cinnabar))' }} />
               </div>
             </div>
 
@@ -395,8 +395,8 @@ export function OnboardingChecklist({ metrics, upcomingEvents, userFirstName, us
                   >
                     <div style={{ flexShrink: 0 }}>
                       {done
-                        ? <CheckCircle2 size={15} style={{ color: 'var(--cth-status-success)' }} />
-                        : <div style={{ width: 15, height: 15, borderRadius: '50%', border: '2px solid var(--cth-admin-accent)' }} />
+                        ? <CheckCircle2 size={15} style={{ color: 'var(--cth-command-success)' }} />
+                        : <div style={{ width: 15, height: 15, borderRadius: '50%', border: '2px solid var(--cth-command-cinnabar)' }} />
                       }
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -413,7 +413,7 @@ export function OnboardingChecklist({ metrics, upcomingEvents, userFirstName, us
             <div style={{ padding: '0 10px 12px' }}>
               <button
                 onClick={() => { setCurrentIdx(0); setShowStep(true); setOpen(false); }}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', borderRadius: 10, fontSize: 12, color: 'var(--cth-admin-muted)', background: 'var(--cth-surface-deep)', border: '1px solid var(--cth-brand-primary-soft)', cursor: 'pointer' }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', borderRadius: 10, fontSize: 12, color: 'var(--cth-command-muted)', background: 'var(--cth-surface-deep)', border: '1px solid var(--cth-brand-primary-soft)', cursor: 'pointer' }}
               >
                 <FileText size={12} />
                 View Step-by-Step Guide
@@ -434,9 +434,9 @@ export function OnboardingChecklist({ metrics, upcomingEvents, userFirstName, us
             onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(175,0,36,0.4)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.5)'; }}
           >
-            <Trophy size={15} style={{ color: 'var(--cth-admin-accent)' }} />
+            <Trophy size={15} style={{ color: 'var(--cth-command-cinnabar)' }} />
             <span>Quick Start</span>
-            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, fontWeight: 800, background: 'var(--cth-admin-accent)', color: 'var(--cth-on-dark)' }}>{pct}%</span>
+            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, fontWeight: 800, background: 'var(--cth-command-cinnabar)', color: 'var(--cth-on-dark)' }}>{pct}%</span>
           </button>
         )}
       </div>

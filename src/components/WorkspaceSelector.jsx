@@ -73,7 +73,7 @@ export function WorkspaceSelector() {
               width: 32,
               height: 32,
               borderRadius: 8,
-              background: activeWorkspace?.color_primary || "var(--cth-admin-accent)",
+              background: activeWorkspace?.color_primary || "var(--cth-command-cinnabar)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -88,7 +88,7 @@ export function WorkspaceSelector() {
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: "var(--cth-admin-panel)",
+                color: "var(--cth-command-ivory)",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -190,7 +190,7 @@ export function WorkspaceSelector() {
                           width: 28,
                           height: 28,
                           borderRadius: 6,
-                          background: ws.color_primary || "var(--cth-admin-accent)",
+                          background: ws.color_primary || "var(--cth-command-cinnabar)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -205,7 +205,7 @@ export function WorkspaceSelector() {
                           style={{
                             fontSize: 12,
                             fontWeight: isActive ? 700 : 500,
-                            color: "var(--cth-admin-panel)",
+                            color: "var(--cth-command-ivory)",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
@@ -231,7 +231,7 @@ export function WorkspaceSelector() {
                       {isActive && (
                         <Check
                           size={14}
-                          style={{ color: "var(--cth-admin-accent)" }}
+                          style={{ color: "var(--cth-command-cinnabar)" }}
                         />
                       )}
                     </div>
