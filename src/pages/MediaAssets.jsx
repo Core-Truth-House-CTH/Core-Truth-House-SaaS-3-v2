@@ -113,6 +113,57 @@ function resolvePreviewUrl(asset) {
   return raw;
 }
 
+function useAuthedBlobUrl(path) {
+  const [blobUrl, setBlobUrl] = useState("");
+
+  useEffect(() => {
+    if (!path) {
+      setBlobUrl("");
+      return undefined;
+    }
+    if (/^https?:\/\//i.test(path) && !path.includes("/api/")) {
+      setBlobUrl(path);
+      return undefined;
+    }
+
+    let cancelled = false;
+    let createdUrl = "";
+
+    (async () => {
+      try {
+        const fullUrl = typeof apiClient.buildApiUrl === "function"
+          ? apiClient.buildApiUrl(path)
+          : path;
+        const headers = typeof apiClient.getAuthHeaders === "function"
+          ? await apiClient.getAuthHeaders()
+          : {};
+        const response = await fetch(fullUrl, {
+          method: "GET",
+          headers,
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        if (cancelled) return;
+        createdUrl = window.URL.createObjectURL(blob);
+        setBlobUrl(createdUrl);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to load authed preview:", err);
+          setBlobUrl("");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (createdUrl) window.URL.revokeObjectURL(createdUrl);
+    };
+  }, [path]);
+
+  return blobUrl;
+}
+
 // =========================================================
 // Sub-components
 // =========================================================
@@ -170,17 +221,27 @@ function TypeChip({ type, extension }) {
   );
 }
 
-function AssetThumb({ asset, type, url }) {
-  if (type === "image" && url) {
+function AssetThumb({ asset, type }) {
+  const imagePath = type === "image" ? String(asset?.preview_url || "") : "";
+  const blobUrl = useAuthedBlobUrl(imagePath);
+
+  if (type === "image") {
+    if (blobUrl) {
+      return (
+        <img
+          src={blobUrl}
+          alt={asset.label || asset.filename || "Asset"}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      );
+    }
     return (
-      <img
-        src={url}
-        alt={asset.label || asset.filename || "Asset"}
-        className="absolute inset-0 h-full w-full object-cover"
-        loading="lazy"
-      />
+      <div className="absolute inset-0 grid place-items-center">
+        <Loader2 size={20} className="animate-spin" style={{ color: TYPE_CHIP_COLORS.image }} />
+      </div>
     );
   }
+
   const Icon = type === "document" ? FileText : type === "font" ? Type : FileIcon;
   const iconColor = TYPE_CHIP_COLORS[type] || TYPE_CHIP_COLORS.other;
   return (
@@ -201,7 +262,6 @@ function AssetCard({
   onCategoryChange,
 }) {
   const type = assetType(asset);
-  const url = resolvePreviewUrl(asset);
   const ext = extensionOf(asset.filename);
   const displayLabel = asset.label || asset.filename || "Untitled";
 
@@ -216,7 +276,7 @@ function AssetCard({
         className="group relative block aspect-square w-full overflow-hidden"
         style={{ background: "var(--cth-command-blush)", borderBottom: "1px solid var(--cth-command-border)" }}
       >
-        <AssetThumb asset={asset} type={type} url={url} />
+        <AssetThumb asset={asset} type={type} />
         <div
           className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-1 p-1.5 opacity-0 transition-opacity group-hover:opacity-100"
           style={{ background: "linear-gradient(180deg, transparent 0%, rgba(13,0,16,0.55) 100%)" }}
@@ -332,7 +392,7 @@ function UploadModal({ file, category, saving, error, onCategoryChange, onCancel
 }
 
 function ImagePreviewModal({ asset, onClose, onDownload }) {
-  const url = resolvePreviewUrl(asset);
+  const blobUrl = useAuthedBlobUrl(String(asset?.preview_url || ""));
   return (
     <div className="fixed inset-0 z-[1200] flex flex-col items-center justify-center p-4"
       style={{ background: "rgba(13,0,16,0.85)" }} onClick={onClose}>
@@ -347,12 +407,16 @@ function ImagePreviewModal({ asset, onClose, onDownload }) {
           <X size={14} />
         </button>
       </div>
-      <img
-        src={url}
-        alt={asset.label || asset.filename || "Asset"}
-        className="max-h-[85vh] max-w-[90vw] object-contain"
-        onClick={(e) => e.stopPropagation()}
-      />
+      {blobUrl ? (
+        <img
+          src={blobUrl}
+          alt={asset.label || asset.filename || "Asset"}
+          className="max-h-[85vh] max-w-[90vw] object-contain"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ) : (
+        <Loader2 size={28} className="animate-spin" style={{ color: "var(--cth-command-panel)" }} />
+      )}
       <p className="mt-3 text-xs" style={{ color: "var(--cth-command-panel)" }}>
         {asset.label || asset.filename}
       </p>
