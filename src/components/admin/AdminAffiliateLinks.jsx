@@ -187,7 +187,7 @@ export function AdminAffiliateLinks({ affiliateLinks = [], fetchAffiliateLinks, 
             resetMessages();
             setShowForm((prev) => !prev);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--cth-admin-accent)] rounded-xl text-white text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--cth-command-cinnabar)] rounded-xl text-white text-sm font-medium"
         >
           <Plus size={16} /> {showForm ? 'Close' : 'Add Link'}
         </button>
@@ -207,7 +207,7 @@ export function AdminAffiliateLinks({ affiliateLinks = [], fetchAffiliateLinks, 
 
       {showForm && (
         <div
-          className="p-5 rounded-2xl border border-[var(--cth-admin-accent)]/30 space-y-4"
+          className="p-5 rounded-2xl border border-[var(--cth-command-cinnabar)]/30 space-y-4"
           style={{ background: colors.darker }}
         >
           <div className="grid md:grid-cols-2 gap-4">
@@ -326,7 +326,7 @@ export function AdminAffiliateLinks({ affiliateLinks = [], fetchAffiliateLinks, 
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 bg-[var(--cth-admin-accent)] rounded-lg text-white text-sm font-medium flex items-center gap-2 disabled:opacity-60"
+              className="px-4 py-2 bg-[var(--cth-command-cinnabar)] rounded-lg text-white text-sm font-medium flex items-center gap-2 disabled:opacity-60"
             >
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
               {saving ? 'Saving...' : 'Save'}

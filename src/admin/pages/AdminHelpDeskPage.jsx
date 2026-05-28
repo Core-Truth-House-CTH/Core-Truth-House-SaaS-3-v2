@@ -5,11 +5,11 @@ import API_PATHS from "../../lib/apiPaths";
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-admin-border)] px-5 py-4">
+    <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-command-border)] px-5 py-4">
         <div>
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">{subtitle}</div> : null}
+          <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{title}</div>
+          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-command-muted)]">{subtitle}</div> : null}
         </div>
         {actions}
       </div>
@@ -20,29 +20,29 @@ function PanelCard({ title, subtitle, children, actions = null }) {
 
 function StatCard({ icon: Icon, label, value, tone = "rose" }) {
   const tones = {
-    rose: "bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]",
-    plum: "bg-[color-mix(in srgb, var(--cth-admin-ruby) 12%, var(--cth-admin-panel))] text-[var(--cth-admin-ruby)]",
-    gold: "bg-[color-mix(in srgb, var(--cth-brand-secondary) 16%, var(--cth-admin-panel))] text-[var(--cth-warning-gold-deep)]",
-    green: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-status-success-deep)]",
+    rose: "bg-[color-mix(in srgb, var(--cth-command-cinnabar) 14%, var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]",
+    plum: "bg-[color-mix(in srgb, var(--cth-command-purple) 12%, var(--cth-command-ivory))] text-[var(--cth-command-purple)]",
+    gold: "bg-[color-mix(in srgb, var(--cth-brand-secondary) 16%, var(--cth-command-ivory))] text-[var(--cth-warning-gold-deep)]",
+    green: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-command-success)]",
   };
 
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white p-5 shadow-sm">
       <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${tones[tone] || tones.rose}`}>
         <Icon size={20} />
       </div>
-      <div className="mt-4 text-2xl font-semibold text-[var(--cth-admin-ink)]">{value}</div>
-      <div className="mt-1 text-sm text-[var(--cth-admin-muted)]">{label}</div>
+      <div className="mt-4 text-2xl font-semibold text-[var(--cth-command-ink)]">{value}</div>
+      <div className="mt-1 text-sm text-[var(--cth-command-muted)]">{label}</div>
     </div>
   );
 }
 
 function StatusPill({ label, tone = "neutral" }) {
   const tones = {
-    neutral: "bg-[var(--cth-admin-panel-alt)] text-[var(--cth-admin-muted)]",
-    success: "bg-[var(--cth-status-success-soft-bg)] text-[var(--cth-status-success-deep)]",
-    warning: "bg-[var(--cth-status-warning-soft-bg)] text-[var(--cth-status-warning-deep)]",
-    danger: "bg-[var(--cth-status-danger-soft-bg)] text-[var(--cth-status-danger-deep)]",
+    neutral: "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-muted)]",
+    success: "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-success)]",
+    warning: "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-warning)]",
+    danger: "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-error)]",
   };
 
   return (
@@ -54,11 +54,11 @@ function StatusPill({ label, tone = "neutral" }) {
 
 function ArticleCard({ article }) {
   return (
-    <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
+    <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{article.title || "Untitled article"}</div>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--cth-admin-muted)]">
+          <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{article.title || "Untitled article"}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--cth-command-muted)]">
             <span>{article.duration || "Read time unavailable"}</span>
             <span>•</span>
             <span>{article.tier || "All"}</span>
@@ -74,11 +74,11 @@ function ArticleCard({ article }) {
       </div>
 
       {Array.isArray(article.body) && article.body.length > 0 ? (
-        <div className="mt-3 text-sm text-[var(--cth-admin-muted)] line-clamp-3">
+        <div className="mt-3 text-sm text-[var(--cth-command-muted)] line-clamp-3">
           {article.body[0]}
         </div>
       ) : (
-        <div className="mt-3 text-sm text-[var(--cth-copy-muted)]">No preview content yet.</div>
+        <div className="mt-3 text-sm text-[var(--cth-command-muted)]">No preview content yet.</div>
       )}
     </div>
   );
@@ -138,17 +138,17 @@ export default function AdminHelpDeskPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-[var(--cth-command-border)] bg-white p-6 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-command-cinnabar) 14%, var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]">
             <LifeBuoy size={20} />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">Manage</p>
-            <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-admin-ink)]">Help Desk</h2>
+            <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-command-purple)]">Manage</p>
+            <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-command-ink)]">Help Desk</h2>
           </div>
         </div>
-        <p className="mt-3 max-w-2xl text-sm text-[var(--cth-admin-muted)]">
+        <p className="mt-3 max-w-2xl text-sm text-[var(--cth-command-muted)]">
           Centralize support intake, escalation flow, and help-content handoff inside the new separated admin shell.
         </p>
       </section>
@@ -166,11 +166,11 @@ export default function AdminHelpDeskPage() {
           subtitle="What this page will own in the new admin system"
         >
           <div className="grid gap-4">
-            <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
+            <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">Support Intake Layer</div>
-                  <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">
+                  <div className="text-sm font-semibold text-[var(--cth-command-ink)]">Support Intake Layer</div>
+                  <div className="mt-1 text-xs text-[var(--cth-command-muted)]">
                     Future home for user issues, support requests, and routed help signals.
                   </div>
                 </div>
@@ -178,11 +178,11 @@ export default function AdminHelpDeskPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
+            <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">Knowledge Base Deflection</div>
-                  <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">
+                  <div className="text-sm font-semibold text-[var(--cth-command-ink)]">Knowledge Base Deflection</div>
+                  <div className="mt-1 text-xs text-[var(--cth-command-muted)]">
                     Published help content is now connected here first, before ticketing and escalation are added.
                   </div>
                 </div>
@@ -190,11 +190,11 @@ export default function AdminHelpDeskPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
+            <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">Admin Escalation Workflow</div>
-                  <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">
+                  <div className="text-sm font-semibold text-[var(--cth-command-ink)]">Admin Escalation Workflow</div>
+                  <div className="mt-1 text-xs text-[var(--cth-command-muted)]">
                     Future path for unresolved issues, owner assignment, and priority handling.
                   </div>
                 </div>
@@ -210,9 +210,9 @@ export default function AdminHelpDeskPage() {
         >
           <div className="grid gap-4">
             {loadingArticles ? (
-              <div className="rounded-xl border border-dashed border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
-                <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">Loading articles...</div>
-                <div className="mt-2 text-sm text-[var(--cth-admin-muted)]">
+              <div className="rounded-xl border border-dashed border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
+                <div className="text-sm font-semibold text-[var(--cth-command-ink)]">Loading articles...</div>
+                <div className="mt-2 text-sm text-[var(--cth-command-muted)]">
                   Pulling published Knowledge Base content from the admin API.
                 </div>
               </div>
@@ -222,19 +222,19 @@ export default function AdminHelpDeskPage() {
                 <div className="mt-2 text-sm text-[var(--cth-error-copy)]">{articlesError}</div>
               </div>
             ) : groupedArticles.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
-                <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">No published articles yet</div>
-                <div className="mt-2 text-sm text-[var(--cth-admin-muted)]">
+              <div className="rounded-xl border border-dashed border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
+                <div className="text-sm font-semibold text-[var(--cth-command-ink)]">No published articles yet</div>
+                <div className="mt-2 text-sm text-[var(--cth-command-muted)]">
                   Publish Knowledge Base content to start using this page as a support deflection dashboard.
                 </div>
               </div>
             ) : (
               groupedArticles.map(([sectionName, sectionArticles]) => (
-                <div key={sectionName} className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
+                <div key={sectionName} className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{sectionName}</div>
-                      <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">
+                      <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{sectionName}</div>
+                      <div className="mt-1 text-xs text-[var(--cth-command-muted)]">
                         {sectionArticles.length} article{sectionArticles.length === 1 ? "" : "s"}
                       </div>
                     </div>

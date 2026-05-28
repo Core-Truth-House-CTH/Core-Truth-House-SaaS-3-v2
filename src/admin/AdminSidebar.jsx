@@ -11,7 +11,7 @@ function NavItem({ item }) {
       className={({ isActive }) =>
         `flex items-center gap-3 rounded px-4 py-3 text-sm font-medium transition ${
           isActive
-            ? "bg-[rgba(224,78,53,0.10)] text-[var(--cth-admin-ink)] border-l-2 border-[var(--cth-admin-accent)]"
+            ? "bg-[rgba(224,78,53,0.10)] text-[var(--cth-command-ink)] border-l-2 border-[var(--cth-command-cinnabar)]"
             : "text-[var(--cth-on-dark)] hover:bg-[var(--cth-sidebar-hover)]"
         }`
       }
@@ -27,7 +27,7 @@ export default function AdminSidebar() {
   return (
     <aside className="w-[300px] min-w-[300px] h-screen bg-[linear-gradient(180deg,var(--cth-surface-sidebar-start),var(--cth-surface-sidebar-end))] border-r border-[var(--cth-surface-sidebar-border)] text-white flex flex-col">
       <div className="px-6 py-6 border-b border-[var(--cth-surface-sidebar-divider)]">
-        <p className="text-xs uppercase tracking-[0.22em] text-[var(--cth-admin-muted)]">Core Truth House</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-[var(--cth-command-muted)]">Core Truth House</p>
         <h2 className="mt-2 text-3xl font-semibold">Admin</h2>
       </div>
 

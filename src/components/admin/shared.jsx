@@ -2,7 +2,7 @@ import React from 'react';
 
 export function StatCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="p-5 rounded-2xl bg-[var(--cth-admin-ink)] border border-white/10">
+    <div className="p-5 rounded-2xl bg-[var(--cth-command-ink)] border border-white/10">
       <div className="flex items-center justify-between mb-3">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -18,9 +18,9 @@ export function StatCard({ icon: Icon, label, value, color }) {
 }
 
 export const PLAN_COLORS = {
-  free: 'var(--cth-admin-muted)',
-  foundation: 'var(--cth-admin-accent)',
-  structure: 'var(--cth-admin-ruby)',
+  free: 'var(--cth-command-muted)',
+  foundation: 'var(--cth-command-cinnabar)',
+  structure: 'var(--cth-command-purple)',
   house: 'var(--cth-brand-primary)',
   estate: 'var(--cth-brand-primary-soft)'
 };

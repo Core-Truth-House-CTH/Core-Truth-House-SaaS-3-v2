@@ -4,11 +4,11 @@ import apiClient from "../../lib/apiClient";
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-admin-border)] px-5 py-4">
+    <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-command-border)] px-5 py-4">
         <div>
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">{subtitle}</div> : null}
+          <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{title}</div>
+          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-command-muted)]">{subtitle}</div> : null}
         </div>
         {actions}
       </div>
@@ -22,7 +22,7 @@ function SmallButton({ onClick, children, disabled = false, icon: Icon = null })
     <button
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-2 text-xs text-[var(--cth-admin-ruby)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
+      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] px-3 py-2 text-xs text-[var(--cth-command-purple)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
     >
       {Icon ? <Icon size={13} /> : null}
       {children}
@@ -36,7 +36,7 @@ function TextInput({ value, onChange, placeholder = "" }) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg border border-[var(--cth-admin-border)] bg-white px-3 py-2 text-sm text-[var(--cth-admin-ink)] outline-none"
+      className="w-full rounded-lg border border-[var(--cth-command-border)] bg-white px-3 py-2 text-sm text-[var(--cth-command-ink)] outline-none"
     />
   );
 }
@@ -46,7 +46,7 @@ function SelectInput({ value, onChange, options }) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border border-[var(--cth-admin-border)] bg-white px-3 py-2 text-sm text-[var(--cth-admin-ink)] outline-none"
+      className="w-full rounded-lg border border-[var(--cth-command-border)] bg-white px-3 py-2 text-sm text-[var(--cth-command-ink)] outline-none"
     >
       {options.map((o) => {
         const val = typeof o === "string" ? o : o.value;
@@ -64,8 +64,8 @@ function SelectInput({ value, onChange, options }) {
 function StatusPill({ published }) {
   const label = published ? "published" : "draft";
   const classes = published
-    ? "bg-[var(--cth-status-success-soft-bg)] text-[var(--cth-status-success-deep)]"
-    : "bg-[var(--cth-status-warning-soft-bg)] text-[var(--cth-status-warning-deep)]";
+    ? "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-success)]"
+    : "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-warning)]";
 
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold ${classes}`}>
@@ -76,7 +76,7 @@ function StatusPill({ published }) {
 
 function SimpleTable({ columns, rows, onRowClick = null, emptyLabel = "No records found", selectedRowId = null }) {
   if (!rows.length) {
-    return <div className="text-sm text-[var(--cth-admin-muted)]">{emptyLabel}</div>;
+    return <div className="text-sm text-[var(--cth-command-muted)]">{emptyLabel}</div>;
   }
 
   return (
@@ -87,7 +87,7 @@ function SimpleTable({ columns, rows, onRowClick = null, emptyLabel = "No record
             {columns.map((col) => (
               <th
                 key={col.key}
-                className="border-b border-[var(--cth-admin-border)] pb-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]"
+                className="border-b border-[var(--cth-command-border)] pb-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--cth-command-muted)]"
               >
                 {col.label}
               </th>
@@ -105,7 +105,7 @@ function SimpleTable({ columns, rows, onRowClick = null, emptyLabel = "No record
                 style={isSelected ? { background: "rgba(224,78,53,0.06)" } : undefined}
               >
                 {columns.map((col) => (
-                  <td key={col.key} className="border-b border-[var(--cth-surface-elevated-soft)] py-3 pr-4 align-top text-sm text-[var(--cth-admin-ink)]">
+                  <td key={col.key} className="border-b border-[var(--cth-surface-elevated-soft)] py-3 pr-4 align-top text-sm text-[var(--cth-command-ink)]">
                     {col.render ? col.render(row) : row[col.key]}
                   </td>
                 ))}
@@ -190,17 +190,17 @@ export default function AdminStoreProductsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-[var(--cth-command-border)] bg-white p-6 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-command-cinnabar) 14%, var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]">
             <Package size={20} />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">Commerce</p>
-            <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-admin-ink)]">Store Products</h2>
+            <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-command-purple)]">Commerce</p>
+            <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-command-ink)]">Store Products</h2>
           </div>
         </div>
-        <p className="mt-3 max-w-2xl text-sm text-[var(--cth-admin-muted)]">
+        <p className="mt-3 max-w-2xl text-sm text-[var(--cth-command-muted)]">
           Review products in the Core Truth House store from the new separated admin shell.
         </p>
       </section>
@@ -225,7 +225,7 @@ export default function AdminStoreProductsPage() {
           </div>
 
           {loading ? (
-            <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+            <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
           ) : (
             <SimpleTable
               columns={[
@@ -250,11 +250,11 @@ export default function AdminStoreProductsPage() {
 
         <PanelCard title="Product Detail" subtitle="Select a product to inspect details">
           {!selectedProduct ? (
-            <div className="text-sm text-[var(--cth-admin-muted)]">Select a product from the table.</div>
+            <div className="text-sm text-[var(--cth-command-muted)]">Select a product from the table.</div>
           ) : (
             <div className="grid gap-4">
               <div>
-                <div className="text-lg font-semibold text-[var(--cth-admin-ink)]">
+                <div className="text-lg font-semibold text-[var(--cth-command-ink)]">
                   {selectedProduct.name || "Untitled product"}
                 </div>
                 <div className="mt-1">
@@ -263,57 +263,57 @@ export default function AdminStoreProductsPage() {
               </div>
 
               <div>
-                <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]">Description</div>
-                <div className="text-sm text-[var(--cth-admin-ink)]">
+                <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Description</div>
+                <div className="text-sm text-[var(--cth-command-ink)]">
                   {selectedProduct.description || "No description provided."}
                 </div>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
-                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]">Price</div>
-                  <div className="text-sm text-[var(--cth-admin-ink)]">{formatMoneyFromCents(selectedProduct.price_cents)}</div>
+                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Price</div>
+                  <div className="text-sm text-[var(--cth-command-ink)]">{formatMoneyFromCents(selectedProduct.price_cents)}</div>
                 </div>
                 <div>
-                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]">Category</div>
-                  <div className="text-sm text-[var(--cth-admin-ink)]">{selectedProduct.category || "—"}</div>
+                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Category</div>
+                  <div className="text-sm text-[var(--cth-command-ink)]">{selectedProduct.category || "—"}</div>
                 </div>
                 <div>
-                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]">Purchases</div>
-                  <div className="text-sm text-[var(--cth-admin-ink)]">{selectedProduct.purchase_count || 0}</div>
+                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Purchases</div>
+                  <div className="text-sm text-[var(--cth-command-ink)]">{selectedProduct.purchase_count || 0}</div>
                 </div>
                 <div>
-                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]">Revenue</div>
-                  <div className="text-sm text-[var(--cth-admin-ink)]">{formatMoneyFromCents(selectedProduct.revenue_cents)}</div>
+                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Revenue</div>
+                  <div className="text-sm text-[var(--cth-command-ink)]">{formatMoneyFromCents(selectedProduct.revenue_cents)}</div>
                 </div>
                 <div>
-                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]">Created</div>
-                  <div className="text-sm text-[var(--cth-admin-ink)]">
+                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Created</div>
+                  <div className="text-sm text-[var(--cth-command-ink)]">
                     {selectedProduct.created_at ? new Date(selectedProduct.created_at).toLocaleString() : "—"}
                   </div>
                 </div>
                 <div>
-                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]">Updated</div>
-                  <div className="text-sm text-[var(--cth-admin-ink)]">
+                  <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Updated</div>
+                  <div className="text-sm text-[var(--cth-command-ink)]">
                     {selectedProduct.updated_at ? new Date(selectedProduct.updated_at).toLocaleString() : "—"}
                   </div>
                 </div>
               </div>
 
               <div>
-                <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]">Tags</div>
+                <div className="mb-1 text-xs uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Tags</div>
                 <div className="flex flex-wrap gap-2">
                   {(selectedProduct.tags || []).length ? (
                     selectedProduct.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center rounded-full bg-[var(--cth-admin-panel-alt)] px-2 py-1 text-[10px] font-semibold text-[var(--cth-admin-ruby)]"
+                        className="inline-flex items-center rounded-full bg-[var(--cth-command-panel-soft)] px-2 py-1 text-[10px] font-semibold text-[var(--cth-command-purple)]"
                       >
                         {tag}
                       </span>
                     ))
                   ) : (
-                    <span className="text-sm text-[var(--cth-admin-muted)]">No tags</span>
+                    <span className="text-sm text-[var(--cth-command-muted)]">No tags</span>
                   )}
                 </div>
               </div>

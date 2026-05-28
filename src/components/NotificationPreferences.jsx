@@ -242,7 +242,7 @@ export function NotificationPreferences() {
               fontFamily: SANS,
               fontSize: 12,
               fontWeight: 500,
-              color: 'var(--cth-status-success-bright)',
+              color: 'var(--cth-command-success)',
             }}
           >
             <Check size={14} />

@@ -9,8 +9,8 @@ import { PromptBuilderPanel, PROMPT_LIBRARY, AI_TWIN_SYSTEM } from './MediaPromp
 
 const T = {
   bg: 'var(--cth-brand-primary-deep)', bgCard: 'var(--cth-surface-night)', bgPanel: 'var(--cth-surface-night)',
-  border: 'rgba(255,255,255,0.07)', accent: 'var(--cth-admin-accent)',
-  gold: 'var(--cth-brand-secondary)', green: 'var(--cth-status-success-bright)', blue: 'var(--cth-status-info)',
+  border: 'rgba(255,255,255,0.07)', accent: 'var(--cth-command-cinnabar)',
+  gold: 'var(--cth-brand-secondary)', green: 'var(--cth-command-success)', blue: 'var(--cth-command-purple)',
   white: 'var(--cth-white)', t80: 'var(--cth-text-on-dark-soft)', t60: 'var(--cth-text-on-dark-muted)',
   t40: 'rgba(255,255,255,0.4)', t30: 'rgba(255,255,255,0.3)',
   t25: 'rgba(255,255,255,0.25)', t08: 'rgba(255,255,255,0.08)',

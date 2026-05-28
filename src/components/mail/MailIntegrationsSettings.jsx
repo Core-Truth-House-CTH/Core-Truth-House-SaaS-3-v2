@@ -334,14 +334,14 @@ export default function MailIntegrationsSettings() {
         <div
           className="mb-4"
           style={{
-            background: "color-mix(in srgb, var(--cth-status-success-bright) 10%, var(--cth-command-panel))",
-            border: "1px solid color-mix(in srgb, var(--cth-status-success-bright) 35%, var(--cth-command-border))",
+            background: "color-mix(in srgb, var(--cth-command-success) 10%, var(--cth-command-panel))",
+            border: "1px solid color-mix(in srgb, var(--cth-command-success) 35%, var(--cth-command-border))",
             borderRadius: 4,
             padding: "10px 14px",
             fontFamily: SANS,
             fontSize: 13,
             fontWeight: 500,
-            color: "var(--cth-status-success-bright)",
+            color: "var(--cth-command-success)",
           }}
         >
           {notice}

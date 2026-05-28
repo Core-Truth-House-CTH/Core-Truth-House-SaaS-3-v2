@@ -88,7 +88,7 @@ function looksLikeMarkdown(content) {
 const STATUS_CONFIG = {
  draft: { label: 'Draft', color: 'var(--cth-command-muted)', bg: 'rgba(74,53,80,0.15)' },
  scheduled: { label: 'Scheduled', color: 'var(--cth-command-muted)', bg: 'rgba(199,160,157,0.1)' },
- published: { label: 'Published', color: 'var(--cth-status-success-bright)', bg: 'rgba(74,222,128,0.1)' },
+ published: { label: 'Published', color: 'var(--cth-command-success)', bg: 'rgba(74,222,128,0.1)' },
  archived: { label: 'Archived', color: 'var(--cth-brand-primary-deep)', bg: 'rgba(93,0,18,0.2)' },
 };
 
@@ -564,7 +564,7 @@ function PostEditorDrawer({ post, onClose, onSave, generating, onGenerate }) {
  <label className="text-xs cth-text-accent font-medium uppercase tracking-widest mb-3 block">Search Preview</label>
  <div className="p-4 cth-card border border-[var(--cth-command-border)]">
  <p className="text-xs cth-muted mb-1">yourbrand.com / blog / {draft.slug || 'your-post-slug'}</p>
- <p className="text-sm font-semibold mb-1" style={{ color: 'color-mix(in srgb, var(--cth-status-info) 60%, white)' }}>{draft.seo_title || draft.title}</p>
+ <p className="text-sm font-semibold mb-1" style={{ color: 'color-mix(in srgb, var(--cth-command-purple) 60%, white)' }}>{draft.seo_title || draft.title}</p>
  <p className="text-xs leading-relaxed" style={{ color: 'var(--cth-command-muted)' }}>{draft.seo_description || draft.excerpt || 'Post excerpt will appear here...'}</p>
  </div>
  </div>

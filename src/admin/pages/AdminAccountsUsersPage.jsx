@@ -8,11 +8,11 @@ const CORE_TRUTH_HOUSE_WORKSPACE_ID = "e285aa0b-83b3-495d-9ac0-52e92ab64b42";
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-admin-border)] px-5 py-4">
+    <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-command-border)] px-5 py-4">
         <div>
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">{subtitle}</div> : null}
+          <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{title}</div>
+          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-command-muted)]">{subtitle}</div> : null}
         </div>
         {actions}
       </div>
@@ -26,7 +26,7 @@ function SmallButton({ onClick, children, disabled = false, icon: Icon = null })
     <button
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-2 text-xs text-[var(--cth-admin-ruby)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
+      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] px-3 py-2 text-xs text-[var(--cth-command-purple)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
     >
       {Icon ? <Icon size={13} /> : null}
       {children}
@@ -39,7 +39,7 @@ function PrimaryButton({ onClick, children, disabled = false }) {
     <button
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-admin-accent)] bg-[var(--cth-admin-accent)] px-3 py-2 text-xs text-white transition hover:opacity-90 disabled:opacity-50"
+      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-command-cinnabar)] bg-[var(--cth-command-cinnabar)] px-3 py-2 text-xs text-white transition hover:opacity-90 disabled:opacity-50"
     >
       {children}
     </button>
@@ -52,7 +52,7 @@ function TextInput({ value, onChange, placeholder = "" }) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg border border-[var(--cth-admin-border)] bg-white px-3 py-2 text-sm text-[var(--cth-admin-ink)] outline-none"
+      className="w-full rounded-lg border border-[var(--cth-command-border)] bg-white px-3 py-2 text-sm text-[var(--cth-command-ink)] outline-none"
     />
   );
 }
@@ -62,7 +62,7 @@ function SelectInput({ value, onChange, options }) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border border-[var(--cth-admin-border)] bg-white px-3 py-2 text-sm text-[var(--cth-admin-ink)] outline-none"
+      className="w-full rounded-lg border border-[var(--cth-command-border)] bg-white px-3 py-2 text-sm text-[var(--cth-command-ink)] outline-none"
     >
       {options.map((o) => {
         const val = typeof o === "string" ? o : o.value;
@@ -80,13 +80,13 @@ function SelectInput({ value, onChange, options }) {
 function StatusPill({ label }) {
   const normalized = String(label || "").toLowerCase();
 
-  let classes = "bg-[var(--cth-admin-panel-alt)] text-[var(--cth-admin-muted)]";
+  let classes = "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-muted)]";
   if (["active", "completed", "paid", "ready"].includes(normalized)) {
-    classes = "bg-[var(--cth-status-success-soft-bg)] text-[var(--cth-status-success-deep)]";
+    classes = "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-success)]";
   } else if (["pending", "trialing"].includes(normalized)) {
-    classes = "bg-[var(--cth-status-warning-soft-bg)] text-[var(--cth-status-warning-deep)]";
+    classes = "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-warning)]";
   } else if (["inactive", "cancelled", "archived", "suspended", "error"].includes(normalized)) {
-    classes = "bg-[var(--cth-status-danger-soft-bg)] text-[var(--cth-status-danger-deep)]";
+    classes = "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-error)]";
   }
 
   return (
@@ -98,7 +98,7 @@ function StatusPill({ label }) {
 
 function SimpleTable({ columns, rows, emptyLabel = "No records found" }) {
   if (!rows.length) {
-    return <div className="text-sm text-[var(--cth-admin-muted)]">{emptyLabel}</div>;
+    return <div className="text-sm text-[var(--cth-command-muted)]">{emptyLabel}</div>;
   }
 
   return (
@@ -109,7 +109,7 @@ function SimpleTable({ columns, rows, emptyLabel = "No records found" }) {
             {columns.map((col) => (
               <th
                 key={col.key}
-                className="border-b border-[var(--cth-admin-border)] pb-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]"
+                className="border-b border-[var(--cth-command-border)] pb-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--cth-command-muted)]"
               >
                 {col.label}
               </th>
@@ -120,7 +120,7 @@ function SimpleTable({ columns, rows, emptyLabel = "No records found" }) {
           {rows.map((row, i) => (
             <tr key={row.id || i}>
               {columns.map((col) => (
-                <td key={col.key} className="border-b border-[var(--cth-surface-elevated-soft)] py-3 pr-4 align-top text-sm text-[var(--cth-admin-ink)]">
+                <td key={col.key} className="border-b border-[var(--cth-surface-elevated-soft)] py-3 pr-4 align-top text-sm text-[var(--cth-command-ink)]">
                   {col.render ? col.render(row) : row[col.key]}
                 </td>
               ))}
@@ -237,7 +237,7 @@ function WorkspacesPanel() {
         </div>
 
         {loading ? (
-          <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+          <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
         ) : (
           <SimpleTable
             columns={[
@@ -275,21 +275,21 @@ function WorkspacesPanel() {
 
       <PanelCard title="Workspace Detail" subtitle="Select a workspace to inspect members and change plan">
         {!detail ? (
-          <div className="text-sm text-[var(--cth-admin-muted)]">Select a workspace from the table.</div>
+          <div className="text-sm text-[var(--cth-command-muted)]">Select a workspace from the table.</div>
         ) : (
           <div className="grid gap-4">
             <div>
-              <div className="text-base font-semibold text-[var(--cth-admin-ink)]">
+              <div className="text-base font-semibold text-[var(--cth-command-ink)]">
                 {detail.workspace?.name || "Untitled workspace"}
               </div>
-              <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">
+              <div className="mt-1 text-xs text-[var(--cth-command-muted)]">
                 {detail.workspace?.id || detail.workspace?.workspace_id}
               </div>
             </div>
 
             <div className="grid gap-4">
               <div>
-                <div className="mb-2 text-xs uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]">Plan</div>
+                <div className="mb-2 text-xs uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Plan</div>
                 <SelectInput
                   value={detail.workspace?.plan_id || "foundation"}
                   onChange={(val) => updatePlan(detail.workspace?.id || detail.workspace?.workspace_id, val)}
@@ -298,8 +298,8 @@ function WorkspacesPanel() {
               </div>
 
               <div>
-                <div className="mb-2 text-xs uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]">Workspace Members</div>
-                <div className="text-sm text-[var(--cth-admin-ink)]">
+                <div className="mb-2 text-xs uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Workspace Members</div>
+                <div className="text-sm text-[var(--cth-command-ink)]">
                   {(detail.workspace_members || []).length} workspace members · {(detail.team_members || []).length} team members
                 </div>
               </div>
@@ -409,7 +409,7 @@ function UsersPanel() {
       </div>
 
       {loading ? (
-        <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+        <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
       ) : (
         <SimpleTable
           columns={[
@@ -433,8 +433,8 @@ function UsersPanel() {
                     <SmallButton onClick={() => updateRole(row.id, "admin")} disabled={saving || isSelf || isReserved}>Admin</SmallButton>
                     <SmallButton onClick={() => updateRole(row.id, "super_admin")} disabled={saving || isReserved}>Super</SmallButton>
                     <SmallButton onClick={() => removeUser(row.id)} disabled={saving || isSelf || isReserved}>Remove</SmallButton>
-                    {isSelf ? <span className="text-xs text-[var(--cth-status-warning-deep)] self-center">Current admin account locked</span> : null}
-                    {isReserved ? <span className="text-xs text-[var(--cth-admin-muted)] self-center">Reserved</span> : null}
+                    {isSelf ? <span className="text-xs text-[var(--cth-command-warning)] self-center">Current admin account locked</span> : null}
+                    {isReserved ? <span className="text-xs text-[var(--cth-command-muted)] self-center">Reserved</span> : null}
                   </div>
                 );
               },
@@ -490,7 +490,7 @@ function DocumentsPanel() {
       actions={<SmallButton onClick={load} icon={RefreshCw}>Refresh</SmallButton>}
     >
       {loading ? (
-        <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+        <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
       ) : (
         <SimpleTable
           columns={[
@@ -540,7 +540,7 @@ function WorkspaceAuditPanel() {
         <TextInput value={workspaceId} onChange={setWorkspaceId} placeholder="Enter workspace id" />
 
         {!result ? (
-          <div className="text-sm text-[var(--cth-admin-muted)]">
+          <div className="text-sm text-[var(--cth-command-muted)]">
             Enter a workspace ID and run the access audit.
           </div>
         ) : (
@@ -550,7 +550,7 @@ function WorkspaceAuditPanel() {
               <StatusPill label={`team_members: ${result.team_member_count || 0}`} />
             </div>
 
-            <div className="text-sm text-[var(--cth-admin-ink)]">
+            <div className="text-sm text-[var(--cth-command-ink)]">
               Workspace: {result.workspace?.name || result.workspace?.id || result.workspace?.workspace_id || "—"}
             </div>
           </div>
@@ -563,10 +563,10 @@ function WorkspaceAuditPanel() {
 export default function AdminAccountsUsersPage() {
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-6 shadow-sm">
-        <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">Manage</p>
-        <h2 className="mt-2 text-3xl font-semibold text-[var(--cth-admin-ink)]">Accounts & Users</h2>
-        <p className="mt-3 max-w-2xl text-sm text-[var(--cth-admin-muted)]">
+      <section className="rounded-2xl border border-[var(--cth-command-border)] bg-white p-6 shadow-sm">
+        <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-command-purple)]">Manage</p>
+        <h2 className="mt-2 text-3xl font-semibold text-[var(--cth-command-ink)]">Accounts & Users</h2>
+        <p className="mt-3 max-w-2xl text-sm text-[var(--cth-command-muted)]">
           Manage workspaces, users, documents, and workspace-level access from the separated admin shell.
         </p>
       </section>

@@ -50,7 +50,7 @@ function AdminLoginRedirect() {
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-[var(--cth-admin-bg,#efe7e3)] px-6 py-12 text-[var(--cth-admin-ink,#2b1040)]">
+    <div className="min-h-screen bg-[var(--cth-command-blush,#efe7e3)] px-6 py-12 text-[var(--cth-command-ink,#2b1040)]">
       Loading Core Truth House...
     </div>
   );

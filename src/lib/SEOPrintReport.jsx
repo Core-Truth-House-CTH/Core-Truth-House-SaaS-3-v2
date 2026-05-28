@@ -155,14 +155,14 @@ function formatDate(iso) {
 }
 
 function scoreColor(score) {
-  if (score >= 80) return 'var(--cth-status-success-bright)'
-  if (score >= 65) return 'var(--cth-status-info)'
-  if (score >= 50) return 'var(--cth-status-warning)'
-  return 'var(--cth-status-danger)'
+  if (score >= 80) return 'var(--cth-command-success)'
+  if (score >= 65) return 'var(--cth-command-purple)'
+  if (score >= 50) return 'var(--cth-command-warning)'
+  return 'var(--cth-command-error)'
 }
 
 function oppColor(opp) {
-  return { high: 'var(--cth-status-success-bright)', medium: 'var(--cth-status-warning)', low: '#6b7280' }[opp] || '#6b7280'
+  return { high: 'var(--cth-command-success)', medium: 'var(--cth-command-warning)', low: '#6b7280' }[opp] || '#6b7280'
 }
 
 function oppBg(opp) {
@@ -170,10 +170,10 @@ function oppBg(opp) {
 }
 
 function trendIcon(dir) { return dir === 'up' ? '↑' : '↓' }
-function trendColor(dir) { return dir === 'up' ? 'var(--cth-status-success-bright)' : 'var(--cth-status-danger)' }
+function trendColor(dir) { return dir === 'up' ? 'var(--cth-command-success)' : 'var(--cth-command-error)' }
 
 function issueColor(type) {
-  return { critical: 'var(--cth-status-danger)', warning: 'var(--cth-status-warning)', passed: 'var(--cth-status-success-bright)' }[type] || '#6b7280'
+  return { critical: 'var(--cth-command-error)', warning: 'var(--cth-command-warning)', passed: 'var(--cth-command-success)' }[type] || '#6b7280'
 }
 
 function issueBg(type) {
@@ -199,7 +199,7 @@ function ScoreRing(props) {
           strokeDasharray={filled + ' ' + circ} strokeLinecap="round" />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: size * 0.23, fontWeight: 800, color: 'var(--cth-admin-ink)', lineHeight: 1 }}>{score}</span>
+        <span style={{ fontSize: size * 0.23, fontWeight: 800, color: 'var(--cth-command-ink)', lineHeight: 1 }}>{score}</span>
         <span style={{ fontSize: size * 0.12, color: '#9c8fb0', lineHeight: 1, marginTop: 1 }}>/ 100</span>
       </div>
     </div>
@@ -216,7 +216,7 @@ var PRINT_CSS = `
   body {
     font-family: 'DM Sans', -apple-system, Arial, sans-serif;
     background: var(--cth-white);
-    color: var(--cth-admin-ink);
+    color: var(--cth-command-ink);
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -245,7 +245,7 @@ var PRINT_CSS = `
   h2.section-title {
     font-size: 16px;
     font-weight: 700;
-    color: var(--cth-admin-ink);
+    color: var(--cth-command-ink);
     margin-bottom: 14px;
     padding-bottom: 8px;
     border-bottom: 2px solid #e8e0ef;
@@ -272,13 +272,13 @@ function SectionSiteAudit(props) {
         <ScoreRing score={d.score} size={64} sw={5} />
         {[
           { l: 'Pages Scanned', v: d.pagesScanned },
-          { l: 'Critical Issues', v: d.issuesCritical, vc: 'var(--cth-status-danger)' },
-          { l: 'Warnings',       v: d.issuesWarning,  vc: 'var(--cth-status-warning)' },
-          { l: 'Passed Checks',  v: d.issuesPassed,   vc: 'var(--cth-status-success-bright)' },
+          { l: 'Critical Issues', v: d.issuesCritical, vc: 'var(--cth-command-error)' },
+          { l: 'Warnings',       v: d.issuesWarning,  vc: 'var(--cth-command-warning)' },
+          { l: 'Passed Checks',  v: d.issuesPassed,   vc: 'var(--cth-command-success)' },
         ].map(function(s) {
           return (
             <div key={s.l} style={{ padding: '10px 12px', background: '#faf7fd', borderRadius: 8, border: '1px solid #e8e0ef', textAlign: 'center' }}>
-              <p style={{ fontSize: 20, fontWeight: 800, color: s.vc || 'var(--cth-admin-ink)', margin: 0 }}>{s.v}</p>
+              <p style={{ fontSize: 20, fontWeight: 800, color: s.vc || 'var(--cth-command-ink)', margin: 0 }}>{s.v}</p>
               <p style={{ fontSize: 9.5, color: '#9c8fb0', margin: '2px 0 0' }}>{s.l}</p>
             </div>
           )
@@ -288,7 +288,7 @@ function SectionSiteAudit(props) {
       {/* Core Web Vitals */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
         {Object.values(d.coreWebVitals).map(function(v) {
-          var c = v.status === 'good' ? 'var(--cth-status-success-bright)' : v.status === 'needs_improvement' ? 'var(--cth-status-warning)' : 'var(--cth-status-danger)'
+          var c = v.status === 'good' ? 'var(--cth-command-success)' : v.status === 'needs_improvement' ? 'var(--cth-command-warning)' : 'var(--cth-command-error)'
           return (
             <div key={v.label} style={{ padding: '8px 12px', background: v.status === 'good' ? 'rgba(16,185,129,0.06)' : 'rgba(245,158,11,0.06)', borderRadius: 8, border: '1px solid', borderColor: v.status === 'good' ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
@@ -305,7 +305,7 @@ function SectionSiteAudit(props) {
       <div style={{ background: '#faf7fd', borderRadius: 8, border: '1px solid #e8e0ef', overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr auto', background: 'var(--cth-brand-primary-soft)', padding: '7px 14px' }}>
           {['Severity', 'Issue', 'Count'].map(function(h) {
-            return <p key={h} style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--cth-admin-ink-soft)', margin: 0 }}>{h}</p>
+            return <p key={h} style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--cth-command-muted)', margin: 0 }}>{h}</p>
           })}
         </div>
         {d.issues.map(function(issue, i) {
@@ -343,8 +343,8 @@ function SectionRankingGaps(props) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
         {[
           { l: 'Keyword Opportunities', v: d.opportunities, c: 'var(--cth-brand-primary)' },
-          { l: 'Avg. Current Position',  v: d.avgPosition,  c: 'var(--cth-status-warning)' },
-          { l: 'Target Position',        v: '< 10',          c: 'var(--cth-status-success-bright)' },
+          { l: 'Avg. Current Position',  v: d.avgPosition,  c: 'var(--cth-command-warning)' },
+          { l: 'Target Position',        v: '< 10',          c: 'var(--cth-command-success)' },
         ].map(function(s) {
           return (
             <div key={s.l} style={{ padding: '12px 14px', background: '#faf7fd', borderRadius: 8, border: '1px solid #e8e0ef', textAlign: 'center' }}>
@@ -358,7 +358,7 @@ function SectionRankingGaps(props) {
       <div style={{ background: '#faf7fd', borderRadius: 8, border: '1px solid #e8e0ef', overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px 90px', background: 'var(--cth-brand-primary-soft)', padding: '7px 14px' }}>
           {['Keyword', 'Volume', 'Position', 'Difficulty', 'Opportunity'].map(function(h) {
-            return <p key={h} style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--cth-admin-ink-soft)', margin: 0 }}>{h}</p>
+            return <p key={h} style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--cth-command-muted)', margin: 0 }}>{h}</p>
           })}
         </div>
         {d.keywords.map(function(kw, i) {
@@ -368,9 +368,9 @@ function SectionRankingGaps(props) {
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px 90px', padding: '9px 14px', borderBottom: '1px solid rgba(0,0,0,0.05)', background: i % 2 === 0 ? 'var(--cth-white)' : '#faf7fd', alignItems: 'center' }}>
               <p style={{ fontSize: 11, fontWeight: 500, color: '#2d1840', margin: 0 }}>{kw.keyword}</p>
               <p style={{ fontSize: 11, color: '#4a3050', margin: 0 }}>{kw.volume ? kw.volume.toLocaleString() : '—'}</p>
-              <p style={{ fontSize: 11, fontWeight: kw.position ? 600 : 400, color: kw.position ? (kw.position <= 10 ? 'var(--cth-status-success-bright)' : 'var(--cth-status-warning)') : '#9c8fb0', margin: 0 }}>{kw.position || 'Not ranked'}</p>
+              <p style={{ fontSize: 11, fontWeight: kw.position ? 600 : 400, color: kw.position ? (kw.position <= 10 ? 'var(--cth-command-success)' : 'var(--cth-command-warning)') : '#9c8fb0', margin: 0 }}>{kw.position || 'Not ranked'}</p>
               <div style={{ height: 6, background: 'rgba(0,0,0,0.06)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ height: '100%', background: kw.difficulty >= 50 ? 'var(--cth-status-danger)' : kw.difficulty >= 35 ? 'var(--cth-status-warning)' : 'var(--cth-status-success-bright)', width: kw.difficulty + '%', borderRadius: 3 }} />
+                <div style={{ height: '100%', background: kw.difficulty >= 50 ? 'var(--cth-command-error)' : kw.difficulty >= 35 ? 'var(--cth-command-warning)' : 'var(--cth-command-success)', width: kw.difficulty + '%', borderRadius: 3 }} />
               </div>
               <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', padding: '2px 8px', borderRadius: 20, color: oc, background: ob }}>{kw.opportunity}</span>
             </div>
@@ -396,8 +396,8 @@ function SectionBacklinks(props) {
         {[
           { l: 'Total Backlinks',    v: d.totalAcquired,  c: 'var(--cth-brand-primary-soft)' },
           { l: 'Domain Authority',   v: d.domainAuthority,c: 'var(--cth-brand-primary)' },
-          { l: 'New This Month',     v: '+' + d.newThisMonth, c: 'var(--cth-status-success-bright)' },
-          { l: 'Lost This Month',    v: '-' + d.lostThisMonth, c: 'var(--cth-status-danger)' },
+          { l: 'New This Month',     v: '+' + d.newThisMonth, c: 'var(--cth-command-success)' },
+          { l: 'Lost This Month',    v: '-' + d.lostThisMonth, c: 'var(--cth-command-error)' },
         ].map(function(s) {
           return (
             <div key={s.l} style={{ padding: '10px 12px', background: '#faf7fd', borderRadius: 8, border: '1px solid #e8e0ef', textAlign: 'center' }}>
@@ -413,15 +413,15 @@ function SectionBacklinks(props) {
       <div style={{ background: '#faf7fd', borderRadius: 8, border: '1px solid #e8e0ef', overflow: 'hidden', marginBottom: 14 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 80px 1fr', background: 'var(--cth-brand-primary-soft)', padding: '7px 14px' }}>
           {['Domain', 'DA', 'Type', 'Anchor Text'].map(function(h) {
-            return <p key={h} style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--cth-admin-ink-soft)', margin: 0 }}>{h}</p>
+            return <p key={h} style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--cth-command-muted)', margin: 0 }}>{h}</p>
           })}
         </div>
         {d.topSources.map(function(bl, i) {
           return (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 80px 1fr', padding: '8px 14px', borderBottom: '1px solid rgba(0,0,0,0.05)', background: i % 2 === 0 ? 'var(--cth-white)' : '#faf7fd', alignItems: 'center' }}>
               <p style={{ fontSize: 11, fontWeight: 500, color: '#2d1840', margin: 0 }}>{bl.domain}</p>
-              <p style={{ fontSize: 12, fontWeight: 700, color: bl.da >= 70 ? 'var(--cth-status-success-bright)' : 'var(--cth-status-warning)', margin: 0 }}>{bl.da}</p>
-              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 20, color: bl.type === 'Dofollow' ? 'var(--cth-status-success-bright)' : '#9c8fb0', background: bl.type === 'Dofollow' ? 'rgba(16,185,129,0.1)' : 'rgba(107,114,128,0.08)' }}>{bl.type}</span>
+              <p style={{ fontSize: 12, fontWeight: 700, color: bl.da >= 70 ? 'var(--cth-command-success)' : 'var(--cth-command-warning)', margin: 0 }}>{bl.da}</p>
+              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 20, color: bl.type === 'Dofollow' ? 'var(--cth-command-success)' : '#9c8fb0', background: bl.type === 'Dofollow' ? 'rgba(16,185,129,0.1)' : 'rgba(107,114,128,0.08)' }}>{bl.type}</span>
               <p style={{ fontSize: 11, color: '#7b6f8a', margin: 0, fontStyle: 'italic' }}>"{bl.anchor}"</p>
             </div>
           )
@@ -477,7 +477,7 @@ function SectionCompetitors(props) {
       <div style={{ background: '#faf7fd', borderRadius: 8, border: '1px solid #e8e0ef', overflow: 'hidden', marginBottom: 14 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 50px 100px 90px 1fr 1fr', background: 'var(--cth-brand-primary-soft)', padding: '7px 14px' }}>
           {['Competitor', 'DA', 'KW Overlap', 'Backlinks', 'Their Advantage', 'Your Edge'].map(function(h) {
-            return <p key={h} style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--cth-admin-ink-soft)', margin: 0 }}>{h}</p>
+            return <p key={h} style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--cth-command-muted)', margin: 0 }}>{h}</p>
           })}
         </div>
         {d.competitors.map(function(c, i) {
@@ -487,11 +487,11 @@ function SectionCompetitors(props) {
                 <p style={{ fontSize: 11, fontWeight: 600, color: '#2d1840', margin: 0 }}>{c.name}</p>
                 <p style={{ fontSize: 9.5, color: '#9c8fb0', margin: 0 }}>{c.domain}</p>
               </div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: c.da >= 70 ? 'var(--cth-status-danger)' : 'var(--cth-status-warning)', margin: 0 }}>{c.da}</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: c.da >= 70 ? 'var(--cth-command-error)' : 'var(--cth-command-warning)', margin: 0 }}>{c.da}</p>
               <p style={{ fontSize: 11, color: '#4a3050', margin: 0 }}>{c.keywordsOverlap}</p>
               <p style={{ fontSize: 11, color: '#4a3050', margin: 0 }}>{c.sharedBacklinks}</p>
               <p style={{ fontSize: 10, color: '#7b6f8a', margin: 0 }}>{c.gap}</p>
-              <p style={{ fontSize: 10, fontWeight: 500, color: 'var(--cth-status-success-bright)', margin: 0 }}>{c.advantage}</p>
+              <p style={{ fontSize: 10, fontWeight: 500, color: 'var(--cth-command-success)', margin: 0 }}>{c.advantage}</p>
             </div>
           )
         })}
@@ -502,7 +502,7 @@ function SectionCompetitors(props) {
         {d.contentGaps.map(function(gap, i) {
           return (
             <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 12px', background: '#faf7fd', borderRadius: 7, border: '1px solid #e8e0ef' }}>
-              <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--cth-status-success-bright)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+              <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--cth-command-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                 <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--cth-on-dark)' }}>✓</span>
               </div>
               <p style={{ fontSize: 11, color: '#4a3050', margin: 0, lineHeight: 1.5 }}>{gap}</p>
@@ -528,7 +528,7 @@ function SectionMarketShifts(props) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 7, marginBottom: 16 }}>
         {d.trends.map(function(t, i) {
           var tc = trendColor(t.direction)
-          var rel = { high: 'var(--cth-status-success-bright)', medium: 'var(--cth-status-warning)', low: '#9c8fb0' }[t.relevance]
+          var rel = { high: 'var(--cth-command-success)', medium: 'var(--cth-command-warning)', low: '#9c8fb0' }[t.relevance]
           return (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '20px 1fr 140px 120px', gap: 10, padding: '10px 14px', background: '#faf7fd', borderRadius: 8, border: '1px solid #e8e0ef', alignItems: 'start' }}>
               <span style={{ fontSize: 14, fontWeight: 700, color: tc }}>{trendIcon(t.direction)}</span>
@@ -565,8 +565,8 @@ function SectionMarketShifts(props) {
 function SectionPriorities(props) {
   var d = props.data
 
-  var effortColor = { Low: 'var(--cth-status-success-bright)', Medium: 'var(--cth-status-warning)', High: 'var(--cth-status-danger)' }
-  var timeframeColor = { 'This week': 'var(--cth-brand-primary)', 'This month': 'var(--cth-status-warning)' }
+  var effortColor = { Low: 'var(--cth-command-success)', Medium: 'var(--cth-command-warning)', High: 'var(--cth-command-error)' }
+  var timeframeColor = { 'This week': 'var(--cth-brand-primary)', 'This month': 'var(--cth-command-warning)' }
 
   return (
     <div className="avoid-break" style={{ marginBottom: 24 }}>
@@ -574,7 +574,7 @@ function SectionPriorities(props) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {d.map(function(item) {
-          var rc = item.rank <= 2 ? 'var(--cth-brand-primary)' : item.rank <= 4 ? 'var(--cth-status-warning)' : 'var(--cth-status-info)'
+          var rc = item.rank <= 2 ? 'var(--cth-brand-primary)' : item.rank <= 4 ? 'var(--cth-command-warning)' : 'var(--cth-command-purple)'
           return (
             <div key={item.rank} style={{ display: 'grid', gridTemplateColumns: '28px 70px 1fr 100px 80px', gap: 10, padding: '11px 14px', background: '#faf7fd', borderRadius: 8, border: '1px solid #e8e0ef', alignItems: 'start' }}>
               <div style={{ width: 26, height: 26, borderRadius: '50%', background: rc, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -621,17 +621,17 @@ export default function SEOPrintReport(props) {
       {/* Screen toolbar */}
       <div className="no-print" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        background: 'var(--cth-admin-panel)', borderBottom: '1px solid var(--cth-admin-border)',
+        background: 'var(--cth-command-ivory)', borderBottom: '1px solid var(--cth-command-border)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '10px 24px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           {onClose && (
-            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--cth-admin-muted)', cursor: 'pointer', fontSize: 13, fontFamily: "'DM Sans', sans-serif", display: 'flex', alignItems: 'center', gap: 5 }}>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--cth-command-muted)', cursor: 'pointer', fontSize: 13, fontFamily: "'DM Sans', sans-serif", display: 'flex', alignItems: 'center', gap: 5 }}>
               ← Back to SEO
             </button>
           )}
-          <span style={{ fontSize: 13, color: 'var(--cth-admin-ink-soft)', fontFamily: "'DM Sans', sans-serif" }}>
+          <span style={{ fontSize: 13, color: 'var(--cth-command-muted)', fontFamily: "'DM Sans', sans-serif" }}>
             SEO Intelligence Report — {workspace.domain}
           </span>
         </div>
@@ -639,7 +639,7 @@ export default function SEOPrintReport(props) {
           onClick={function() { window.print() }}
           style={{
             display: 'flex', alignItems: 'center', gap: 7, padding: '7px 18px', borderRadius: 8,
-            border: 'none', background: 'var(--cth-admin-accent)', color: 'var(--cth-on-dark)', fontSize: 12, fontWeight: 600,
+            border: 'none', background: 'var(--cth-command-cinnabar)', color: 'var(--cth-on-dark)', fontSize: 12, fontWeight: 600,
             cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
           }}
         >
@@ -660,14 +660,14 @@ export default function SEOPrintReport(props) {
               {/* Brand mark */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
                 <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--cth-brand-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ color: 'var(--cth-admin-accent)', fontWeight: 800, fontSize: 15 }}>C</span>
+                  <span style={{ color: 'var(--cth-command-cinnabar)', fontWeight: 800, fontSize: 15 }}>C</span>
                 </div>
                 <div>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--cth-brand-primary-soft)', margin: 0 }}>Core Truth House OS</p>
                   <p style={{ fontSize: 10, color: '#9c8fb0', margin: 0 }}>SEO Intelligence Report</p>
                 </div>
               </div>
-              <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--cth-admin-ink)', margin: '0 0 4px', lineHeight: 1.1 }}>SEO Intelligence</h1>
+              <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--cth-command-ink)', margin: '0 0 4px', lineHeight: 1.1 }}>SEO Intelligence</h1>
               <p style={{ fontSize: 14, color: 'var(--cth-brand-primary)', fontWeight: 600, margin: '0 0 3px' }}>{workspace.domain}</p>
               <p style={{ fontSize: 11, color: '#9c8fb0', margin: 0 }}>Generated {formatDate(data.generatedAt)}</p>
             </div>

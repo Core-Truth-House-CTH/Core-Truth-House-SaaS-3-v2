@@ -64,7 +64,7 @@ export default function DashboardMarquee({ stats = {} }) {
       position: 'relative',
       overflow: 'hidden',
       height: 36,
-      borderBottom: '1px solid var(--cth-admin-border)',
+      borderBottom: '1px solid var(--cth-command-border)',
       background: 'rgba(0,0,0,0.2)',
     }}>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -107,11 +107,11 @@ export default function DashboardMarquee({ stats = {} }) {
             padding: '0 20px',
             height: '100%',
             flexShrink: 0,
-            borderRight: '1px solid var(--cth-admin-border)',
+            borderRight: '1px solid var(--cth-command-border)',
           }}>
             <span style={{
               fontSize: 13,
-              color: item.highlight ? 'var(--cth-admin-accent)' : 'var(--cth-admin-muted)',
+              color: item.highlight ? 'var(--cth-command-cinnabar)' : 'var(--cth-command-muted)',
               lineHeight: 1,
             }}>
               {item.icon}
@@ -119,7 +119,7 @@ export default function DashboardMarquee({ stats = {} }) {
             <span style={{
               fontSize: 11,
               fontWeight: item.highlight ? 600 : 400,
-              color: item.highlight ? 'rgba(224,78,53,0.7)' : 'var(--cth-admin-muted)',
+              color: item.highlight ? 'rgba(224,78,53,0.7)' : 'var(--cth-command-muted)',
               letterSpacing: '0.08em',
               fontFamily: "'DM Sans', sans-serif",
               whiteSpace: 'nowrap',

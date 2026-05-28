@@ -30,7 +30,7 @@ export default function AdminLayout() {
   const title = TITLES[location.pathname] || "Admin";
 
   return (
-    <div className="min-h-screen flex bg-[var(--cth-admin-bg)]">
+    <div className="min-h-screen flex bg-[var(--cth-command-blush)]">
       <AdminSidebar />
       <div className="flex-1 min-w-0 flex flex-col">
         <AdminTopbar title={title} />

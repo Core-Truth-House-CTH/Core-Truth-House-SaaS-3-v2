@@ -8,13 +8,13 @@ import React from 'react';
 const T = {
   bg: 'var(--cth-brand-primary-deep)', bgCard: 'var(--cth-surface-night)', bgPanel: 'var(--cth-surface-night)',
   border: 'rgba(255,255,255,0.07)', borderMid: 'rgba(255,255,255,0.12)',
-  aubergine: 'var(--cth-brand-primary-soft)', crimson: 'var(--cth-brand-primary)', cinnabar: 'var(--cth-admin-accent)',
-  ruby: 'var(--cth-admin-ruby)', tuscany: 'var(--cth-admin-muted)', gold: 'var(--cth-brand-secondary)',
+  aubergine: 'var(--cth-brand-primary-soft)', crimson: 'var(--cth-brand-primary)', cinnabar: 'var(--cth-command-cinnabar)',
+  ruby: 'var(--cth-command-purple)', tuscany: 'var(--cth-command-muted)', gold: 'var(--cth-brand-secondary)',
   white: 'var(--cth-white)', t80: 'var(--cth-text-on-dark-soft)', t60: 'var(--cth-text-on-dark-muted)',
   t40: 'rgba(255,255,255,0.4)', t30: 'rgba(255,255,255,0.3)',
   t25: 'rgba(255,255,255,0.25)', t15: 'rgba(255,255,255,0.15)',
   t08: 'rgba(255,255,255,0.08)',
-  green: 'var(--cth-status-success-bright)', amber: 'var(--cth-status-warning)', red: 'var(--cth-status-danger)', blue: 'var(--cth-status-info)',
+  green: 'var(--cth-command-success)', amber: 'var(--cth-command-warning)', red: 'var(--cth-command-error)', blue: 'var(--cth-command-purple)',
   font: "'DM Sans', -apple-system, sans-serif",
 };
 

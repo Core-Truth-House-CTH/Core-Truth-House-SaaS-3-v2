@@ -4,14 +4,14 @@ import apiClient from "../../lib/apiClient";
 
 const STATUS_TONES = {
   received: "bg-[var(--cth-surface-info-soft)] text-[var(--cth-info-blue-deep)]",
-  approved: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-status-success-deep)]",
-  paid: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-status-success-deep)]",
-  rejected: "bg-[var(--cth-admin-panel)] text-[var(--cth-admin-muted)]",
+  approved: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-command-success)]",
+  paid: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-command-success)]",
+  rejected: "bg-[var(--cth-command-ivory)] text-[var(--cth-command-muted)]",
 };
 
 const SEAT_TONES = {
-  founding: "bg-[color-mix(in_srgb,var(--cth-admin-accent)_14%,var(--cth-admin-panel))] text-[var(--cth-admin-accent)]",
-  standard: "bg-[color-mix(in_srgb,var(--cth-brand-secondary)_16%,var(--cth-admin-panel))] text-[var(--cth-warning-gold-deep)]",
+  founding: "bg-[color-mix(in_srgb,var(--cth-command-cinnabar)_14%,var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]",
+  standard: "bg-[color-mix(in_srgb,var(--cth-brand-secondary)_16%,var(--cth-command-ivory))] text-[var(--cth-warning-gold-deep)]",
 };
 
 function Pill({ tone, children }) {
@@ -83,12 +83,12 @@ export default function AdminCohortPage() {
     <div className="space-y-6 p-6">
       <header className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--cth-admin-accent)_14%,var(--cth-admin-panel))] text-[var(--cth-admin-accent)]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--cth-command-cinnabar)_14%,var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]">
             <GraduationCap size={20} />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-[var(--cth-admin-ink)]">Cohort Applications</h1>
-            <p className="mt-1 text-sm text-[var(--cth-admin-muted)]">
+            <h1 className="text-2xl font-semibold text-[var(--cth-command-ink)]">Cohort Applications</h1>
+            <p className="mt-1 text-sm text-[var(--cth-command-muted)]">
               Review applicants for The Core Truth Cohort.
             </p>
           </div>
@@ -96,7 +96,7 @@ export default function AdminCohortPage() {
         <button
           onClick={fetchApplications}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-admin-border)] bg-white px-3 py-2 text-xs text-[var(--cth-admin-ink)] transition hover:bg-[var(--cth-admin-panel)] disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-command-border)] bg-white px-3 py-2 text-xs text-[var(--cth-command-ink)] transition hover:bg-[var(--cth-command-ivory)] disabled:opacity-50"
         >
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           Refresh
@@ -113,30 +113,30 @@ export default function AdminCohortPage() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-xl border border-[var(--cth-admin-border)] bg-white p-4"
+            className="rounded-xl border border-[var(--cth-command-border)] bg-white p-4"
           >
-            <div className="text-xs uppercase tracking-wide text-[var(--cth-admin-muted)]">{stat.label}</div>
-            <div className="mt-1 text-2xl font-semibold text-[var(--cth-admin-ink)]">{stat.value}</div>
+            <div className="text-xs uppercase tracking-wide text-[var(--cth-command-muted)]">{stat.label}</div>
+            <div className="mt-1 text-2xl font-semibold text-[var(--cth-command-ink)]">{stat.value}</div>
           </div>
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[var(--cth-admin-border)] bg-white shadow-sm">
-        <div className="border-b border-[var(--cth-admin-border)] px-5 py-4">
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">Applications</div>
-          <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">Newest first.</div>
+      <div className="overflow-hidden rounded-2xl border border-[var(--cth-command-border)] bg-white shadow-sm">
+        <div className="border-b border-[var(--cth-command-border)] px-5 py-4">
+          <div className="text-sm font-semibold text-[var(--cth-command-ink)]">Applications</div>
+          <div className="mt-1 text-xs text-[var(--cth-command-muted)]">Newest first.</div>
         </div>
 
         {error ? (
-          <div className="p-5 text-sm text-[var(--cth-status-error-deep)]">{error}</div>
+          <div className="p-5 text-sm text-[var(--cth-command-error)]">{error}</div>
         ) : loading ? (
-          <div className="p-5 text-sm text-[var(--cth-admin-muted)]">Loading…</div>
+          <div className="p-5 text-sm text-[var(--cth-command-muted)]">Loading…</div>
         ) : applications.length === 0 ? (
-          <div className="p-5 text-sm text-[var(--cth-admin-muted)]">No applications yet.</div>
+          <div className="p-5 text-sm text-[var(--cth-command-muted)]">No applications yet.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-[var(--cth-admin-border)] text-sm">
-              <thead className="bg-[var(--cth-admin-panel)] text-left text-xs uppercase tracking-wide text-[var(--cth-admin-muted)]">
+            <table className="min-w-full divide-y divide-[var(--cth-command-border)] text-sm">
+              <thead className="bg-[var(--cth-command-ivory)] text-left text-xs uppercase tracking-wide text-[var(--cth-command-muted)]">
                 <tr>
                   <th className="px-5 py-3">Applicant</th>
                   <th className="px-5 py-3">Seat</th>
@@ -145,16 +145,16 @@ export default function AdminCohortPage() {
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--cth-admin-border)]">
+              <tbody className="divide-y divide-[var(--cth-command-border)]">
                 {applications.map((app) => {
                   const status = app.status || "received";
                   const seat = app.seat_type || "founding";
                   const isRejected = status === "rejected";
                   return (
-                    <tr key={app.application_id} className="text-[var(--cth-admin-ink)]">
+                    <tr key={app.application_id} className="text-[var(--cth-command-ink)]">
                       <td className="px-5 py-4">
                         <div className="font-medium">{app.name}</div>
-                        <div className="text-xs text-[var(--cth-admin-muted)]">{app.email}</div>
+                        <div className="text-xs text-[var(--cth-command-muted)]">{app.email}</div>
                       </td>
                       <td className="px-5 py-4">
                         <Pill tone={SEAT_TONES[seat] || SEAT_TONES.founding}>{seat}</Pill>
@@ -162,14 +162,14 @@ export default function AdminCohortPage() {
                       <td className="px-5 py-4">
                         <Pill tone={STATUS_TONES[status] || STATUS_TONES.received}>{status}</Pill>
                       </td>
-                      <td className="px-5 py-4 text-xs text-[var(--cth-admin-muted)]">
+                      <td className="px-5 py-4 text-xs text-[var(--cth-command-muted)]">
                         {formatDate(app.created_at)}
                       </td>
                       <td className="px-5 py-4 text-right">
                         <button
                           onClick={() => handleReject(app.application_id)}
                           disabled={isRejected || rejecting === app.application_id}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cth-admin-border)] px-3 py-1.5 text-xs text-[var(--cth-admin-ruby)] transition hover:bg-[var(--cth-admin-panel)] disabled:opacity-40"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cth-command-border)] px-3 py-1.5 text-xs text-[var(--cth-command-purple)] transition hover:bg-[var(--cth-command-ivory)] disabled:opacity-40"
                         >
                           <X size={13} />
                           {rejecting === app.application_id ? "Rejecting…" : "Reject"}

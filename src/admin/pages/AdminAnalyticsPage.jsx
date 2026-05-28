@@ -19,11 +19,11 @@ const API = import.meta.env.VITE_BACKEND_URL;
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-admin-border)] px-5 py-4">
+    <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-command-border)] px-5 py-4">
         <div>
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">{subtitle}</div> : null}
+          <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{title}</div>
+          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-command-muted)]">{subtitle}</div> : null}
         </div>
         {actions}
       </div>
@@ -37,7 +37,7 @@ function SmallButton({ onClick, children, disabled = false, icon: Icon = null })
     <button
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-2 text-xs text-[var(--cth-admin-ruby)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
+      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] px-3 py-2 text-xs text-[var(--cth-command-purple)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
     >
       {Icon ? <Icon size={13} /> : null}
       {children}
@@ -47,28 +47,28 @@ function SmallButton({ onClick, children, disabled = false, icon: Icon = null })
 
 function MetricCard({ icon: Icon, label, value, hint = "", tone = "rose" }) {
   const tones = {
-    rose: "bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]",
-    plum: "bg-[color-mix(in srgb, var(--cth-admin-ruby) 12%, var(--cth-admin-panel))] text-[var(--cth-admin-ruby)]",
-    gold: "bg-[color-mix(in srgb, var(--cth-brand-secondary) 16%, var(--cth-admin-panel))] text-[var(--cth-warning-gold-deep)]",
-    green: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-status-success-deep)]",
+    rose: "bg-[color-mix(in srgb, var(--cth-command-cinnabar) 14%, var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]",
+    plum: "bg-[color-mix(in srgb, var(--cth-command-purple) 12%, var(--cth-command-ivory))] text-[var(--cth-command-purple)]",
+    gold: "bg-[color-mix(in srgb, var(--cth-brand-secondary) 16%, var(--cth-command-ivory))] text-[var(--cth-warning-gold-deep)]",
+    green: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-command-success)]",
     blue: "bg-[var(--cth-surface-info-soft)] text-[var(--cth-info-blue-deep)]",
   };
 
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white p-5 shadow-sm">
       <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${tones[tone] || tones.rose}`}>
         <Icon size={20} />
       </div>
-      <div className="mt-4 text-2xl font-semibold text-[var(--cth-admin-ink)]">{value}</div>
-      <div className="mt-1 text-sm text-[var(--cth-admin-muted)]">{label}</div>
-      {hint ? <div className="mt-2 text-xs text-[var(--cth-copy-muted)]">{hint}</div> : null}
+      <div className="mt-4 text-2xl font-semibold text-[var(--cth-command-ink)]">{value}</div>
+      <div className="mt-1 text-sm text-[var(--cth-command-muted)]">{label}</div>
+      {hint ? <div className="mt-2 text-xs text-[var(--cth-command-muted)]">{hint}</div> : null}
     </div>
   );
 }
 
 function InsightCard({ title, body, tone = "neutral" }) {
   const tones = {
-    neutral: "border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)]",
+    neutral: "border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)]",
     success: "border-[rgba(34,197,94,0.25)] bg-[rgba(34,197,94,0.06)]",
     warning: "border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.06)]",
     danger: "border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.06)]",
@@ -76,15 +76,15 @@ function InsightCard({ title, body, tone = "neutral" }) {
 
   return (
     <div className={`rounded-xl border p-4 ${tones[tone] || tones.neutral}`}>
-      <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-      <div className="mt-2 text-sm text-[var(--cth-admin-muted)]">{body}</div>
+      <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{title}</div>
+      <div className="mt-2 text-sm text-[var(--cth-command-muted)]">{body}</div>
     </div>
   );
 }
 
 function SimpleTable({ columns, rows, emptyLabel = "No records found" }) {
   if (!rows.length) {
-    return <div className="text-sm text-[var(--cth-admin-muted)]">{emptyLabel}</div>;
+    return <div className="text-sm text-[var(--cth-command-muted)]">{emptyLabel}</div>;
   }
 
   return (
@@ -95,7 +95,7 @@ function SimpleTable({ columns, rows, emptyLabel = "No records found" }) {
             {columns.map((col) => (
               <th
                 key={col.key}
-                className="border-b border-[var(--cth-admin-border)] pb-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--cth-admin-muted)]"
+                className="border-b border-[var(--cth-command-border)] pb-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--cth-command-muted)]"
               >
                 {col.label}
               </th>
@@ -106,7 +106,7 @@ function SimpleTable({ columns, rows, emptyLabel = "No records found" }) {
           {rows.map((row, i) => (
             <tr key={row.id || i}>
               {columns.map((col) => (
-                <td key={col.key} className="border-b border-[var(--cth-surface-elevated-soft)] py-3 pr-4 align-top text-sm text-[var(--cth-admin-ink)]">
+                <td key={col.key} className="border-b border-[var(--cth-surface-elevated-soft)] py-3 pr-4 align-top text-sm text-[var(--cth-command-ink)]">
                   {col.render ? col.render(row) : row[col.key]}
                 </td>
               ))}
@@ -221,15 +221,15 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-[var(--cth-command-border)] bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-command-cinnabar) 14%, var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]">
               <BarChart3 size={20} />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">Manage</p>
-              <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-admin-ink)]">Analytics</h2>
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-command-purple)]">Manage</p>
+              <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-command-ink)]">Analytics</h2>
             </div>
           </div>
 
@@ -238,7 +238,7 @@ export default function AdminAnalyticsPage() {
           </SmallButton>
         </div>
 
-        <p className="mt-3 max-w-3xl text-sm text-[var(--cth-admin-muted)]">
+        <p className="mt-3 max-w-3xl text-sm text-[var(--cth-command-muted)]">
           This page is for SaaS performance analysis. It should answer: how healthy is revenue, how engaged are users,
           where are adoption gaps, and what needs intervention next.
         </p>
@@ -286,7 +286,7 @@ export default function AdminAnalyticsPage() {
           subtitle="What the current data suggests"
         >
           {loading ? (
-            <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+            <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
           ) : (
             <div className="grid gap-4">
               <InsightCard
@@ -337,7 +337,7 @@ export default function AdminAnalyticsPage() {
         subtitle="Current raw usage metrics from the backend"
       >
         {loading ? (
-          <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+          <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
         ) : (
           <SimpleTable
             columns={[
@@ -355,7 +355,7 @@ export default function AdminAnalyticsPage() {
         title="Instrumentation Roadmap"
         subtitle="What still needs to be added to make this a true SaaS analytics surface"
       >
-        <div className="grid gap-3 text-sm text-[var(--cth-admin-ink)]">
+        <div className="grid gap-3 text-sm text-[var(--cth-command-ink)]">
           <div>1. DAU / WAU / MAU tracking</div>
           <div>2. Feature adoption by module</div>
           <div>3. Onboarding funnel drop-off</div>

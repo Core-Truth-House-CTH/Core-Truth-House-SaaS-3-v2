@@ -164,10 +164,10 @@ export default function AdminProtectedRoute() {
   if (!isAllowed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--cth-surface-midnight)] p-6">
-        <div className="w-full max-w-lg rounded-2xl border border-[var(--cth-surface-sidebar-border)] bg-[linear-gradient(180deg,var(--cth-admin-ink),var(--cth-surface-midnight))] p-8 text-[var(--cth-on-dark)] shadow-xl">
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--cth-admin-muted)]">Core Truth House</p>
+        <div className="w-full max-w-lg rounded-2xl border border-[var(--cth-surface-sidebar-border)] bg-[linear-gradient(180deg,var(--cth-command-ink),var(--cth-surface-midnight))] p-8 text-[var(--cth-on-dark)] shadow-xl">
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--cth-command-muted)]">Core Truth House</p>
           <h1 className="mt-3 text-3xl font-semibold">Admin access required</h1>
-          <p className="mt-3 text-sm text-[var(--cth-admin-border)]">
+          <p className="mt-3 text-sm text-[var(--cth-command-border)]">
             Your session is signed in, but it does not currently resolve to an admin-authorized role.
           </p>
 
@@ -188,13 +188,13 @@ export default function AdminProtectedRoute() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               to="/admin/sign-in"
-              className="inline-flex items-center rounded-lg bg-[var(--cth-admin-accent)] px-4 py-2 text-sm font-medium text-white"
+              className="inline-flex items-center rounded-lg bg-[var(--cth-command-cinnabar)] px-4 py-2 text-sm font-medium text-white"
             >
               Return to admin sign-in
             </Link>
             <Link
               to="/command-center"
-              className="inline-flex items-center rounded-lg border border-[var(--cth-admin-muted)] px-4 py-2 text-sm font-medium text-[var(--cth-on-dark)]"
+              className="inline-flex items-center rounded-lg border border-[var(--cth-command-muted)] px-4 py-2 text-sm font-medium text-[var(--cth-on-dark)]"
             >
               Go to command center
             </Link>

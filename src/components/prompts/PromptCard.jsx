@@ -2,16 +2,16 @@ import React from 'react';
 import { Star, Copy, Trash2, Check } from 'lucide-react';
 
 const categoryColors = {
-  'generator-scene': 'var(--cth-admin-accent)',
-  'generator-dna': 'var(--cth-admin-ruby)',
+  'generator-scene': 'var(--cth-command-cinnabar)',
+  'generator-dna': 'var(--cth-command-purple)',
   'generator-god-prompt': 'var(--cth-brand-primary)',
   'generator-launch': 'var(--cth-brand-primary-soft)',
-  'custom': 'var(--cth-admin-muted)',
+  'custom': 'var(--cth-command-muted)',
 };
 
 export function PromptCard({ prompt, onCopy, onFavorite, onDelete, copied }) {
   return (
-    <div className="p-4 rounded-xl cth-card border border-[var(--cth-admin-border)] hover:border-[rgba(224,78,53,0.24)] transition-all">
+    <div className="p-4 rounded-xl cth-card border border-[var(--cth-command-border)] hover:border-[rgba(224,78,53,0.24)] transition-all">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -33,7 +33,7 @@ export function PromptCard({ prompt, onCopy, onFavorite, onDelete, copied }) {
           <button
             onClick={() => onFavorite(prompt.id)}
             className={`p-2 rounded-lg transition-colors ${
-              prompt.is_favorite ? 'text-[var(--cth-admin-accent)]' : 'text-gray-500 hover:text-gray-300'
+              prompt.is_favorite ? 'text-[var(--cth-command-cinnabar)]' : 'text-gray-500 hover:text-gray-300'
             }`}
           >
             <Star className={`w-4 h-4 ${prompt.is_favorite ? 'fill-current' : ''}`} />

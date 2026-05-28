@@ -26,23 +26,23 @@ import {
 } from "lucide-react";
 function AdminCard({ title, description, to, icon: Icon, tone = "rose" }) {
   const tones = {
-    rose: "bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]",
-    plum: "bg-[color-mix(in srgb, var(--cth-admin-ruby) 12%, var(--cth-admin-panel))] text-[var(--cth-admin-ruby)]",
-    gold: "bg-[color-mix(in srgb, var(--cth-brand-secondary) 16%, var(--cth-admin-panel))] text-[var(--cth-warning-gold-deep)]",
-    green: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-status-success-deep)]",
+    rose: "bg-[color-mix(in srgb, var(--cth-command-cinnabar) 14%, var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]",
+    plum: "bg-[color-mix(in srgb, var(--cth-command-purple) 12%, var(--cth-command-ivory))] text-[var(--cth-command-purple)]",
+    gold: "bg-[color-mix(in srgb, var(--cth-brand-secondary) 16%, var(--cth-command-ivory))] text-[var(--cth-warning-gold-deep)]",
+    green: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-command-success)]",
     blue: "bg-[var(--cth-surface-info-soft)] text-[var(--cth-info-blue-deep)]",
   };
 
   return (
     <Link
       to={to}
-      className="rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-5 transition hover:border-[var(--cth-admin-muted)]"
+      className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-5 transition hover:border-[var(--cth-command-muted)]"
     >
       <div className={`flex h-11 w-11 items-center justify-center rounded ${tones[tone] || tones.rose}`}>
         <Icon size={20} />
       </div>
-      <h3 className="mt-4 text-lg font-semibold text-[var(--cth-admin-ink)]">{title}</h3>
-      <p className="mt-2 text-sm text-[var(--cth-admin-muted)]">{description}</p>
+      <h3 className="mt-4 text-lg font-semibold text-[var(--cth-command-ink)]">{title}</h3>
+      <p className="mt-2 text-sm text-[var(--cth-command-muted)]">{description}</p>
     </Link>
   );
 }
@@ -51,8 +51,8 @@ function Section({ title, subtitle, children }) {
   return (
     <section className="space-y-3">
       <div>
-        <h2 className="text-xl font-semibold text-[var(--cth-admin-ink)]">{title}</h2>
-        <p className="mt-1 text-sm text-[var(--cth-admin-muted)]">{subtitle}</p>
+        <h2 className="text-xl font-semibold text-[var(--cth-command-ink)]">{title}</h2>
+        <p className="mt-1 text-sm text-[var(--cth-command-muted)]">{subtitle}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</div>
     </section>
@@ -61,31 +61,31 @@ function Section({ title, subtitle, children }) {
 
 function StatCard({ icon: Icon, label, value, tone = "rose" }) {
   const tones = {
-    rose: "bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]",
-    plum: "bg-[color-mix(in srgb, var(--cth-admin-ruby) 12%, var(--cth-admin-panel))] text-[var(--cth-admin-ruby)]",
-    gold: "bg-[color-mix(in srgb, var(--cth-brand-secondary) 16%, var(--cth-admin-panel))] text-[var(--cth-warning-gold-deep)]",
-    green: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-status-success-deep)]",
+    rose: "bg-[color-mix(in srgb, var(--cth-command-cinnabar) 14%, var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]",
+    plum: "bg-[color-mix(in srgb, var(--cth-command-purple) 12%, var(--cth-command-ivory))] text-[var(--cth-command-purple)]",
+    gold: "bg-[color-mix(in srgb, var(--cth-brand-secondary) 16%, var(--cth-command-ivory))] text-[var(--cth-warning-gold-deep)]",
+    green: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-command-success)]",
     blue: "bg-[var(--cth-surface-info-soft)] text-[var(--cth-info-blue-deep)]",
   };
 
   return (
-    <div className="rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-5">
+    <div className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-5">
       <div className={`flex h-11 w-11 items-center justify-center rounded ${tones[tone] || tones.rose}`}>
         <Icon size={20} />
       </div>
-      <div className="mt-4 text-2xl font-semibold text-[var(--cth-admin-ink)]">{value}</div>
-      <div className="mt-1 text-sm text-[var(--cth-admin-muted)]">{label}</div>
+      <div className="mt-4 text-2xl font-semibold text-[var(--cth-command-ink)]">{value}</div>
+      <div className="mt-1 text-sm text-[var(--cth-command-muted)]">{label}</div>
     </div>
   );
 }
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
-    <div className="rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-admin-border)] px-5 py-4">
+    <div className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-command-border)] px-5 py-4">
         <div>
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">{subtitle}</div> : null}
+          <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{title}</div>
+          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-command-muted)]">{subtitle}</div> : null}
         </div>
         {actions}
       </div>
@@ -99,7 +99,7 @@ function SmallButton({ onClick, children, disabled = false, icon: Icon = null })
     <button
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center gap-2 rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-2 text-xs text-[var(--cth-admin-ruby)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
+      className="inline-flex items-center gap-2 rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] px-3 py-2 text-xs text-[var(--cth-command-purple)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
     >
       {Icon ? <Icon size={13} /> : null}
       {children}
@@ -147,15 +147,15 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-6">
+      <section className="rounded border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded bg-[color-mix(in srgb, var(--cth-command-cinnabar) 14%, var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]">
               <LayoutDashboard size={20} />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">Manage</p>
-              <h1 className="mt-1 text-3xl font-semibold text-[var(--cth-admin-ink)]">Admin Dashboard</h1>
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-command-purple)]">Manage</p>
+              <h1 className="mt-1 text-3xl font-semibold text-[var(--cth-command-ink)]">Admin Dashboard</h1>
             </div>
           </div>
 
@@ -164,7 +164,7 @@ export default function AdminDashboardPage() {
           </SmallButton>
         </div>
 
-        <p className="mt-3 max-w-3xl text-sm text-[var(--cth-admin-muted)]">
+        <p className="mt-3 max-w-3xl text-sm text-[var(--cth-command-muted)]">
           Live admin command center for Core Truth House. Review platform health, operational totals, revenue snapshots,
           and jump into the right admin systems without dropping back into the tenant shell.
         </p>
@@ -183,9 +183,9 @@ export default function AdminDashboardPage() {
           subtitle="Live overview from the admin backend"
         >
           {loading ? (
-            <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+            <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
           ) : (
-            <div className="grid gap-3 text-sm text-[var(--cth-admin-ink)]">
+            <div className="grid gap-3 text-sm text-[var(--cth-command-ink)]">
               <div>Total workspaces: {workspaces.total || 0}</div>
               <div>Active workspaces: {workspaces.active || 0}</div>
               <div>Total users: {users.total || 0}</div>
@@ -199,9 +199,9 @@ export default function AdminDashboardPage() {
           subtitle="Store and billing summary"
         >
           {loading ? (
-            <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+            <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
           ) : (
-            <div className="grid gap-3 text-sm text-[var(--cth-admin-ink)]">
+            <div className="grid gap-3 text-sm text-[var(--cth-command-ink)]">
               <div>Store revenue: {formatDollars(store.revenue_dollars || 0)}</div>
               <div>Completed orders: {store.completed_orders || 0}</div>
               <div>Billing revenue: {formatDollars(billing.revenue_dollars || 0)}</div>

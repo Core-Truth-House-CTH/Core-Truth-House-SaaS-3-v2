@@ -38,7 +38,7 @@ export function AdminModelConfig({ adminId }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-[var(--cth-admin-accent)]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[var(--cth-command-cinnabar)]" />
       </div>
     );
   }
@@ -50,14 +50,14 @@ export function AdminModelConfig({ adminId }) {
   });
 
   const providerLabels = { anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google' };
-  const providerColors = { anthropic: 'var(--cth-status-warning)', openai: 'var(--cth-status-success-bright)', google: 'var(--cth-status-info)' };
+  const providerColors = { anthropic: 'var(--cth-command-warning)', openai: 'var(--cth-command-success)', google: 'var(--cth-command-purple)' };
 
   return (
     <div className="space-y-6" data-testid="ai-model-config-tab">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-[var(--cth-admin-accent)]" />
+            <Cpu className="w-5 h-5 text-[var(--cth-command-cinnabar)]" />
             AI Model Selection
           </h3>
           <p className="text-sm text-gray-400 mt-1">
@@ -73,8 +73,8 @@ export function AdminModelConfig({ adminId }) {
       </div>
 
       {/* Current model banner */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-[var(--cth-admin-accent)]/10 to-[var(--cth-brand-primary)]/5 border border-[var(--cth-admin-accent)]/30">
-        <div className="text-xs text-[var(--cth-admin-accent)] uppercase tracking-wider font-medium mb-2">Currently Active</div>
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-[var(--cth-command-cinnabar)]/10 to-[var(--cth-brand-primary)]/5 border border-[var(--cth-command-cinnabar)]/30">
+        <div className="text-xs text-[var(--cth-command-cinnabar)] uppercase tracking-wider font-medium mb-2">Currently Active</div>
         <div className="text-white font-bold text-lg">
           {models.find(m => m.model_id === current.model_id)?.label || current.model_id}
         </div>
@@ -87,7 +87,7 @@ export function AdminModelConfig({ adminId }) {
       {Object.entries(providerGroups).map(([provider, providerModels]) => (
         <div key={provider}>
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full" style={{ background: providerColors[provider] || 'var(--cth-admin-muted)' }} />
+            <div className="w-2 h-2 rounded-full" style={{ background: providerColors[provider] || 'var(--cth-command-muted)' }} />
             <span className="text-sm font-semibold text-gray-300">{providerLabels[provider] || provider}</span>
           </div>
           <div className="grid md:grid-cols-2 gap-3">
@@ -101,14 +101,14 @@ export function AdminModelConfig({ adminId }) {
                   disabled={saving}
                   className={`relative p-5 rounded-xl border text-left transition-all ${
                     isActive
-                      ? 'bg-[var(--cth-admin-accent)]/10 border-[var(--cth-admin-accent)]/50'
-                      : 'bg-[var(--cth-admin-ink)] border-white/10 hover:border-[var(--cth-admin-accent)]/30 hover:bg-[var(--cth-admin-ink)]/80'
+                      ? 'bg-[var(--cth-command-cinnabar)]/10 border-[var(--cth-command-cinnabar)]/50'
+                      : 'bg-[var(--cth-command-ink)] border-white/10 hover:border-[var(--cth-command-cinnabar)]/30 hover:bg-[var(--cth-command-ink)]/80'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-white font-semibold">{model.label}</span>
                     {isActive && (
-                      <div className="w-6 h-6 rounded-full bg-[var(--cth-admin-accent)] flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-[var(--cth-command-cinnabar)] flex items-center justify-center">
                         <Check size={14} className="text-white" />
                       </div>
                     )}

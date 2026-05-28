@@ -9,11 +9,11 @@ const API = import.meta.env.VITE_BACKEND_URL;
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-admin-border)] px-5 py-4">
+    <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-command-border)] px-5 py-4">
         <div>
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">{subtitle}</div> : null}
+          <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{title}</div>
+          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-command-muted)]">{subtitle}</div> : null}
         </div>
         {actions}
       </div>
@@ -27,7 +27,7 @@ function SmallButton({ onClick, children, disabled = false, icon: Icon = null })
     <button
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-2 text-xs text-[var(--cth-admin-ruby)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
+      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] px-3 py-2 text-xs text-[var(--cth-command-purple)] transition hover:bg-[var(--cth-surface-elevated-soft)] disabled:opacity-50"
     >
       {Icon ? <Icon size={13} /> : null}
       {children}
@@ -37,31 +37,31 @@ function SmallButton({ onClick, children, disabled = false, icon: Icon = null })
 
 function StatCard({ icon: Icon, label, value, tone = "rose", hint = "" }) {
   const tones = {
-    rose: "bg-[color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))] text-[var(--cth-admin-accent)]",
-    plum: "bg-[color-mix(in srgb, var(--cth-admin-ruby) 12%, var(--cth-admin-panel))] text-[var(--cth-admin-ruby)]",
-    gold: "bg-[color-mix(in srgb, var(--cth-brand-secondary) 16%, var(--cth-admin-panel))] text-[var(--cth-warning-gold-deep)]",
-    green: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-status-success-deep)]",
+    rose: "bg-[color-mix(in srgb, var(--cth-command-cinnabar) 14%, var(--cth-command-ivory))] text-[var(--cth-command-cinnabar)]",
+    plum: "bg-[color-mix(in srgb, var(--cth-command-purple) 12%, var(--cth-command-ivory))] text-[var(--cth-command-purple)]",
+    gold: "bg-[color-mix(in srgb, var(--cth-brand-secondary) 16%, var(--cth-command-ivory))] text-[var(--cth-warning-gold-deep)]",
+    green: "bg-[var(--cth-surface-success-soft)] text-[var(--cth-command-success)]",
     blue: "bg-[var(--cth-surface-info-soft)] text-[var(--cth-info-blue-deep)]",
   };
 
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white p-5 shadow-sm">
       <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${tones[tone] || tones.rose}`}>
         <Icon size={20} />
       </div>
-      <div className="mt-4 text-2xl font-semibold text-[var(--cth-admin-ink)]">{value}</div>
-      <div className="mt-1 text-sm text-[var(--cth-admin-muted)]">{label}</div>
-      {hint ? <div className="mt-2 text-xs text-[var(--cth-copy-muted)]">{hint}</div> : null}
+      <div className="mt-4 text-2xl font-semibold text-[var(--cth-command-ink)]">{value}</div>
+      <div className="mt-1 text-sm text-[var(--cth-command-muted)]">{label}</div>
+      {hint ? <div className="mt-2 text-xs text-[var(--cth-command-muted)]">{hint}</div> : null}
     </div>
   );
 }
 
 function StatusPill({ label, tone = "neutral" }) {
   const tones = {
-    neutral: "bg-[var(--cth-admin-panel-alt)] text-[var(--cth-admin-muted)]",
-    success: "bg-[var(--cth-status-success-soft-bg)] text-[var(--cth-status-success-deep)]",
-    warning: "bg-[var(--cth-status-warning-soft-bg)] text-[var(--cth-status-warning-deep)]",
-    danger: "bg-[var(--cth-status-danger-soft-bg)] text-[var(--cth-status-danger-deep)]",
+    neutral: "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-muted)]",
+    success: "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-success)]",
+    warning: "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-warning)]",
+    danger: "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-error)]",
   };
 
   return (
@@ -107,7 +107,7 @@ function normalizeMilestones(progress) {
 
 function InsightCard({ title, body, tone = "neutral" }) {
   const tones = {
-    neutral: "border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)]",
+    neutral: "border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)]",
     success: "border-[rgba(34,197,94,0.25)] bg-[rgba(34,197,94,0.06)]",
     warning: "border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.06)]",
     danger: "border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.06)]",
@@ -115,8 +115,8 @@ function InsightCard({ title, body, tone = "neutral" }) {
 
   return (
     <div className={`rounded-xl border p-4 ${tones[tone] || tones.neutral}`}>
-      <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-      <div className="mt-2 text-sm text-[var(--cth-admin-muted)]">{body}</div>
+      <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{title}</div>
+      <div className="mt-2 text-sm text-[var(--cth-command-muted)]">{body}</div>
     </div>
   );
 }
@@ -192,15 +192,15 @@ export default function AdminOnboardingPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-[var(--cth-command-border)] bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-admin-ruby) 12%, var(--cth-admin-panel))] text-[var(--cth-admin-ruby)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-command-purple) 12%, var(--cth-command-ivory))] text-[var(--cth-command-purple)]">
               <BookOpen size={20} />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">Manage</p>
-              <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-admin-ink)]">Onboarding & Training</h2>
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-command-purple)]">Manage</p>
+              <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-command-ink)]">Onboarding & Training</h2>
             </div>
           </div>
 
@@ -209,7 +209,7 @@ export default function AdminOnboardingPage() {
           </SmallButton>
         </div>
 
-        <p className="mt-3 max-w-3xl text-sm text-[var(--cth-admin-muted)]">
+        <p className="mt-3 max-w-3xl text-sm text-[var(--cth-command-muted)]">
           This page should help admin see where onboarding is moving, where people get stuck, and what training content exists to reduce friction.
         </p>
       </section>
@@ -251,27 +251,27 @@ export default function AdminOnboardingPage() {
           subtitle="Live progress from the onboarding backend"
         >
           {loading ? (
-            <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+            <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
           ) : (
             <div className="grid gap-4">
-              <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
-                <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">Current Step</div>
-                <div className="mt-2 text-sm text-[var(--cth-admin-muted)]">{String(onboardingStep)}</div>
+              <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
+                <div className="text-sm font-semibold text-[var(--cth-command-ink)]">Current Step</div>
+                <div className="mt-2 text-sm text-[var(--cth-command-muted)]">{String(onboardingStep)}</div>
               </div>
 
-              <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
-                <div className="mb-3 text-sm font-semibold text-[var(--cth-admin-ink)]">Milestone Status</div>
+              <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
+                <div className="mb-3 text-sm font-semibold text-[var(--cth-command-ink)]">Milestone Status</div>
                 {milestones.length ? (
                   <div className="grid gap-2">
                     {milestones.map((m) => (
                       <div key={m.id} className="flex items-center justify-between gap-3 rounded-lg border border-[var(--cth-surface-elevated-soft)] px-3 py-2">
-                        <div className="text-sm capitalize text-[var(--cth-admin-ink)]">{m.label}</div>
+                        <div className="text-sm capitalize text-[var(--cth-command-ink)]">{m.label}</div>
                         <StatusPill label={m.complete ? "complete" : "incomplete"} tone={m.complete ? "success" : "warning"} />
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-sm text-[var(--cth-admin-muted)]">No milestone data found.</div>
+                  <div className="text-sm text-[var(--cth-command-muted)]">No milestone data found.</div>
                 )}
               </div>
             </div>
@@ -283,7 +283,7 @@ export default function AdminOnboardingPage() {
           subtitle="Where onboarding may need intervention"
         >
           {loading ? (
-            <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+            <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
           ) : (
             <div className="grid gap-4">
               <InsightCard
@@ -320,7 +320,7 @@ export default function AdminOnboardingPage() {
         subtitle="Connected admin training surface"
       >
         {loading ? (
-          <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+          <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
         ) : (
           <AdminTrainingVideos
             trainingVideos={trainingVideos}
@@ -335,28 +335,28 @@ export default function AdminOnboardingPage() {
         subtitle="What should be connected next"
       >
         <div className="grid gap-3">
-          <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
+          <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 text-[var(--cth-status-warning-deep)]" size={16} />
+              <AlertTriangle className="mt-0.5 text-[var(--cth-command-warning)]" size={16} />
               <div>
-                <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">Aggregate onboarding by workspace</div>
-                <div className="mt-1 text-sm text-[var(--cth-admin-muted)]">
+                <div className="text-sm font-semibold text-[var(--cth-command-ink)]">Aggregate onboarding by workspace</div>
+                <div className="mt-1 text-sm text-[var(--cth-command-muted)]">
                   The current connected view is useful, but the real admin version should summarize onboarding progress across all workspaces and users.
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
-            <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">Tie friction to support actions</div>
-            <div className="mt-1 text-sm text-[var(--cth-admin-muted)]">
+          <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
+            <div className="text-sm font-semibold text-[var(--cth-command-ink)]">Tie friction to support actions</div>
+            <div className="mt-1 text-sm text-[var(--cth-command-muted)]">
               Next step is linking stuck onboarding states to Help Desk, Knowledge Base, and Notifications.
             </div>
           </div>
 
-          <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
-            <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">Track training completion, not just training inventory</div>
-            <div className="mt-1 text-sm text-[var(--cth-admin-muted)]">
+          <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] p-4">
+            <div className="text-sm font-semibold text-[var(--cth-command-ink)]">Track training completion, not just training inventory</div>
+            <div className="mt-1 text-sm text-[var(--cth-command-muted)]">
               The page now sees training content. Next it should track who completed which tutorial and where adoption drops.
             </div>
           </div>

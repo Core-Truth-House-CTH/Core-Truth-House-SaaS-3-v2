@@ -10,12 +10,12 @@ export function AdminTenants({ tenants, searchQuery, setSearchQuery, viewClient 
         <input
           type="text" placeholder="Search tenants..."
           value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-[var(--cth-admin-ink)] border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[var(--cth-admin-accent)]/50"
+          className="w-full pl-10 pr-4 py-2.5 bg-[var(--cth-command-ink)] border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[var(--cth-command-cinnabar)]/50"
         />
       </div>
       <div className="overflow-hidden rounded-2xl border border-white/10">
         <table className="w-full">
-          <thead className="bg-[var(--cth-admin-ink)]">
+          <thead className="bg-[var(--cth-command-ink)]">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Workspace</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Plan</th>
@@ -33,8 +33,8 @@ export function AdminTenants({ tenants, searchQuery, setSearchQuery, viewClient 
               <tr key={tenant.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--cth-admin-accent)]/20 flex items-center justify-center">
-                      <Building2 className="w-4 h-4 text-[var(--cth-admin-accent)]" />
+                    <div className="w-8 h-8 rounded-lg bg-[var(--cth-command-cinnabar)]/20 flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-[var(--cth-command-cinnabar)]" />
                     </div>
                     <div>
                       <div className="text-white font-medium">{tenant.name}</div>

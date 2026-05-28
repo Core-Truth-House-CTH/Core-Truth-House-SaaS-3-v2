@@ -240,7 +240,7 @@ export function SaveStatusBar({ persist }) {
   if (persist.loading) {
     return (
       <div className="flex items-center gap-2">
-        <div className="w-3 h-3 rounded-full border-2 border-[var(--cth-admin-accent)]/30 border-t-[var(--cth-admin-accent)] animate-spin" />
+        <div className="w-3 h-3 rounded-full border-2 border-[var(--cth-command-cinnabar)]/30 border-t-[var(--cth-command-cinnabar)] animate-spin" />
         <span className="text-[11px] text-white/35">Loading...</span>
       </div>
     );
@@ -254,7 +254,7 @@ export function SaveStatusBar({ persist }) {
           height="12"
           fill="none"
           viewBox="0 0 24 24"
-          stroke="var(--cth-status-danger)"
+          stroke="var(--cth-command-error)"
           strokeWidth="2"
         >
           <circle cx="12" cy="12" r="10" />
@@ -263,7 +263,7 @@ export function SaveStatusBar({ persist }) {
         <span className="text-[11px] text-red-400">{persist.error}</span>
         <button
           onClick={() => persist.save()}
-          className="text-[10.5px] text-[var(--cth-admin-accent)] underline bg-transparent border-none cursor-pointer"
+          className="text-[10.5px] text-[var(--cth-command-cinnabar)] underline bg-transparent border-none cursor-pointer"
         >
           Retry
         </button>
@@ -274,7 +274,7 @@ export function SaveStatusBar({ persist }) {
   if (persist.saving) {
     return (
       <div className="flex items-center gap-2">
-        <div className="w-3 h-3 rounded-full border-2 border-[var(--cth-admin-accent)]/30 border-t-[var(--cth-admin-accent)] animate-spin" />
+        <div className="w-3 h-3 rounded-full border-2 border-[var(--cth-command-cinnabar)]/30 border-t-[var(--cth-command-cinnabar)] animate-spin" />
         <span className="text-[11px] text-white/40">Saving...</span>
       </div>
     );
@@ -288,7 +288,7 @@ export function SaveStatusBar({ persist }) {
           height="12"
           fill="none"
           viewBox="0 0 24 24"
-          stroke="var(--cth-status-success-bright)"
+          stroke="var(--cth-command-success)"
           strokeWidth="2"
         >
           <path
@@ -309,7 +309,7 @@ export function SaveStatusBar({ persist }) {
         <span className="text-[11px] text-white/30">Unsaved changes</span>
         <button
           onClick={() => persist.save()}
-          className="text-[11px] text-[var(--cth-admin-accent)] px-2.5 py-0.5 rounded-md border border-[var(--cth-admin-accent)]/30 bg-transparent cursor-pointer hover:bg-[var(--cth-admin-accent)]/10 transition-colors"
+          className="text-[11px] text-[var(--cth-command-cinnabar)] px-2.5 py-0.5 rounded-md border border-[var(--cth-command-cinnabar)]/30 bg-transparent cursor-pointer hover:bg-[var(--cth-command-cinnabar)]/10 transition-colors"
         >
           Save now
         </button>

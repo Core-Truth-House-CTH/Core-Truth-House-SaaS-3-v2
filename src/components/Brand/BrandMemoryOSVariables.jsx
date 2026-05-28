@@ -232,14 +232,14 @@ const PLATFORM_OPTIONS = [
 const PERSIST_DEFAULTS = {};
 
 const C = {
-  accent: 'var(--cth-admin-accent)',
+  accent: 'var(--cth-command-cinnabar)',
   panel: 'var(--cth-surface-night)',
-  border: 'var(--cth-admin-border)',
-  t60: 'var(--cth-admin-ink-soft)',
-  t40: 'var(--cth-admin-muted)',
-  t10: 'var(--cth-admin-border)',
-  green: 'var(--cth-status-success-bright)',
-  amber: 'var(--cth-status-warning)',
+  border: 'var(--cth-command-border)',
+  t60: 'var(--cth-command-muted)',
+  t40: 'var(--cth-command-muted)',
+  t10: 'var(--cth-command-border)',
+  green: 'var(--cth-command-success)',
+  amber: 'var(--cth-command-warning)',
   font: "'DM Sans', sans-serif",
 };
 
@@ -382,7 +382,7 @@ export default function BrandMemoryOSVariables() {
               padding: '6px 12px',
               borderRadius: 8,
               background:
-                completion.percent >= 80 ? 'rgba(34,197,94,0.1)' : 'var(--cth-admin-panel-alt)',
+                completion.percent >= 80 ? 'rgba(34,197,94,0.1)' : 'var(--cth-command-panel-soft)',
               border: `1px solid ${
                 completion.percent >= 80 ? 'rgba(34,197,94,0.3)' : C.border
               }`,
@@ -613,7 +613,7 @@ export default function BrandMemoryOSVariables() {
                               border: `1px solid ${
                                 isMissing ? 'rgba(245,158,11,0.35)' : C.border
                               }`,
-                              background: 'var(--cth-admin-panel-alt)',
+                              background: 'var(--cth-command-panel-soft)',
                               color: 'var(--cth-on-dark)',
                               fontSize: 13,
                               fontFamily: C.font,
@@ -635,7 +635,7 @@ export default function BrandMemoryOSVariables() {
                               border: `1px solid ${
                                 isMissing ? 'rgba(245,158,11,0.35)' : C.border
                               }`,
-                              background: 'var(--cth-admin-panel-alt)',
+                              background: 'var(--cth-command-panel-soft)',
                               color: 'var(--cth-on-dark)',
                               fontSize: 13,
                               fontFamily: C.font,

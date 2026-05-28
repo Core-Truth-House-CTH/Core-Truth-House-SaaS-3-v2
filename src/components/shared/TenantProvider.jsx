@@ -130,7 +130,7 @@ export function TenantGuard({ children, fallback = null }) {
     return (
       fallback || (
         <div className="flex items-center justify-center min-h-[200px]">
-          <div className="w-6 h-6 border-2 border-[var(--cth-admin-accent)]/30 border-t-[var(--cth-admin-accent)] rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-[var(--cth-command-cinnabar)]/30 border-t-[var(--cth-command-cinnabar)] rounded-full animate-spin" />
         </div>
       )
     );

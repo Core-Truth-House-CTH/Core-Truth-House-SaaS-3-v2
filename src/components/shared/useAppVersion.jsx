@@ -147,10 +147,10 @@ export function AppVersionBanner() {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--cth-admin-accent)" strokeWidth="2">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--cth-command-cinnabar)" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
-        <span style={{ fontSize: 12, color: 'var(--cth-admin-ink-soft)' }}>
+        <span style={{ fontSize: 12, color: 'var(--cth-command-muted)' }}>
           A new version of CTH OS is ready
         </span>
       </div>
@@ -161,7 +161,7 @@ export function AppVersionBanner() {
           padding: '5px 16px', 
           borderRadius: 7, 
           border: 'none', 
-          background: 'var(--cth-admin-accent)', 
+          background: 'var(--cth-command-cinnabar)', 
           color: 'var(--cth-on-dark)', 
           fontSize: 11.5, 
           fontWeight: 600, 

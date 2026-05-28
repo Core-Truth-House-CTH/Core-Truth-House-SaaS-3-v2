@@ -36,10 +36,10 @@ import { useState } from 'react'
 
 var CTH_PALETTE = {
   primary:    'var(--cth-brand-primary)',
-  secondary:  'var(--cth-admin-accent)',
-  accent:     'var(--cth-admin-muted)',
+  secondary:  'var(--cth-command-cinnabar)',
+  accent:     'var(--cth-command-muted)',
   dark:       'var(--cth-brand-primary-deep)',
-  ruby:       'var(--cth-admin-ruby)',
+  ruby:       'var(--cth-command-purple)',
   background: 'var(--cth-brand-primary-deep)',
   gold:       'var(--cth-brand-secondary)',
 }
@@ -589,7 +589,7 @@ export var PROMPT_LIBRARY = {
       label: 'Education — Carousel Background',
       platform: 'Instagram Carousel',
       phase: 'education',
-      full_prompt:         'Luxury editorial background for Instagram carousel slides. Clean architectural surface — dark aubergine marble or deep matte surface. Soft diffused daylight from left. Small brand-colored accent elements in crimson var(--cth-admin-accent) and tuscany var(--cth-admin-muted). 1:1 square, top-down slight angle, editorial magazine aesthetic. Mood: structured authority, intelligent clarity. Ultra realistic flat lay photography, space for text overlay, minimal composition. No generic stock photography.',
+      full_prompt:         'Luxury editorial background for Instagram carousel slides. Clean architectural surface — dark aubergine marble or deep matte surface. Soft diffused daylight from left. Small brand-colored accent elements in crimson var(--cth-command-cinnabar) and tuscany var(--cth-command-muted). 1:1 square, top-down slight angle, editorial magazine aesthetic. Mood: structured authority, intelligent clarity. Ultra realistic flat lay photography, space for text overlay, minimal composition. No generic stock photography.',
     },
 
     authority_portrait: {
@@ -695,7 +695,7 @@ export var PROMPT_LIBRARY = {
 
     // CTH brand defaults
     cth_defaults: {
-      palette:    'deep aubergine var(--cth-brand-primary-soft), Alabama Crimson var(--cth-brand-primary), Cinnabar var(--cth-admin-accent), Tuscany Rose var(--cth-admin-muted), warm gold var(--cth-brand-secondary)',
+      palette:    'deep aubergine var(--cth-brand-primary-soft), Alabama Crimson var(--cth-brand-primary), Cinnabar var(--cth-command-cinnabar), Tuscany Rose var(--cth-command-muted), warm gold var(--cth-brand-secondary)',
       quality:    'ultra realistic, DSLR photography, cinematic editorial photography, shallow depth of field, 8k detail',
       anti:       CTH_ANTI_PATTERNS,
     },
@@ -717,7 +717,7 @@ export var PROMPT_LIBRARY = {
 
 var C = {
   bg: 'var(--cth-brand-primary-deep)', bgCard: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.07)',
-  accent: 'var(--cth-admin-accent)', white: 'var(--cth-white)',
+  accent: 'var(--cth-command-cinnabar)', white: 'var(--cth-white)',
   t60: 'var(--cth-text-on-dark-muted)', t50: 'rgba(255,255,255,0.5)',
   t40: 'rgba(255,255,255,0.4)', t30: 'rgba(255,255,255,0.3)',
   t25: 'rgba(255,255,255,0.25)', t20: 'rgba(255,255,255,0.2)',
@@ -735,7 +735,7 @@ var PILLARS_EDITORIAL = [
   { id: 'subject',     label: '🎭 Subject',              hint: 'Who or what is the focus', example: 'Confident brand founder at a luxury marble desk' },
   { id: 'environment', label: '🌿 Environment',          hint: 'Where does the scene take place', example: 'Luxury high-rise office, aubergine walls, city view' },
   { id: 'lighting',    label: '💡 Lighting',             hint: 'How is the scene lit — controls emotion', example: 'Warm golden hour light streaming through windows' },
-  { id: 'wardrobe',    label: '👗 Wardrobe / Style',     hint: 'What is worn or designed with', example: 'Tailored burgundy power suit, gold jewelry, var(--cth-brand-primary) var(--cth-admin-accent)' },
+  { id: 'wardrobe',    label: '👗 Wardrobe / Style',     hint: 'What is worn or designed with', example: 'Tailored burgundy power suit, gold jewelry, var(--cth-brand-primary) var(--cth-command-cinnabar)' },
   { id: 'camera',      label: '📸 Camera & Composition', hint: 'Lens, angle, framing', example: '85mm portrait lens, shallow depth of field, slight low angle' },
   { id: 'emotion',     label: '⚡ Emotion / Energy',     hint: 'What feeling does this carry', example: 'Quiet authority, earned confidence, calm certainty' },
 ]
@@ -941,7 +941,7 @@ export function PromptBuilderPanel(props) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
             <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', color: C.t25, margin: 0 }}>Built Prompt</p>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={handleCopy} style={{ fontSize: 10.5, color: copied ? 'var(--cth-status-success-bright)' : C.t40, background: 'none', border: 'none', cursor: 'pointer', fontFamily: C.font }}>
+              <button onClick={handleCopy} style={{ fontSize: 10.5, color: copied ? 'var(--cth-command-success)' : C.t40, background: 'none', border: 'none', cursor: 'pointer', fontFamily: C.font }}>
                 {copied ? '✓ Copied' : 'Copy'}
               </button>
               {onUsePrompt && (

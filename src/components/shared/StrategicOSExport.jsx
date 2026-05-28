@@ -59,16 +59,16 @@ function OptionCard({ icon, title, text, active, onClick }) {
       onClick={onClick}
       className="w-full rounded-2xl border p-4 text-left transition hover:opacity-90"
       style={{
-        borderColor: active ? 'var(--cth-admin-accent)' : 'var(--cth-admin-border)',
-        background: active ? 'color-mix(in srgb, var(--cth-admin-accent) 8%, var(--cth-admin-panel))' : 'var(--cth-admin-panel)',
+        borderColor: active ? 'var(--cth-command-cinnabar)' : 'var(--cth-command-border)',
+        background: active ? 'color-mix(in srgb, var(--cth-command-cinnabar) 8%, var(--cth-command-ivory))' : 'var(--cth-command-ivory)',
       }}
     >
       <div className="flex items-start gap-3">
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
           style={{
-            background: 'var(--cth-admin-panel-alt)',
-            color: 'var(--cth-admin-accent)',
+            background: 'var(--cth-command-panel-soft)',
+            color: 'var(--cth-command-cinnabar)',
           }}
         >
           {icon}
@@ -259,8 +259,8 @@ export default function StrategicOSExport({ onClose, completedSteps = {}, inline
                 key={step.number}
                 className="flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-xs"
                 style={{
-                  borderColor: checked ? 'var(--cth-admin-accent)' : 'var(--cth-admin-border)',
-                  background: checked ? 'color-mix(in srgb, var(--cth-admin-accent) 7%, var(--cth-admin-panel))' : 'var(--cth-admin-panel)',
+                  borderColor: checked ? 'var(--cth-command-cinnabar)' : 'var(--cth-command-border)',
+                  background: checked ? 'color-mix(in srgb, var(--cth-command-cinnabar) 7%, var(--cth-command-ivory))' : 'var(--cth-command-ivory)',
                 }}
               >
                 <input
@@ -291,7 +291,7 @@ export default function StrategicOSExport({ onClose, completedSteps = {}, inline
       ) : null}
 
       {status === 'ready' ? (
-        <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--cth-success)', background: 'color-mix(in srgb, var(--cth-success) 8%, var(--cth-admin-panel))' }}>
+        <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--cth-success)', background: 'color-mix(in srgb, var(--cth-success) 8%, var(--cth-command-ivory))' }}>
           <div className="flex items-center gap-2">
             <CheckCircle size={18} className="cth-text-success" />
             <p className="m-0 text-sm font-semibold cth-heading">Your report is ready.</p>
@@ -331,8 +331,8 @@ export default function StrategicOSExport({ onClose, completedSteps = {}, inline
       <div
         className="w-full max-w-3xl rounded-3xl border p-5 shadow-2xl"
         style={{
-          background: 'var(--cth-admin-panel)',
-          borderColor: 'var(--cth-admin-border)',
+          background: 'var(--cth-command-ivory)',
+          borderColor: 'var(--cth-command-border)',
           maxHeight: '90vh',
           overflowY: 'auto',
         }}
@@ -358,7 +358,7 @@ export function StrategicOSExportButton({ completedSteps = {}, variant = 'second
         <Download size={13} />
         {label}
         {completedCount > 0 ? (
-          <span className="rounded-full px-2 py-0.5 text-[10px]" style={{ background: 'color-mix(in srgb, var(--cth-admin-accent) 15%, transparent)', color: 'var(--cth-admin-accent)' }}>
+          <span className="rounded-full px-2 py-0.5 text-[10px]" style={{ background: 'color-mix(in srgb, var(--cth-command-cinnabar) 15%, transparent)', color: 'var(--cth-command-cinnabar)' }}>
             {completedCount}/9
           </span>
         ) : null}

@@ -335,8 +335,8 @@ function ExportModal({ onClose, userId, workspaceId, workspaceName }) {
           <div
             className="mt-4"
             style={{
-              border: '1px solid var(--cth-status-success-bright)',
-              background: 'color-mix(in srgb, var(--cth-status-success-bright) 8%, var(--cth-command-panel))',
+              border: '1px solid var(--cth-command-success)',
+              background: 'color-mix(in srgb, var(--cth-command-success) 8%, var(--cth-command-panel))',
               borderRadius: 4,
               padding: 16,
             }}

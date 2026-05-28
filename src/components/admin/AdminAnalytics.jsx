@@ -26,7 +26,7 @@ import { StatCard, PLAN_COLORS } from './shared';
 
 const API = import.meta.env.VITE_BACKEND_URL;
 
-const PIE_COLORS = ['var(--cth-admin-accent)', 'var(--cth-admin-ruby)', 'var(--cth-brand-primary)', 'var(--cth-status-success-bright)', 'var(--cth-status-warning)', 'var(--cth-admin-muted)', 'var(--cth-status-info)'];
+const PIE_COLORS = ['var(--cth-command-cinnabar)', 'var(--cth-command-purple)', 'var(--cth-brand-primary)', 'var(--cth-command-success)', 'var(--cth-command-warning)', 'var(--cth-command-muted)', 'var(--cth-command-purple)'];
 
 export function AdminAnalytics({ adminId, overview }) {
   const colors = useColors();
@@ -104,7 +104,7 @@ export function AdminAnalytics({ adminId, overview }) {
       name: plan.charAt(0).toUpperCase() + plan.slice(1),
       mrr: Number(data?.mrr) || 0,
       subscribers: Number(data?.subscribers) || 0,
-      color: PLAN_COLORS?.[plan] || 'var(--cth-admin-muted)',
+      color: PLAN_COLORS?.[plan] || 'var(--cth-command-muted)',
     }));
   }, [overview]);
 
@@ -155,7 +155,7 @@ export function AdminAnalytics({ adminId, overview }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--cth-admin-accent)]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--cth-command-cinnabar)]" />
       </div>
     );
   }
@@ -167,25 +167,25 @@ export function AdminAnalytics({ adminId, overview }) {
           icon={Users}
           label="New Workspaces (30d)"
           value={growthTotal}
-          color="var(--cth-admin-accent)"
+          color="var(--cth-command-cinnabar)"
         />
         <StatCard
           icon={Sparkles}
           label="AI Generations"
           value={aiGenerationTotal}
-          color="var(--cth-admin-ruby)"
+          color="var(--cth-command-purple)"
         />
         <StatCard
           icon={MousePointerClick}
           label="Affiliate Clicks"
           value={affiliateClickTotal}
-          color="var(--cth-status-success-bright)"
+          color="var(--cth-command-success)"
         />
         <StatCard
           icon={FileText}
           label="Preloaded Prompts"
           value={promptStats.length}
-          color="var(--cth-status-warning)"
+          color="var(--cth-command-warning)"
         />
       </div>
 
@@ -203,8 +203,8 @@ export function AdminAnalytics({ adminId, overview }) {
                 <AreaChart data={signupData}>
                   <defs>
                     <linearGradient id="signupGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--cth-admin-accent)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="var(--cth-admin-accent)" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--cth-command-cinnabar)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--cth-command-cinnabar)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
@@ -214,7 +214,7 @@ export function AdminAnalytics({ adminId, overview }) {
                   <Area
                     type="monotone"
                     dataKey="signups"
-                    stroke="var(--cth-admin-accent)"
+                    stroke="var(--cth-command-cinnabar)"
                     fill="url(#signupGrad)"
                     strokeWidth={2}
                   />
@@ -283,7 +283,7 @@ export function AdminAnalytics({ adminId, overview }) {
                     width={110}
                   />
                   <Tooltip contentStyle={chartTooltipStyle} />
-                  <Bar dataKey="count" fill="var(--cth-admin-accent)" radius={[0, 6, 6, 0]} />
+                  <Bar dataKey="count" fill="var(--cth-command-cinnabar)" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -312,7 +312,7 @@ export function AdminAnalytics({ adminId, overview }) {
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
                     style={{
-                      background: i === 0 ? 'var(--cth-admin-accent)' : i === 1 ? 'var(--cth-admin-ruby)' : 'var(--cth-admin-muted)',
+                      background: i === 0 ? 'var(--cth-command-cinnabar)' : i === 1 ? 'var(--cth-command-purple)' : 'var(--cth-command-muted)',
                     }}
                   >
                     {i + 1}

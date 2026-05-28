@@ -202,7 +202,7 @@ function IntakeProgress({ current, total, colors }) {
               transition: 'all 0.2s',
             }}>
               {isPast ? (
-                <Check size={10} style={{ color: 'var(--cth-status-success-bright)' }} />
+                <Check size={10} style={{ color: 'var(--cth-command-success)' }} />
               ) : (
                 <span style={{ fontSize: 10, fontWeight: 700, color: isCurrent ? colors.cinnabar : colors.textMuted }}>{n}</span>
               )}
@@ -703,7 +703,7 @@ export default function PreAuditIntake({ onComplete, onSkip, workspaceId = '' })
             border: '1px solid rgba(239,68,68,0.2)',
             borderRadius: 9,
           }}>
-            <p data-testid="intake-error" style={{ fontSize: 12, color: 'var(--cth-status-danger)', margin: 0 }}>{error}</p>
+            <p data-testid="intake-error" style={{ fontSize: 12, color: 'var(--cth-command-error)', margin: 0 }}>{error}</p>
           </div>
         )}
 
