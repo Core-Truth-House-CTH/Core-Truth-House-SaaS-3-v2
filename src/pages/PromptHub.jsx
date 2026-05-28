@@ -28,7 +28,7 @@ const GENERATORS = [
  title: 'Infinite Scene Generator',
  description: 'Create unlimited cinematic brand scenes with consistent visual DNA',
  icon: '◎',
- color: 'var(--cth-admin-accent)',
+ color: 'var(--cth-command-cinnabar)',
  requiredPlan: 'STRUCTURE',
  fields: [
  { key: 'archetype', label: 'Brand Archetype', placeholder: 'e.g., Luxury Coach, Bold Creator' },
@@ -36,7 +36,7 @@ const GENERATORS = [
  { key: 'location', label: 'Location', placeholder: 'e.g., Modern minimalist studio' },
  { key: 'mood', label: 'Mood', placeholder: 'e.g., Empowering and sophisticated' },
  { key: 'platform', label: 'Platform', placeholder: 'Instagram, LinkedIn, Website' },
- { key: 'colors', label: 'Color Palette', placeholder: 'var(--cth-brand-primary), var(--cth-admin-accent), var(--cth-surface-deep)' },
+ { key: 'colors', label: 'Color Palette', placeholder: 'var(--cth-brand-primary), var(--cth-command-cinnabar), var(--cth-surface-deep)' },
  ]
  },
  {
@@ -44,12 +44,12 @@ const GENERATORS = [
  title: 'Brand DNA Scene Builder',
  description: 'Build a consistent visual DNA system for all your brand imagery',
  icon: '⬡',
- color: 'var(--cth-admin-ruby)',
+ color: 'var(--cth-command-purple)',
  requiredPlan: 'STRUCTURE',
  fields: [
  { key: 'character', label: 'Character', placeholder: 'Brand founder/representative description' },
  { key: 'lighting', label: 'Lighting Style', placeholder: 'e.g., Soft, directional, golden hour' },
- { key: 'colors', label: 'Color Palette', placeholder: 'var(--cth-brand-primary), var(--cth-admin-accent)' },
+ { key: 'colors', label: 'Color Palette', placeholder: 'var(--cth-brand-primary), var(--cth-command-cinnabar)' },
  { key: 'mood', label: 'Mood/Emotion', placeholder: 'e.g., Confident, warm, approachable' },
  { key: 'style', label: 'Visual Style', placeholder: 'e.g., Editorial luxury, minimalist modern' },
  ]
@@ -59,7 +59,7 @@ const GENERATORS = [
  title: 'Content Pillar Architect',
  description: 'Define 4–6 brand content pillars with messaging frameworks for each',
  icon: '◱',
- color: 'var(--cth-admin-muted)',
+ color: 'var(--cth-command-muted)',
  requiredPlan: 'STRUCTURE',
  fields: [
  { key: 'brand_name', label: 'Brand Name', placeholder: 'e.g., Core Truth House' },
@@ -269,15 +269,15 @@ export default function PromptHub() {
  data-testid="prompt-hub-page"
  >
  {/* Tabs */}
- <div className="flex gap-2 border-b pb-1" style={{ borderColor: "var(--cth-admin-border)" }}>
+ <div className="flex gap-2 border-b pb-1" style={{ borderColor: "var(--cth-command-border)" }}>
  {TABS.map(tab => (
  <button
  key={tab.id}
  onClick={() => setActiveTab(tab.id)}
  className={`flex items-center gap-2 px-4 py-2.5 transition-all text-sm font-medium ${
  activeTab === tab.id
- ? 'cth-card-muted cth-text-accent border-b-2 border-[var(--cth-admin-accent)]'
- : 'cth-muted hover:opacity-80 hover:bg-[var(--cth-admin-panel-alt)]'
+ ? 'cth-card-muted cth-text-accent border-b-2 border-[var(--cth-command-cinnabar)]'
+ : 'cth-muted hover:opacity-80 hover:bg-[var(--cth-command-panel-soft)]'
  }`}
  data-testid={`tab-${tab.id}`}
  >
@@ -379,7 +379,7 @@ export default function PromptHub() {
  return (
  <div
  key={gen.id}
- className="p-5 border cth-card border-[var(--cth-admin-border)] transition-all"
+ className="p-5 border cth-card border-[var(--cth-command-border)] transition-all"
  data-testid={`store-generator-${gen.id}`}
  >
  <div className="flex items-start justify-between mb-3">
@@ -397,7 +397,7 @@ export default function PromptHub() {
  </div>
  <h3 className="cth-heading font-semibold mb-1">{gen.title}</h3>
  <p className="text-xs cth-muted mb-3 line-clamp-2">{gen.description}</p>
- <p className="text-xs cth-muted mb-4">Normally unlocked with <strong style={{ color: 'var(--cth-admin-ink)' }}>{tierLabel}</strong></p>
+ <p className="text-xs cth-muted mb-4">Normally unlocked with <strong style={{ color: 'var(--cth-command-ink)' }}>{tierLabel}</strong></p>
  <div className="flex items-center justify-between">
  <div className="text-lg font-bold cth-text-accent">${price}</div>
  {isIncluded ? (
@@ -451,21 +451,21 @@ export default function PromptHub() {
  }}
  className="p-5 border text-left group relative overflow-hidden transition-all cth-card"
  style={{
- background: effectiveLocked ? 'var(--cth-admin-panel-alt)' : 'var(--cth-admin-panel)',
- borderColor: 'var(--cth-admin-border)',
+ background: effectiveLocked ? 'var(--cth-command-panel-soft)' : 'var(--cth-command-ivory)',
+ borderColor: 'var(--cth-command-border)',
  opacity: effectiveLocked ? 0.75 : 1,
  }}
  data-testid={`generator-${gen.id}`}
  >
  {effectiveLocked && (
- <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(224,78,53,0.12)', color: 'var(--cth-admin-accent)' }}>
+ <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(224,78,53,0.12)', color: 'var(--cth-command-cinnabar)' }}>
  🔒 {planLabels[planRequired] || planRequired}
  </div>
  )}
  <div className="flex items-start justify-between mb-3">
  <div
  className="w-12 h-12 flex items-center justify-center text-2xl"
- style={{ background: effectiveLocked ? 'var(--cth-admin-panel-alt)' : `linear-gradient(135deg, ${gen.color}, ${gen.color}88)` }}
+ style={{ background: effectiveLocked ? 'var(--cth-command-panel-soft)' : `linear-gradient(135deg, ${gen.color}, ${gen.color}88)` }}
  >
  {gen.icon}
  </div>
@@ -474,7 +474,7 @@ export default function PromptHub() {
  <h3 className="cth-heading font-semibold mb-1">{gen.title}</h3>
  <p className="text-sm cth-muted">{gen.description}</p>
  {effectiveLocked && (
- <div className="mt-3 text-xs font-semibold" style={{ color: 'var(--cth-admin-accent)' }}>
+ <div className="mt-3 text-xs font-semibold" style={{ color: 'var(--cth-command-cinnabar)' }}>
  Upgrade to {planLabels[planRequired]} to unlock →
  </div>
  )}
@@ -533,7 +533,7 @@ export default function PromptHub() {
  disabled={generating}
  className="cth-button-primary w-full mt-4 py-3 font-semibold transition-all flex items-center justify-center gap-2"
  style={{
- background: generating ? 'rgba(168,143,159,0.18)' : 'linear-gradient(135deg, var(--cth-admin-accent), var(--cth-admin-ruby))',
+ background: generating ? 'rgba(168,143,159,0.18)' : 'linear-gradient(135deg, var(--cth-command-cinnabar), var(--cth-command-purple))',
  cursor: generating ? 'not-allowed' : 'pointer'
  }}
  >
@@ -554,7 +554,7 @@ export default function PromptHub() {
  {/* Output */}
  <div className="space-y-4">
  <h3 className="text-sm font-medium cth-muted uppercase tracking-wider">Output</h3>
- <div className="p-4 border min-h-[400px] cth-card-muted" style={{ borderColor: "var(--cth-admin-border)" }}>
+ <div className="p-4 border min-h-[400px] cth-card-muted" style={{ borderColor: "var(--cth-command-border)" }}>
  {generatedResult ? (
  <div className="space-y-3">
  <div className="flex items-center justify-between">
@@ -601,22 +601,22 @@ export default function PromptHub() {
  {showUpgradeModal && (
  <div data-testid="upgrade-modal" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
  onClick={() => setShowUpgradeModal(null)}>
- <div style={{ background: 'var(--cth-admin-panel)', border: '1px solid rgba(224,78,53,0.24)', borderRadius: 0, padding: 32, maxWidth: 400, width: '100%' }}
+ <div style={{ background: 'var(--cth-command-ivory)', border: '1px solid rgba(224,78,53,0.24)', borderRadius: 0, padding: 32, maxWidth: 400, width: '100%' }}
  onClick={e => e.stopPropagation()}>
  <div style={{ fontSize: 36, marginBottom: 12 }}>{showUpgradeModal.icon}</div>
- <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--cth-admin-ink)', marginBottom: 8 }}>Upgrade to unlock</h2>
- <p style={{ fontSize: 14, color: 'var(--cth-admin-ink-soft)', marginBottom: 6 }}>
- <strong style={{ color: 'var(--cth-admin-ink)' }}>{showUpgradeModal.title}</strong> is available on {' '}
- <strong style={{ color: 'var(--cth-admin-accent)' }}>
+ <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--cth-command-ink)', marginBottom: 8 }}>Upgrade to unlock</h2>
+ <p style={{ fontSize: 14, color: 'var(--cth-command-muted)', marginBottom: 6 }}>
+ <strong style={{ color: 'var(--cth-command-ink)' }}>{showUpgradeModal.title}</strong> is available on {' '}
+ <strong style={{ color: 'var(--cth-command-cinnabar)' }}>
  {{ STRUCTURE: 'The Structure ($97/mo)', HOUSE: 'The House ($197/mo)', ESTATE: 'The Estate ($397/mo)' }[showUpgradeModal.requiredPlan]}
  </strong> and above.
  </p>
- <p style={{ fontSize: 13, color: 'var(--cth-admin-muted)', marginBottom: 24 }}>{showUpgradeModal.description}</p>
+ <p style={{ fontSize: 13, color: 'var(--cth-command-muted)', marginBottom: 24 }}>{showUpgradeModal.description}</p>
  <div style={{ display: 'flex', gap: 10 }}>
- <a href="/billing" data-testid="upgrade-modal-billing-link" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', borderRadius: 0, background: 'linear-gradient(135deg,var(--cth-admin-ruby),var(--cth-admin-accent))', color: 'white', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+ <a href="/billing" data-testid="upgrade-modal-billing-link" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', borderRadius: 0, background: 'linear-gradient(135deg,var(--cth-command-purple),var(--cth-command-cinnabar))', color: 'white', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
  View Plans & Upgrade
  </a>
- <button data-testid="upgrade-modal-close" onClick={() => setShowUpgradeModal(null)} style={{ padding: '12px 16px', borderRadius: 0, border: '1px solid var(--cth-admin-border)', background: 'transparent', color: 'var(--cth-admin-muted)', fontSize: 13, cursor: 'pointer' }}>
+ <button data-testid="upgrade-modal-close" onClick={() => setShowUpgradeModal(null)} style={{ padding: '12px 16px', borderRadius: 0, border: '1px solid var(--cth-command-border)', background: 'transparent', color: 'var(--cth-command-muted)', fontSize: 13, cursor: 'pointer' }}>
  Close
  </button>
  </div>

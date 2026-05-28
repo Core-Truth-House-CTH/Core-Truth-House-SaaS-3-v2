@@ -517,7 +517,7 @@ function StepCard({ id, step, values, expanded, saving, onToggle, onChange, lock
         borderColor: locked
           ? "var(--cth-command-border)"
           : complete
-          ? "var(--cth-status-success-bright)"
+          ? "var(--cth-command-success)"
           : expanded
           ? "var(--cth-command-crimson)"
           : "var(--cth-command-border)",
@@ -540,10 +540,10 @@ function StepCard({ id, step, values, expanded, saving, onToggle, onChange, lock
             style={{
               borderRadius: 0,
               background: complete
-                ? "color-mix(in srgb, var(--cth-status-success-bright) 14%, transparent)"
+                ? "color-mix(in srgb, var(--cth-command-success) 14%, transparent)"
                 : "color-mix(in srgb, var(--cth-command-crimson) 12%, transparent)",
               color: complete
-                ? "var(--cth-status-success-bright)"
+                ? "var(--cth-command-success)"
                 : "var(--cth-command-crimson)",
               fontFamily: SANS,
               fontSize: 13,
@@ -1354,11 +1354,11 @@ export default function StrategicOS() {
                   borderRadius: "50%",
                   background:
                     status === "complete"
-                      ? "color-mix(in srgb, var(--cth-status-success-bright) 22%, transparent)"
+                      ? "color-mix(in srgb, var(--cth-command-success) 22%, transparent)"
                       : "color-mix(in srgb, var(--cth-command-ivory) 14%, transparent)",
                   color:
                     status === "complete"
-                      ? "var(--cth-status-success-bright)"
+                      ? "var(--cth-command-success)"
                       : "var(--cth-command-ivory)",
                   display: "flex",
                   alignItems: "center",

@@ -141,7 +141,7 @@ function StatusBanner({ status }) {
   const isError = status.type === "error";
 
   const tintColor = isSuccess
-    ? "var(--cth-status-success-bright)"
+    ? "var(--cth-command-success)"
     : isError
     ? "var(--cth-danger)"
     : "var(--cth-command-crimson)";

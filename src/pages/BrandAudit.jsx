@@ -642,7 +642,7 @@ export default function BrandAudit() {
                       fontSize: 12,
                       fontWeight: 500,
                       color: improved
-                        ? 'var(--cth-status-success-bright)'
+                        ? 'var(--cth-command-success)'
                         : 'var(--cth-command-crimson)',
                       textAlign: 'center',
                       margin: '-12px 0 0',

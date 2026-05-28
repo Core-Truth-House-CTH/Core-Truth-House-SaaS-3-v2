@@ -20,17 +20,17 @@ import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
 const CTH_PAGE_COLORS = {
- cardBg: "var(--cth-admin-panel)",
- tuscany: "var(--cth-admin-tuscany)",
+ cardBg: "var(--cth-command-ivory)",
+ tuscany: "var(--cth-command-border)",
 };
 
 const CATEGORY_FALLBACKS = {
- general: { name: "General", color: "var(--cth-admin-muted)" },
+ general: { name: "General", color: "var(--cth-command-muted)" },
  meeting: { name: "Meeting", color: "var(--cth-command-crimson)" },
  launch: { name: "Launch", color: "var(--cth-brand-primary)" },
- content: { name: "Content", color: "var(--cth-admin-ruby)" },
- deadline: { name: "Deadline", color: "var(--cth-status-danger)" },
- personal: { name: "Personal", color: "var(--cth-status-success-bright)" },
+ content: { name: "Content", color: "var(--cth-command-purple)" },
+ deadline: { name: "Deadline", color: "var(--cth-command-error)" },
+ personal: { name: "Personal", color: "var(--cth-command-success)" },
 };
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -123,7 +123,7 @@ function isoDay(date) {
 }
 
 function chipStyle(categoryMeta) {
- const color = categoryMeta?.color || "var(--cth-admin-muted)";
+ const color = categoryMeta?.color || "var(--cth-command-muted)";
  return {
  background: `${color}20`,
  border: `1px solid ${color}35`,
@@ -174,8 +174,8 @@ function EventModal({
  <div
  className="relative z-10 w-full max-w-2xl p-5"
  style={{
- background: "var(--cth-admin-panel)",
- border: "1px solid var(--cth-admin-border)",
+ background: "var(--cth-command-ivory)",
+ border: "1px solid var(--cth-command-border)",
  }}
  >
  <div className="mb-4 flex items-center justify-between">
@@ -214,9 +214,9 @@ function EventModal({
  onChange={(e) => onChange("title", e.target.value)}
  className="cth-input w-full px-3 py-3"
  style={{
- background: "var(--cth-admin-panel-alt)",
- border: "1px solid var(--cth-admin-border)",
- color: "var(--cth-admin-ink)",
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-border)",
+ color: "var(--cth-command-ink)",
  }}
  />
  </div>
@@ -235,9 +235,9 @@ function EventModal({
  }}
  className="cth-select w-full px-3 py-3"
  style={{
- background: "var(--cth-admin-panel-alt)",
- border: "1px solid var(--cth-admin-border)",
- color: "var(--cth-admin-ink)",
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-border)",
+ color: "var(--cth-command-ink)",
  }}
  >
  {categories.map((item) => (
@@ -269,9 +269,9 @@ function EventModal({
  onChange={(e) => onChange("start_time", fromLocalInputValue(e.target.value))}
  className="cth-input w-full px-3 py-3"
  style={{
- background: "var(--cth-admin-panel-alt)",
- border: "1px solid var(--cth-admin-border)",
- color: "var(--cth-admin-ink)",
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-border)",
+ color: "var(--cth-command-ink)",
  colorScheme: "light",
  }}
  />
@@ -285,8 +285,8 @@ function EventModal({
  onChange={(e) => onChange("end_time", fromLocalInputValue(e.target.value))}
  className="w-full px-3 py-3 cth-heading"
  style={{
- background: "var(--cth-admin-panel-alt)",
- border: "1px solid var(--cth-admin-border)",
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-border)",
  colorScheme: "dark",
  }}
  />
@@ -299,8 +299,8 @@ function EventModal({
  onChange={(e) => onChange("location", e.target.value)}
  className="w-full px-3 py-3 cth-heading"
  style={{
- background: "var(--cth-admin-panel-alt)",
- border: "1px solid var(--cth-admin-border)",
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-border)",
  }}
  />
  </div>
@@ -312,8 +312,8 @@ function EventModal({
  onChange={(e) => onChange("recurring", e.target.value)}
  className="w-full px-3 py-3 cth-heading"
  style={{
- background: "var(--cth-admin-panel-alt)",
- border: "1px solid var(--cth-admin-border)",
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-border)",
  }}
  >
  <option value="">None</option>
@@ -332,8 +332,8 @@ function EventModal({
  onChange={(e) => onChange("description", e.target.value)}
  className="w-full px-3 py-3 cth-heading"
  style={{
- background: "var(--cth-admin-panel-alt)",
- border: "1px solid var(--cth-admin-border)",
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-border)",
  }}
  />
  </div>
@@ -389,8 +389,8 @@ function EventListCard({ title, icon: Icon, events, categories, emptyText, onOpe
  <div
  className="p-4 cth-card"
  style={{
- background: "var(--cth-admin-panel)",
- border: "1px solid var(--cth-admin-border)",
+ background: "var(--cth-command-ivory)",
+ border: "1px solid var(--cth-command-border)",
  }}
  >
  <div className="mb-3 flex items-center gap-2">
@@ -399,7 +399,7 @@ function EventListCard({ title, icon: Icon, events, categories, emptyText, onOpe
  </div>
 
  {events.length === 0 ? (
- <div className="px-4 py-5 text-sm cth-muted" style={{ background: "var(--cth-admin-panel-alt)" }}>
+ <div className="px-4 py-5 text-sm cth-muted" style={{ background: "var(--cth-command-panel-soft)" }}>
  {emptyText}
  </div>
  ) : (
@@ -416,7 +416,7 @@ function EventListCard({ title, icon: Icon, events, categories, emptyText, onOpe
  type="button"
  onClick={() => onOpen(event)}
  className="px-4 py-3 text-left cth-card-muted"
- style={{ background: "var(--cth-admin-panel-alt)" }}
+ style={{ background: "var(--cth-command-panel-soft)" }}
  >
  <div className="mb-1 flex items-center justify-between gap-2">
  <div className="truncate text-sm font-semibold cth-heading">{event.title}</div>
@@ -738,7 +738,7 @@ export default function Calendar() {
  )
  }
  className="p-2 cth-heading"
- style={{ background: "var(--cth-admin-panel-alt)" }}
+ style={{ background: "var(--cth-command-panel-soft)" }}
  >
  <ChevronLeft size={16} />
  </button>
@@ -755,7 +755,7 @@ export default function Calendar() {
  )
  }
  className="p-2 cth-heading"
- style={{ background: "var(--cth-admin-panel-alt)" }}
+ style={{ background: "var(--cth-command-panel-soft)" }}
  >
  <ChevronRight size={16} />
  </button>
@@ -773,8 +773,8 @@ export default function Calendar() {
  placeholder="Search events"
  className="py-2 pl-9 pr-3 text-sm cth-heading"
  style={{
- background: "var(--cth-admin-panel-alt)",
- border: "1px solid var(--cth-admin-border)",
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-border)",
  }}
  />
  </div>
@@ -783,7 +783,7 @@ export default function Calendar() {
  type="button"
  onClick={() => loadCalendar({ silent: true })}
  className="inline-flex items-center gap-2 px-3 py-2 cth-heading"
- style={{ background: "var(--cth-admin-panel-alt)" }}
+ style={{ background: "var(--cth-command-panel-soft)" }}
  >
  {refreshing ? (
  <Loader2 size={15} className="animate-spin" />
@@ -834,17 +834,17 @@ export default function Calendar() {
  onClick={() => openCreateForDate(date)}
  className="min-h-[120px] p-2 text-left align-top"
  style={{
- background: inMonth ? "var(--cth-admin-panel-alt)" : "rgba(43,16,64,0.04)",
+ background: inMonth ? "var(--cth-command-panel-soft)" : "rgba(43,16,64,0.04)",
  border: isToday
  ? "1px solid rgba(224,78,53,0.45)"
- : "1px solid var(--cth-admin-panel-alt)",
+ : "1px solid var(--cth-command-panel-soft)",
  }}
  >
  <div
  className="mb-2 flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
  style={{
  background: isToday ? "var(--cth-command-crimson)" : "transparent",
- color: isToday ? "var(--cth-white)" : inMonth ? "var(--cth-admin-ink)" : "var(--cth-admin-muted)",
+ color: isToday ? "var(--cth-white)" : inMonth ? "var(--cth-command-ink)" : "var(--cth-command-muted)",
  }}
  >
  {date.getDate()}
@@ -895,21 +895,21 @@ export default function Calendar() {
  </div>
 
  <div className="grid gap-3">
- <div className="px-4 py-3" style={{ background: "var(--cth-admin-panel-alt)" }}>
+ <div className="px-4 py-3" style={{ background: "var(--cth-command-panel-soft)" }}>
  <div className="text-xs uppercase tracking-wide cth-heading/50">Total Events</div>
  <div className="mt-1 text-xl font-bold cth-heading">
  {analytics?.total_events ?? events.length}
  </div>
  </div>
 
- <div className="px-4 py-3" style={{ background: "var(--cth-admin-panel-alt)" }}>
+ <div className="px-4 py-3" style={{ background: "var(--cth-command-panel-soft)" }}>
  <div className="text-xs uppercase tracking-wide cth-heading/50">This Month</div>
  <div className="mt-1 text-xl font-bold cth-heading">
  {analytics?.events_this_month ?? 0}
  </div>
  </div>
 
- <div className="px-4 py-3" style={{ background: "var(--cth-admin-panel-alt)" }}>
+ <div className="px-4 py-3" style={{ background: "var(--cth-command-panel-soft)" }}>
  <div className="text-xs uppercase tracking-wide cth-heading/50">Next 7 Days</div>
  <div className="mt-1 text-xl font-bold cth-heading">
  {analytics?.upcoming_7_days ?? upcomingEvents.length}

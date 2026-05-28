@@ -17,24 +17,24 @@ const API = import.meta.env.VITE_BACKEND_URL;
 
 const C = {
   bg: 'var(--cth-brand-primary-deep)',
-  card: 'var(--cth-admin-panel-alt)',
+  card: 'var(--cth-command-panel-soft)',
   panel: 'var(--cth-surface-night)',
-  border: 'var(--cth-admin-border)',
-  accent: 'var(--cth-admin-accent)',
+  border: 'var(--cth-command-border)',
+  accent: 'var(--cth-command-cinnabar)',
   white: 'var(--cth-white)',
-  t80: 'var(--cth-admin-ink)',
-  t70: 'var(--cth-admin-ink-soft)',
-  t60: 'var(--cth-admin-ink-soft)',
-  t50: 'var(--cth-admin-muted)',
-  t40: 'var(--cth-admin-muted)',
-  t30: 'var(--cth-admin-muted)',
-  t25: 'var(--cth-admin-muted)',
-  t20: 'var(--cth-admin-muted)',
-  t10: 'var(--cth-admin-border)',
-  t08: 'var(--cth-admin-border)',
-  green: 'var(--cth-status-success-bright)',
-  amber: 'var(--cth-status-warning)',
-  red: 'var(--cth-status-danger)',
+  t80: 'var(--cth-command-ink)',
+  t70: 'var(--cth-command-muted)',
+  t60: 'var(--cth-command-muted)',
+  t50: 'var(--cth-command-muted)',
+  t40: 'var(--cth-command-muted)',
+  t30: 'var(--cth-command-muted)',
+  t25: 'var(--cth-command-muted)',
+  t20: 'var(--cth-command-muted)',
+  t10: 'var(--cth-command-border)',
+  t08: 'var(--cth-command-border)',
+  green: 'var(--cth-command-success)',
+  amber: 'var(--cth-command-warning)',
+  red: 'var(--cth-command-error)',
   font: "'DM Sans', sans-serif",
 };
 
@@ -221,7 +221,7 @@ function UploadProgressItem({ item, onRetry, onRemove }) {
         alignItems: 'center',
         gap: 10,
         padding: '7px 0',
-        borderBottom: '1px solid var(--cth-admin-border)',
+        borderBottom: '1px solid var(--cth-command-border)',
       }}
     >
       <div
@@ -378,7 +378,7 @@ function AssetCard({ asset, onDelete, onEdit }) {
       <div
         style={{
           height: 110,
-          background: 'var(--cth-admin-panel-alt)',
+          background: 'var(--cth-command-panel-soft)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -461,7 +461,7 @@ function AssetCard({ asset, onDelete, onEdit }) {
             onClick={() => onEdit(asset)}
             style={{
               border: `1px solid ${C.border}`,
-              background: 'var(--cth-admin-panel-alt)',
+              background: 'var(--cth-command-panel-soft)',
               color: C.t70,
               borderRadius: 8,
               padding: '7px 8px',
@@ -477,7 +477,7 @@ function AssetCard({ asset, onDelete, onEdit }) {
             onClick={handleDownload}
             style={{
               border: `1px solid ${C.border}`,
-              background: 'var(--cth-admin-panel-alt)',
+              background: 'var(--cth-command-panel-soft)',
               color: C.t70,
               borderRadius: 8,
               padding: '7px 8px',
@@ -493,7 +493,7 @@ function AssetCard({ asset, onDelete, onEdit }) {
             onClick={handleCopy}
             style={{
               border: `1px solid ${C.border}`,
-              background: 'var(--cth-admin-panel-alt)',
+              background: 'var(--cth-command-panel-soft)',
               color: C.t70,
               borderRadius: 8,
               padding: '7px 8px',
@@ -668,7 +668,7 @@ export default function IdentityStudioAssets({
             borderRadius: 9,
             background: 'rgba(239,68,68,0.15)',
             border: '1px solid rgba(239,68,68,0.3)',
-            color: 'var(--cth-status-danger)',
+            color: 'var(--cth-command-error)',
             fontSize: 12.5,
             fontFamily: C.font,
           }}

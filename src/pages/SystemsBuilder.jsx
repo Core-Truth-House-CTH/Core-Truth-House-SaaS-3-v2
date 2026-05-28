@@ -913,12 +913,12 @@ export default function SystemsBuilder() {
             <div
               style={{
                 ...CARD_STYLE,
-                borderColor: "color-mix(in srgb, var(--cth-status-success-bright) 35%, var(--cth-command-border))",
-                background: "color-mix(in srgb, var(--cth-status-success-bright) 8%, var(--cth-command-panel))",
+                borderColor: "color-mix(in srgb, var(--cth-command-success) 35%, var(--cth-command-border))",
+                background: "color-mix(in srgb, var(--cth-command-success) 8%, var(--cth-command-panel))",
                 padding: 14,
                 fontFamily: SANS,
                 fontSize: 13,
-                color: "var(--cth-status-success-bright)",
+                color: "var(--cth-command-success)",
                 fontWeight: 500,
               }}
             >

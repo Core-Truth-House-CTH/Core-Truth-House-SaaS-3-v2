@@ -21,8 +21,8 @@ const BRAND_STUDIO_CSS = `
   gap: 1rem;
   height: calc(100vh - 7rem);
   min-height: 520px;
-  background: var(--cth-admin-bg);
-  color: var(--cth-admin-ink);
+  background: var(--cth-command-blush);
+  color: var(--cth-command-ink);
 }
 .cth-brand-studio * { box-sizing: border-box; }
 
@@ -31,8 +31,8 @@ const BRAND_STUDIO_CSS = `
   min-width: 260px;
   display: flex;
   flex-direction: column;
-  background: var(--cth-admin-panel);
-  border: 1px solid var(--cth-admin-border);
+  background: var(--cth-command-ivory);
+  border: 1px solid var(--cth-command-border);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -43,7 +43,7 @@ const BRAND_STUDIO_CSS = `
   padding: 1rem 1rem 0.75rem;
   font-size: 15px;
   font-weight: 700;
-  color: var(--cth-admin-ink);
+  color: var(--cth-command-ink);
 }
 .cth-bs-rail-scroll {
   flex: 1;
@@ -61,26 +61,26 @@ const BRAND_STUDIO_CSS = `
   border-left: 3px solid transparent;
   border-radius: 0;
   background: transparent;
-  color: var(--cth-admin-ink);
+  color: var(--cth-command-ink);
   cursor: pointer;
   transition: background 0.15s ease;
 }
-.cth-bs-bot:hover { background: var(--cth-admin-panel-alt); }
+.cth-bs-bot:hover { background: var(--cth-command-panel-soft); }
 .cth-bs-bot.is-active {
-  background: var(--cth-admin-panel-alt);
-  border-left: 3px solid var(--cth-admin-crimson);
+  background: var(--cth-command-panel-soft);
+  border-left: 3px solid var(--cth-command-crimson);
 }
 .cth-bs-bot-label { display: block; font-size: 13px; font-weight: 700; }
 .cth-bs-bot-desc {
   display: block;
   font-size: 11px;
-  color: var(--cth-admin-muted);
+  color: var(--cth-command-muted);
   margin-top: 2px;
 }
 
 .cth-bs-divider {
   height: 1px;
-  background: var(--cth-admin-border);
+  background: var(--cth-command-border);
   margin: 0.5rem 0.7rem;
 }
 .cth-bs-rail-label {
@@ -92,7 +92,7 @@ const BRAND_STUDIO_CSS = `
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--cth-admin-muted);
+  color: var(--cth-command-muted);
 }
 .cth-bs-session {
   display: flex;
@@ -100,7 +100,7 @@ const BRAND_STUDIO_CSS = `
   gap: 0.4rem;
   padding: 0.5rem 0.7rem;
   border-radius: 0;
-  color: var(--cth-admin-ink);
+  color: var(--cth-command-ink);
   cursor: pointer;
 }
 .cth-bs-session-main { flex: 1; min-width: 0; }
@@ -112,13 +112,13 @@ const BRAND_STUDIO_CSS = `
 }
 .cth-bs-session-time {
   font-size: 10px;
-  color: var(--cth-admin-muted);
+  color: var(--cth-command-muted);
   margin-top: 2px;
 }
 .cth-bs-session-empty {
   padding: 0.5rem 0.7rem;
   font-size: 11px;
-  color: var(--cth-admin-muted);
+  color: var(--cth-command-muted);
 }
 
 .cth-bs-main {
@@ -126,23 +126,23 @@ const BRAND_STUDIO_CSS = `
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: var(--cth-admin-panel);
-  border: 1px solid var(--cth-admin-border);
+  background: var(--cth-command-ivory);
+  border: 1px solid var(--cth-command-border);
   border-radius: 0;
   overflow: hidden;
 }
 .cth-bs-main-header {
   padding: 0.9rem 1.25rem;
-  border-bottom: 1px solid var(--cth-admin-border);
+  border-bottom: 1px solid var(--cth-command-border);
 }
 .cth-bs-main-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--cth-admin-ink);
+  color: var(--cth-command-ink);
 }
 .cth-bs-main-sub {
   font-size: 12px;
-  color: var(--cth-admin-muted);
+  color: var(--cth-command-muted);
   margin-top: 2px;
 }
 
@@ -154,7 +154,7 @@ const BRAND_STUDIO_CSS = `
   flex-direction: column;
   gap: 0.75rem;
   padding: 1.25rem;
-  background: var(--cth-admin-bg);
+  background: var(--cth-command-blush);
 }
 .cth-bs-empty {
   margin: auto;
@@ -164,7 +164,7 @@ const BRAND_STUDIO_CSS = `
   gap: 0.5rem;
   text-align: center;
   font-size: 13px;
-  color: var(--cth-admin-muted);
+  color: var(--cth-command-muted);
 }
 .cth-bs-msg {
   max-width: 76%;
@@ -177,19 +177,19 @@ const BRAND_STUDIO_CSS = `
 }
 .cth-bs-msg.is-user {
   align-self: flex-end;
-  background: var(--cth-admin-panel-alt);
-  color: var(--cth-admin-ink);
+  background: var(--cth-command-panel-soft);
+  color: var(--cth-command-ink);
 }
 .cth-bs-msg.is-assistant {
   align-self: flex-start;
-  background: var(--cth-admin-panel);
-  color: var(--cth-admin-ink);
-  border: 1px solid var(--cth-admin-border);
+  background: var(--cth-command-ivory);
+  color: var(--cth-command-ink);
+  border: 1px solid var(--cth-command-border);
 }
 .cth-bs-typing {
   align-self: flex-start;
   font-size: 12px;
-  color: var(--cth-admin-muted);
+  color: var(--cth-command-muted);
 }
 
 .cth-bs-input {
@@ -197,8 +197,8 @@ const BRAND_STUDIO_CSS = `
   align-items: flex-end;
   gap: 0.6rem;
   padding: 0.85rem 1rem;
-  border-top: 1px solid var(--cth-admin-border);
-  background: var(--cth-admin-panel);
+  border-top: 1px solid var(--cth-command-border);
+  background: var(--cth-command-ivory);
 }
 .cth-bs-textarea {
   flex: 1;
@@ -211,13 +211,13 @@ const BRAND_STUDIO_CSS = `
   overflow-y: auto;
   padding: 0.6rem 0.75rem;
   border-radius: 0;
-  border: 1px solid var(--cth-admin-border);
-  background: var(--cth-admin-bg);
-  color: var(--cth-admin-ink);
+  border: 1px solid var(--cth-command-border);
+  background: var(--cth-command-blush);
+  color: var(--cth-command-ink);
 }
 .cth-bs-textarea:focus {
   outline: none;
-  border-color: var(--cth-admin-accent);
+  border-color: var(--cth-command-cinnabar);
 }
 .cth-bs-send {
   display: flex;
@@ -226,8 +226,8 @@ const BRAND_STUDIO_CSS = `
   padding: 0.65rem 1rem;
   border: none;
   border-radius: 0;
-  background: var(--cth-admin-accent);
-  color: var(--cth-admin-panel);
+  background: var(--cth-command-cinnabar);
+  color: var(--cth-command-ivory);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -478,7 +478,7 @@ export default function BrandStudio() {
                       border: "none",
                       cursor: "pointer",
                       padding: "2px 4px",
-                      color: "var(--cth-admin-muted)",
+                      color: "var(--cth-command-muted)",
                       display: "flex",
                       alignItems: "center",
                     }}

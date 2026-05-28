@@ -534,7 +534,7 @@ function ScoreRing({ score }) {
   const r = 22;
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
-  const stroke = score === 100 ? "var(--cth-status-success-bright)" : "var(--cth-command-crimson)";
+  const stroke = score === 100 ? "var(--cth-command-success)" : "var(--cth-command-crimson)";
 
   return (
     <div className="relative h-16 w-16 shrink-0">
@@ -564,7 +564,7 @@ function ScoreRing({ score }) {
 
 function StatusDot({ status }) {
   let fill = "var(--cth-command-muted)";
-  if (status === "complete") fill = "var(--cth-status-success-bright)";
+  if (status === "complete") fill = "var(--cth-command-success)";
   else if (status === "draft") fill = "var(--cth-command-gold)";
   return (
     <span

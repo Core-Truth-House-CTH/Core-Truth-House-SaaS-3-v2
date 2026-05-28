@@ -33,7 +33,7 @@ import { PLAN_ORDER } from "../config/routeConfig";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
-const CHART_COLORS = ["var(--cth-command-crimson)", "var(--cth-brand-primary)", "var(--cth-command-crimson)", "var(--cth-status-info)", "var(--cth-status-success-bright)", "var(--cth-status-warning)"];
+const CHART_COLORS = ["var(--cth-command-crimson)", "var(--cth-brand-primary)", "var(--cth-command-crimson)", "var(--cth-command-purple)", "var(--cth-command-success)", "var(--cth-command-warning)"];
 
 function MetricCard({ label, value, icon: Icon, color, sublabel }) {
  return (
@@ -370,35 +370,35 @@ export default function Analytics() {
  label: "Audit Score",
  value: overview?.summary?.brand_audit_score || 0,
  icon: TrendingUp,
- color: "var(--cth-status-info)",
+ color: "var(--cth-command-purple)",
  sublabel: "Latest brand score",
  },
  {
  label: "AI This Month",
  value: overview?.summary?.ai_generations_this_month || 0,
  icon: Sparkles,
- color: "var(--cth-status-focus)",
+ color: "var(--cth-command-purple)",
  sublabel: "Generations used this month",
  },
  {
  label: "Content",
  value: overview?.summary?.total_content || 0,
  icon: FileText,
- color: "var(--cth-status-success-bright)",
+ color: "var(--cth-command-success)",
  sublabel: "Saved content assets",
  },
  {
  label: "Media",
  value: overview?.summary?.total_media || 0,
  icon: Image,
- color: "var(--cth-status-warning)",
+ color: "var(--cth-command-warning)",
  sublabel: "Generated media assets",
  },
  {
  label: "Systems",
  value: overview?.summary?.total_systems || 0,
  icon: BarChart3,
- color: "var(--cth-status-info)",
+ color: "var(--cth-command-purple)",
  sublabel: "Tracked system assets",
  },
  ];
@@ -661,7 +661,7 @@ export default function Analytics() {
  <div
  className="rounded-xl p-4"
  style={{
- background: "color-mix(in srgb, var(--cth-status-info) 6%, var(--cth-command-panel))",
+ background: "color-mix(in srgb, var(--cth-command-purple) 6%, var(--cth-command-panel))",
  border: "1px solid var(--cth-command-border)",
  }}
  >
@@ -687,7 +687,7 @@ export default function Analytics() {
  <SectionHeader
  title="Strategy Analytics"
  badgeLabel="Structure+"
- badgeColor="var(--cth-status-info)"
+ badgeColor="var(--cth-command-purple)"
  />
  {isStructurePlus ? (
  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -695,7 +695,7 @@ export default function Analytics() {
  label="Campaigns Created"
  value={workspaceStats?.campaign_count || 0}
  icon={BarChart3}
- color="var(--cth-status-info)"
+ color="var(--cth-command-purple)"
  sublabel="Total campaigns built"
  />
  <MetricCard
@@ -709,14 +709,14 @@ export default function Analytics() {
  label="Content Generated"
  value={workspaceStats?.content_generated || 0}
  icon={Sparkles}
- color="var(--cth-status-success-bright)"
+ color="var(--cth-command-success)"
  sublabel="AI content pieces created"
  />
  <MetricCard
  label="Prompts Saved"
  value={workspaceStats?.has_prompts ? "Active" : "None yet"}
  icon={Sparkles}
- color="var(--cth-status-focus)"
+ color="var(--cth-command-purple)"
  sublabel="Prompt Generator usage"
  />
  </div>
@@ -734,7 +734,7 @@ export default function Analytics() {
  <SectionHeader
  title="Execution Analytics"
  badgeLabel="House+"
- badgeColor="var(--cth-status-success-bright)"
+ badgeColor="var(--cth-command-success)"
  />
  {isHousePlus ? (
  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -742,14 +742,14 @@ export default function Analytics() {
  label="CRM Contacts"
  value={workspaceStats?.contacts_count || 0}
  icon={Shield}
- color="var(--cth-status-info)"
+ color="var(--cth-command-purple)"
  sublabel="Contacts in your CRM"
  />
  <MetricCard
  label="Media Generated"
  value={workspaceStats?.total_media || 0}
  icon={Image}
- color="var(--cth-status-warning)"
+ color="var(--cth-command-warning)"
  sublabel="Media assets created"
  />
  <MetricCard
@@ -763,7 +763,7 @@ export default function Analytics() {
  label="Launch Readiness"
  value={`${launchReadiness}%`}
  icon={TrendingUp}
- color="var(--cth-status-success-bright)"
+ color="var(--cth-command-success)"
  sublabel="Across 6 key launch factors"
  />
  </div>

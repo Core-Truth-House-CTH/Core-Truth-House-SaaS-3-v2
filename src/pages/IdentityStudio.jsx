@@ -40,8 +40,8 @@ function isCssVarReference(value) {
 
 const DEFAULT_COLORS = [
   { id: 'primary', role: 'primary', label: 'Primary', hex: 'var(--cth-brand-primary)' },
-  { id: 'secondary', role: 'secondary', label: 'Secondary', hex: 'var(--cth-admin-accent)' },
-  { id: 'accent', role: 'accent', label: 'Accent', hex: 'var(--cth-admin-muted)' },
+  { id: 'secondary', role: 'secondary', label: 'Secondary', hex: 'var(--cth-command-cinnabar)' },
+  { id: 'accent', role: 'accent', label: 'Accent', hex: 'var(--cth-command-muted)' },
   { id: 'background', role: 'background', label: 'Background', hex: 'var(--cth-surface-deep)' },
   { id: 'text', role: 'text', label: 'Text', hex: 'var(--cth-on-dark)' },
 ];

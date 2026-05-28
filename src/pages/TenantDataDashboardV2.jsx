@@ -31,11 +31,11 @@ import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
 const CTH_PAGE_COLORS = {
- cardBg: "var(--cth-admin-panel)",
- cinnabar: "var(--cth-admin-accent)",
- tuscany: "var(--cth-admin-tuscany)",
- textPrimary: "var(--cth-admin-ink)",
- textMuted: "var(--cth-admin-ink-soft, var(--cth-admin-muted))",
+ cardBg: "var(--cth-command-ivory)",
+ cinnabar: "var(--cth-command-cinnabar)",
+ tuscany: "var(--cth-command-border)",
+ textPrimary: "var(--cth-command-ink)",
+ textMuted: "var(--cth-command-muted, var(--cth-command-muted))",
 };
 
 const API = import.meta.env.VITE_BACKEND_URL || "";
@@ -181,7 +181,7 @@ function UploadDropzone({ onFilesSelected, uploading, colors }) {
  width: 44,
  height: 44,
  borderRadius: 0,
- background: "color-mix(in srgb, var(--cth-admin-accent) 12%, var(--cth-admin-panel))",
+ background: "color-mix(in srgb, var(--cth-command-cinnabar) 12%, var(--cth-command-ivory))",
  display: "flex",
  alignItems: "center",
  justifyContent: "center",
@@ -210,7 +210,7 @@ function UploadDropzone({ onFilesSelected, uploading, colors }) {
  border: "none",
  borderRadius: 0,
  padding: "10px 16px",
- background: "var(--cth-admin-accent)",
+ background: "var(--cth-command-cinnabar)",
  color: "var(--cth-on-dark)",
  fontWeight: 700,
  cursor: uploading ? "wait" : "pointer",
@@ -646,7 +646,7 @@ export default function TenantDataDashboard() {
  borderRadius: 0,
  background: message.isError ? "rgba(175,0,36,0.12)" : "rgba(16,185,129,0.12)",
  border: message.isError ? "1px solid rgba(175,0,36,0.3)" : "1px solid rgba(16,185,129,0.3)",
- color: message.isError ? "color-mix(in srgb, var(--cth-status-danger) 35%, white)" : "color-mix(in srgb, var(--cth-status-success-bright) 40%, white)",
+ color: message.isError ? "color-mix(in srgb, var(--cth-command-error) 35%, white)" : "color-mix(in srgb, var(--cth-command-success) 40%, white)",
  }}
  >
  {message.text}
@@ -673,14 +673,14 @@ export default function TenantDataDashboard() {
  label="Media Assets"
  value={loadingSummary ? "…" : collections.media_assets?.count || 0}
  sub="images & media"
- color="var(--cth-admin-accent)"
+ color="var(--cth-command-cinnabar)"
  colors={colors}
  />
  <StatCard
  label="Content Items"
  value={loadingSummary ? "…" : collections.content_assets?.count || 0}
  sub="saved content"
- color="var(--cth-admin-accent)"
+ color="var(--cth-command-cinnabar)"
  colors={colors}
  />
  </div>
@@ -711,7 +711,7 @@ export default function TenantDataDashboard() {
  border: "none",
  borderRadius: 0,
  padding: "10px 16px",
- background: "color-mix(in srgb, var(--cth-admin-accent) 12%, var(--cth-admin-panel))",
+ background: "color-mix(in srgb, var(--cth-command-cinnabar) 12%, var(--cth-command-ivory))",
  color: colors.cinnabar,
  fontWeight: 700,
  cursor: exporting ? "wait" : "pointer",
@@ -764,7 +764,7 @@ export default function TenantDataDashboard() {
  width: "100%",
  border: `1px solid ${active ? `${colors.cinnabar}30` : `${colors.tuscany}14`}`,
  background: active
- ? "color-mix(in srgb, var(--cth-admin-accent) 10%, var(--cth-admin-panel))"
+ ? "color-mix(in srgb, var(--cth-command-cinnabar) 10%, var(--cth-command-ivory))"
  : "transparent",
  color: active ? colors.cinnabar : colors.textPrimary,
  borderRadius: 0,
@@ -823,7 +823,7 @@ export default function TenantDataDashboard() {
  padding: "10px 12px",
  borderRadius: 0,
  border: `1px solid ${colors.tuscany}20`,
- background: "var(--cth-admin-panel-alt)",
+ background: "var(--cth-command-panel-soft)",
  color: colors.textPrimary,
  }}
  >
@@ -872,7 +872,7 @@ export default function TenantDataDashboard() {
  padding: "11px 12px 11px 38px",
  borderRadius: 0,
  border: `1px solid ${colors.tuscany}20`,
- background: "var(--cth-admin-panel-alt)",
+ background: "var(--cth-command-panel-soft)",
  color: colors.textPrimary,
  outline: "none",
  }}
@@ -887,7 +887,7 @@ export default function TenantDataDashboard() {
  padding: "11px 12px",
  borderRadius: 0,
  border: `1px solid ${colors.tuscany}20`,
- background: "var(--cth-admin-panel-alt)",
+ background: "var(--cth-command-panel-soft)",
  color: colors.textPrimary,
  }}
  >
@@ -1015,7 +1015,7 @@ export default function TenantDataDashboard() {
  onClick={() => handleDownload(doc)}
  style={{
  border: `1px solid ${colors.cinnabar}25`,
- background: "color-mix(in srgb, var(--cth-admin-accent) 8%, var(--cth-admin-panel))",
+ background: "color-mix(in srgb, var(--cth-command-cinnabar) 8%, var(--cth-command-ivory))",
  color: colors.cinnabar,
  borderRadius: 0,
  padding: "7px 10px",

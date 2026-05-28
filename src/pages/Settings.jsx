@@ -181,7 +181,7 @@ const DESTRUCTIVE_BUTTON_SMALL_STYLE = {
 };
 
 function statusColor(value) {
-  if (value === 'verified') return 'var(--cth-status-success-bright)';
+  if (value === 'verified') return 'var(--cth-command-success)';
   if (value === 'failed') return 'var(--cth-danger)';
   return 'var(--cth-command-muted)';
 }
@@ -935,7 +935,7 @@ export default function Settings() {
                       style={{
                         ...PRIMARY_CTA_STYLE,
                         background: saved
-                          ? 'var(--cth-status-success-bright)'
+                          ? 'var(--cth-command-success)'
                           : 'var(--cth-command-purple)',
                         color: saved ? 'var(--cth-command-ivory)' : 'var(--cth-command-gold)',
                         cursor: saving ? 'wait' : 'pointer',
@@ -1038,7 +1038,7 @@ export default function Settings() {
       >
         <div className="flex items-center gap-3" style={{ marginBottom: 16 }}>
           {dnsResult?.verified ? (
-            <CheckCircle size={32} style={{ color: 'var(--cth-status-success-bright)' }} />
+            <CheckCircle size={32} style={{ color: 'var(--cth-command-success)' }} />
           ) : (
             <XCircle size={32} style={{ color: 'var(--cth-command-crimson)' }} />
           )}

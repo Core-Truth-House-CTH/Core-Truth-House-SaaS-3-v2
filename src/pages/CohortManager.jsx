@@ -200,7 +200,7 @@ function deriveModuleStatus(progress, moduleId) {
 }
 
 function moduleDotColor(status) {
-  if (status === "complete") return "var(--cth-status-success-bright, #2f8a4a)";
+  if (status === "complete") return "var(--cth-command-success, #2f8a4a)";
   if (status === "draft") return "var(--cth-command-gold)";
   return "var(--cth-command-border)";
 }
