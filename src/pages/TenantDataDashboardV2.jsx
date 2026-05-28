@@ -23,6 +23,7 @@ import {
   ImagePlus,
   Loader2,
   RefreshCw,
+  Search,
   Send,
   Trash2,
   Type,
@@ -523,6 +524,7 @@ export default function TenantDataDashboard() {
   const [message, setMessage] = useState("");
 
   const [filterType, setFilterType] = useState("all");
+  const [search, setSearch] = useState("");
   const [previewItem, setPreviewItem] = useState(null);
   const [pendingUpload, setPendingUpload] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -595,9 +597,18 @@ export default function TenantDataDashboard() {
   }, [documents, media]);
 
   const visibleItems = useMemo(() => {
-    if (filterType === "all") return items;
-    return items.filter((item) => itemType(item) === filterType);
-  }, [items, filterType]);
+    let result = filterType === "all" ? items : items.filter((item) => itemType(item) === filterType);
+    const q = search.trim().toLowerCase();
+    if (q) {
+      result = result.filter((item) =>
+        String(item.name || "").toLowerCase().includes(q) ||
+        String(item.filename || "").toLowerCase().includes(q) ||
+        String(categoryLabel(item.category) || "").toLowerCase().includes(q) ||
+        String(item.category || "").toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [items, filterType, search]);
 
   function canManage(item) {
     return isPlatformAdmin || (item.ownerId && String(item.ownerId) === String(user?.id || ""));
@@ -920,11 +931,22 @@ export default function TenantDataDashboard() {
               </button>
             );
           })}
+          <div className="relative ml-auto">
+            <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--cth-command-muted)" }} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search files..."
+              className="w-44 rounded-md py-1 pl-8 pr-2 text-[12px] outline-none transition-[width] focus:w-56"
+              style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", color: "var(--cth-command-ink)" }}
+            />
+          </div>
           <button
             type="button"
             onClick={() => { loadFiles(); loadSummary(); }}
             title="Refresh"
-            className="ml-auto inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold"
+            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold"
             style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", color: "var(--cth-command-muted)" }}
           >
             <RefreshCw size={12} /> Refresh
