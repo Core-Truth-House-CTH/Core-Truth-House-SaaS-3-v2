@@ -34,4 +34,10 @@
   /* Structural */
   --cth-command-border: #d8c5c3;
   --cth-command-muted: #7c6576;
+
+  /* Semantic status — values match existing --cth-status-* so the migration
+     from --cth-status-* to --cth-command-* is a name swap, not a recolor. */
+  --cth-command-success: #2d6a4f;
+  --cth-command-warning: #e04e35;
+  --cth-command-error: #b44343;
 }
