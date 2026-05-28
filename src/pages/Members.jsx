@@ -411,6 +411,7 @@ export default function Members() {
   const [members, setMembers] = useState([]);
   const [invites, setInvites] = useState([]);
   const [activity, setActivity] = useState(null);
+  const [seatUsage, setSeatUsage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
@@ -462,6 +463,16 @@ export default function Members() {
     }
   }, []);
 
+  const loadSeatUsage = useCallback(async (workspaceId) => {
+    try {
+      const response = await apiClient.get(`/api/teams/${encodeURIComponent(workspaceId)}/seat-usage`);
+      setSeatUsage(response || null);
+    } catch (err) {
+      console.error("Failed to load seat usage", err);
+      setSeatUsage(null);
+    }
+  }, []);
+
   useEffect(() => {
     if (!activeWorkspaceId) {
       setLoading(false);
@@ -479,7 +490,8 @@ export default function Members() {
   useEffect(() => {
     if (!activeWorkspaceId || !isWorkspaceAdmin) return;
     loadInvites(activeWorkspaceId);
-  }, [activeWorkspaceId, isWorkspaceAdmin, loadInvites]);
+    loadSeatUsage(activeWorkspaceId);
+  }, [activeWorkspaceId, isWorkspaceAdmin, loadInvites, loadSeatUsage]);
 
   async function handleRoleChange(member, nextRole) {
     if (!activeWorkspaceId) return;
@@ -555,10 +567,12 @@ export default function Members() {
       } else {
         await loadInvites(activeWorkspaceId);
       }
+      await loadSeatUsage(activeWorkspaceId);
       setInviteModalOpen(false);
     } catch (err) {
       console.error("Invite failed", err);
-      setInviteError(err?.message || "Could not send invite.");
+      const detail = err?.response?.data?.detail || err?.message || "Could not send invite.";
+      setInviteError(detail);
     } finally {
       setSavingInvite(false);
     }
@@ -610,11 +624,17 @@ export default function Members() {
     }
   }
 
+  const atSeatCap = Boolean(
+    seatUsage && typeof seatUsage.limit === "number" && seatUsage.used >= seatUsage.limit
+  );
+
   const headerAction = isWorkspaceAdmin ? (
     <button
       type="button"
       onClick={() => { setInviteError(""); setInviteModalOpen(true); }}
-      className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
+      disabled={atSeatCap}
+      title={atSeatCap ? `Seat limit reached for the ${seatUsage?.plan || "current"} plan. Upgrade to add more members.` : ""}
+      className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
       style={{ background: "var(--cth-command-crimson)", color: "var(--cth-command-panel)" }}
     >
       <UserPlus size={13} /> Invite member
@@ -644,6 +664,26 @@ export default function Members() {
       />
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+        {seatUsage && isWorkspaceAdmin ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold"
+              style={{
+                background: atSeatCap ? "var(--cth-command-error)" : "var(--cth-command-blush)",
+                color: atSeatCap ? "var(--cth-command-panel)" : "var(--cth-command-ink)",
+                border: "1px solid " + (atSeatCap ? "var(--cth-command-error)" : "var(--cth-command-border)"),
+              }}
+            >
+              Seats: {seatUsage.used} / {seatUsage.limit}
+            </span>
+            <span className="text-[11px]" style={{ color: "var(--cth-command-muted)" }}>
+              {atSeatCap
+                ? `Seat limit reached for the ${seatUsage.plan} plan. Upgrade to add more members.`
+                : `${seatUsage.plan.charAt(0).toUpperCase() + seatUsage.plan.slice(1)} plan — ${seatUsage.remaining} seat${seatUsage.remaining === 1 ? "" : "s"} remaining.`}
+            </span>
+          </div>
+        ) : null}
+
         {error ? (
           <div className="flex items-start gap-2 rounded-xl px-3 py-2 text-xs"
             style={{ background: "var(--cth-command-panel-soft)", border: "1px solid var(--cth-command-crimson)", color: "var(--cth-command-ink)" }}>
