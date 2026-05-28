@@ -68,7 +68,6 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
-import HelpCenter from "./help/HelpCenter";
 
 const ICON_MAP = {
   "/admin": ShieldAlert,
@@ -187,7 +186,6 @@ export function Sidebar() {
   const [usage, setUsage] = useState(null);
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [showHelpCenter, setShowHelpCenter] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const enterTimerRef = useRef(null);
@@ -744,19 +742,9 @@ export function Sidebar() {
                     </div>
                   ))}
 
-                <button data-testid="sidebar-billing-btn" onClick={() => navigate("/billing")} className="cth-sidebar-utility w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors">
-                  <CreditCard size={14} />
-                  {showLabels && <span>Billing</span>}
-                </button>
-
-                <button data-testid="sidebar-settings-btn" onClick={() => navigate("/settings")} className="cth-sidebar-utility w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors">
-                  <Settings size={14} />
-                  {showLabels && <span>Settings</span>}
-                </button>
-
-                <button data-testid="help-center-btn" onClick={() => setShowHelpCenter(true)} className="cth-sidebar-utility w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors">
+                <button data-testid="sidebar-knowledge-base-btn" onClick={() => navigate("/knowledge-base")} className="cth-sidebar-utility w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors">
                   <HelpCircle size={14} />
-                  {showLabels && <span>Help Center</span>}
+                  {showLabels && <span>Knowledge Base</span>}
                 </button>
 
                 {showLabels && (
@@ -863,8 +851,6 @@ export function Sidebar() {
             </div>
           </div>
         )}
-
-        <HelpCenter isOpen={showHelpCenter} onClose={() => setShowHelpCenter(false)} />
 
         {mobileOpen && (
           <button
