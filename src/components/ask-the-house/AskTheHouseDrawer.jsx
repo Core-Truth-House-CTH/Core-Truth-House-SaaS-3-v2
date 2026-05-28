@@ -6,6 +6,12 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 const SANS = '"DM Sans", system-ui, sans-serif';
 const SERIF = '"Playfair Display", serif';
 
+// Brand Architect persona ("Zuri") avatar — the "Replicate Headshot" record in
+// media_assets. Served behind the global /api auth middleware, so it is fetched
+// as an authenticated blob URL (a direct <img src> would 401).
+const ZURI_AVATAR_PATH =
+  "/api/media-upload/files/brand_asset_reference/47ec8f1a92bc4a77968bc1f4f7d5eb19.png";
+
 const MODES = [
   { id: "guide", label: "Guide" },
   { id: "review", label: "Review" },
@@ -54,7 +60,40 @@ export default function AskTheHouseDrawer({
   const [mode, setMode] = useState("guide");
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const avatarUrlRef = useRef("");
   const messagesEndRef = useRef(null);
+
+  // Fetch Zuri's avatar as an authed blob once the drawer opens (cached after).
+  useEffect(() => {
+    if (!open || avatarUrlRef.current) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const url = typeof apiClient.buildApiUrl === "function"
+          ? apiClient.buildApiUrl(ZURI_AVATAR_PATH)
+          : ZURI_AVATAR_PATH;
+        const headers = typeof apiClient.getAuthHeaders === "function"
+          ? await apiClient.getAuthHeaders()
+          : {};
+        const res = await fetch(url, { method: "GET", headers, credentials: "include" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        if (cancelled) return;
+        const objUrl = window.URL.createObjectURL(blob);
+        avatarUrlRef.current = objUrl;
+        setAvatarUrl(objUrl);
+      } catch (err) {
+        if (!cancelled) console.error("Failed to load Zuri avatar:", err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open]);
+
+  // Revoke the object URL only on unmount (not on re-open, so the cache holds).
+  useEffect(() => () => {
+    if (avatarUrlRef.current) window.URL.revokeObjectURL(avatarUrlRef.current);
+  }, []);
 
   // ESC closes
   useEffect(() => {
@@ -201,23 +240,41 @@ export default function AskTheHouseDrawer({
           borderBottom: "1px solid var(--cth-command-border)",
           flexShrink: 0,
         }}>
-          <div>
-            <p style={{
-              margin: 0, fontSize: 11,
-              letterSpacing: "0.1em", textTransform: "uppercase",
-              color: "var(--cth-command-muted)",
-              fontFamily: SANS,
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+              background: "var(--cth-command-purple)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              border: "1px solid var(--cth-command-border)",
             }}>
-              Ask the House
-            </p>
-            <h2 style={{
-              margin: "2px 0 0", fontSize: 20,
-              fontFamily: SERIF,
-              color: "var(--cth-command-ink)", fontWeight: 600,
-              textTransform: "capitalize",
-            }}>
-              {(surface || "").replace(/_/g, " ")}
-            </h2>
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Zuri"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <span style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 600, color: "var(--cth-command-gold)" }}>
+                  Z
+                </span>
+              )}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{
+                margin: 0, fontSize: 20, fontFamily: SERIF,
+                color: "var(--cth-command-ink)", fontWeight: 600, lineHeight: 1.1,
+              }}>
+                Zuri
+              </h2>
+              <p style={{
+                margin: "2px 0 0", fontSize: 11,
+                letterSpacing: "0.08em", textTransform: "uppercase",
+                color: "var(--cth-command-muted)", fontFamily: SANS,
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+              }}>
+                Brand Architect · {(surface || "").replace(/_/g, " ")}
+              </p>
+            </div>
           </div>
           <button onClick={onClose} aria-label="Close" style={{
             background: "none", border: "none", cursor: "pointer",
@@ -368,7 +425,7 @@ export default function AskTheHouseDrawer({
                 fontSize: 14, fontFamily: SANS,
                 marginBottom: 16, lineHeight: 1.5,
               }}>
-                Could not load your Brand Architect. Check your connection and try again.
+                Could not load Zuri. Check your connection and try again.
               </p>
               <button
                 onClick={loadContext}
@@ -417,7 +474,7 @@ export default function AskTheHouseDrawer({
               fontStyle: "italic",
               padding: "12px 0",
             }}>
-              Ask the Brand Architect anything about your {(surface || "").replace(/_/g, " ")}.
+              Ask Zuri anything about your {(surface || "").replace(/_/g, " ")}.
             </div>
           ) : (
             messages.map((m, idx) => (
