@@ -107,11 +107,11 @@ function slugify(value) {
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-admin-border)] px-5 py-4">
+    <div className="rounded-2xl border border-[var(--cth-command-border)] bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-command-border)] px-5 py-4">
         <div>
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">{subtitle}</div> : null}
+          <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{title}</div>
+          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-command-muted)]">{subtitle}</div> : null}
         </div>
         {actions}
       </div>
@@ -122,13 +122,13 @@ function PanelCard({ title, subtitle, children, actions = null }) {
 
 function SearchInput({ value, onChange }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-[var(--cth-admin-border)] bg-white px-3 py-2">
-      <Search size={15} className="text-[var(--cth-copy-muted)]" />
+    <div className="flex items-center gap-2 rounded-xl border border-[var(--cth-command-border)] bg-white px-3 py-2">
+      <Search size={15} className="text-[var(--cth-command-muted)]" />
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search guides and docs..."
-        className="w-full bg-transparent text-sm text-[var(--cth-admin-ink)] outline-none placeholder:text-[var(--cth-copy-muted)]"
+        className="w-full bg-transparent text-sm text-[var(--cth-command-ink)] outline-none placeholder:text-[var(--cth-command-muted)]"
       />
     </div>
   );
@@ -140,7 +140,7 @@ function TextInput({ value, onChange, placeholder = "" }) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-xl border border-[var(--cth-admin-border)] bg-white px-3 py-2 text-sm text-[var(--cth-admin-ink)] outline-none"
+      className="w-full rounded-xl border border-[var(--cth-command-border)] bg-white px-3 py-2 text-sm text-[var(--cth-command-ink)] outline-none"
     />
   );
 }
@@ -150,7 +150,7 @@ function SelectInput({ value, onChange, options }) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-xl border border-[var(--cth-admin-border)] bg-white px-3 py-2 text-sm text-[var(--cth-admin-ink)] outline-none"
+      className="w-full rounded-xl border border-[var(--cth-command-border)] bg-white px-3 py-2 text-sm text-[var(--cth-command-ink)] outline-none"
     >
       {options.map((option) => (
         <option key={option.value || option} value={option.value || option}>
@@ -168,7 +168,7 @@ function TextArea({ value, onChange, rows = 6, placeholder = "" }) {
       onChange={(e) => onChange(e.target.value)}
       rows={rows}
       placeholder={placeholder}
-      className="w-full rounded-xl border border-[var(--cth-admin-border)] bg-white px-3 py-2 text-sm text-[var(--cth-admin-ink)] outline-none"
+      className="w-full rounded-xl border border-[var(--cth-command-border)] bg-white px-3 py-2 text-sm text-[var(--cth-command-ink)] outline-none"
     />
   );
 }
@@ -180,11 +180,11 @@ function TierBadge({ tier }) {
     .replace("House+", "House");
 
   const styles = {
-    All: "bg-[var(--cth-admin-panel-alt)] text-[var(--cth-admin-muted)]",
-    Foundation: "bg-[rgba(45,106,79,0.12)] text-[var(--cth-status-success)]",
-    Structure: "bg-[var(--cth-kb-structure-bg)] text-[var(--cth-kb-structure-text)]",
-    House: "bg-[rgba(118,59,91,0.12)] text-[var(--cth-admin-ruby)]",
-    Estate: "bg-[var(--cth-kb-estate-bg)] text-[var(--cth-kb-estate-text)]",
+    All: "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-muted)]",
+    Foundation: "bg-[var(--cth-command-purple)] text-[var(--cth-command-panel)]",
+    Structure: "bg-[var(--cth-command-gold)] text-[var(--cth-command-ink)]",
+    House: "bg-[var(--cth-command-crimson)] text-[var(--cth-command-panel)]",
+    Estate: "bg-[var(--cth-command-ink)] text-[var(--cth-command-panel)]",
   };
 
   return (
@@ -199,8 +199,8 @@ function PublishBadge({ published }) {
     <span
       className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold ${
         published
-          ? "bg-[var(--cth-status-success-soft-bg)] text-[var(--cth-status-success-deep)]"
-          : "bg-[var(--cth-status-warning-soft-bg)] text-[var(--cth-status-warning-deep)]"
+          ? "bg-[var(--cth-command-purple)] text-[var(--cth-command-panel)]"
+          : "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-muted)]"
       }`}
     >
       {published ? "Published" : "Draft"}
@@ -215,8 +215,8 @@ function SectionTab({ section, active, count = 0, onClick }) {
       onClick={onClick}
       className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
         active
-          ? "bg-[var(--cth-admin-accent)]/15 text-[var(--cth-admin-accent)]"
-          : "text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)] hover:text-[var(--cth-admin-ink)]"
+          ? "bg-[var(--cth-command-crimson)]/15 text-[var(--cth-command-crimson)]"
+          : "text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)] hover:text-[var(--cth-command-ink)]"
       }`}
     >
       <span className="flex items-center gap-2.5 min-w-0">
@@ -227,8 +227,8 @@ function SectionTab({ section, active, count = 0, onClick }) {
       <span
         className={`inline-flex min-w-[24px] items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
           active
-            ? "bg-[var(--cth-admin-accent)] text-white"
-            : "bg-[var(--cth-admin-panel-alt)] text-[var(--cth-admin-muted)]"
+            ? "bg-[var(--cth-command-crimson)] text-white"
+            : "bg-[var(--cth-command-panel-soft)] text-[var(--cth-command-muted)]"
         }`}
       >
         {count}
@@ -241,15 +241,15 @@ function QuickLinkCard({ to, icon: Icon, title, description }) {
   return (
     <Link
       to={to}
-      className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4 transition hover:bg-[var(--cth-admin-panel)] hover:border-[var(--cth-admin-border)]"
+      className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4 transition hover:bg-[var(--cth-command-panel)] hover:border-[var(--cth-command-border)]"
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color-mix(in srgb, var(--cth-admin-ruby) 12%, var(--cth-admin-panel))] text-[var(--cth-admin-ruby)]">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color-mix(in srgb, var(--cth-command-purple) 12%, var(--cth-command-panel))] text-[var(--cth-command-purple)]">
           <Icon size={16} />
         </div>
         <div>
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-          <div className="mt-1 text-sm text-[var(--cth-admin-muted)]">{description}</div>
+          <div className="text-sm font-semibold text-[var(--cth-command-ink)]">{title}</div>
+          <div className="mt-1 text-sm text-[var(--cth-command-muted)]">{description}</div>
         </div>
       </div>
     </Link>
@@ -551,44 +551,44 @@ export default function AdminKnowledgeBasePage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-[var(--cth-admin-border)] bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-[var(--cth-command-border)] bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-admin-ruby) 12%, var(--cth-admin-panel))] text-[var(--cth-admin-ruby)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in srgb, var(--cth-command-purple) 12%, var(--cth-command-panel))] text-[var(--cth-command-purple)]">
               <BookOpen size={20} />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">Market</p>
-              <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-admin-ink)]">Knowledge Base</h2>
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--cth-command-purple)]">Market</p>
+              <h2 className="mt-1 text-3xl font-semibold text-[var(--cth-command-ink)]">Knowledge Base</h2>
             </div>
           </div>
 
           <div className="flex gap-2">
             <button
               onClick={openCreate}
-              className="inline-flex items-center gap-2 rounded-xl bg-[var(--cth-admin-accent)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-xl bg-[var(--cth-command-crimson)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
             >
               <Plus size={15} />
               Add Article
             </button>
             <button
               onClick={resetKnowledgeBase}
-              className="inline-flex items-center gap-2 rounded-xl border border-[var(--cth-admin-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--cth-admin-muted)] transition hover:bg-[var(--cth-admin-panel)]"
+              className="inline-flex items-center gap-2 rounded-xl border border-[var(--cth-command-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--cth-command-muted)] transition hover:bg-[var(--cth-command-panel)]"
             >
               Reset
             </button>
           </div>
         </div>
 
-        <p className="mt-3 max-w-3xl text-sm text-[var(--cth-admin-muted)]">
+        <p className="mt-3 max-w-3xl text-sm text-[var(--cth-command-muted)]">
           This Knowledge Base is now an admin-managed authoring surface with draft and published visibility controls.
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-[color-mix(in srgb, var(--cth-admin-ruby) 12%, var(--cth-admin-panel))] px-3 py-1 text-xs font-semibold text-[var(--cth-admin-ruby)]">
+          <span className="inline-flex items-center rounded-full bg-[color-mix(in srgb, var(--cth-command-purple) 12%, var(--cth-command-panel))] px-3 py-1 text-xs font-semibold text-[var(--cth-command-purple)]">
             Total Articles: {totalArticleCount}
           </span>
-          <span className="inline-flex items-center rounded-full bg-[var(--cth-admin-panel-alt)] px-3 py-1 text-xs font-semibold text-[var(--cth-admin-muted)]">
+          <span className="inline-flex items-center rounded-full bg-[var(--cth-command-panel-soft)] px-3 py-1 text-xs font-semibold text-[var(--cth-command-muted)]">
             This Section: {sectionArticleCount}
           </span>
         </div>
@@ -617,7 +617,7 @@ export default function AdminKnowledgeBasePage() {
               options={SORT_OPTIONS}
             />
 
-            <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-2 text-xs text-[var(--cth-admin-muted)]">
+            <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-3 py-2 text-xs text-[var(--cth-command-muted)]">
               {sortOrder === "manual"
                 ? "Manual Order is active. Use ↑ and ↓ to control article order inside this section."
                 : "List order is currently controlled by the selected sort mode."}
@@ -649,9 +649,9 @@ export default function AdminKnowledgeBasePage() {
                       />
 
                       {isActiveSection ? (
-                        <div className="ml-2 space-y-1.5 border-l border-[var(--cth-admin-border)] pl-3">
+                        <div className="ml-2 space-y-1.5 border-l border-[var(--cth-command-border)] pl-3">
                           {sectionArticles.length === 0 ? (
-                            <div className="text-xs text-[var(--cth-copy-muted)]">No articles in this section.</div>
+                            <div className="text-xs text-[var(--cth-command-muted)]">No articles in this section.</div>
                           ) : (
                             sectionArticles.map((article, index) => {
                               const isFirst = index === 0;
@@ -662,8 +662,8 @@ export default function AdminKnowledgeBasePage() {
                                   key={article.id}
                                   className={`rounded-lg border px-2.5 py-2 transition ${
                                     selectedArticleId === article.id || (!selectedArticleId && activeArticle?.id === article.id)
-                                      ? "border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)]"
-                                      : "border-transparent bg-transparent hover:border-[var(--cth-admin-border)] hover:bg-[var(--cth-admin-panel)]"
+                                      ? "border-[var(--cth-command-border)] bg-[var(--cth-command-panel)]"
+                                      : "border-transparent bg-transparent hover:border-[var(--cth-command-border)] hover:bg-[var(--cth-command-panel)]"
                                   }`}
                                 >
                                   <div className="flex items-start justify-between gap-3">
@@ -674,16 +674,16 @@ export default function AdminKnowledgeBasePage() {
                                       }}
                                       className="min-w-0 flex-1 text-left"
                                     >
-                                      <div className="text-[13px] font-medium leading-5 text-[var(--cth-admin-ink)] line-clamp-2">{article.title}</div>
+                                      <div className="text-[13px] font-medium leading-5 text-[var(--cth-command-ink)] line-clamp-2">{article.title}</div>
                                       {sortOrder === "manual" ? (
-                                        <div className="mt-0.5 text-[10px] text-[var(--cth-copy-muted)]">
+                                        <div className="mt-0.5 text-[10px] text-[var(--cth-command-muted)]">
                                           Position {index + 1}
                                         </div>
                                       ) : null}
                                     </button>
 
                                     <div className="flex items-center gap-1.5 self-center">
-                                      <span className="inline-flex items-center rounded-full bg-[var(--cth-admin-panel-alt)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--cth-admin-muted)]">
+                                      <span className="inline-flex items-center rounded-full bg-[var(--cth-command-panel-soft)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--cth-command-muted)]">
                                         {article.is_published ? "Published" : "Draft"}
                                       </span>
 
@@ -693,7 +693,7 @@ export default function AdminKnowledgeBasePage() {
                                             type="button"
                                             onClick={() => moveArticle(sectionKey, article.id, "up")}
                                             disabled={isFirst}
-                                            className="rounded-md border border-[var(--cth-admin-border)] bg-white px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)] disabled:cursor-not-allowed disabled:opacity-40"
+                                            className="rounded-md border border-[var(--cth-command-border)] bg-white px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)] disabled:cursor-not-allowed disabled:opacity-40"
                                             title="Move up"
                                           >
                                             ↑
@@ -703,7 +703,7 @@ export default function AdminKnowledgeBasePage() {
                                             type="button"
                                             onClick={() => moveArticle(sectionKey, article.id, "down")}
                                             disabled={isLast}
-                                            className="rounded-md border border-[var(--cth-admin-border)] bg-white px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)] disabled:cursor-not-allowed disabled:opacity-40"
+                                            className="rounded-md border border-[var(--cth-command-border)] bg-white px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)] disabled:cursor-not-allowed disabled:opacity-40"
                                             title="Move down"
                                           >
                                             ↓
@@ -725,7 +725,7 @@ export default function AdminKnowledgeBasePage() {
             ) : (
               <div className="space-y-2">
                 {searchResults.length === 0 ? (
-                  <div className="text-sm text-[var(--cth-admin-muted)]">No help articles found.</div>
+                  <div className="text-sm text-[var(--cth-command-muted)]">No help articles found.</div>
                 ) : (
                   searchResults.slice(0, 10).map((article) => (
                     <button
@@ -734,13 +734,13 @@ export default function AdminKnowledgeBasePage() {
                         setActiveSection(article.sectionKey);
                         setSelectedArticleId(article.id);
                       }}
-                      className="w-full flex items-center justify-between gap-3 rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-3 text-left hover:bg-[var(--cth-admin-panel)]"
+                      className="w-full flex items-center justify-between gap-3 rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] px-3 py-3 text-left hover:bg-[var(--cth-command-panel)]"
                     >
                       <div>
-                        <p className="text-sm text-[var(--cth-admin-ink)]">{article.title}</p>
-                        <p className="text-xs text-[var(--cth-copy-muted)]">{article.section}</p>
+                        <p className="text-sm text-[var(--cth-command-ink)]">{article.title}</p>
+                        <p className="text-xs text-[var(--cth-command-muted)]">{article.section}</p>
                       </div>
-                      <ArrowRight size={14} className="text-[var(--cth-copy-muted)]" />
+                      <ArrowRight size={14} className="text-[var(--cth-command-muted)]" />
                     </button>
                   ))
                 )}
@@ -760,14 +760,14 @@ export default function AdminKnowledgeBasePage() {
                   <PublishBadge published={Boolean(activeArticle.is_published)} />
                   <button
                     onClick={() => openEdit(activeArticle)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-admin-border)] bg-white px-3 py-1.5 text-xs text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)]"
+                    className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-command-border)] bg-white px-3 py-1.5 text-xs text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)]"
                   >
                     <Pencil size={13} />
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(activeArticle)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-[rgba(239,68,68,0.25)] bg-white px-3 py-1.5 text-xs text-[var(--cth-status-danger-deep)] hover:bg-[rgba(239,68,68,0.06)]"
+                    className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-command-crimson)] bg-[var(--cth-command-panel)] px-3 py-1.5 text-xs text-[var(--cth-command-crimson)] hover:bg-[var(--cth-command-panel-soft)]"
                   >
                     <Trash2 size={13} />
                     Delete
@@ -777,23 +777,23 @@ export default function AdminKnowledgeBasePage() {
             }
           >
             {loading ? (
-              <div className="text-sm text-[var(--cth-admin-muted)]">Loading...</div>
+              <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
             ) : !activeArticle ? (
-              <div className="text-sm text-[var(--cth-admin-muted)]">No article selected.</div>
+              <div className="text-sm text-[var(--cth-command-muted)]">No article selected.</div>
             ) : (
               <div className="space-y-5">
-                <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cth-admin-ruby)]">
+                <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cth-command-purple)]">
                     Connected Help Center Mode
                   </p>
-                  <p className="mt-2 text-sm leading-7 text-[var(--cth-copy-body-soft)]">
+                  <p className="mt-2 text-sm leading-7 text-[var(--cth-command-ink)]">
                     This article now lives inside the admin support flow. Read the documentation here first. If the issue needs triage or operational follow-up, move directly into Help Desk or Notifications from the actions below.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   {activeArticle.body.map((paragraph, index) => (
-                    <p key={index} className="text-sm leading-8 text-[var(--cth-copy-body-soft)]">
+                    <p key={index} className="text-sm leading-8 text-[var(--cth-command-ink)]">
                       {paragraph}
                     </p>
                   ))}
@@ -818,11 +818,11 @@ export default function AdminKnowledgeBasePage() {
               />
             </div>
 
-            <div className="mt-4 rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cth-copy-muted)]">
+            <div className="mt-4 rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--cth-command-muted)]">
                 Support escalation logic
               </p>
-              <ul className="mt-3 space-y-2 text-sm text-[var(--cth-copy-body-soft)]">
+              <ul className="mt-3 space-y-2 text-sm text-[var(--cth-command-ink)]">
                 <li>• Stay in Knowledge Base when the answer is already documented</li>
                 <li>• Move to Help Desk when there is a user issue or message that needs handling</li>
                 <li>• Move to Notifications when the issue creates an operational signal that needs monitoring</li>
@@ -833,15 +833,15 @@ export default function AdminKnowledgeBasePage() {
       </div>
 
       {editorOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(28,8,40,0.55)] p-4">
-          <div className="w-full max-w-5xl rounded-2xl border border-[var(--cth-admin-border)] bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[var(--cth-admin-border)] px-5 py-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(13,0,16,0.55)] p-4">
+          <div className="w-full max-w-5xl rounded-2xl border border-[var(--cth-command-border)] bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[var(--cth-command-border)] px-5 py-4">
               <div className="space-y-2">
                 <div>
-                  <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">
+                  <div className="text-sm font-semibold text-[var(--cth-command-ink)]">
                     {editorMode === "create" ? "Add Knowledge Article" : "Edit Knowledge Article"}
                   </div>
-                  <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">
+                  <div className="mt-1 text-xs text-[var(--cth-command-muted)]">
                     Manage Knowledge Base content directly from the admin API.
                   </div>
                 </div>
@@ -849,17 +849,17 @@ export default function AdminKnowledgeBasePage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => setEditorOpen(false)}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-admin-border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)]"
+                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--cth-command-border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)]"
                   >
                     <ArrowRight size={13} className="rotate-180" />
                     Back to Article
                   </button>
 
-                  <span className="inline-flex items-center rounded-full bg-[color-mix(in srgb, var(--cth-admin-ruby) 12%, var(--cth-admin-panel))] px-3 py-1 text-xs font-semibold text-[var(--cth-admin-ruby)]">
+                  <span className="inline-flex items-center rounded-full bg-[color-mix(in srgb, var(--cth-command-purple) 12%, var(--cth-command-panel))] px-3 py-1 text-xs font-semibold text-[var(--cth-command-purple)]">
                     Edit Mode
                   </span>
 
-                  <span className="inline-flex items-center rounded-full bg-[var(--cth-admin-panel-alt)] px-3 py-1 text-xs font-semibold text-[var(--cth-admin-muted)]">
+                  <span className="inline-flex items-center rounded-full bg-[var(--cth-command-panel-soft)] px-3 py-1 text-xs font-semibold text-[var(--cth-command-muted)]">
                     Live Preview On
                   </span>
                 </div>
@@ -867,7 +867,7 @@ export default function AdminKnowledgeBasePage() {
 
               <button
                 onClick={() => setEditorOpen(false)}
-                className="rounded-lg p-2 text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)]"
+                className="rounded-lg p-2 text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)]"
                 aria-label="Close editor"
                 title="Close editor"
               >
@@ -878,7 +878,7 @@ export default function AdminKnowledgeBasePage() {
             <div className="grid gap-4 p-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-copy-muted)]">Title</div>
+                  <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Title</div>
                   <TextInput
                     value={form.title}
                     onChange={(value) =>
@@ -894,13 +894,13 @@ export default function AdminKnowledgeBasePage() {
                 </div>
 
                 <div>
-                  <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-copy-muted)]">Read Time</div>
+                  <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Read Time</div>
                   <TextInput value={form.duration} onChange={(value) => setForm((f) => ({ ...f, duration: value }))} placeholder="e.g. 5 min read" />
                 </div>
               </div>
 
               <div>
-                <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-copy-muted)]">Slug</div>
+                <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Slug</div>
                 <TextInput
                   value={form.slug}
                   onChange={(value) => setForm((f) => ({ ...f, slug: slugify(value) }))}
@@ -910,21 +910,21 @@ export default function AdminKnowledgeBasePage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-copy-muted)]">Section</div>
+                  <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Section</div>
                   <SelectInput value={form.sectionKey} onChange={(value) => setForm((f) => ({ ...f, sectionKey: value }))} options={SECTION_OPTIONS} />
                 </div>
 
                 <div>
-                  <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-copy-muted)]">Tier</div>
+                  <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Tier</div>
                   <SelectInput value={form.tier} onChange={(value) => setForm((f) => ({ ...f, tier: value }))} options={TIER_OPTIONS} />
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
+              <div className="rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4">
                 <label className="flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">Published</div>
-                    <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">
+                    <div className="text-sm font-semibold text-[var(--cth-command-ink)]">Published</div>
+                    <div className="mt-1 text-xs text-[var(--cth-command-muted)]">
                       Turn this off to keep the article in draft mode.
                     </div>
                   </div>
@@ -932,7 +932,7 @@ export default function AdminKnowledgeBasePage() {
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, is_published: !f.is_published }))}
                     className={`relative inline-flex h-7 w-14 items-center rounded-full transition ${
-                      form.is_published ? "bg-[var(--cth-status-success-deep)]" : "bg-[var(--cth-admin-border)]"
+                      form.is_published ? "bg-[var(--cth-command-crimson)]" : "bg-[var(--cth-command-border)]"
                     }`}
                   >
                     <span
@@ -947,12 +947,12 @@ export default function AdminKnowledgeBasePage() {
               <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
                 <div>
                   <div className="mb-1 flex items-center justify-between gap-3">
-                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-copy-muted)]">Article Body</div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Article Body</div>
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
                         onClick={() => insertIntoBody("## New Section Heading")}
-                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-admin-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)]"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-command-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)]"
                         title="Insert heading"
                       >
                         <Heading size={13} />
@@ -961,7 +961,7 @@ export default function AdminKnowledgeBasePage() {
                       <button
                         type="button"
                         onClick={() => insertIntoBody("- First bullet\n- Second bullet\n- Third bullet")}
-                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-admin-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)]"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-command-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)]"
                         title="Insert bullet list"
                       >
                         <List size={13} />
@@ -970,7 +970,7 @@ export default function AdminKnowledgeBasePage() {
                       <button
                         type="button"
                         onClick={() => insertIntoBody("**Bold emphasis point**")}
-                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-admin-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)]"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-command-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)]"
                         title="Insert bold emphasis"
                       >
                         <Bold size={13} />
@@ -979,7 +979,7 @@ export default function AdminKnowledgeBasePage() {
                       <button
                         type="button"
                         onClick={() => insertIntoBody("---")}
-                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-admin-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)]"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-command-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)]"
                         title="Insert divider"
                       >
                         <Minus size={13} />
@@ -988,7 +988,7 @@ export default function AdminKnowledgeBasePage() {
                       <button
                         type="button"
                         onClick={() => insertIntoBody("New paragraph text goes here.")}
-                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-admin-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)]"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--cth-command-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)]"
                         title="Insert paragraph"
                       >
                         <Pilcrow size={13} />
@@ -1005,19 +1005,19 @@ export default function AdminKnowledgeBasePage() {
                 </div>
 
                 <div>
-                  <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-copy-muted)]">Live Preview</div>
-                  <div className="min-h-[320px] rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] p-4">
-                    <div className="text-lg font-semibold text-[var(--cth-admin-ink)]">
+                  <div className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cth-command-muted)]">Live Preview</div>
+                  <div className="min-h-[320px] rounded-xl border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4">
+                    <div className="text-lg font-semibold text-[var(--cth-command-ink)]">
                       {form.title || "Untitled article"}
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--cth-copy-muted)]">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--cth-command-muted)]">
                       <span>{SECTION_META[form.sectionKey]?.title || "Start Here"}</span>
                       <span>•</span>
                       <span>{form.duration || "3 min read"}</span>
                       <span>•</span>
                       <span>{form.tier || "All"}</span>
                     </div>
-                    <div className="mt-2 text-xs text-[var(--cth-copy-muted)]">/{form.slug || slugify(form.title)}</div>
+                    <div className="mt-2 text-xs text-[var(--cth-command-muted)]">/{form.slug || slugify(form.title)}</div>
 
                     <div className="mt-4 space-y-4">
                       {form.bodyText.trim() ? (
@@ -1026,12 +1026,12 @@ export default function AdminKnowledgeBasePage() {
                           .map((paragraph, index) => paragraph.trim())
                           .filter(Boolean)
                           .map((paragraph, index) => (
-                            <p key={index} className="text-sm leading-7 text-[var(--cth-copy-body-soft)]">
+                            <p key={index} className="text-sm leading-7 text-[var(--cth-command-ink)]">
                               {paragraph}
                             </p>
                           ))
                       ) : (
-                        <div className="text-sm text-[var(--cth-copy-muted)]">
+                        <div className="text-sm text-[var(--cth-command-muted)]">
                           Your article preview will appear here as you write.
                         </div>
                       )}
@@ -1041,22 +1041,22 @@ export default function AdminKnowledgeBasePage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--cth-admin-border)] px-5 py-4">
-              <div className="text-xs text-[var(--cth-copy-muted)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--cth-command-border)] px-5 py-4">
+              <div className="text-xs text-[var(--cth-command-muted)]">
                 Changes save directly to the admin Knowledge Base API.
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setEditorOpen(false)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[var(--cth-admin-border)] bg-white px-4 py-2 text-sm text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)]"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[var(--cth-command-border)] bg-white px-4 py-2 text-sm text-[var(--cth-command-muted)] hover:bg-[var(--cth-command-panel)]"
                 >
                   <X size={15} />
                   Close
                 </button>
                 <button
                   onClick={handleSave}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[var(--cth-admin-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[var(--cth-command-crimson)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
                 >
                   <Save size={15} />
                   Save Article
