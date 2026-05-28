@@ -412,7 +412,6 @@ export function Sidebar() {
         label: "WORKSPACE",
         items: [
           { path: "/workspace-library", label: "Workspace Library", icon: FolderOpen },
-          { path: "/saved-reports", label: "Saved Reports", icon: BarChart2 },
           { path: "/workspace-controls", label: "Workspace Controls", icon: Settings },
           { path: "/billing", label: "Plan & Billing", icon: CreditCard },
           { path: "/members", label: "Members", icon: Users },

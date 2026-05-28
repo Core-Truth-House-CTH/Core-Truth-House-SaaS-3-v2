@@ -429,7 +429,6 @@ export const APP_ROUTES = [
   { path: "/automations", label: "Automations", group: "placeholder", requiredPlan: "structure", gateType: null },
   { path: "/tracking-links", label: "Tracking Links", group: "placeholder", requiredPlan: "structure", gateType: null },
   { path: "/documents", label: "Documents", group: "placeholder", requiredPlan: "foundation", gateType: null },
-  { path: "/saved-reports", label: "Saved Reports", group: "placeholder", requiredPlan: "structure", gateType: null },
   { path: "/join", label: "Join Workspace", group: "placeholder", requiredPlan: null, gateType: null },
   { path: "/workspace-controls", label: "Workspace Controls", group: "placeholder", requiredPlan: "foundation", gateType: null },
   { path: "/members", label: "Members", group: "placeholder", requiredPlan: "structure", gateType: null },

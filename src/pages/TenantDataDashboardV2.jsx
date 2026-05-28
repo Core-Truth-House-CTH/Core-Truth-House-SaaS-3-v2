@@ -112,6 +112,7 @@ const TYPE_CHIP_COLORS = {
   image: "var(--cth-command-gold)",
   document: "var(--cth-command-purple)",
   font: "var(--cth-command-cinnabar)",
+  report: "var(--cth-command-gold)",
   other: "var(--cth-command-muted)",
 };
 
@@ -120,8 +121,21 @@ const TYPE_FILTERS = [
   { id: "image", label: "Images" },
   { id: "document", label: "Documents" },
   { id: "font", label: "Fonts" },
+  { id: "report", label: "Reports" },
   { id: "other", label: "Other" },
 ];
+
+// Read-only labels for generated report artifacts (saved_reports.type).
+const REPORT_TYPE_LABELS = {
+  brand_kit_zip: "Brand Kit (ZIP)",
+  brand_kit_pdf: "Brand Kit (PDF)",
+  brand_guidelines: "Brand Guidelines",
+  brand_foundation_report: "Brand Foundation Report",
+};
+
+function reportTypeLabel(value) {
+  return REPORT_TYPE_LABELS[value] || "Report";
+}
 
 // Widened document detection: pdf/doc/docx/csv/txt/xls/xlsx all read as "document".
 const DOC_EXTS = new Set(["pdf", "doc", "docx", "csv", "txt", "xls", "xlsx", "ppt", "pptx", "rtf", "odt", "ods"]);
@@ -161,6 +175,9 @@ function formatDate(iso) {
 
 // Classify any item (either origin) into a filter bucket.
 function itemType(item) {
+  // Reports are generated artifacts — bucket by origin, not by mime, so a
+  // PDF/ZIP report never leaks into the Documents/Other chips.
+  if (item?.origin === "report") return "report";
   const mime = String(item?.mime || "").toLowerCase();
   const ext = extensionOf(item?.filename);
   if (mime.startsWith("image/")) return "image";
@@ -223,6 +240,25 @@ function normalizeDoc(d = {}) {
     previewPath: d.file_url || (id ? `/api/documents/${id}/download` : ""),
     ownerId: d.created_by || d.user_id || "",
     raw: d,
+  };
+}
+
+// Normalize a saved_reports record into the unified card shape.
+// origin "report": read-only generated artifact (no category editing).
+function normalizeReport(r = {}) {
+  return {
+    origin: "report",
+    id: r.id || "",
+    name: r.name || reportTypeLabel(r.type) || r.filename || "Report",
+    filename: r.filename || "report",
+    mime: r.content_type || "",
+    size: r.file_size || 0,
+    reportType: r.type || "",
+    category: r.type || "",
+    created_at: r.created_at || "",
+    previewPath: r.download_url || (r.filename ? `/api/export/download/${encodeURIComponent(r.filename)}` : ""),
+    ownerId: r.user_id || "",
+    raw: r,
   };
 }
 
@@ -401,13 +437,23 @@ function ItemCard({ item, canManage, busyDelete, busyCategory, onOpen, onDownloa
           {item.name}
         </p>
         <div className="flex items-center gap-1.5">
-          <CategoryChip
-            value={item.category}
-            options={options}
-            editable={canManage}
-            busy={busyCategory}
-            onChange={onCategoryChange}
-          />
+          {item.origin === "report" ? (
+            <span
+              className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]"
+              style={styleForCategory("document")}
+              title="Generated report"
+            >
+              {reportTypeLabel(item.reportType)}
+            </span>
+          ) : (
+            <CategoryChip
+              value={item.category}
+              options={options}
+              editable={canManage}
+              busy={busyCategory}
+              onChange={onCategoryChange}
+            />
+          )}
           <TypeChip type={type} extension={ext} />
         </div>
         <div className="flex items-center justify-between text-[10px]" style={{ color: "var(--cth-command-muted)" }}>
@@ -518,6 +564,7 @@ export default function TenantDataDashboard() {
   const [summary, setSummary] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [media, setMedia] = useState([]);
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
@@ -559,13 +606,14 @@ export default function TenantDataDashboard() {
     if (!hasContext) {
       setDocuments([]);
       setMedia([]);
+      setReports([]);
       setLoading(false);
       return;
     }
     setLoading(true);
     setError("");
     try {
-      const [docRes, mediaRes] = await Promise.all([
+      const [docRes, mediaRes, reportRes] = await Promise.all([
         apiClient.get(API_PATHS.documents.list({})).catch((e) => {
           console.error("Failed to load documents:", e);
           return { documents: [] };
@@ -574,9 +622,14 @@ export default function TenantDataDashboard() {
           console.error("Failed to load media assets:", e);
           return { assets: [] };
         }),
+        apiClient.get("/api/export/saved-reports").catch((e) => {
+          console.error("Failed to load saved reports:", e);
+          return { reports: [] };
+        }),
       ]);
       setDocuments(Array.isArray(docRes?.documents) ? docRes.documents.map(normalizeDoc) : []);
       setMedia(Array.isArray(mediaRes?.assets) ? mediaRes.assets.map(normalizeMedia) : []);
+      setReports(Array.isArray(reportRes?.reports) ? reportRes.reports.map(normalizeReport) : []);
     } catch (err) {
       console.error("Failed to load workspace library:", err);
       setError(err?.message || "Could not load workspace library.");
@@ -591,10 +644,19 @@ export default function TenantDataDashboard() {
   }, [loadSummary, loadFiles]);
 
   const items = useMemo(() => {
-    const merged = [...documents, ...media];
+    // Option A de-dupe: a report (e.g. brand_guidelines) is also auto-saved into
+    // the documents collection. The report card wins — suppress the document
+    // whose stored_filename matches a report's filename so it shows once.
+    const reportFilenames = new Set(
+      reports.map((r) => String(r.raw?.filename || r.filename || "")).filter(Boolean)
+    );
+    const dedupedDocs = documents.filter(
+      (d) => !reportFilenames.has(String(d.raw?.stored_filename || ""))
+    );
+    const merged = [...dedupedDocs, ...media, ...reports];
     merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     return merged;
-  }, [documents, media]);
+  }, [documents, media, reports]);
 
   const visibleItems = useMemo(() => {
     let result = filterType === "all" ? items : items.filter((item) => itemType(item) === filterType);
@@ -603,7 +665,7 @@ export default function TenantDataDashboard() {
       result = result.filter((item) =>
         String(item.name || "").toLowerCase().includes(q) ||
         String(item.filename || "").toLowerCase().includes(q) ||
-        String(categoryLabel(item.category) || "").toLowerCase().includes(q) ||
+        String(item.origin === "report" ? reportTypeLabel(item.reportType) : categoryLabel(item.category)).toLowerCase().includes(q) ||
         String(item.category || "").toLowerCase().includes(q)
       );
     }
@@ -781,6 +843,8 @@ export default function TenantDataDashboard() {
   function removeFromState(item) {
     if (item.origin === "media") {
       setMedia((cur) => cur.filter((m) => m.id !== item.id));
+    } else if (item.origin === "report") {
+      setReports((cur) => cur.filter((r) => r.id !== item.id));
     } else {
       setDocuments((cur) => cur.filter((d) => d.id !== item.id));
     }
@@ -792,10 +856,13 @@ export default function TenantDataDashboard() {
     setDeletingIds((cur) => new Set(cur).add(item.id));
     const docSnapshot = documents;
     const mediaSnapshot = media;
+    const reportSnapshot = reports;
     removeFromState(item);
     try {
       if (item.origin === "media") {
         await apiClient.delete(`/api/media-upload/assets/${encodeURIComponent(item.id)}`);
+      } else if (item.origin === "report") {
+        await apiClient.delete(`/api/export/saved-reports/${encodeURIComponent(item.id)}`);
       } else {
         await apiClient.delete(API_PATHS.documents.delete(item.id));
       }
@@ -805,6 +872,7 @@ export default function TenantDataDashboard() {
       console.error("Delete failed", err);
       setDocuments(docSnapshot);
       setMedia(mediaSnapshot);
+      setReports(reportSnapshot);
       setError(err?.message || "Could not delete file.");
     } finally {
       setDeletingIds((cur) => {
@@ -856,6 +924,7 @@ export default function TenantDataDashboard() {
   const docCount = collections.documents?.count || 0;
   const mediaCount = collections.media_assets?.count || 0;
   const contentCount = collections.content_assets?.count || 0;
+  const reportCount = reports.length; // client-side: tenant-data summary does not track saved_reports
   const totalFiles = docCount + mediaCount;
 
   const headerAction = (
@@ -904,10 +973,11 @@ export default function TenantDataDashboard() {
         ) : null}
 
         {/* Summary counts */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <StatCard label="Total Files" value={loading && !items.length ? "…" : totalFiles} sub="documents + media" />
           <StatCard label="Documents" value={docCount} sub="document files" />
           <StatCard label="Media Assets" value={mediaCount} sub="images, fonts, logos" />
+          <StatCard label="Reports" value={reportCount} sub="generated reports" />
           <StatCard label="Content" value={contentCount} sub="saved content" />
         </div>
 

@@ -34,7 +34,6 @@ const Calendar = lazy(() => import("../pages/Calendar"));
 const SocialMediaManager = lazy(() => import("../pages/SocialMediaManager"));
 const CommunityPage = lazy(() => import("../pages/CommunityPage"));
 const KnowledgeBasePage = lazy(() => import("../pages/KnowledgeBasePage"));
-const SavedReports = lazy(() => import("../pages/SavedReports"));
 const JoinWorkspace = lazy(() => import("../pages/JoinWorkspace"));
 const CohortManager = lazy(() => import("../pages/CohortManager"));
 const VideoTutorialsPage = lazy(() => import("../pages/VideoTutorialsPage"));
@@ -99,7 +98,6 @@ const pageRegistry = {
 
   "/automations": Automations,
   "/tracking-links": makePlaceholder("Tracking Links"),
-  "/saved-reports": SavedReports,
   "/join": JoinWorkspace,
   "/workspace-controls": makePlaceholder("Workspace Controls"),
   "/members": Members,
