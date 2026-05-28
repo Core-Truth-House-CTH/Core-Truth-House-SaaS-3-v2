@@ -32,6 +32,7 @@ const LaunchPlanner = lazy(() => import("../pages/LaunchPlanner"));
 const Calendar = lazy(() => import("../pages/Calendar"));
 const SocialMediaManager = lazy(() => import("../pages/SocialMediaManager"));
 const CommunityPage = lazy(() => import("../pages/CommunityPage"));
+const KnowledgeBasePage = lazy(() => import("../pages/KnowledgeBasePage"));
 const CohortManager = lazy(() => import("../pages/CohortManager"));
 const VideoTutorialsPage = lazy(() => import("../pages/VideoTutorialsPage"));
 const OnboardingWorkflow = lazy(() => import("../pages/OnboardingWorkflow"));
@@ -102,7 +103,7 @@ const pageRegistry = {
   "/workspace-controls": makePlaceholder("Workspace Controls"),
   "/members": Members,
   "/help-desk": makePlaceholder("Help Desk"),
-  "/knowledge-base": makePlaceholder("Knowledge Base"),
+  "/knowledge-base": KnowledgeBasePage,
   "/release-notes": makePlaceholder("Release Notes"),
   "/ai-keys": makePlaceholder("AI API Keys"),
   "/platform-store": makePlaceholder("Store"),
