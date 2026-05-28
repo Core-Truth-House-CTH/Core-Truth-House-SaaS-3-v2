@@ -248,7 +248,7 @@ function VideoCard({ video, isCompleted, onClick }) {
  return (
  <div
  onClick={onClick}
- className="group cursor-pointer overflow-hidden border transition-all cth-card" style={{ borderColor: "var(--cth-admin-border)" }}
+ className="group cursor-pointer overflow-hidden border transition-all cth-card" style={{ borderColor: "var(--cth-command-border)" }}
  data-testid={`video-card-${video.id}`}
  >
  {/* Thumbnail */}
@@ -256,7 +256,7 @@ function VideoCard({ video, isCompleted, onClick }) {
  <PlayCircle size={48} className="text-white/80 group-hover:text-white group-hover:scale-110 transition-all" />
 
  {video.featured && (
- <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--cth-admin-accent)] text-white text-[10px] font-medium">
+ <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--cth-command-cinnabar)] text-white text-[10px] font-medium">
  <Star size={10} fill="currentColor" /> Featured
  </div>
  )}
@@ -279,7 +279,7 @@ function VideoCard({ video, isCompleted, onClick }) {
  {difficulty.label}
  </span>
  </div>
- <h3 className="text-sm font-semibold transition-colors mb-1 group-hover:opacity-80" style={{ color: "var(--cth-admin-ink)" }}>
+ <h3 className="text-sm font-semibold transition-colors mb-1 group-hover:opacity-80" style={{ color: "var(--cth-command-ink)" }}>
  {video.title}
  </h3>
  <p className="text-xs cth-muted line-clamp-2">{video.description}</p>
@@ -295,12 +295,12 @@ function VideoPlayer({ video, isCompleted, onToggleCompleted, onClose }) {
  {/* Header */}
  <div className="flex items-center justify-between mb-4">
  <div>
- <h3 className="text-xl font-semibold" style={{ color: "var(--cth-admin-panel)" }}>{video.title}</h3>
+ <h3 className="text-xl font-semibold" style={{ color: "var(--cth-command-ivory)" }}>{video.title}</h3>
  <p className="text-sm" style={{ color: "rgba(248, 244, 242, 0.78)" }}>{video.description}</p>
  </div>
  <button
  onClick={onClose}
- className="p-2 transition-colors" style={{ color: "var(--cth-admin-panel)", background: "rgba(255,255,255,0.06)" }}
+ className="p-2 transition-colors" style={{ color: "var(--cth-command-ivory)", background: "rgba(255,255,255,0.06)" }}
  data-testid="close-video-player"
  >
  <X size={24} />
@@ -325,7 +325,7 @@ function VideoPlayer({ video, isCompleted, onToggleCompleted, onClose }) {
  </div>
 
  {/* Video Info */}
- <div className="flex items-center justify-between mt-4 p-4 cth-card border" style={{ borderColor: "var(--cth-admin-border)" }}>
+ <div className="flex items-center justify-between mt-4 p-4 cth-card border" style={{ borderColor: "var(--cth-command-border)" }}>
  <div className="flex items-center gap-4">
  <div className="flex items-center gap-2 text-sm cth-muted">
  <Clock size={14} /> {video.duration}
@@ -463,8 +463,8 @@ export default function VideoTutorialsPage() {
  onClick={() => setActiveCategory(cat.id)}
  className={`flex items-center gap-2 px-4 py-2 text-sm whitespace-nowrap transition-all ${
  activeCategory === cat.id
- ? 'bg-[rgba(224,78,53,0.12)] text-[var(--cth-admin-accent)] border border-[rgba(224,78,53,0.24)]'
- : 'cth-card-muted cth-muted border border-[var(--cth-admin-border)] hover:opacity-80'
+ ? 'bg-[rgba(224,78,53,0.12)] text-[var(--cth-command-cinnabar)] border border-[rgba(224,78,53,0.24)]'
+ : 'cth-card-muted cth-muted border border-[var(--cth-command-border)] hover:opacity-80'
  }`}
  data-testid={`category-${cat.id}`}
  >
@@ -513,7 +513,7 @@ export default function VideoTutorialsPage() {
  key={idx}
  className="flex items-center gap-1.5 px-3 py-1.5 cth-card-muted text-sm cth-muted"
  >
- <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(224,78,53,0.14)', color: 'var(--cth-admin-accent)' }}>
+ <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(224,78,53,0.14)', color: 'var(--cth-command-cinnabar)' }}>
  {idx + 1}
  </span>
  {title}

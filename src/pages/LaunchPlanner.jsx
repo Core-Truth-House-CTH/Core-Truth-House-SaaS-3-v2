@@ -17,28 +17,28 @@ import {
 import apiClient from '../lib/apiClient';
 
 const CTH_PAGE_COLORS = {
- darkest: "var(--cth-admin-bg)",
- darker: "var(--cth-admin-panel-alt)",
- cardBg: "var(--cth-admin-panel)",
- crimson: "var(--cth-admin-accent)",
- cinnabar: "var(--cth-admin-accent)",
- tuscany: "var(--cth-admin-tuscany)",
- ruby: "var(--cth-admin-ruby)",
- textPrimary: "var(--cth-admin-ink)",
- textSecondary: "var(--cth-admin-ruby)",
- textMuted: "var(--cth-admin-ink-soft, var(--cth-admin-muted))",
- border: "var(--cth-admin-border)",
- accent: "var(--cth-admin-accent)",
- sidebarStart: "var(--cth-admin-sidebar-start)",
- sidebarEnd: "var(--cth-admin-sidebar-end)",
- sidebarHover: "var(--cth-admin-sidebar-hover)",
- panel: "var(--cth-admin-panel)",
- appBg: "var(--cth-admin-bg)",
+ darkest: "var(--cth-command-blush)",
+ darker: "var(--cth-command-panel-soft)",
+ cardBg: "var(--cth-command-ivory)",
+ crimson: "var(--cth-command-cinnabar)",
+ cinnabar: "var(--cth-command-cinnabar)",
+ tuscany: "var(--cth-command-border)",
+ ruby: "var(--cth-command-purple)",
+ textPrimary: "var(--cth-command-ink)",
+ textSecondary: "var(--cth-command-purple)",
+ textMuted: "var(--cth-command-muted, var(--cth-command-muted))",
+ border: "var(--cth-command-border)",
+ accent: "var(--cth-command-cinnabar)",
+ sidebarStart: "var(--cth-command-ink)",
+ sidebarEnd: "var(--cth-command-night)",
+ sidebarHover: "var(--cth-command-purple-mid)",
+ panel: "var(--cth-command-ivory)",
+ appBg: "var(--cth-command-blush)",
 };
 
 const PHASE_COLORS = {
  'pre-launch': 'var(--cth-brand-primary)',
- launch: 'var(--cth-admin-accent)',
+ launch: 'var(--cth-command-cinnabar)',
  'post-launch': 'var(--cth-brand-primary-soft)',
 };
 
@@ -295,7 +295,7 @@ function LaunchPlannerContent() {
  marginBottom: 16,
  padding: '12px 16px',
  borderRadius: 12,
- background: "color-mix(in srgb, var(--cth-danger) 10%, var(--cth-admin-panel))",
+ background: "color-mix(in srgb, var(--cth-danger) 10%, var(--cth-command-ivory))",
  border: '1px solid rgba(239, 68, 68, 0.22)',
  color: "var(--cth-danger)",
  fontSize: 13,
@@ -332,7 +332,7 @@ function LaunchPlannerContent() {
  padding: '12px 24px',
  borderRadius: 10,
  border: 'none',
- background: "var(--cth-admin-accent)",
+ background: "var(--cth-command-cinnabar)",
  color: 'white',
  fontSize: 13,
  fontWeight: 700,
@@ -363,7 +363,7 @@ function LaunchPlannerContent() {
  padding: '6px 12px',
  borderRadius: 6,
  border: 'none',
- background: "var(--cth-admin-accent)",
+ background: "var(--cth-command-cinnabar)",
  color: 'white',
  fontSize: 11,
  cursor: 'pointer',
@@ -388,7 +388,7 @@ function LaunchPlannerContent() {
  cursor: 'pointer',
  background:
  activeLaunch?.id === launch.id
- ? "color-mix(in srgb, var(--cth-admin-accent) 14%, var(--cth-admin-panel))"
+ ? "color-mix(in srgb, var(--cth-command-cinnabar) 14%, var(--cth-command-ivory))"
  : 'transparent',
  border:
  activeLaunch?.id === launch.id
@@ -476,7 +476,7 @@ function LaunchPlannerContent() {
  style={{
  width: `${progress.percentage}%`,
  height: '100%',
- background: "var(--cth-admin-accent)",
+ background: "var(--cth-command-cinnabar)",
  borderRadius: 4,
  transition: 'width 0.3s ease',
  }}
@@ -584,7 +584,7 @@ function LaunchPlannerContent() {
  }}
  >
  {task.completed ? (
- <CheckCircle2 size={18} style={{ color: 'var(--cth-status-success-bright)', flexShrink: 0 }} />
+ <CheckCircle2 size={18} style={{ color: 'var(--cth-command-success)', flexShrink: 0 }} />
  ) : (
  <Circle size={18} style={{ color: colors.textMuted, flexShrink: 0 }} />
  )}
@@ -710,7 +710,7 @@ function LaunchPlannerContent() {
  border: 'none',
  background: !newLaunchName.trim()
  ? colors.textMuted
- : "var(--cth-admin-accent)",
+ : "var(--cth-command-cinnabar)",
  color: 'white',
  fontSize: 13,
  fontWeight: 700,

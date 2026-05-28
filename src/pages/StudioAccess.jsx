@@ -38,7 +38,7 @@ export default function StudioAccess() {
  return (
  <div style={{ minHeight: "100vh", background: "var(--cth-brand-primary-deep)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--cth-on-dark)", textAlign: "center", padding: 24, fontFamily: "system-ui, sans-serif" }}>
  <h2 style={{ color: "var(--cth-brand-primary)", marginBottom: 16 }}>Invalid Access Link</h2>
- <p style={{ color: "var(--cth-admin-ink-soft)", marginBottom: 32 }}>
+ <p style={{ color: "var(--cth-command-muted)", marginBottom: 32 }}>
  This link is invalid or has expired. Purchase access to continue.
  </p><a href="/headshots"
  style={{ padding: "16px 32px", background: "var(--cth-brand-primary)", color: "var(--cth-on-dark)", borderRadius: 10, textDecoration: "none", fontWeight: 700, fontSize: 16 }}

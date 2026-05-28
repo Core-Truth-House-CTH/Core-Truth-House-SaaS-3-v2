@@ -172,18 +172,18 @@ function HeroDraftMarks({ scrollOffset = 0 }) {
  className="pointer-events-none absolute inset-0 overflow-hidden"
  style={{ transform: `translate3d(0, ${scrollOffset * -0.08}px, 0)` }}
  >
- <div className="absolute left-[7%] top-[11%] h-[180px] w-[180px] rounded-full border border-[var(--cth-admin-tuscany)]/35" />
- <div className="absolute left-[11%] top-[16%] h-[110px] w-[110px] rounded-full border border-[var(--cth-admin-tuscany)]/25" />
- <div className="absolute left-[30%] top-[8%] h-px w-[190px] bg-[var(--cth-admin-tuscany)]/28" />
- <div className="absolute left-[5%] top-[44%] h-px w-[260px] bg-[var(--cth-admin-tuscany)]/22" />
- <div className="absolute left-[18%] top-[33%] h-[170px] w-px bg-[var(--cth-admin-tuscany)]/24" />
- <div className="absolute left-[40%] top-[20%] h-[115px] w-px bg-[var(--cth-admin-tuscany)]/18" />
- <div className="absolute left-[13%] top-[63%] h-[88px] w-[240px] border border-[var(--cth-admin-tuscany)]/14" />
- <div className="absolute left-[28%] top-[58%] h-[62px] w-[62px] rounded-full border border-[var(--cth-admin-tuscany)]/22" />
+ <div className="absolute left-[7%] top-[11%] h-[180px] w-[180px] rounded-full border border-[var(--cth-command-border)]/35" />
+ <div className="absolute left-[11%] top-[16%] h-[110px] w-[110px] rounded-full border border-[var(--cth-command-border)]/25" />
+ <div className="absolute left-[30%] top-[8%] h-px w-[190px] bg-[var(--cth-command-border)]/28" />
+ <div className="absolute left-[5%] top-[44%] h-px w-[260px] bg-[var(--cth-command-border)]/22" />
+ <div className="absolute left-[18%] top-[33%] h-[170px] w-px bg-[var(--cth-command-border)]/24" />
+ <div className="absolute left-[40%] top-[20%] h-[115px] w-px bg-[var(--cth-command-border)]/18" />
+ <div className="absolute left-[13%] top-[63%] h-[88px] w-[240px] border border-[var(--cth-command-border)]/14" />
+ <div className="absolute left-[28%] top-[58%] h-[62px] w-[62px] rounded-full border border-[var(--cth-command-border)]/22" />
  <div className="absolute left-[36%] top-[46%] h-px w-[120px] bg-[var(--cth-crimson)]/12" />
  <div className="absolute left-[32%] top-[46%] h-[8px] w-[8px] rounded-full bg-[var(--cth-crimson)]/12" />
- <div className="absolute left-[8%] top-[76%] h-px w-[320px] bg-[var(--cth-admin-tuscany)]/18" />
- <div className="absolute left-[10%] top-[75%] h-[22px] w-[22px] rounded-full border border-[var(--cth-admin-tuscany)]/18" />
+ <div className="absolute left-[8%] top-[76%] h-px w-[320px] bg-[var(--cth-command-border)]/18" />
+ <div className="absolute left-[10%] top-[75%] h-[22px] w-[22px] rounded-full border border-[var(--cth-command-border)]/18" />
  </div>
  );
 }

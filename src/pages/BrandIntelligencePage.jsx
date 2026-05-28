@@ -277,8 +277,8 @@ export default function BrandIntelligencePage() {
  <div
  className="cth-card mt-4 px-3 py-3 text-sm cth-text-danger"
  style={{
- background: "color-mix(in srgb, var(--cth-danger) 10%, var(--cth-admin-panel))",
- borderColor: "color-mix(in srgb, var(--cth-danger) 25%, var(--cth-admin-border))",
+ background: "color-mix(in srgb, var(--cth-danger) 10%, var(--cth-command-ivory))",
+ borderColor: "color-mix(in srgb, var(--cth-danger) 25%, var(--cth-command-border))",
  }}
  >
  {generateError}
@@ -335,8 +335,8 @@ export default function BrandIntelligencePage() {
  <div
  className="cth-card mb-4 px-3 py-3 text-sm cth-text-danger"
  style={{
- background: "color-mix(in srgb, var(--cth-danger) 10%, var(--cth-admin-panel))",
- borderColor: "color-mix(in srgb, var(--cth-danger) 25%, var(--cth-admin-border))",
+ background: "color-mix(in srgb, var(--cth-danger) 10%, var(--cth-command-ivory))",
+ borderColor: "color-mix(in srgb, var(--cth-danger) 25%, var(--cth-command-border))",
  }}
  >
  {saveError}
@@ -379,8 +379,8 @@ export default function BrandIntelligencePage() {
  <div
  className="cth-card mb-4 px-3 py-3 text-sm cth-text-danger"
  style={{
- background: "color-mix(in srgb, var(--cth-danger) 10%, var(--cth-admin-panel))",
- borderColor: "color-mix(in srgb, var(--cth-danger) 25%, var(--cth-admin-border))",
+ background: "color-mix(in srgb, var(--cth-danger) 10%, var(--cth-command-ivory))",
+ borderColor: "color-mix(in srgb, var(--cth-danger) 25%, var(--cth-command-border))",
  }}
  >
  {libraryError}
