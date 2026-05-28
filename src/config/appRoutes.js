@@ -417,7 +417,6 @@ export const APP_ROUTES = [
   // Placeholder pages — registered so React Router resolves them; content is "Coming soon"
   { path: "/automations", label: "Automations", group: "placeholder", requiredPlan: "structure", gateType: null },
   { path: "/tracking-links", label: "Tracking Links", group: "placeholder", requiredPlan: "structure", gateType: null },
-  { path: "/integrations", label: "Integrations", group: "placeholder", requiredPlan: "structure", gateType: null },
   { path: "/documents", label: "Documents", group: "placeholder", requiredPlan: "foundation", gateType: null },
   { path: "/media-assets", label: "Media Assets", group: "placeholder", requiredPlan: "foundation", gateType: null },
   { path: "/saved-reports", label: "Saved Reports", group: "placeholder", requiredPlan: "structure", gateType: null },

@@ -131,10 +131,6 @@ export default function SocialConnectionsSection() {
  const res = await apiClient.post("/api/social/zernio/connect", { platform: platformKey });
  const payload = res?.data && typeof res.data === "object" ? res.data : res;
  url = payload?.authorize_url;
- } else if (routingMode === "ayrshare") {
- const res = await apiClient.post("/api/social/ayrshare/connect", { platforms: [platformKey] });
- const payload = res?.data && typeof res.data === "object" ? res.data : res;
- url = payload?.authorize_url;
  } else {
  const res = await apiClient.post(`/api/social/${platformKey}/connect`);
  const payload = res?.data && typeof res.data === "object" ? res.data : res;
@@ -160,8 +156,6 @@ export default function SocialConnectionsSection() {
  try {
  if (routingMode === "zernio") {
  await apiClient.delete("/api/social/zernio/disconnect", { data: { platform: platformKey } });
- } else if (routingMode === "ayrshare") {
- await apiClient.delete("/api/social/ayrshare/disconnect", { data: { platform: platformKey } });
  } else {
  await apiClient.delete(`/api/social/${platformKey}/disconnect`);
  }

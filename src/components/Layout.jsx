@@ -405,7 +405,6 @@ export function Sidebar() {
             ? [{ path: "/automations", label: "Automations", icon: Workflow }]
             : []),
           { path: "/tracking-links", label: "Tracking Links", icon: Share2 },
-          { path: "/integrations", label: "Integrations", icon: Globe },
         ],
       },
       {
