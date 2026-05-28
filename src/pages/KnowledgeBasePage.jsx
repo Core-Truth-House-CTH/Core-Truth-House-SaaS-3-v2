@@ -81,11 +81,11 @@ function flattenSections(sections) {
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
-    <div className="rounded-2xl border border-[var(--cth-admin-border)] bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-admin-border)] px-5 py-4">
+    <div className="rounded-2xl border border-[var(--cth-border)] bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--cth-border)] px-5 py-4">
         <div>
-          <div className="text-sm font-semibold text-[var(--cth-admin-ink)]">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-admin-muted)]">{subtitle}</div> : null}
+          <div className="text-sm font-semibold text-[var(--cth-ink)]">{title}</div>
+          {subtitle ? <div className="mt-1 text-xs text-[var(--cth-muted)]">{subtitle}</div> : null}
         </div>
         {actions}
       </div>
@@ -96,13 +96,13 @@ function PanelCard({ title, subtitle, children, actions = null }) {
 
 function SearchInput({ value, onChange }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-[var(--cth-admin-border)] bg-white px-3 py-2">
-      <Search size={15} className="text-[var(--cth-copy-muted)]" />
+    <div className="flex items-center gap-2 rounded-xl border border-[var(--cth-border)] bg-white px-3 py-2">
+      <Search size={15} className="text-[var(--cth-muted)]" />
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search guides and docs..."
-        className="w-full bg-transparent text-sm text-[var(--cth-admin-ink)] outline-none placeholder:text-[var(--cth-copy-muted)]"
+        className="w-full bg-transparent text-sm text-[var(--cth-ink)] outline-none placeholder:text-[var(--cth-muted)]"
       />
     </div>
   );
@@ -136,8 +136,8 @@ function SectionTab({ section, active, count = 0, onClick }) {
       onClick={onClick}
       className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
         active
-          ? "bg-[var(--cth-admin-accent)]/15 text-[var(--cth-admin-accent)]"
-          : "text-[var(--cth-admin-muted)] hover:bg-[var(--cth-admin-panel)] hover:text-[var(--cth-admin-ink)]"
+          ? "bg-[var(--cth-ink)] text-[var(--cth-on-dark)]"
+          : "text-[var(--cth-ink-soft)] hover:bg-[var(--cth-blush)] hover:text-[var(--cth-ink)]"
       }`}
     >
       <span className="flex items-center gap-2.5 min-w-0">
@@ -148,8 +148,8 @@ function SectionTab({ section, active, count = 0, onClick }) {
       <span
         className={`inline-flex min-w-[24px] items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
           active
-            ? "bg-[var(--cth-admin-accent)] text-white"
-            : "bg-[var(--cth-admin-panel-alt)] text-[var(--cth-admin-muted)]"
+            ? "bg-[var(--cth-on-dark)] text-[var(--cth-ink)]"
+            : "bg-[var(--cth-blush)] text-[var(--cth-ink-soft)]"
         }`}
       >
         {count}
@@ -273,9 +273,9 @@ export default function KnowledgeBasePage() {
                       />
 
                       {isActiveSection ? (
-                        <div className="ml-2 space-y-1.5 border-l border-[var(--cth-admin-border)] pl-3">
+                        <div className="ml-2 space-y-1.5 border-l border-[var(--cth-border)] pl-3">
                           {sectionArticles.length === 0 ? (
-                            <div className="text-xs text-[var(--cth-copy-muted)]">No articles in this section.</div>
+                            <div className="text-xs text-[var(--cth-muted)]">No articles in this section.</div>
                           ) : (
                             sectionArticles.map((article) => {
                               const isSelected =
@@ -291,11 +291,11 @@ export default function KnowledgeBasePage() {
                                   }}
                                   className={`w-full rounded-lg border px-2.5 py-2 text-left transition ${
                                     isSelected
-                                      ? "border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)]"
-                                      : "border-transparent bg-transparent hover:border-[var(--cth-admin-border)] hover:bg-[var(--cth-admin-panel)]"
+                                      ? "border-[var(--cth-border)] bg-[var(--cth-blush)]"
+                                      : "border-transparent bg-transparent hover:border-[var(--cth-border)] hover:bg-[var(--cth-blush)]"
                                   }`}
                                 >
-                                  <div className="text-[13px] font-medium leading-5 text-[var(--cth-admin-ink)] line-clamp-2">
+                                  <div className="text-[13px] font-medium leading-5 text-[var(--cth-ink)] line-clamp-2">
                                     {article.title}
                                   </div>
                                 </button>
@@ -311,7 +311,7 @@ export default function KnowledgeBasePage() {
             ) : (
               <div className="space-y-2">
                 {searchResults.length === 0 ? (
-                  <div className="text-sm text-[var(--cth-admin-muted)]">No help articles found.</div>
+                  <div className="text-sm text-[var(--cth-muted)]">No help articles found.</div>
                 ) : (
                   searchResults.slice(0, 10).map((article) => (
                     <button
@@ -321,13 +321,13 @@ export default function KnowledgeBasePage() {
                         setSelectedArticleId(article.id);
                         setQuery("");
                       }}
-                      className="w-full flex items-center justify-between gap-3 rounded-xl border border-[var(--cth-admin-border)] bg-[var(--cth-admin-panel)] px-3 py-3 text-left hover:bg-[var(--cth-admin-panel)]"
+                      className="w-full flex items-center justify-between gap-3 rounded-xl border border-[var(--cth-border)] bg-[var(--cth-blush)] px-3 py-3 text-left hover:border-[var(--cth-ruby)]"
                     >
                       <div>
-                        <p className="text-sm text-[var(--cth-admin-ink)]">{article.title}</p>
-                        <p className="text-xs text-[var(--cth-copy-muted)]">{article.section}</p>
+                        <p className="text-sm text-[var(--cth-ink)]">{article.title}</p>
+                        <p className="text-xs text-[var(--cth-muted)]">{article.section}</p>
                       </div>
-                      <ArrowRight size={14} className="text-[var(--cth-copy-muted)]" />
+                      <ArrowRight size={14} className="text-[var(--cth-muted)]" />
                     </button>
                   ))
                 )}
