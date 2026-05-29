@@ -3,6 +3,7 @@ import {
   AlertCircle,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Loader2,
   Lock,
@@ -905,6 +906,10 @@ export default function StrategicOS() {
   const [confirmGenerateOpen, setConfirmGenerateOpen] = useState(false);
   const [confirmRefreshOpen, setConfirmRefreshOpen] = useState(false);
   const [reportDrawerOpen, setReportDrawerOpen] = useState(false);
+  const [zuriByStep, setZuriByStep] = useState({});
+  const [zuriLoadingStep, setZuriLoadingStep] = useState(null);
+  const [zuriError, setZuriError] = useState("");
+  const [zuriExpanded, setZuriExpanded] = useState(false);
 
   const saveTimers = useRef({});
 
@@ -1217,6 +1222,42 @@ export default function StrategicOS() {
     await loadPage();
   };
 
+  // Collapse any expanded Zuri output when the active step changes.
+  useEffect(() => {
+    setZuriExpanded(false);
+    setZuriError("");
+  }, [expandedStep]);
+
+  // Zuri inline suggestion — wired to the per-step generate endpoint.
+  // Returns step-level AI output (uses AI credits); shown read-only, never auto-fills fields.
+  const askZuriForStep = async (stepNumber) => {
+    setZuriError("");
+    setZuriLoadingStep(stepNumber);
+    try {
+      const targetWorkflowId = await ensureWorkflow();
+      const res = await apiClient.post(
+        API_PATHS.osWorkflow.generateStep(targetWorkflowId, stepNumber),
+        {
+          user_id: userId,
+          workspace_id: activeWorkspaceId || undefined,
+          step_inputs: stepState[stepNumber]?.inputs || {},
+        }
+      );
+      const output = typeof res?.output === "string" ? res.output.trim() : "";
+      if (output) {
+        setZuriByStep((current) => ({ ...current, [stepNumber]: output }));
+        setZuriExpanded(false);
+      } else {
+        setZuriError("Zuri returned no draft. Try again.");
+      }
+    } catch (err) {
+      console.error(`Zuri step ${stepNumber} generation failed`, err);
+      setZuriError(err?.message || "Zuri could not generate this step.");
+    } finally {
+      setZuriLoadingStep(null);
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -1488,7 +1529,23 @@ export default function StrategicOS() {
             A living questionnaire that turns founder answers into one final Strategic OS report.
           </p>
         </div>
-        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)", marginBottom: 5 }}>
+              {completion.completed} of {completion.total} complete
+            </div>
+            <div style={{ width: 120, height: 3, background: "var(--cth-command-border)", borderRadius: 2, overflow: "hidden", marginLeft: "auto" }}>
+              <div
+                style={{
+                  height: "100%",
+                  width: `${completion.percent}%`,
+                  background: "var(--cth-command-success)",
+                  borderRadius: 2,
+                  transition: "width 0.6s ease",
+                }}
+              />
+            </div>
+          </div>
           <button
             type="button"
             onClick={requestRefresh}
@@ -1565,162 +1622,193 @@ export default function StrategicOS() {
             </div>
           ) : null}
 
-          {/* Progress card */}
-          <div style={{ ...CARD_STYLE, padding: 24 }}>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p style={SECTION_LABEL_STYLE}>Progress</p>
-                <h2 style={SECTION_HEADING_STYLE}>
-                  {completion.completed} of {completion.total} steps complete
-                </h2>
-                <p style={{ ...MUTED_STYLE, marginTop: 12, maxWidth: 600 }}>
-                  No AI credits are used while answering. Credits are only used when generating the final report.
-                </p>
-              </div>
+          {/* Active step — single-step flow */}
+          {(() => {
+            const activeCfg =
+              OS_STEP_INPUTS.find((s) => getStepNumber(s) === expandedStep) || OS_STEP_INPUTS[0];
+            const activeNum = getStepNumber(activeCfg);
+            const idx = OS_STEP_INPUTS.findIndex((s) => getStepNumber(s) === activeNum);
+            const activeLocked = isStepLocked(activeCfg, plan);
+            const prev = idx > 0 ? OS_STEP_INPUTS[idx - 1] : null;
+            const next = idx < OS_STEP_INPUTS.length - 1 ? OS_STEP_INPUTS[idx + 1] : null;
+            const isLast = idx === OS_STEP_INPUTS.length - 1;
+            const zuriOutput = zuriByStep[activeNum] || "";
+            const zuriLoading = zuriLoadingStep === activeNum;
 
-              <div
-                style={{
-                  ...CARD_STYLE,
-                  background: "var(--cth-command-panel-soft)",
-                  padding: "14px 20px",
-                  textAlign: "right",
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: SERIF,
-                    fontSize: 28,
-                    fontWeight: 600,
-                    color: "var(--cth-command-ink)",
-                    margin: 0,
-                    lineHeight: 1,
-                  }}
-                >
-                  {completion.percent}%
-                </p>
-                <p
-                  style={{
-                    ...SECTION_LABEL_STYLE,
-                    marginTop: 6,
-                    fontSize: 10,
-                  }}
-                >
-                  Complete
-                </p>
-              </div>
-            </div>
-
-            <div
-              className="mt-5 h-2 overflow-hidden rounded-full"
-              style={{ background: "var(--cth-command-blush)" }}
-            >
-              <div
-                className="h-full rounded-full transition-all"
-                style={{
-                  width: `${completion.percent}%`,
-                  background: "var(--cth-command-crimson)",
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Step cards */}
-          <div className="grid gap-4">
-            {OS_STEP_INPUTS.map((step) => {
-              const stepNumber = getStepNumber(step);
-
-              return (
+            return (
+              <>
                 <StepCard
-                  id={`step-card-${stepNumber}`}
-                  key={stepNumber}
-                  step={step}
-                  values={stepState[stepNumber]?.inputs || {}}
-                  expanded={expandedStep === stepNumber}
-                  saving={savingStep === stepNumber}
-                  locked={isStepLocked(step, plan)}
-                  onToggle={() =>
-                    setExpandedStep((current) => (current === stepNumber ? 0 : stepNumber))
-                  }
+                  id={`step-card-${activeNum}`}
+                  step={activeCfg}
+                  values={stepState[activeNum]?.inputs || {}}
+                  expanded
+                  saving={savingStep === activeNum}
+                  locked={activeLocked}
+                  onToggle={() => {}}
                   onChange={updateStepInput}
                 />
-              );
-            })}
-          </div>
 
-          <ReportPanel
-            id="report-panel"
-            report={workflow?.strategic_report || ""}
-            status={workflow?.report_status || "not_started"}
-            version={workflow?.report_version || 0}
-            onGenerate={requestGenerate}
-            generating={generatingReport || creatingWorkflow}
-            canGenerate={completion.allComplete}
-            needsUpdate={needsUpdate}
-            onViewReport={() => setReportDrawerOpen(true)}
-            plan={plan}
-            unlockedStepsComplete={completion.unlockedStepsComplete}
-            hasLockedSteps={completion.hasLockedSteps}
-          />
+                {/* Zuri inline suggestion — wired to generateStep (step-level AI output, read-only) */}
+                {!activeLocked ? (
+                  <div style={{ background: "#1a0828", borderRadius: 10, padding: "15px 17px" }} data-testid="zuri-inline">
+                    <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
+                      <span style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--cth-command-crimson)", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: SANS, fontSize: 8, fontWeight: 600, color: "#fff" }}>Z</span>
+                      <span style={{ fontFamily: SANS, fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase", color: "#7a6090" }}>Zuri · suggestion</span>
+                    </div>
 
-          {workflow?.strategic_report ? (
-            <div className="grid gap-3 md:grid-cols-2">
-              {nextStep ? (
-                <div
-                  className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-                  style={{ ...CARD_STYLE, padding: 20 }}
-                >
-                  <div>
-                    <p style={SECTION_LABEL_STYLE}>
-                      {nextStep.upgradeTo ? "Upgrade" : "Next Step"}
-                    </p>
-                    <p style={{ ...BODY_STYLE, marginTop: 6, maxWidth: 320 }}>
-                      {nextStep.copy}
-                    </p>
+                    {zuriLoading ? (
+                      <div className="flex items-center gap-2" style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 15, color: "rgba(255,255,255,0.75)" }}>
+                        <Loader2 size={14} className="animate-spin" />
+                        Zuri is drafting Step {activeNum} from your answers…
+                      </div>
+                    ) : zuriOutput ? (
+                      <>
+                        <div style={{ fontFamily: SANS, fontSize: 11, color: "#b9a7cc", marginBottom: 8, lineHeight: 1.5 }}>
+                          Zuri generated a strategic draft for{" "}
+                          <strong style={{ color: "#fff", fontWeight: 600 }}>Step {activeNum} — {activeCfg.stepName}</strong>.
+                          Read it, then apply it to your own answers above in your words.
+                        </div>
+                        <div
+                          style={{
+                            fontFamily: SANS,
+                            fontSize: 13,
+                            lineHeight: 1.6,
+                            color: "rgba(255,255,255,0.92)",
+                            whiteSpace: "pre-wrap",
+                            maxHeight: zuriExpanded ? "none" : 220,
+                            overflow: "hidden",
+                          }}
+                          data-testid="zuri-output"
+                        >
+                          {zuriOutput}
+                        </div>
+                        <div className="flex items-center gap-3" style={{ marginTop: 10 }}>
+                          <button
+                            onClick={() => setZuriExpanded((v) => !v)}
+                            style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: "var(--cth-command-gold)", background: "transparent", border: "0.5px solid rgba(196,169,91,0.4)", borderRadius: 5, padding: "5px 11px", cursor: "pointer" }}
+                          >
+                            {zuriExpanded ? "Collapse" : "Expand full output"}
+                          </button>
+                          <button
+                            onClick={() => askZuriForStep(activeNum)}
+                            style={{ fontFamily: SANS, fontSize: 11, color: "#7a6090", background: "transparent", border: "none", padding: "5px 6px", cursor: "pointer" }}
+                          >
+                            Regenerate →
+                          </button>
+                          <button
+                            onClick={() => setZuriByStep((c) => { const n = { ...c }; delete n[activeNum]; return n; })}
+                            style={{ fontFamily: SANS, fontSize: 11, color: "#52406a", background: "transparent", border: "none", padding: "5px 6px", cursor: "pointer", marginLeft: "auto" }}
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 15, lineHeight: 1.4, color: "rgba(255,255,255,0.82)", marginBottom: 10 }}>
+                          Want Zuri to draft Step {activeNum} from your current answers and brand context? This uses AI credits each time.
+                        </div>
+                        <button
+                          onClick={() => askZuriForStep(activeNum)}
+                          data-testid="zuri-generate-btn"
+                          className="inline-flex items-center gap-1.5"
+                          style={{ fontFamily: SANS, fontSize: 11, fontWeight: 500, color: "var(--cth-command-crimson)", background: "transparent", border: "0.5px solid rgba(224,78,53,0.4)", borderRadius: 5, padding: "6px 12px", cursor: "pointer" }}
+                        >
+                          <Sparkles size={12} />
+                          Ask the House
+                        </button>
+                      </>
+                    )}
+
+                    {zuriError ? (
+                      <div style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-gold)", marginTop: 10 }}>
+                        {zuriError}
+                      </div>
+                    ) : null}
                   </div>
+                ) : null}
+
+                {/* Footer step navigation */}
+                <div
+                  className="flex items-center justify-between"
+                  style={{ padding: "14px 0", borderTop: "0.5px solid var(--cth-command-border)" }}
+                >
                   <button
-                    type="button"
-                    onClick={() => window.location.assign(nextStepHref)}
-                    className="shrink-0"
-                    style={PRIMARY_CTA_STYLE}
+                    onClick={() => prev && setExpandedStep(getStepNumber(prev))}
+                    disabled={!prev}
+                    data-testid="prev-step-btn"
+                    className="inline-flex items-center gap-1.5"
+                    style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)", background: "var(--cth-command-panel)", border: "0.5px solid var(--cth-command-border)", borderRadius: 7, padding: "8px 16px", cursor: prev ? "pointer" : "default", opacity: prev ? 1 : 0.4 }}
                   >
-                    {nextStepLabel}
+                    <ChevronLeft size={14} />
+                    {prev ? `Step ${getStepNumber(prev)}` : "Previous"}
+                  </button>
+
+                  <span style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)" }}>
+                    Step {idx + 1} of {OS_STEP_INPUTS.length}
+                  </span>
+
+                  <button
+                    onClick={() => next && setExpandedStep(getStepNumber(next))}
+                    disabled={!next}
+                    data-testid="next-step-btn"
+                    className="inline-flex items-center gap-1.5"
+                    style={{ fontFamily: SANS, fontSize: 12, fontWeight: 500, color: "#fff", background: "var(--cth-command-crimson)", border: "none", borderRadius: 7, padding: "8px 20px", cursor: next ? "pointer" : "default", opacity: next ? 1 : 0.4 }}
+                  >
+                    {next ? `Step ${getStepNumber(next)}` : "Last step"}
+                    <ChevronRight size={14} />
                   </button>
                 </div>
-              ) : null}
 
-              <div
-                className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-                style={{ ...CARD_STYLE, padding: 20 }}
-              >
-                <div>
-                  <p style={SECTION_LABEL_STYLE}>Export</p>
-                  <p style={{ ...BODY_STYLE, marginTop: 6, maxWidth: 320 }}>
-                    Preview, print, download, or save the latest report.
-                  </p>
-                </div>
-                <StrategicOSExportButton
-                  completedSteps={completedStepsForExport}
-                  variant="primary"
-                  label="Export Report"
-                />
-              </div>
-            </div>
-          ) : null}
+                {/* Report panel — appears after the final step */}
+                {isLast ? (
+                  <>
+                    <ReportPanel
+                      id="report-panel"
+                      report={workflow?.strategic_report || ""}
+                      status={workflow?.report_status || "not_started"}
+                      version={workflow?.report_version || 0}
+                      onGenerate={requestGenerate}
+                      generating={generatingReport || creatingWorkflow}
+                      canGenerate={completion.allComplete}
+                      needsUpdate={needsUpdate}
+                      onViewReport={() => setReportDrawerOpen(true)}
+                      plan={plan}
+                      unlockedStepsComplete={completion.unlockedStepsComplete}
+                      hasLockedSteps={completion.hasLockedSteps}
+                    />
 
-          {!completion.allComplete && !(plan === "foundation" && completion.hasLockedSteps) ? (
-            <div
-              style={{
-                ...CARD_STYLE,
-                background: "var(--cth-command-panel-soft)",
-                padding: 16,
-                fontFamily: SANS,
-                fontSize: 13,
-                color: "var(--cth-command-muted)",
-              }}
-            >
-              Complete all required questions to unlock the report generator.
-            </div>
-          ) : null}
+                    {workflow?.strategic_report ? (
+                      <div
+                        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                        style={{ ...CARD_STYLE, padding: 20 }}
+                      >
+                        <div>
+                          <p style={SECTION_LABEL_STYLE}>Export</p>
+                          <p style={{ ...BODY_STYLE, marginTop: 6, maxWidth: 320 }}>
+                            Preview, print, download, or save the latest report.
+                          </p>
+                        </div>
+                        <StrategicOSExportButton
+                          completedSteps={completedStepsForExport}
+                          variant="primary"
+                          label="Export Report"
+                        />
+                      </div>
+                    ) : null}
+
+                    {!completion.allComplete && !(plan === "foundation" && completion.hasLockedSteps) ? (
+                      <div
+                        style={{ ...CARD_STYLE, background: "var(--cth-command-panel-soft)", padding: 16, fontFamily: SANS, fontSize: 13, color: "var(--cth-command-muted)" }}
+                      >
+                        Complete all required questions to unlock the report generator.
+                      </div>
+                    ) : null}
+                  </>
+                ) : null}
+              </>
+            );
+          })()}
             </div>
           </main>
         </div>
