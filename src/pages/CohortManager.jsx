@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
 import apiClient from "../lib/apiClient";
@@ -213,10 +213,22 @@ function getErrorMessage(error, fallback) {
 function LockedOverlay() {
   return (
     <DashboardLayout>
-      <TopBar
-        title="Cohort Manager"
-        subtitle="Schedule weekly calls and track Brand OS progress across your cohort."
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Cohort Manager
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Schedule weekly calls and track Brand OS progress across your cohort.
+          </p>
+        </div>
+      </header>
       <div className="flex-1 overflow-auto" style={PAGE_STYLE}>
         <div className="mx-auto max-w-3xl px-4 py-16 md:px-8">
           <div
@@ -545,10 +557,22 @@ export default function CohortManager() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Cohort Manager"
-        subtitle="Schedule weekly calls, track Brand OS progress, and log check-in notes for up to 8 members."
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Cohort Manager
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Schedule weekly calls, track Brand OS progress, and log check-in notes for up to 8 members.
+          </p>
+        </div>
+      </header>
 
       <div className="flex-1 overflow-auto" style={PAGE_STYLE} data-testid="cohort-manager-page">
         <div className="mx-auto max-w-[1200px] px-4 py-6 md:px-8 md:py-8 space-y-6">

@@ -46,7 +46,7 @@ globally available on `:root`. **Always reference them via `var(--cth-command-*)
 ### Page wrapper
 
 Every authenticated page's outermost content `div` (the one immediately inside
-`<DashboardLayout>`, sibling-or-wrapping the `<TopBar>`) MUST set the page
+`<DashboardLayout>`, sibling-or-wrapping the page `<header>`) MUST set the page
 background and a viewport-height floor. The `100vh` floor is required because
 `.cth-app-body` (the wrapper supplied by `DashboardLayout`) is `display: block`
 with `min-height` only — `flex-1` on a child is a no-op and `min-height: 100%`
@@ -60,9 +60,31 @@ const PAGE_STYLE = {
 };
 ```
 
+The global "Ask the House" button and notification bell are rendered once by
+`DashboardLayout` itself (`.cth-global-controls`, fixed top-right) — pages do
+NOT render them. Each page provides its own inline `<header className="cth-page-header">`
+with the page title (Cormorant Garamond via the global `h1` rule), a muted
+subtitle, and any page-specific action buttons.
+
 ```jsx
 <DashboardLayout>
-  <TopBar title="..." subtitle="..." action={...} />
+  <header className="cth-page-header">
+    <div className="min-w-0 flex-1">
+      <h1
+        className="text-2xl md:text-[32px] leading-tight truncate"
+        style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: 'var(--cth-command-ink)', margin: 0 }}
+      >
+        Page Title
+      </h1>
+      <p
+        className="text-xs md:text-sm truncate"
+        style={{ margin: '6px 0 0 0', color: 'var(--cth-command-muted)', fontFamily: "'DM Sans', sans-serif" }}
+      >
+        Page subtitle.
+      </p>
+    </div>
+    {/* optional: <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">{action}</div> */}
+  </header>
 
   <div className="flex-1 overflow-auto px-4 py-7 md:px-8" style={PAGE_STYLE}>
     {/* page content */}

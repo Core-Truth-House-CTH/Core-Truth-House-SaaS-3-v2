@@ -14,7 +14,7 @@ import {
 import DOMPurify from "dompurify";
 import { useAuth } from "@clerk/react";
 
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
 import apiClient from "../lib/apiClient";
@@ -1220,7 +1220,22 @@ export default function StrategicOS() {
   if (loading) {
     return (
       <DashboardLayout>
-        <TopBar title="Strategic OS" subtitle="Loading your brand operating system..." />
+        <header className="cth-page-header">
+          <div className="min-w-0 flex-1">
+            <h1
+              className="text-2xl md:text-[32px] leading-tight truncate"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+            >
+              Strategic OS
+            </h1>
+            <p
+              className="text-xs md:text-sm truncate"
+              style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+            >
+              Loading your brand operating system...
+            </p>
+          </div>
+        </header>
         <div className="flex-1 overflow-auto px-4 py-7 md:px-8" style={PAGE_STYLE}>
           <div
             style={{
@@ -1458,10 +1473,22 @@ export default function StrategicOS() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Strategic OS"
-        subtitle="A living questionnaire that turns founder answers into one final Strategic OS report."
-        action={
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Strategic OS
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            A living questionnaire that turns founder answers into one final Strategic OS report.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <button
             type="button"
             onClick={requestRefresh}
@@ -1470,8 +1497,8 @@ export default function StrategicOS() {
             <RefreshCw size={14} />
             Refresh
           </button>
-        }
-      />
+        </div>
+      </header>
 
       <div
         className="flex-1 overflow-auto"

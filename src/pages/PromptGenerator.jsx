@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
 import apiClient from "../lib/apiClient";
@@ -824,10 +824,22 @@ export default function PromptGenerator() {
   if (isLocked) {
     return (
       <DashboardLayout>
-        <TopBar
-          title="Prompt Generator"
-          subtitle="Generate brand-specific AI image and video prompts."
-        />
+        <header className="cth-page-header">
+          <div className="min-w-0 flex-1">
+            <h1
+              className="text-2xl md:text-[32px] leading-tight truncate"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+            >
+              Prompt Generator
+            </h1>
+            <p
+              className="text-xs md:text-sm truncate"
+              style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+            >
+              Generate brand-specific AI image and video prompts.
+            </p>
+          </div>
+        </header>
         <div className="flex-1 overflow-auto" style={PAGE_STYLE}>
           <LockedOverlay />
         </div>
@@ -842,11 +854,25 @@ export default function PromptGenerator() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Prompt Generator"
-        subtitle="Brand-specific AI prompts for image and video generation."
-        action={<UsageBadge usage={usage} />}
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Prompt Generator
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Brand-specific AI prompts for image and video generation.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          <UsageBadge usage={usage} />
+        </div>
+      </header>
       <div className="flex-1 overflow-auto" style={PAGE_STYLE} data-testid="prompt-generator-page">
         <Toast message={toast} />
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
 import { getNextStep } from "../config/brandCoreNextStep";
@@ -611,10 +611,22 @@ function StatusPill({ status }) {
 function LockedView() {
   return (
     <DashboardLayout>
-      <TopBar
-        title="Customer Journey"
-        subtitle="Map how your ideal client moves from stranger to buyer to advocate."
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Customer Journey
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Map how your ideal client moves from stranger to buyer to advocate.
+          </p>
+        </div>
+      </header>
       <div className="flex-1 overflow-auto" style={PAGE_STYLE}>
         <div className="mx-auto max-w-3xl px-4 py-16 md:px-8 md:py-24">
           <div style={{ ...CARD_STYLE, padding: 40, textAlign: "center" }}>
@@ -922,10 +934,22 @@ export default function CustomerJourney() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Customer Journey"
-        subtitle="Map how your ideal client moves from stranger to buyer to advocate across all 8 stages."
-        action={
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Customer Journey
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Map how your ideal client moves from stranger to buyer to advocate across all 8 stages.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-3 px-4 py-2" style={CARD_STYLE}>
               <ScoreRing score={score} />
@@ -953,8 +977,8 @@ export default function CustomerJourney() {
               </div>
             </div>
           </div>
-        }
-      />
+        </div>
+      </header>
 
       <div
         className="flex-1 overflow-auto"

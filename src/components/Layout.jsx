@@ -864,63 +864,6 @@ export function Sidebar() {
   );
 }
 
-export function TopBar({ title, subtitle, action }) {
-  const { toggle } = useAskTheHouse();
-  return (
-    <div className="cth-topbar sticky top-0 z-20 flex items-center justify-between px-4 py-3 md:px-7 md:py-5">
-      <div className="min-w-0 flex-1">
-        <h1
-          className="text-xl md:text-[28px] leading-tight truncate"
-          style={{
-            fontWeight: 700,
-            color: "var(--cth-app-ink)",
-            margin: 0,
-          }}
-        >
-          {title}
-        </h1>
-        {subtitle && (
-          <p
-            className="text-xs md:text-sm truncate"
-            style={{
-              margin: "6px 0 0 0",
-            }}
-          >
-            {subtitle}
-          </p>
-        )}
-      </div>
-
-      <div className="ml-3 flex items-center gap-2 md:gap-3 flex-shrink-0">
-        {action}
-        <button
-          onClick={toggle}
-          title="Ask the House"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "6px 12px",
-            background: "var(--cth-command-purple)",
-            color: "var(--cth-command-gold)",
-            border: "1px solid var(--cth-command-border)",
-            borderRadius: 0,
-            fontSize: "12px",
-            fontWeight: 600,
-            fontFamily: '"DM Sans", system-ui, sans-serif',
-            letterSpacing: "0.05em",
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-          }}
-        >
-          Ask the House
-        </button>
-        <NotificationBell />
-      </div>
-    </div>
-  );
-}
-
 export function DashboardLayout({ children }) {
   const { isOpen, close, sectionId, toggle } = useAskTheHouse();
   const location = useLocation();

@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useUser } from "../hooks/useAuth";
 import { usePlan } from "../context/PlanContext";
 import { useWorkspace } from "../context/WorkspaceContext";
@@ -644,7 +644,22 @@ export default function Members() {
   if (!activeWorkspaceId) {
     return (
       <DashboardLayout>
-        <TopBar title="Members" subtitle="Manage who can access this workspace." />
+        <header className="cth-page-header">
+          <div className="min-w-0 flex-1">
+            <h1
+              className="text-2xl md:text-[32px] leading-tight truncate"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+            >
+              Members
+            </h1>
+            <p
+              className="text-xs md:text-sm truncate"
+              style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+            >
+              Manage who can access this workspace.
+            </p>
+          </div>
+        </header>
         <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
           <div className="flex items-center gap-2 rounded-xl p-5 text-sm"
             style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", color: "var(--cth-command-muted)" }}>
@@ -657,11 +672,25 @@ export default function Members() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Members"
-        subtitle="Manage who can access this workspace."
-        action={headerAction}
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Members
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Manage who can access this workspace.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          {headerAction}
+        </div>
+      </header>
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6">
         {seatUsage && isWorkspaceAdmin ? (
