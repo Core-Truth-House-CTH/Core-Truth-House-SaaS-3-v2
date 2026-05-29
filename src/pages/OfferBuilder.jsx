@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import apiClient from '../lib/apiClient';
+import API_PATHS from '../lib/apiPaths';
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
@@ -167,6 +168,7 @@ const EMPTY_FORM = {
   name: '',
   description: '',
   price: '',
+  price_cadence: 'one-time',
   features: '',
   target_audience: '',
   transformation: '',
@@ -175,12 +177,43 @@ const EMPTY_FORM = {
   booking_url: '',
 };
 
+const CADENCE_OPTIONS = [
+  { value: 'one-time', label: 'One-time', cardLabel: 'one-time payment' },
+  { value: 'monthly', label: 'Monthly', cardLabel: 'per month' },
+  { value: 'quarterly', label: 'Quarterly', cardLabel: 'per quarter' },
+  { value: 'annual', label: 'Annual', cardLabel: 'per year' },
+];
+
+const CADENCE_CARD_LABEL = CADENCE_OPTIONS.reduce(
+  (acc, o) => ({ ...acc, [o.value]: o.cardLabel }),
+  {}
+);
+
+const OFFER_SECTIONS = [
+  { id: 'basics', label: 'Basics', desc: 'Name the offer, say what it is, and set how it is priced.' },
+  { id: 'audience', label: 'Audience', desc: 'Who is this offer built for and what does it promise to change for them.' },
+  { id: 'links', label: 'Links', desc: 'Where buyers go to learn more, check out, or book.' },
+  { id: 'features', label: 'Features', desc: "What's included — one per line." },
+];
+
+const CUSTOM_AUDIENCE = '__custom__';
+
+function getOfferSectionDone(section, form) {
+  if (section === 'basics') return Boolean((form.name || '').trim());
+  if (section === 'audience') return Boolean((form.target_audience || '').trim());
+  if (section === 'links')
+    return Boolean((form.sales_page_url || '').trim() || (form.checkout_url || '').trim() || (form.booking_url || '').trim());
+  if (section === 'features') return Boolean((form.features || '').trim());
+  return false;
+}
+
 function normalizeOffer(raw) {
   return {
     id: raw?.id || raw?.offer_id || `offer-${Date.now()}`,
     name: raw?.name || '',
     description: raw?.description || '',
     price: raw?.price ?? 0,
+    price_cadence: raw?.price_cadence || 'one-time',
     features: Array.isArray(raw?.features) ? raw.features : [],
     target_audience: raw?.target_audience || '',
     transformation: raw?.transformation || '',
@@ -297,6 +330,27 @@ function OfferBuilderContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
 
+  // Modal section-nav + audience avatars
+  const [activeOfferSection, setActiveOfferSection] = useState('basics');
+  const [audienceAvatars, setAudienceAvatars] = useState([]);
+  const [audienceCustom, setAudienceCustom] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiClient.get(API_PATHS.audience.avatars);
+        const list = Array.isArray(res?.avatars) ? res.avatars : Array.isArray(res) ? res : [];
+        if (!cancelled) setAudienceAvatars(list.map((a) => a?.name).filter(Boolean));
+      } catch (err) {
+        if (!cancelled) setAudienceAvatars([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const offerCountSubtitle = useMemo(
     () => `${offers.length} offer${offers.length !== 1 ? 's' : ''} created`,
     [offers.length]
@@ -346,6 +400,7 @@ function OfferBuilderContent() {
         name: offer.name || '',
         description: offer.description || '',
         price: offer.price?.toString() || '',
+        price_cadence: offer.price_cadence || 'one-time',
         features: Array.isArray(offer.features) ? offer.features.join('\n') : '',
         target_audience: offer.target_audience || '',
         transformation: offer.transformation || '',
@@ -358,6 +413,8 @@ function OfferBuilderContent() {
       setFormData(EMPTY_FORM);
     }
 
+    setActiveOfferSection('basics');
+    setAudienceCustom(false);
     setShowModal(true);
     setError('');
   }, []);
@@ -386,6 +443,7 @@ function OfferBuilderContent() {
       name: formData.name.trim(),
       description: formData.description.trim(),
       price: parseFloat(formData.price) || 0,
+      price_cadence: formData.price_cadence || 'one-time',
       features: formData.features
         .split('\n')
         .map((f) => f.trim())
@@ -481,10 +539,11 @@ function OfferBuilderContent() {
     if (generatedCopyOffer) runGenerateCopy(generatedCopyOffer);
   };
 
-  const handleCopyToClipboard = async () => {
-    if (!generatedCopy) return;
+  const handleCopyToClipboard = async (text) => {
+    const value = typeof text === 'string' ? text : generatedCopy;
+    if (!value) return;
     try {
-      await navigator.clipboard.writeText(generatedCopy);
+      await navigator.clipboard.writeText(value);
       setCopiedFeedback(true);
       setTimeout(() => setCopiedFeedback(false), 1600);
     } catch (err) {
@@ -766,7 +825,7 @@ function OfferBuilderContent() {
                               {priceSet ? `$${offer.price}` : '—'}
                             </div>
                             <div style={{ fontFamily: SANS, fontSize: 9, color: 'var(--cth-command-muted)', marginTop: 3, letterSpacing: '0.04em' }}>
-                              {priceSet ? 'Price' : 'Price not set'}
+                              {priceSet ? (CADENCE_CARD_LABEL[offer.price_cadence] || 'one-time payment') : 'Price not set'}
                             </div>
                           </div>
 
@@ -818,31 +877,6 @@ function OfferBuilderContent() {
                           >
                             {isDraft ? 'Edit & complete' : 'Edit'}
                           </button>
-
-                          {!isDraft ? (
-                            <button
-                              type="button"
-                              data-testid={`generate-copy-${offer.id}`}
-                              onClick={() => handleGenerateCopy(offer)}
-                              disabled={generatingCopy === offer.id}
-                              className="inline-flex items-center gap-1"
-                              style={{
-                                fontFamily: SANS,
-                                fontSize: 11,
-                                fontWeight: 500,
-                                color: hasCopy ? 'var(--cth-command-gold)' : 'var(--cth-command-muted)',
-                                background: 'transparent',
-                                border: `1px solid ${hasCopy ? 'color-mix(in srgb, var(--cth-command-gold) 40%, transparent)' : 'var(--cth-command-border)'}`,
-                                borderRadius: 6,
-                                padding: '6px 10px',
-                                cursor: generatingCopy === offer.id ? 'wait' : 'pointer',
-                                opacity: generatingCopy === offer.id ? 0.7 : 1,
-                              }}
-                            >
-                              {generatingCopy === offer.id ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-                              {hasCopy ? 'Sales copy' : 'Generate copy'}
-                            </button>
-                          ) : null}
 
                           <button
                             type="button"
@@ -1022,366 +1056,252 @@ function OfferBuilderContent() {
         </div>
       </div>
 
-      {/* Generated copy modal */}
-      {generatedCopy ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Generated Sales Copy"
-          data-testid="generated-copy-modal"
-          onClick={handleCloseGeneratedCopy}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 60,
-            background: 'rgba(13, 0, 16, 0.6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 24,
-          }}
-        >
+      {/* Create / edit modal — Phase 3 section-nav */}
+      {showModal ? (() => {
+        const doneCount = OFFER_SECTIONS.filter((s) => getOfferSectionDone(s.id, formData)).length;
+        const secIdx = OFFER_SECTIONS.findIndex((s) => s.id === activeOfferSection);
+        const activeSec = OFFER_SECTIONS[secIdx] || OFFER_SECTIONS[0];
+        const prevSec = secIdx > 0 ? OFFER_SECTIONS[secIdx - 1] : null;
+        const nextSec = secIdx < OFFER_SECTIONS.length - 1 ? OFFER_SECTIONS[secIdx + 1] : null;
+        const canZuri = Boolean(editingOffer?.id);
+        const zuriBusy = canZuri && generatingCopy === editingOffer.id;
+        const zuriCopy =
+          (generatedCopyOffer?.id && editingOffer?.id && generatedCopyOffer.id === editingOffer.id
+            ? generatedCopy
+            : '') || editingOffer?.sales_copy || '';
+        const audienceInList = audienceAvatars.includes(formData.target_audience);
+        const isCustomAudience =
+          audienceCustom || (Boolean(formData.target_audience) && !audienceInList);
+        const audienceSelectValue = isCustomAudience ? CUSTOM_AUDIENCE : formData.target_audience || '';
+
+        return (
           <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              ...CARD_STYLE,
-              width: '100%',
-              maxWidth: 640,
-              maxHeight: 'calc(100vh - 48px)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={editingOffer ? 'Edit Offer' : 'New Offer'}
+            onClick={handleCloseModal}
+            style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(13, 0, 16, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
           >
             <div
-              className="flex items-start justify-between gap-4"
-              style={{
-                padding: 24,
-                borderBottom: '1px solid var(--cth-command-border)',
-              }}
+              data-testid="offer-modal"
+              onClick={(e) => e.stopPropagation()}
+              style={{ ...CARD_STYLE, borderRadius: 14, width: '100%', maxWidth: 820, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
             >
-              <div className="min-w-0 flex-1">
-                <p style={SECTION_LABEL_STYLE}>Generated Sales Copy</p>
-                <h2 style={{ ...SECTION_HEADING_STYLE, marginTop: 6 }}>
-                  Sales Copy: {generatedCopyOffer?.name || 'Offer'}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={handleCloseGeneratedCopy}
-                aria-label="Close generated copy"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 6,
-                  color: 'var(--cth-command-muted)',
-                  display: 'inline-flex',
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-auto" style={{ padding: 24 }}>
-              <div
-                style={{
-                  ...CARD_STYLE,
-                  background: 'var(--cth-command-panel-soft)',
-                  padding: 16,
-                  fontFamily: SANS,
-                  fontSize: 14,
-                  color: 'var(--cth-command-ink)',
-                  lineHeight: 1.7,
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
-                {generatedCopy}
-              </div>
-            </div>
-
-            <div
-              className="flex flex-wrap items-center justify-end gap-3"
-              style={{
-                padding: '16px 24px',
-                borderTop: '1px solid var(--cth-command-border)',
-              }}
-            >
-              <button
-                type="button"
-                onClick={handleRegenerateCopy}
-                disabled={generatingCopy != null}
-                style={{
-                  ...SECONDARY_BUTTON_STYLE,
-                  opacity: generatingCopy != null ? 0.65 : 1,
-                  cursor: generatingCopy != null ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {generatingCopy != null ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    Regenerating...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw size={14} />
-                    Regenerate
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={handleCopyToClipboard}
-                data-testid="copy-to-clipboard-btn"
-                style={PRIMARY_CTA_STYLE}
-              >
-                {copiedFeedback ? (
-                  <>
-                    <Check size={14} />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Clipboard size={14} />
-                    Copy to Clipboard
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Create / edit modal */}
-      {showModal ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={editingOffer ? 'Edit Offer' : 'New Offer'}
-          onClick={handleCloseModal}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 60,
-            background: 'rgba(13, 0, 16, 0.6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 24,
-          }}
-        >
-          <div
-            data-testid="offer-modal"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              ...CARD_STYLE,
-              width: '100%',
-              maxWidth: 640,
-              maxHeight: 'calc(100vh - 48px)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <div
-              className="flex items-start justify-between gap-4"
-              style={{
-                padding: 24,
-                borderBottom: '1px solid var(--cth-command-border)',
-              }}
-            >
-              <div>
-                <p style={SECTION_LABEL_STYLE}>
-                  {editingOffer ? 'Edit Offer' : 'New Offer'}
-                </p>
-                <h3 style={{ ...SECTION_HEADING_STYLE, marginTop: 6 }}>
-                  {editingOffer ? 'Update your offer' : 'Create a new offer'}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                aria-label="Close modal"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 6,
-                  color: 'var(--cth-command-muted)',
-                  display: 'inline-flex',
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div
-              className="flex-1 overflow-auto"
-              style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}
-            >
-              <div>
-                <label style={FIELD_LABEL_STYLE}>Offer Name *</label>
-                <input
-                  data-testid="offer-name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g., Brand Strategy Intensive"
-                  style={{ ...INPUT_STYLE, marginTop: 6 }}
-                />
-              </div>
-
-              <div>
-                <label style={FIELD_LABEL_STYLE}>Description</label>
-                <textarea
-                  data-testid="offer-description"
-                  value={formData.description}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="What is this offer about?"
-                  rows={3}
-                  style={{ ...TEXTAREA_STYLE, marginTop: 6 }}
-                />
-              </div>
-
-              <div>
-                <label style={FIELD_LABEL_STYLE}>Price ($)</label>
-                <input
-                  data-testid="offer-price"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
-                  placeholder="0"
-                  style={{ ...INPUT_STYLE, marginTop: 6 }}
-                />
-              </div>
-
-              <div>
-                <label style={FIELD_LABEL_STYLE}>Target Audience</label>
-                <input
-                  data-testid="offer-audience"
-                  type="text"
-                  value={formData.target_audience}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, target_audience: e.target.value }))}
-                  placeholder="Who is this offer for?"
-                  style={{ ...INPUT_STYLE, marginTop: 6 }}
-                />
-              </div>
-
-              <div>
-                <label style={FIELD_LABEL_STYLE}>Transformation Promise</label>
-                <input
-                  data-testid="offer-transformation"
-                  type="text"
-                  value={formData.transformation}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, transformation: e.target.value }))}
-                  placeholder="What outcome will they achieve?"
-                  style={{ ...INPUT_STYLE, marginTop: 6 }}
-                />
-              </div>
-
-              <div>
-                <label style={FIELD_LABEL_STYLE}>Sales Page URL</label>
-                <input
-                  data-testid="offer-sales-page-url"
-                  type="url"
-                  value={formData.sales_page_url || ''}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, sales_page_url: e.target.value }))}
-                  placeholder="https://yourdomain.com/sales-page"
-                  style={{ ...INPUT_STYLE, marginTop: 6 }}
-                />
-              </div>
-
-              <div>
-                <label style={FIELD_LABEL_STYLE}>Checkout URL</label>
-                <input
-                  data-testid="offer-checkout-url"
-                  type="url"
-                  value={formData.checkout_url || ''}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, checkout_url: e.target.value }))}
-                  placeholder="https://checkout.yourdomain.com/offer"
-                  style={{ ...INPUT_STYLE, marginTop: 6 }}
-                />
-              </div>
-
-              <div>
-                <label style={FIELD_LABEL_STYLE}>Booking URL</label>
-                <input
-                  data-testid="offer-booking-url"
-                  type="url"
-                  value={formData.booking_url || ''}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, booking_url: e.target.value }))}
-                  placeholder="https://calendly.com/your-offer"
-                  style={{ ...INPUT_STYLE, marginTop: 6 }}
-                />
-              </div>
-
-              <div>
-                <label style={FIELD_LABEL_STYLE}>Features (one per line)</label>
-                <textarea
-                  data-testid="offer-features"
-                  value={formData.features}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, features: e.target.value }))}
-                  placeholder={'1:1 Strategy Session\nCustom Brand Playbook\n30-Day Support'}
-                  rows={4}
-                  style={{ ...TEXTAREA_STYLE, marginTop: 6 }}
-                />
-              </div>
-
-              {error ? (
-                <div
-                  style={{
-                    ...CARD_STYLE,
-                    borderColor: 'color-mix(in srgb, var(--cth-danger) 35%, var(--cth-command-border))',
-                    background: 'color-mix(in srgb, var(--cth-danger) 8%, var(--cth-command-panel))',
-                    padding: 12,
-                    fontFamily: SANS,
-                    fontSize: 13,
-                    color: 'var(--cth-danger)',
-                  }}
-                >
-                  {error}
+              {/* Header */}
+              <div className="flex items-start justify-between" style={{ padding: '18px 24px 16px', borderBottom: '1px solid var(--cth-command-border)', background: 'var(--cth-command-panel)', flexShrink: 0, gap: 16 }}>
+                <div className="min-w-0">
+                  <h3 style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 600, color: 'var(--cth-command-ink)', margin: 0, lineHeight: 1.2 }}>
+                    {editingOffer ? (formData.name || 'Edit offer') : 'Create a new offer'}
+                  </h3>
+                  <p style={{ fontFamily: SANS, fontSize: 11, color: 'var(--cth-command-muted)', margin: '3px 0 0' }}>
+                    Edit offer details and generate sales copy.
+                  </p>
                 </div>
-              ) : null}
-            </div>
+                <div className="flex items-center" style={{ gap: 10, flexShrink: 0 }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontFamily: SANS, fontSize: 10, color: 'var(--cth-command-muted)', marginBottom: 4 }}>
+                      {doneCount} of {OFFER_SECTIONS.length} complete
+                    </div>
+                    <div style={{ width: 80, height: 3, background: 'var(--cth-command-border)', borderRadius: 2, overflow: 'hidden', marginLeft: 'auto' }}>
+                      <div style={{ height: '100%', width: `${Math.round((doneCount / OFFER_SECTIONS.length) * 100)}%`, background: 'var(--cth-command-success)', borderRadius: 2, transition: 'width 0.4s ease' }} />
+                    </div>
+                  </div>
+                  <button type="button" onClick={handleCloseModal} aria-label="Close modal" style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--cth-command-panel-soft)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--cth-command-muted)', flexShrink: 0 }}>
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
 
-            <div
-              className="flex items-center justify-end gap-3"
-              style={{
-                padding: '16px 24px',
-                borderTop: '1px solid var(--cth-command-border)',
-              }}
-            >
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                style={SECONDARY_BUTTON_STYLE}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                data-testid="save-offer-btn"
-                onClick={handleSaveOffer}
-                disabled={!formData.name.trim() || savingOffer}
-                style={{
-                  ...PRIMARY_CTA_STYLE,
-                  opacity: !formData.name.trim() || savingOffer ? 0.65 : 1,
-                  cursor: !formData.name.trim() || savingOffer ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {savingOffer ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    Saving...
-                  </>
-                ) : editingOffer ? (
-                  'Save Changes'
-                ) : (
-                  'Create Offer'
-                )}
-              </button>
+              {/* Body: section nav + field area */}
+              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '148px 1fr', overflow: 'hidden', minHeight: 0 }}>
+                {/* Section nav */}
+                <div style={{ borderRight: '1px solid var(--cth-command-border)', padding: '14px 0', background: 'var(--cth-command-panel-soft)', overflowY: 'auto' }}>
+                  <div style={{ fontFamily: SANS, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--cth-command-muted)', padding: '0 14px 8px', fontWeight: 600 }}>Sections</div>
+                  {OFFER_SECTIONS.map((s) => {
+                    const isActive = s.id === activeOfferSection;
+                    const done = getOfferSectionDone(s.id, formData);
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setActiveOfferSection(s.id)}
+                        data-testid={`offer-section-${s.id}`}
+                        className="text-left"
+                        style={{ display: 'flex', alignItems: 'center', gap: 7, width: '100%', padding: '8px 14px', cursor: 'pointer', border: 'none', borderLeft: `2px solid ${isActive ? 'var(--cth-command-crimson)' : 'transparent'}`, background: isActive ? 'var(--cth-command-panel)' : 'transparent' }}
+                      >
+                        {isActive ? (
+                          <Edit2 size={12} style={{ color: 'var(--cth-command-crimson)', flexShrink: 0 }} />
+                        ) : done ? (
+                          <Check size={12} style={{ color: 'var(--cth-command-success)', flexShrink: 0 }} />
+                        ) : (
+                          <span style={{ width: 12, height: 12, borderRadius: '50%', border: '1.5px solid var(--cth-command-border)', flexShrink: 0 }} />
+                        )}
+                        <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: isActive ? 500 : 400, color: isActive ? 'var(--cth-command-crimson)' : 'var(--cth-command-muted)' }}>{s.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Field area */}
+                <div style={{ padding: '20px 22px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <div style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 600, color: 'var(--cth-command-ink)', marginBottom: 2 }}>{activeSec.label}</div>
+                    <div style={{ fontFamily: SANS, fontSize: 11, color: 'var(--cth-command-muted)', lineHeight: 1.5 }}>{activeSec.desc}</div>
+                  </div>
+
+                  {activeOfferSection === 'basics' ? (
+                    <>
+                      <div className="flex flex-col" style={{ gap: 5 }}>
+                        <label style={FIELD_LABEL_STYLE}>Offer name *</label>
+                        <input data-testid="offer-name" type="text" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} placeholder="e.g., Brand Strategy Intensive" style={INPUT_STYLE} />
+                      </div>
+                      <div className="flex flex-col" style={{ gap: 5 }}>
+                        <label style={FIELD_LABEL_STYLE}>Description</label>
+                        <textarea data-testid="offer-description" value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} placeholder="What is this offer about?" rows={3} style={TEXTAREA_STYLE} />
+                      </div>
+                      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <div className="flex flex-col" style={{ gap: 5 }}>
+                          <label style={FIELD_LABEL_STYLE}>Price ($)</label>
+                          <input data-testid="offer-price" type="number" value={formData.price} onChange={(e) => setFormData((p) => ({ ...p, price: e.target.value }))} placeholder="0" style={INPUT_STYLE} />
+                        </div>
+                        <div className="flex flex-col" style={{ gap: 5 }}>
+                          <label style={FIELD_LABEL_STYLE}>Cadence</label>
+                          <select data-testid="offer-cadence" value={formData.price_cadence} onChange={(e) => setFormData((p) => ({ ...p, price_cadence: e.target.value }))} style={INPUT_STYLE}>
+                            {CADENCE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                          </select>
+                        </div>
+                      </div>
+                    </>
+                  ) : null}
+
+                  {activeOfferSection === 'audience' ? (
+                    <>
+                      <div className="flex flex-col" style={{ gap: 5 }}>
+                        <label style={FIELD_LABEL_STYLE}>Target audience</label>
+                        <select
+                          data-testid="offer-audience"
+                          value={audienceSelectValue}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === CUSTOM_AUDIENCE) {
+                              setAudienceCustom(true);
+                            } else {
+                              setAudienceCustom(false);
+                              setFormData((p) => ({ ...p, target_audience: v }));
+                            }
+                          }}
+                          style={INPUT_STYLE}
+                        >
+                          <option value="">Select an audience…</option>
+                          {audienceAvatars.map((n) => (<option key={n} value={n}>{n}</option>))}
+                          <option value={CUSTOM_AUDIENCE}>Custom…</option>
+                        </select>
+                        {isCustomAudience ? (
+                          <input data-testid="offer-audience-custom" type="text" value={formData.target_audience} onChange={(e) => setFormData((p) => ({ ...p, target_audience: e.target.value }))} placeholder="Describe who this offer is for" style={{ ...INPUT_STYLE, marginTop: 6 }} />
+                        ) : null}
+                      </div>
+                      <div className="flex flex-col" style={{ gap: 5 }}>
+                        <label style={FIELD_LABEL_STYLE}>Transformation promise</label>
+                        <textarea data-testid="offer-transformation" value={formData.transformation} onChange={(e) => setFormData((p) => ({ ...p, transformation: e.target.value }))} placeholder="What outcome will they achieve?" rows={3} style={TEXTAREA_STYLE} />
+                      </div>
+                    </>
+                  ) : null}
+
+                  {activeOfferSection === 'links' ? (
+                    <>
+                      <div className="flex flex-col" style={{ gap: 5 }}>
+                        <label style={FIELD_LABEL_STYLE}>Sales page URL</label>
+                        <input data-testid="offer-sales-page-url" type="url" value={formData.sales_page_url || ''} onChange={(e) => setFormData((p) => ({ ...p, sales_page_url: e.target.value }))} placeholder="https://yourdomain.com/sales-page" style={INPUT_STYLE} />
+                      </div>
+                      <div className="flex flex-col" style={{ gap: 5 }}>
+                        <label style={FIELD_LABEL_STYLE}>Checkout URL</label>
+                        <input data-testid="offer-checkout-url" type="url" value={formData.checkout_url || ''} onChange={(e) => setFormData((p) => ({ ...p, checkout_url: e.target.value }))} placeholder="https://checkout.yourdomain.com/offer" style={INPUT_STYLE} />
+                      </div>
+                      <div className="flex flex-col" style={{ gap: 5 }}>
+                        <label style={FIELD_LABEL_STYLE}>Booking URL</label>
+                        <input data-testid="offer-booking-url" type="url" value={formData.booking_url || ''} onChange={(e) => setFormData((p) => ({ ...p, booking_url: e.target.value }))} placeholder="https://calendly.com/your-offer" style={INPUT_STYLE} />
+                      </div>
+                    </>
+                  ) : null}
+
+                  {activeOfferSection === 'features' ? (
+                    <div className="flex flex-col" style={{ gap: 5 }}>
+                      <label style={FIELD_LABEL_STYLE}>Features (one per line)</label>
+                      <textarea data-testid="offer-features" value={formData.features} onChange={(e) => setFormData((p) => ({ ...p, features: e.target.value }))} placeholder={'1:1 Strategy Session\nCustom Brand Playbook\n30-Day Support'} rows={5} style={TEXTAREA_STYLE} />
+                    </div>
+                  ) : null}
+
+                  {/* Zuri sales-copy card */}
+                  <div style={{ background: '#1a0828', borderRadius: 10, padding: '13px 15px' }} data-testid="zuri-sales-copy">
+                    <div className="flex items-center gap-2" style={{ marginBottom: 9 }}>
+                      <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--cth-command-crimson)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: SANS, fontSize: 8, fontWeight: 600, color: '#fff' }}>Z</span>
+                      <span style={{ fontFamily: SANS, fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7a6090' }}>Zuri · sales copy</span>
+                    </div>
+
+                    {!canZuri ? (
+                      <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 14, lineHeight: 1.5, color: 'rgba(255,255,255,0.7)' }}>
+                        Save the offer first, then Zuri can write your sales copy.
+                      </div>
+                    ) : zuriBusy ? (
+                      <div className="flex items-center gap-2" style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 14, color: 'rgba(255,255,255,0.75)' }}>
+                        <Loader2 size={14} className="animate-spin" /> Zuri is writing your sales copy…
+                      </div>
+                    ) : zuriCopy ? (
+                      <>
+                        <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 500, fontSize: 13, lineHeight: 1.55, color: '#e8dff0', marginBottom: 8, whiteSpace: 'pre-wrap', maxHeight: 160, overflowY: 'auto' }} data-testid="zuri-copy-text">
+                          {zuriCopy}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={() => handleCopyToClipboard(zuriCopy)} className="inline-flex items-center gap-1" style={{ fontFamily: SANS, fontSize: 10, fontWeight: 500, color: 'var(--cth-command-crimson)', background: 'transparent', border: '0.5px solid rgba(224,78,53,0.4)', borderRadius: 5, padding: '4px 10px', cursor: 'pointer' }}>
+                            {copiedFeedback ? <Check size={10} /> : <Clipboard size={10} />}
+                            {copiedFeedback ? 'Copied!' : 'Copy to clipboard'}
+                          </button>
+                          <button type="button" onClick={() => runGenerateCopy(editingOffer)} style={{ fontFamily: SANS, fontSize: 10, color: '#7a6090', background: 'transparent', border: '0.5px solid rgba(122,96,144,0.3)', borderRadius: 5, padding: '4px 10px', cursor: 'pointer' }}>
+                            Regenerate
+                          </button>
+                        </div>
+                        <div style={{ fontFamily: SANS, fontSize: 10, color: '#5a4868', marginTop: 6 }}>Uses AI credits each time · Copy is ready to paste into your sales page</div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 14, lineHeight: 1.5, color: 'rgba(255,255,255,0.82)', marginBottom: 9 }}>
+                          Let Zuri write conversion-focused sales copy from this offer's details.
+                        </div>
+                        <button type="button" onClick={() => runGenerateCopy(editingOffer)} data-testid="zuri-generate-btn" className="inline-flex items-center gap-1.5" style={{ fontFamily: SANS, fontSize: 10, fontWeight: 500, color: 'var(--cth-command-crimson)', background: 'transparent', border: '0.5px solid rgba(224,78,53,0.4)', borderRadius: 5, padding: '5px 11px', cursor: 'pointer' }}>
+                          <Sparkles size={12} /> Write sales copy
+                        </button>
+                        <div style={{ fontFamily: SANS, fontSize: 10, color: '#5a4868', marginTop: 6 }}>Uses AI credits each time · Copy is ready to paste into your sales page</div>
+                      </>
+                    )}
+                  </div>
+
+                  {error ? (
+                    <div style={{ ...CARD_STYLE, borderColor: 'color-mix(in srgb, var(--cth-danger) 35%, var(--cth-command-border))', background: 'color-mix(in srgb, var(--cth-danger) 8%, var(--cth-command-panel))', padding: 12, fontFamily: SANS, fontSize: 13, color: 'var(--cth-danger)' }}>
+                      {error}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between" style={{ padding: '12px 22px', borderTop: '1px solid var(--cth-command-border)', background: 'var(--cth-command-panel-soft)', flexShrink: 0, gap: 10 }}>
+                <button type="button" onClick={() => prevSec && setActiveOfferSection(prevSec.id)} disabled={!prevSec} data-testid="offer-prev-section" style={{ fontFamily: SANS, fontSize: 12, color: 'var(--cth-command-muted)', background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 7, padding: '7px 14px', cursor: prevSec ? 'pointer' : 'default', opacity: prevSec ? 1 : 0.4 }}>
+                  {prevSec ? `← ${prevSec.label}` : '← Previous'}
+                </button>
+                <div className="flex items-center" style={{ gap: 10 }}>
+                  <button type="button" onClick={handleCloseModal} style={{ fontFamily: SANS, fontSize: 12, color: 'var(--cth-command-muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}>Cancel</button>
+                  <button type="button" data-testid="save-offer-btn" onClick={handleSaveOffer} disabled={!formData.name.trim() || savingOffer} className="inline-flex items-center gap-1.5" style={{ fontFamily: SANS, fontSize: 12, fontWeight: 500, color: '#fff', background: 'var(--cth-command-success)', border: 'none', borderRadius: 7, padding: '7px 18px', cursor: (!formData.name.trim() || savingOffer) ? 'not-allowed' : 'pointer', opacity: (!formData.name.trim() || savingOffer) ? 0.65 : 1 }}>
+                    {savingOffer ? (<><Loader2 size={13} className="animate-spin" /> Saving…</>) : 'Save offer'}
+                  </button>
+                </div>
+                <button type="button" onClick={() => nextSec && setActiveOfferSection(nextSec.id)} disabled={!nextSec} data-testid="offer-next-section" style={{ fontFamily: SANS, fontSize: 12, fontWeight: 500, color: '#fff', background: 'var(--cth-command-crimson)', border: 'none', borderRadius: 7, padding: '7px 18px', cursor: nextSec ? 'pointer' : 'default', opacity: nextSec ? 1 : 0.4 }}>
+                  {nextSec ? `${nextSec.label} →` : 'Last'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      ) : null}
+        );
+      })() : null}
 
       {/* Confirm: Delete Offer */}
       {pendingDeleteOffer ? (
@@ -1444,66 +1364,6 @@ function OfferBuilderContent() {
                 style={DESTRUCTIVE_BUTTON_STYLE}
               >
                 Delete Offer
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Confirm: Generate Sales Copy */}
-      {pendingGenerateOffer ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Generate Sales Copy"
-          onClick={() => setPendingGenerateOffer(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 70,
-            background: 'rgba(13, 0, 16, 0.6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 24,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ ...CARD_STYLE, width: '100%', maxWidth: 480, padding: 28 }}
-          >
-            <h2 style={{ ...SECTION_HEADING_STYLE, fontSize: 22 }}>Generate Sales Copy</h2>
-            <p
-              style={{
-                fontFamily: SANS,
-                fontSize: 14,
-                color: 'var(--cth-command-muted)',
-                margin: '12px 0 24px',
-                lineHeight: 1.6,
-              }}
-            >
-              This will use AI credits to generate sales copy for{' '}
-              <span style={{ color: 'var(--cth-command-ink)', fontWeight: 600 }}>
-                {pendingGenerateOffer.name || 'this offer'}
-              </span>
-              . Continue?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setPendingGenerateOffer(null)}
-                style={SECONDARY_BUTTON_STYLE}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                data-testid="confirm-generate-copy-btn"
-                onClick={handleConfirmGenerate}
-                style={PRIMARY_CTA_STYLE}
-              >
-                <Sparkles size={14} />
-                Generate Copy
               </button>
             </div>
           </div>
