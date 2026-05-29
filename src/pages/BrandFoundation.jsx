@@ -7,11 +7,14 @@ import { BrandGuidelinesExportButton } from "../components/shared/BrandGuideline
 import { getNextStep } from "../config/brandCoreNextStep";
 import apiClient from "../lib/apiClient";
 import {
+  Check,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Circle,
   FileText,
   Loader2,
+  Pencil,
   Sparkles,
   Wand2,
   X,
@@ -233,7 +236,7 @@ function getErrorMessage(error, fallback) {
 }
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 const PAGE_STYLE = {
   background: "var(--cth-command-blush)",
@@ -356,6 +359,16 @@ function StatusIcon({ status }) {
   );
 }
 
+function SectionStateIcon({ state }) {
+  if (state === "done") {
+    return <Check size={12} style={{ color: "var(--cth-command-success)", flexShrink: 0 }} />;
+  }
+  if (state === "active") {
+    return <Pencil size={12} style={{ color: "var(--cth-command-crimson)", flexShrink: 0 }} />;
+  }
+  return <Circle size={12} style={{ color: "var(--cth-command-border)", flexShrink: 0 }} />;
+}
+
 // TODO: StatusPill uses Tailwind bg-emerald-500/10 / bg-amber-500/10 — migrate to --cth-command-* tokens in palette cleanup pass
 function StatusPill({ status }) {
   if (status === "complete") {
@@ -451,7 +464,7 @@ export default function BrandFoundation() {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.max(220, textareaRef.current.scrollHeight)}px`;
+      textareaRef.current.style.height = `${Math.max(120, textareaRef.current.scrollHeight)}px`;
     }
   }, [activeValue, activeField]);
 
@@ -601,35 +614,37 @@ export default function BrandFoundation() {
         title="Brand Foundation"
         subtitle="Define the core truth your brand is built on so every strategy, offer, and content decision pulls from the same source of truth."
         action={
-          <div className="flex flex-wrap items-center gap-3">
-            <div
-              className="flex items-center gap-3 px-4 py-2"
-              style={CARD_STYLE}
-            >
-              <ScoreRing score={score} />
-              <div>
+          <div className="flex flex-wrap items-center gap-4">
+            <div style={{ textAlign: "right" }}>
+              <div
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 11,
+                  color: "var(--cth-command-muted)",
+                  marginBottom: 5,
+                }}
+              >
+                {completedCount} of {FIELDS.length} complete
+              </div>
+              <div
+                style={{
+                  width: 120,
+                  height: 3,
+                  background: "var(--cth-command-border)",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  marginLeft: "auto",
+                }}
+              >
                 <div
                   style={{
-                    fontFamily: SANS,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "var(--cth-command-ink)",
+                    height: "100%",
+                    width: `${Math.round((completedCount / FIELDS.length) * 100)}%`,
+                    background: "var(--cth-command-success)",
+                    borderRadius: 2,
+                    transition: "width 0.6s ease",
                   }}
-                >
-                  Foundation Score
-                </div>
-                <div
-                  style={{
-                    fontFamily: SANS,
-                    fontSize: 11,
-                    color: "var(--cth-command-muted)",
-                    marginTop: 2,
-                  }}
-                >
-                  {score === 100
-                    ? "Complete and ready for Strategic OS"
-                    : `${7 - completedCount} fields remaining`}
-                </div>
+                />
               </div>
             </div>
             <BrandGuidelinesExportButton />
@@ -690,475 +705,682 @@ export default function BrandFoundation() {
           })}
         </div>
 
-        <div className="mx-auto flex max-w-[1200px] flex-col md:flex-row">
-          {/* Left sidebar */}
-          <aside className="hidden w-60 shrink-0 md:block">
-            <div className="sticky top-0 px-5 py-6">
-              <div style={SECTION_LABEL_STYLE}>Foundation Elements</div>
+        <div className="mx-auto flex max-w-[1100px] flex-col md:flex-row">
+          {/* Left section nav */}
+          <aside
+            className="hidden md:flex md:flex-col"
+            style={{
+              width: 148,
+              flexShrink: 0,
+              borderRight: "0.5px solid var(--cth-command-border)",
+              background: "var(--cth-command-blush)",
+              padding: "16px 0",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: SANS,
+                fontSize: 8,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "var(--cth-command-muted)",
+                fontWeight: 600,
+                padding: "0 14px 8px",
+              }}
+            >
+              Sections
+            </div>
 
+            {FIELDS.map((field) => {
+              const value = data[field.id] || "";
+              const status = getCompletionStatus(value, field.minLength);
+              const isActive = activeField === field.id;
+              const state = isActive ? "active" : status === "complete" ? "done" : "todo";
+
+              return (
+                <button
+                  key={field.id}
+                  onClick={() => handleFieldSwitch(field.id)}
+                  data-testid={`field-nav-${field.id}`}
+                  className="text-left"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    width: "100%",
+                    padding: "8px 14px",
+                    cursor: "pointer",
+                    border: "none",
+                    borderLeft: `2px solid ${isActive ? "var(--cth-command-crimson)" : "transparent"}`,
+                    background: isActive ? "var(--cth-command-panel)" : "transparent",
+                  }}
+                >
+                  <SectionStateIcon state={state} />
+                  <span
+                    style={{
+                      fontFamily: SANS,
+                      fontSize: 11,
+                      fontWeight: isActive ? 500 : 400,
+                      color: isActive ? "var(--cth-command-crimson)" : "var(--cth-command-muted)",
+                    }}
+                  >
+                    {field.label}
+                  </span>
+                </button>
+              );
+            })}
+
+            <div style={{ padding: "12px 14px 0", marginTop: "auto" }}>
               <button
                 type="button"
                 onClick={() => setViewAllOpen(true)}
                 data-testid="view-all-foundation-btn"
                 style={{
-                  marginTop: 10,
+                  width: "100%",
                   background: "transparent",
-                  border: "1px solid var(--cth-command-border)",
-                  borderRadius: 4,
+                  border: "0.5px solid var(--cth-command-border)",
+                  borderRadius: 6,
                   color: "var(--cth-command-muted)",
                   fontFamily: SANS,
-                  fontSize: 11,
+                  fontSize: 9,
                   fontWeight: 600,
-                  letterSpacing: "0.18em",
+                  letterSpacing: "0.12em",
                   textTransform: "uppercase",
-                  padding: "6px 12px",
+                  padding: "6px 8px",
                   cursor: "pointer",
                 }}
               >
                 View All
               </button>
-
-              <div className="mt-4 space-y-2">
-                {FIELDS.map((field) => {
-                  const value = data[field.id] || "";
-                  const status = getCompletionStatus(value, field.minLength);
-                  const isActive = activeField === field.id;
-                  const snippet = getSnippet(value);
-
-                  return (
-                    <button
-                      key={field.id}
-                      onClick={() => handleFieldSwitch(field.id)}
-                      data-testid={`field-nav-${field.id}`}
-                      className="w-full px-4 py-3 text-left transition"
-                      style={{
-                        background: isActive ? "var(--cth-command-panel)" : "transparent",
-                        border: "none",
-                        borderLeft: `3px solid ${isActive ? "var(--cth-command-crimson)" : "transparent"}`,
-                        borderRadius: 0,
-                        paddingLeft: 13,
-                      }}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div
-                          style={{
-                            fontFamily: SANS,
-                            fontSize: 13,
-                            fontWeight: isActive ? 600 : 500,
-                            color: "var(--cth-command-ink)",
-                          }}
-                        >
-                          {field.label}
-                        </div>
-                        <StatusIcon status={status} />
-                      </div>
-
-                      <div
-                        style={{
-                          fontFamily: SANS,
-                          fontSize: 11,
-                          lineHeight: 1.5,
-                          color: "var(--cth-command-muted)",
-                          marginTop: 8,
-                        }}
-                      >
-                        {snippet || field.subtitle}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
             </div>
           </aside>
 
-          {/* Right content area */}
-          <main className="min-w-0 flex-1 px-4 py-5 md:px-8 md:py-8">
-            <div className="mx-auto max-w-3xl space-y-8">
-              {/* Active field card */}
-              <div style={{ ...CARD_STYLE, padding: 28 }}>
-                {/* Field header */}
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="flex h-10 w-10 shrink-0 items-center justify-center"
-                      style={{
-                        borderRadius: 4,
-                        background:
-                          "color-mix(in srgb, var(--cth-command-crimson) 12%, transparent)",
-                        color: "var(--cth-command-crimson)",
-                      }}
-                    >
-                      <FileText size={18} />
-                    </div>
-                    <div>
-                      <h2 style={FIELD_HEADING_STYLE}>{activeConfig.label}</h2>
-                      <p
-                        style={{
-                          fontFamily: SANS,
-                          fontSize: 13,
-                          color: "var(--cth-command-muted)",
-                          margin: "4px 0 0",
-                        }}
-                      >
-                        {activeConfig.subtitle}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <StatusPill status={activeStatus} />
-                    <div
-                      style={{
-                        fontFamily: SANS,
-                        fontSize: 11,
-                        color: "var(--cth-command-muted)",
-                      }}
-                    >
-                      {saveState === "saving" && "Saving..."}
-                      {saveState === "saved" && "Saved"}
-                      {saveState === "idle" && lastSavedAt
-                        ? `Last saved ${lastSavedAt.toLocaleTimeString([], {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}`
-                        : ""}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Why this matters */}
-                <div style={{ ...CARD_STYLE, padding: 16, marginTop: 20 }}>
-                  <p style={SECTION_LABEL_STYLE}>Why this matters</p>
+          {/* Right field area */}
+          <main className="min-w-0 flex-1" style={{ display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                padding: "22px 24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+            >
+              {/* Field header */}
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2
+                    style={{
+                      fontFamily: SERIF,
+                      fontSize: 20,
+                      fontWeight: 500,
+                      color: "var(--cth-command-ink)",
+                      margin: 0,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {activeConfig.label}
+                  </h2>
                   <p
                     style={{
                       fontFamily: SANS,
-                      fontSize: 14,
-                      lineHeight: 1.65,
-                      color: "var(--cth-command-ink)",
-                      margin: "8px 0 0",
+                      fontSize: 12,
+                      color: "var(--cth-command-muted)",
+                      margin: "3px 0 0",
+                      lineHeight: 1.5,
+                      maxWidth: 520,
                     }}
                   >
-                    {activeConfig.why}
+                    {activeConfig.subtitle}
                   </p>
                 </div>
-
-                {/* Tip cards */}
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
-                  {activeConfig.tips.map((tip, index) => (
-                    <div
-                      key={`${activeConfig.id}-tip-${index}`}
-                      style={{ ...CARD_STYLE, padding: 16 }}
-                    >
-                      <p style={SECTION_LABEL_STYLE}>Tip {index + 1}</p>
-                      <p
-                        style={{
-                          fontFamily: SANS,
-                          fontSize: 13,
-                          lineHeight: 1.65,
-                          color: "var(--cth-command-ink)",
-                          margin: "8px 0 0",
-                        }}
-                      >
-                        {tip}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Textarea */}
-                <div className="mt-5">
-                  <label
-                    style={{
-                      display: "block",
-                      fontFamily: SANS,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "var(--cth-command-ink)",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Write your {activeConfig.label.toLowerCase()}
-                  </label>
-
-                  <div className="relative" style={{ ...CARD_STYLE, overflow: "hidden" }}>
-                    <textarea
-                      ref={textareaRef}
-                      value={activeValue}
-                      onChange={(event) => handleChange(event.target.value)}
-                      placeholder={
-                        activeStatus === "empty"
-                          ? `${activeConfig.placeholder}\n\nExample: "${activeConfig.exampleSnippet}"`
-                          : activeConfig.placeholder
-                      }
-                      data-testid={`input-${activeField}`}
-                      className="w-full resize-none"
-                      style={{
-                        minHeight: 220,
-                        background: "var(--cth-command-panel)",
-                        color: "var(--cth-command-ink)",
-                        fontFamily: SANS,
-                        fontSize: 14,
-                        lineHeight: 1.65,
-                        padding: "18px 18px 36px",
-                        border: "none",
-                        outline: "none",
-                        boxShadow: "none",
-                        display: "block",
-                      }}
-                      maxLength={activeConfig.maxLength}
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 12,
-                        right: 16,
-                        fontFamily: SANS,
-                        fontSize: 10,
-                        color: "var(--cth-command-muted)",
-                      }}
-                    >
-                      {activeValue.length}/{activeConfig.maxLength}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Generate AI / Clear */}
-                <div className="mt-5 flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={handleGenerate}
-                    disabled={isGenerating}
-                    data-testid="generate-ai-btn"
-                    className="inline-flex items-center gap-2"
-                    style={{
-                      ...PRIMARY_CTA_STYLE,
-                      opacity: isGenerating ? 0.65 : 1,
-                      cursor: isGenerating ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 size={16} />
-                        Ask the House
-                      </>
-                    )}
-                  </button>
-
-                  {activeValue ? (
-                    <button onClick={() => handleChange("")} style={SECONDARY_BUTTON_STYLE}>
-                      Clear field
-                    </button>
-                  ) : null}
-                </div>
-
-                {saveError ? (
-                  <div
-                    style={{
-                      marginTop: 16,
-                      padding: "10px 14px",
-                      borderRadius: 4,
-                      border:
-                        "1px solid color-mix(in srgb, var(--cth-danger) 25%, var(--cth-command-border))",
-                      background:
-                        "color-mix(in srgb, var(--cth-danger) 8%, var(--cth-command-panel))",
-                      color: "var(--cth-danger)",
-                      fontFamily: SANS,
-                      fontSize: 13,
-                    }}
-                  >
-                    {saveError}
-                  </div>
-                ) : null}
-
-                {/* Generated preview */}
-                {generatedPreview ? (
-                  <div
-                    className="mt-5"
-                    style={{
-                      ...CARD_STYLE,
-                      borderColor: "var(--cth-command-crimson)",
-                      background:
-                        "color-mix(in srgb, var(--cth-command-crimson) 6%, var(--cth-command-panel))",
-                      padding: 16,
-                    }}
-                    data-testid="generated-preview"
-                  >
-                    <div
-                      className="flex items-center gap-2"
-                      style={{
-                        fontFamily: SANS,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        letterSpacing: "0.2em",
-                        textTransform: "uppercase",
-                        color: "var(--cth-command-crimson)",
-                      }}
-                    >
-                      <Sparkles size={12} />
-                      AI Draft
-                    </div>
-
-                    <p
-                      style={{
-                        whiteSpace: "pre-wrap",
-                        fontFamily: SANS,
-                        fontSize: 14,
-                        lineHeight: 1.65,
-                        color: "var(--cth-command-ink)",
-                        margin: "12px 0 0",
-                      }}
-                    >
-                      {generatedPreview}
-                    </p>
-
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      <button
-                        onClick={handleAcceptGenerated}
-                        data-testid="accept-generated-btn"
-                        style={{
-                          background: "var(--cth-command-crimson)",
-                          color: "var(--cth-command-panel)",
-                          border: "none",
-                          borderRadius: 999,
-                          padding: "10px 18px",
-                          fontFamily: SANS,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          letterSpacing: "0.04em",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={handleGenerate}
-                        style={{ ...SECONDARY_BUTTON_STYLE, padding: "10px 18px" }}
-                      >
-                        Regenerate
-                      </button>
-                      <button
-                        onClick={() => setGeneratedPreview(null)}
-                        style={{
-                          background: "transparent",
-                          color: "var(--cth-command-muted)",
-                          border: "none",
-                          borderRadius: 999,
-                          padding: "10px 18px",
-                          fontFamily: SANS,
-                          fontSize: 13,
-                          fontWeight: 500,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Discard
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-
-                {/* Field navigation */}
-                <div
-                  className="mt-6 flex items-center justify-between pt-5"
-                  style={{ borderTop: "1px solid var(--cth-command-border)" }}
-                >
-                  <button
-                    onClick={() => prevField && handleFieldSwitch(prevField.id)}
-                    disabled={!prevField}
-                    data-testid="prev-field-btn"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      background: "none",
-                      border: "none",
-                      cursor: prevField ? "pointer" : "default",
-                      opacity: prevField ? 1 : 0.25,
-                      fontFamily: SANS,
-                      fontSize: 13,
-                      color: "var(--cth-command-muted)",
-                      padding: 0,
-                    }}
-                  >
-                    <ChevronLeft size={16} />
-                    {prevField?.label || "Previous"}
-                  </button>
-
+                <div className="flex items-center gap-3" style={{ flexShrink: 0 }}>
                   <span
                     style={{
                       fontFamily: SANS,
                       fontSize: 11,
-                      fontWeight: 600,
-                      letterSpacing: "0.2em",
-                      textTransform: "uppercase",
                       color: "var(--cth-command-muted)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {saveState === "saving" && "Saving…"}
+                    {saveState === "saved" && "Saved"}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: SANS,
+                      fontSize: 9,
+                      color: "var(--cth-command-muted)",
+                      padding: "3px 9px",
+                      border: "0.5px solid var(--cth-command-border)",
+                      borderRadius: 5,
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {fieldIndex + 1} of {FIELDS.length}
                   </span>
-
-                  <button
-                    onClick={() => nextField && handleFieldSwitch(nextField.id)}
-                    disabled={!nextField}
-                    data-testid="next-field-btn"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      background: "none",
-                      border: "none",
-                      cursor: nextField ? "pointer" : "default",
-                      opacity: nextField ? 1 : 0.25,
-                      fontFamily: SANS,
-                      fontSize: 13,
-                      color: "var(--cth-command-muted)",
-                      padding: 0,
-                    }}
-                  >
-                    {nextField?.label || "Next"}
-                    <ChevronRight size={16} />
-                  </button>
                 </div>
               </div>
 
-              {/* Next Step banner */}
-              {nextStep ? (
+              {/* Why this matters */}
+              <div
+                style={{
+                  background: "var(--cth-command-panel)",
+                  border: "0.5px solid var(--cth-command-border)",
+                  borderRadius: 8,
+                  padding: "10px 12px",
+                }}
+              >
                 <div
-                  className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-                  style={{ ...CARD_STYLE, padding: 24 }}
+                  style={{
+                    fontFamily: SANS,
+                    fontSize: 8,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "var(--cth-command-muted)",
+                    marginBottom: 4,
+                  }}
                 >
-                  <div>
-                    <p style={SECTION_LABEL_STYLE}>
-                      {nextStep.upgradeTo ? "Upgrade" : "Next Step"}
-                    </p>
-                    <p
+                  Why this matters
+                </div>
+                <div
+                  style={{
+                    fontFamily: SANS,
+                    fontSize: 11,
+                    lineHeight: 1.55,
+                    color: "var(--cth-command-ink)",
+                  }}
+                >
+                  {activeConfig.why}
+                </div>
+              </div>
+
+              {/* Tips row */}
+              <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+                {activeConfig.tips.map((tip, index) => (
+                  <div
+                    key={`${activeConfig.id}-tip-${index}`}
+                    style={{
+                      background: "var(--cth-command-panel)",
+                      border: "0.5px solid var(--cth-command-border)",
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                    }}
+                  >
+                    <div
                       style={{
                         fontFamily: SANS,
-                        fontSize: 14,
-                        lineHeight: 1.65,
-                        color: "var(--cth-command-ink)",
-                        margin: "8px 0 0",
-                        maxWidth: 620,
+                        fontSize: 8,
+                        letterSpacing: "0.12em",
+                        textTransform: "uppercase",
+                        color: "var(--cth-command-muted)",
+                        marginBottom: 4,
                       }}
                     >
-                      {nextStep.copy}
-                    </p>
+                      Tip {index + 1}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: SANS,
+                        fontSize: 11,
+                        lineHeight: 1.5,
+                        color: "var(--cth-command-ink)",
+                      }}
+                    >
+                      {tip}
+                    </div>
                   </div>
-                  <a
-                    href={nextStepHref}
-                    className="inline-flex shrink-0 items-center gap-2"
-                    style={PRIMARY_CTA_STYLE}
+                ))}
+              </div>
+
+              {/* Field card */}
+              <div
+                style={{
+                  background: "var(--cth-command-panel)",
+                  border: "0.5px solid var(--cth-command-border)",
+                  borderRadius: 10,
+                  overflow: "hidden",
+                }}
+              >
+                {activeValue.trim() ? (
+                  <div
+                    style={{
+                      padding: "12px 14px",
+                      borderBottom: "0.5px solid var(--cth-command-border)",
+                      background:
+                        "color-mix(in srgb, var(--cth-command-blush) 60%, var(--cth-command-panel))",
+                    }}
                   >
-                    {nextStepLabel}
-                    <ChevronRight size={14} />
-                  </a>
+                    <div
+                      style={{
+                        fontFamily: SANS,
+                        fontSize: 9,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: "var(--cth-command-muted)",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Current answer
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: SERIF,
+                        fontStyle: "italic",
+                        fontSize: 13,
+                        lineHeight: 1.5,
+                        color: "var(--cth-command-ink)",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {activeValue}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div style={{ padding: "12px 14px" }}>
+                  <textarea
+                    ref={textareaRef}
+                    value={activeValue}
+                    onChange={(event) => handleChange(event.target.value)}
+                    placeholder={
+                      activeStatus === "empty"
+                        ? `${activeConfig.placeholder}\n\nExample: "${activeConfig.exampleSnippet}"`
+                        : activeConfig.placeholder
+                    }
+                    data-testid={`input-${activeField}`}
+                    className="w-full resize-none"
+                    style={{
+                      minHeight: 120,
+                      width: "100%",
+                      background: "transparent",
+                      color: "var(--cth-command-ink)",
+                      fontFamily: SANS,
+                      fontSize: 13,
+                      lineHeight: 1.65,
+                      border: "none",
+                      outline: "none",
+                      boxShadow: "none",
+                      display: "block",
+                    }}
+                    maxLength={activeConfig.maxLength}
+                  />
+                </div>
+
+                <div
+                  className="flex items-center justify-between"
+                  style={{
+                    padding: "10px 14px",
+                    borderTop: "0.5px solid var(--cth-command-border)",
+                    background:
+                      "color-mix(in srgb, var(--cth-command-blush) 60%, var(--cth-command-panel))",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: SANS,
+                      fontSize: 10,
+                      color: "var(--cth-command-muted)",
+                    }}
+                  >
+                    {activeValue.length} / {activeConfig.maxLength}
+                  </span>
+                  {activeValue ? (
+                    <button
+                      onClick={() => handleChange("")}
+                      style={{
+                        fontFamily: SANS,
+                        fontSize: 11,
+                        color: "var(--cth-command-muted)",
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Clear field
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+                </div>
+              </div>
+
+              {saveError ? (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    border:
+                      "0.5px solid color-mix(in srgb, var(--cth-danger) 25%, var(--cth-command-border))",
+                    background:
+                      "color-mix(in srgb, var(--cth-danger) 8%, var(--cth-command-panel))",
+                    color: "var(--cth-danger)",
+                    fontFamily: SANS,
+                    fontSize: 12,
+                  }}
+                >
+                  {saveError}
                 </div>
               ) : null}
+
+              {/* Zuri inline suggestion — wired to Ask the House (handleGenerate) */}
+              <div style={{ background: "#1a0828", borderRadius: 10, padding: "13px 15px" }} data-testid="zuri-inline">
+                <div className="flex items-center gap-2" style={{ marginBottom: 9 }}>
+                  <span
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      background: "var(--cth-command-crimson)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      fontFamily: SANS,
+                      fontSize: 8,
+                      fontWeight: 600,
+                      color: "#fff",
+                    }}
+                  >
+                    Z
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: SANS,
+                      fontSize: 8,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "#7a6090",
+                    }}
+                  >
+                    Zuri · suggestion
+                  </span>
+                </div>
+
+                {isGenerating ? (
+                  <div
+                    className="flex items-center gap-2"
+                    style={{
+                      fontFamily: SERIF,
+                      fontStyle: "italic",
+                      fontSize: 15,
+                      color: "rgba(255,255,255,0.75)",
+                    }}
+                  >
+                    <Loader2 size={14} className="animate-spin" />
+                    Zuri is drafting from your foundation…
+                  </div>
+                ) : generatedPreview ? (
+                  <>
+                    <div
+                      style={{
+                        fontFamily: SERIF,
+                        fontStyle: "italic",
+                        fontWeight: 500,
+                        fontSize: 15,
+                        lineHeight: 1.4,
+                        color: "#fff",
+                        marginBottom: 10,
+                        whiteSpace: "pre-wrap",
+                      }}
+                      data-testid="generated-preview"
+                    >
+                      {generatedPreview}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleAcceptGenerated}
+                        data-testid="accept-generated-btn"
+                        style={{
+                          fontFamily: SANS,
+                          fontSize: 10,
+                          fontWeight: 500,
+                          color: "var(--cth-command-crimson)",
+                          background: "transparent",
+                          border: "0.5px solid rgba(224,78,53,0.4)",
+                          borderRadius: 5,
+                          padding: "4px 10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Use this
+                      </button>
+                      <button
+                        onClick={handleGenerate}
+                        style={{
+                          fontFamily: SANS,
+                          fontSize: 10,
+                          color: "#7a6090",
+                          background: "transparent",
+                          border: "none",
+                          padding: "4px 6px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Try another →
+                      </button>
+                      <button
+                        onClick={() => setGeneratedPreview(null)}
+                        style={{
+                          fontFamily: SANS,
+                          fontSize: 10,
+                          color: "#52406a",
+                          background: "transparent",
+                          border: "none",
+                          padding: "4px 6px",
+                          cursor: "pointer",
+                          marginLeft: "auto",
+                        }}
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      style={{
+                        fontFamily: SERIF,
+                        fontStyle: "italic",
+                        fontSize: 15,
+                        lineHeight: 1.4,
+                        color: "rgba(255,255,255,0.82)",
+                        marginBottom: 10,
+                      }}
+                    >
+                      Want a starting point for your {activeConfig.label.toLowerCase()}? Ask the House and I&apos;ll draft one from your foundation.
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleGenerate}
+                        data-testid="generate-ai-btn"
+                        className="inline-flex items-center gap-1.5"
+                        style={{
+                          fontFamily: SANS,
+                          fontSize: 10,
+                          fontWeight: 500,
+                          color: "var(--cth-command-crimson)",
+                          background: "transparent",
+                          border: "0.5px solid rgba(224,78,53,0.4)",
+                          borderRadius: 5,
+                          padding: "5px 11px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <Wand2 size={12} />
+                        Ask the House
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
+
+            {/* Page footer */}
+            <div
+              className="flex items-center justify-between"
+              style={{
+                marginTop: "auto",
+                padding: "14px 24px",
+                borderTop: "0.5px solid var(--cth-command-border)",
+                background:
+                  "color-mix(in srgb, var(--cth-command-blush) 60%, var(--cth-command-panel))",
+              }}
+            >
+              <button
+                onClick={() => prevField && handleFieldSwitch(prevField.id)}
+                disabled={!prevField}
+                data-testid="prev-field-btn"
+                className="inline-flex items-center gap-1.5"
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 12,
+                  color: "var(--cth-command-muted)",
+                  background: "var(--cth-command-panel)",
+                  border: "0.5px solid var(--cth-command-border)",
+                  borderRadius: 7,
+                  padding: "7px 16px",
+                  cursor: prevField ? "pointer" : "default",
+                  opacity: prevField ? 1 : 0.4,
+                }}
+              >
+                <ChevronLeft size={14} />
+                {prevField?.label || "Previous"}
+              </button>
+
+              <span
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 11,
+                  color: "var(--cth-command-muted)",
+                }}
+              >
+                {fieldIndex + 1} of {FIELDS.length}
+              </span>
+
+              {nextField ? (
+                <button
+                  onClick={() => handleFieldSwitch(nextField.id)}
+                  data-testid="next-field-btn"
+                  className="inline-flex items-center gap-1.5"
+                  style={{
+                    fontFamily: SANS,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#fff",
+                    background: "var(--cth-command-crimson)",
+                    border: "none",
+                    borderRadius: 7,
+                    padding: "7px 20px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Save & continue
+                  <ChevronRight size={14} />
+                </button>
+              ) : nextStepHref ? (
+                <a
+                  href={nextStepHref}
+                  data-testid="next-field-btn"
+                  className="inline-flex items-center gap-1.5"
+                  style={{
+                    fontFamily: SANS,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#fff",
+                    background: "var(--cth-command-crimson)",
+                    border: "none",
+                    borderRadius: 7,
+                    padding: "7px 20px",
+                    cursor: "pointer",
+                    textDecoration: "none",
+                  }}
+                >
+                  {nextStepLabel || "Continue"}
+                  <ChevronRight size={14} />
+                </a>
+              ) : (
+                <button
+                  disabled
+                  data-testid="next-field-btn"
+                  className="inline-flex items-center gap-1.5"
+                  style={{
+                    fontFamily: SANS,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#fff",
+                    background: "var(--cth-command-crimson)",
+                    border: "none",
+                    borderRadius: 7,
+                    padding: "7px 20px",
+                    opacity: 0.4,
+                    cursor: "default",
+                  }}
+                >
+                  Save & continue
+                  <ChevronRight size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Next Step — quiet card below the footer, Phase 3 styling */}
+            {nextStep ? (
+              <div
+                className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+                style={{
+                  margin: "16px 24px 24px",
+                  padding: 16,
+                  background: "var(--cth-command-panel)",
+                  border: "0.5px solid var(--cth-command-border)",
+                  borderRadius: 10,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontFamily: SANS,
+                      fontSize: 9,
+                      fontWeight: 600,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "var(--cth-command-muted)",
+                    }}
+                  >
+                    {nextStep.upgradeTo ? "Upgrade" : "Next Step"}
+                  </div>
+                  <p
+                    style={{
+                      fontFamily: SANS,
+                      fontSize: 12,
+                      lineHeight: 1.6,
+                      color: "var(--cth-command-muted)",
+                      margin: "6px 0 0",
+                      maxWidth: 620,
+                    }}
+                  >
+                    {nextStep.copy}
+                  </p>
+                </div>
+                <a
+                  href={nextStepHref}
+                  className="inline-flex shrink-0 items-center gap-1.5"
+                  style={{
+                    fontFamily: SANS,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#fff",
+                    background: "var(--cth-command-crimson)",
+                    border: "none",
+                    borderRadius: 7,
+                    padding: "7px 20px",
+                    cursor: "pointer",
+                    textDecoration: "none",
+                  }}
+                >
+                  {nextStepLabel}
+                  <ChevronRight size={14} />
+                </a>
+              </div>
+            ) : null}
           </main>
         </div>
       </div>
