@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { DashboardLayout, TopBar } from '../components/Layout';
+import { DashboardLayout } from '../components/Layout';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useAuth } from '@clerk/react';
 import {
@@ -283,10 +283,22 @@ function LaunchPlannerContent() {
 
  return (
  <DashboardLayout>
- <TopBar
- title="Launch Planner"
- subtitle="Plan and track your launches. Active launches count toward your Brand Health Score."
- />
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Launch Planner
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Plan and track your launches. Active launches count toward your Brand Health Score.
+          </p>
+        </div>
+      </header>
 
  <div className="flex-1 overflow-auto px-4 py-4 md:px-7 md:py-6">
  {error ? (

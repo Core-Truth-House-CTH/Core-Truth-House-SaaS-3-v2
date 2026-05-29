@@ -10,7 +10,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import apiClient from "../lib/apiClient";
 
 const SECTION_META = {
@@ -258,10 +258,22 @@ export default function KnowledgeBasePage() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Knowledge Base"
-        subtitle="Browse guides, references, and how-tos curated by the Core Truth House team."
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Knowledge Base
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Browse guides, references, and how-tos curated by the Core Truth House team.
+          </p>
+        </div>
+      </header>
 
       <main className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6">
         <div className="grid gap-4 xl:grid-cols-[260px_1fr]">
