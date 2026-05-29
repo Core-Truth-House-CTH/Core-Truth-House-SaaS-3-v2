@@ -5,6 +5,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Phase 1 redesign — display typeface on top-level page headings.
+   Cormorant Garamond (loaded in index.html) at weight 500 for all
+   <h1> / primary page titles. Body, labels, and nav are untouched.
+   !important overrides the inline fontWeight:700 on TopBar's <h1>
+   and any cascade from later stylesheets.
+   ============================================================ */
+h1 {
+  font-family: var(--font-display) !important;
+  font-weight: 500 !important;
+}
+
 :root {
   /* Core Truth House Admin Light Theme */
   --cth-admin-bg: #efe7e3;

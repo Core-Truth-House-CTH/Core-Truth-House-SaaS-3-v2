@@ -14,6 +14,9 @@
  */
 
 :root {
+  /* Typography — Phase 1 redesign display typeface */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+
   /* Surfaces — dark */
   --cth-command-night: #0d0010;
   --cth-command-purple: #33033c;
