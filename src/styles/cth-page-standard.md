@@ -17,6 +17,27 @@ If you are unsure how a section should look, open one of the files above first.
 
 ---
 
+## Corner radius — ROUNDED (updated 2026-05-29)
+
+**As of 2026-05-29 the CTH standard is rounded corners**, replacing the former
+4px-sharp convention. Apply this scale:
+
+| Element | Radius |
+| --- | --- |
+| Cards / panels / modals body | `12` |
+| Modal shell | `14` |
+| Inputs, selects, textareas, buttons | `8` |
+| Pills / status chips / avatars | `999` / `50%` |
+
+Reference implementation: `src/pages/OfferBuilder.jsx` (gallery + section-nav
+modal). The session that introduced this (Audience, Workspace Library, Signal
+Inbox, OfferBuilder, and all new components) is the new baseline. **Older pages
+still using 4px are being migrated when touched** — match the rounded scale on
+any page you redesign. The `borderRadius: 4` values shown in older examples
+below are historical; use the scale above.
+
+---
+
 ## Tokens
 
 All 13 palette tokens are defined in `src/styles/cth-tokens.css` and are
@@ -95,14 +116,15 @@ subtitle, and any page-specific action buttons.
 ### Card
 
 The standard card. Use it for every content panel, every nav item, every
-sub-block. Borders are 1px, radius is 4px (sharper than generic SaaS), padding
-is `28` for top-level cards, `16–24` for nested cards.
+sub-block. Borders are 1px, radius is `12` (see the Corner radius section —
+rounded as of 2026-05-29), padding is `28` for top-level cards, `16–24` for
+nested cards.
 
 ```js
 const CARD_STYLE = {
   background: 'var(--cth-command-panel)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 12,
 };
 ```
 
@@ -652,9 +674,10 @@ These are non-negotiable. PRs that violate any of these should be rejected.
 - **No white page backgrounds.** The page is always `var(--cth-command-blush)`.
   If you find yourself reaching for `bg-white`, `#ffffff`, or
   `var(--cth-app-bg)`, stop.
-- **No large border-radius on cards.** Standard is 4px. The single allowed
-  exception is small score tiles at 14px (Brand Audit MetricTile). Never
-  `rounded-2xl` (16px), never `rounded-3xl` (24px), never `borderRadius: 12+`.
+- **Rounded corners (updated 2026-05-29).** Follow the radius scale in the
+  Corner radius section: cards/panels `12`, modal shell `14`, inputs/buttons
+  `8`, pills/avatars `999`. Don't exceed it — never `rounded-3xl` (24px) on
+  cards. (This replaces the former 4px-sharp rule.)
 - **No Inter font.** Anywhere. Headlines are Playfair Display, body is DM Sans,
   hex/code is DM Mono (or system monospace stack). If you see Inter sneaking in
   via a shadcn or Tailwind default, override it explicitly with `fontFamily: SANS`.
