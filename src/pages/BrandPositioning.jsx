@@ -1214,65 +1214,6 @@ export default function BrandPositioning() {
               )}
             </div>
 
-            {/* Next Step — quiet card below the footer, Phase 3 styling */}
-            {nextStep ? (
-              <div
-                className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-                style={{
-                  margin: "16px 24px 24px",
-                  padding: 16,
-                  background: "var(--cth-command-panel)",
-                  border: "0.5px solid var(--cth-command-border)",
-                  borderRadius: 10,
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontFamily: SANS,
-                      fontSize: 9,
-                      fontWeight: 600,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "var(--cth-command-muted)",
-                    }}
-                  >
-                    {nextStep.upgradeTo ? "Upgrade" : "Next Step"}
-                  </div>
-                  <p
-                    style={{
-                      fontFamily: SANS,
-                      fontSize: 12,
-                      lineHeight: 1.6,
-                      color: "var(--cth-command-muted)",
-                      margin: "6px 0 0",
-                      maxWidth: 620,
-                    }}
-                  >
-                    {nextStep.copy}
-                  </p>
-                </div>
-                <a
-                  href={nextStepHref}
-                  className="inline-flex shrink-0 items-center gap-1.5"
-                  style={{
-                    fontFamily: SANS,
-                    fontSize: 12,
-                    fontWeight: 500,
-                    color: "#fff",
-                    background: "var(--cth-command-crimson)",
-                    border: "none",
-                    borderRadius: 7,
-                    padding: "7px 20px",
-                    cursor: "pointer",
-                    textDecoration: "none",
-                  }}
-                >
-                  {nextStepLabel}
-                  <ChevronRight size={14} />
-                </a>
-              </div>
-            ) : null}
           </main>
         </div>
       </div>
