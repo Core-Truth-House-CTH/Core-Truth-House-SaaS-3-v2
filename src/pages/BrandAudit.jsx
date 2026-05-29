@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, RefreshCw, RotateCcw } from 'lucide-react';
 
-import { DashboardLayout, TopBar } from '../components/Layout';
+import { DashboardLayout } from '../components/Layout';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../lib/apiClient';
@@ -437,10 +437,22 @@ export default function BrandAudit() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <TopBar
-          title="Brand Audit"
-          subtitle="Diagnose first, then move through the journey in sequence."
-        />
+        <header className="cth-page-header">
+          <div className="min-w-0 flex-1">
+            <h1
+              className="text-2xl md:text-[32px] leading-tight truncate"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+            >
+              Brand Audit
+            </h1>
+            <p
+              className="text-xs md:text-sm truncate"
+              style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+            >
+              Diagnose first, then move through the journey in sequence.
+            </p>
+          </div>
+        </header>
 
         <div className="flex-1 overflow-auto px-4 py-7 md:px-8" style={PAGE_STYLE}>
           <div className="flex min-h-[280px] items-center justify-center">
@@ -455,11 +467,23 @@ export default function BrandAudit() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Brand Audit"
-        subtitle="Your live brand health score"
-        action={
-          showIntake ? null : (
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Brand Audit
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Your live brand health score
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          {showIntake ? null : (
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -488,9 +512,9 @@ export default function BrandAudit() {
                 />
               ) : null}
             </div>
-          )
-        }
-      />
+          )}
+        </div>
+      </header>
 
       <div
         className="flex-1 overflow-auto px-4 py-7 md:px-8"

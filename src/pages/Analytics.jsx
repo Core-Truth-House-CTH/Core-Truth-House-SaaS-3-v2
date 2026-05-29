@@ -26,7 +26,7 @@ import {
  YAxis,
 } from "recharts";
 
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useColors } from "../context/ThemeContext";
 import { usePlan } from "../context/PlanContext";
 import { useWorkspace } from "../context/WorkspaceContext";
@@ -73,10 +73,22 @@ function EmptyChart({ text }) {
 function LockedOverlay() {
  return (
  <DashboardLayout>
- <TopBar
- title="Analytics"
- subtitle="Track your brand system, content usage, and momentum over time."
- />
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Analytics
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Track your brand system, content usage, and momentum over time.
+          </p>
+        </div>
+      </header>
  <div className="flex-1 overflow-auto">
  <div className="mx-auto max-w-3xl px-4 py-16 md:px-8">
  <div
@@ -556,10 +568,22 @@ export default function Analytics() {
 
  return (
  <DashboardLayout>
- <TopBar
- title="Analytics"
- subtitle="Track your brand system, content usage, and momentum over time."
- />
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Analytics
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Track your brand system, content usage, and momentum over time.
+          </p>
+        </div>
+      </header>
 
  <div className="px-4 pt-5 md:px-7">
  <AnalyticsTabBar value={activeTab} onChange={setActiveTab} />

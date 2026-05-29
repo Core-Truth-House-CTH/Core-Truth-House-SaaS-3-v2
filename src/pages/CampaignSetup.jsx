@@ -8,7 +8,7 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Check, Loader2, X } from "lucide-react";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useUser } from "../hooks/useAuth";
 import { useWorkspace } from "../context/WorkspaceContext";
 import apiClient from "../lib/apiClient";
@@ -631,11 +631,25 @@ export default function CampaignSetup() {
   if (!activeWorkspaceId) {
     return (
       <DashboardLayout>
-        <TopBar
-          title="Create Campaign"
-          subtitle="Three steps: Strategy, Structure, Distribution."
-          action={cancelAction}
-        />
+        <header className="cth-page-header">
+          <div className="min-w-0 flex-1">
+            <h1
+              className="text-2xl md:text-[32px] leading-tight truncate"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+            >
+              Create Campaign
+            </h1>
+            <p
+              className="text-xs md:text-sm truncate"
+              style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+            >
+              Three steps: Strategy, Structure, Distribution.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+            {cancelAction}
+          </div>
+        </header>
         <div style={PAGE_STYLE}>
           <div style={PAGE_LOADER_STYLE}>
             <Loader2
@@ -651,11 +665,25 @@ export default function CampaignSetup() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Create Campaign"
-        subtitle="Three steps: Strategy, Structure, Distribution."
-        action={cancelAction}
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Create Campaign
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Three steps: Strategy, Structure, Distribution.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          {cancelAction}
+        </div>
+      </header>
       <div style={PAGE_STYLE}>
         <div style={BODY_WRAP_STYLE}>
           {showRestoredBanner && (

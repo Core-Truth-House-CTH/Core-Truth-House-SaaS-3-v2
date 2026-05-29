@@ -15,7 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { usePlan } from "../context/PlanContext";
 import apiClient from "../lib/apiClient";
 
@@ -112,7 +112,22 @@ function TogglePill({ active, busy, onClick }) {
 function DenialState() {
   return (
     <DashboardLayout>
-      <TopBar title="Automations" subtitle="Admin access required." />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Automations
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Admin access required.
+          </p>
+        </div>
+      </header>
       <main className="mx-auto max-w-2xl px-4 py-12">
         <section
           className="flex flex-col items-center rounded-xl p-8 text-center"
@@ -817,11 +832,25 @@ export default function Automations() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Automations"
-        subtitle="Trigger actions when events happen across your workspace."
-        action={headerAction}
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Automations
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Trigger actions when events happen across your workspace.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          {headerAction}
+        </div>
+      </header>
 
       <main className="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:px-6">
         {error ? (

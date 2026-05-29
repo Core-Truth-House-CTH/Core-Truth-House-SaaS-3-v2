@@ -12,7 +12,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import apiClient from "../lib/apiClient";
 import { API_PATHS } from "../lib/apiPaths";
@@ -646,7 +646,22 @@ export default function AvatarEditor() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <TopBar title="Avatar" subtitle="Loading..." />
+        <header className="cth-page-header">
+          <div className="min-w-0 flex-1">
+            <h1
+              className="text-2xl md:text-[32px] leading-tight truncate"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+            >
+              Avatar
+            </h1>
+            <p
+              className="text-xs md:text-sm truncate"
+              style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+            >
+              Loading...
+            </p>
+          </div>
+        </header>
         <div style={PAGE_STYLE}>
           <div style={BODY_WRAP_STYLE}>
             <div
@@ -670,14 +685,24 @@ export default function AvatarEditor() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title={isNew ? "Create Avatar" : form.name || "Avatar"}
-        subtitle={
-          isNew
-            ? "Define a person your brand serves so every campaign pulls from the same source."
-            : "Edit this avatar to keep every connected campaign aligned."
-        }
-        action={
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            {isNew ? "Create Avatar" : form.name || "Avatar"}
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            {isNew
+              ? "Define a person your brand serves so every campaign pulls from the same source."
+              : "Edit this avatar to keep every connected campaign aligned."}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <button
             type="button"
             onClick={() => navigate("/audience")}
@@ -686,8 +711,8 @@ export default function AvatarEditor() {
             <ArrowLeft size={14} />
             Back to Audience
           </button>
-        }
-      />
+        </div>
+      </header>
 
       <div style={PAGE_STYLE}>
         <div style={BODY_WRAP_STYLE}>
