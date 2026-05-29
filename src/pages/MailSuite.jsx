@@ -24,7 +24,7 @@ import {
  AlertCircle,
 } from "lucide-react";
 
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import {
  Drawer,
  DrawerClose,
@@ -1359,10 +1359,22 @@ export default function MailSuite() {
 
  return (
  <DashboardLayout>
- <TopBar
- title="Mail Suite"
- subtitle="Inbound mail, click signals, tracking links, and automation templates."
- />
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Mail Suite
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Inbound mail, click signals, tracking links, and automation templates.
+          </p>
+        </div>
+      </header>
 
  <div style={PAGE_STYLE} className="px-4 py-6 md:px-7 md:py-8">
  <div style={{ marginBottom: 24, display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "flex-end", gap: 16 }}>

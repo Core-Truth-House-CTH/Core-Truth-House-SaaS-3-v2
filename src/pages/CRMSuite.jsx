@@ -15,7 +15,7 @@ import {
  X,
 } from "lucide-react";
 
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
@@ -1156,7 +1156,22 @@ export default function CRMSuite() {
 
  return (
  <DashboardLayout>
- <TopBar title="CRM" subtitle="Workspace-scoped pipeline, contacts, activity, and notes." />
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            CRM
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Workspace-scoped pipeline, contacts, activity, and notes.
+          </p>
+        </div>
+      </header>
 
  <div style={PAGE_STYLE} className="px-4 py-6 md:px-7 md:py-8">
  <div className="mx-auto w-full max-w-[1200px] space-y-8">

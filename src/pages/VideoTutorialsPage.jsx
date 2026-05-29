@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { DashboardLayout, TopBar } from '../components/Layout';
+import { DashboardLayout } from '../components/Layout';
 import {
  PlayCircle, Clock, BookOpen, Search,
  Star, CheckCircle, X,
@@ -395,10 +395,22 @@ export default function VideoTutorialsPage() {
 
  return (
  <DashboardLayout>
- <TopBar
- title="Tutorials"
- subtitle="Video guides for every part of Core Truth House"
- />
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Tutorials
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Video guides for every part of Core Truth House
+          </p>
+        </div>
+      </header>
  <div data-testid="video-tutorials-page" className="cth-page flex-1 overflow-y-auto">
  <div className="max-w-[1200px] mx-auto px-6 py-5">
  <div className="flex items-center justify-end gap-3 mb-6">
