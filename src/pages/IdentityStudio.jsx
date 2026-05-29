@@ -9,6 +9,7 @@ import IdentityStudioAssets from '../components/shared/IdentityStudioAssets';
 import { getNextStep } from '../config/brandCoreNextStep';
 import apiClient from "../lib/apiClient";
 import { toast } from 'sonner';
+import { Check, Pencil, Circle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 function isValidHex(value) {
   return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value.trim());
@@ -213,6 +214,31 @@ const NEXT_STEP_PILL_STYLE = {
   padding: '12px 22px',
 };
 
+const SECTIONS = [
+  { id: 'colors', label: 'Brand Colors' },
+  { id: 'typography', label: 'Typography' },
+  { id: 'assets', label: 'Brand Assets' },
+];
+
+const ZURI_GUIDANCE = {
+  colors:
+    'Strong palettes lead with one dominant color, then two or three supporting tones and a neutral. Keep enough contrast for legible text, and reuse the exact same hex values everywhere so recognition compounds over time.',
+  typography:
+    'Pair one distinctive display face for headlines with a highly legible workhorse for body copy. Two families is usually enough — let weight, size, and spacing build the hierarchy rather than adding more fonts.',
+  assets:
+    'Upload your primary logo plus the marks, icons, and lockups you actually reuse. Consistent assets across your content and guidelines are what make a brand read as intentional instead of improvised.',
+};
+
+function SectionStateIcon({ state }) {
+  if (state === 'done') {
+    return <Check size={12} style={{ color: 'var(--cth-command-success)', flexShrink: 0 }} />;
+  }
+  if (state === 'active') {
+    return <Pencil size={12} style={{ color: 'var(--cth-command-crimson)', flexShrink: 0 }} />;
+  }
+  return <Circle size={12} style={{ color: 'var(--cth-command-border)', flexShrink: 0 }} />;
+}
+
 function IdentityStudioContent() {
   const { activeWorkspace } = useWorkspace();
   const { plan } = usePlan();
@@ -223,6 +249,7 @@ function IdentityStudioContent() {
   const nextStepHref = nextStep?.upgradeTo ? '/billing' : nextStep?.href;
   const nextStepLabel = nextStep?.upgradeTo ? nextStep.ctaLabel : nextStep?.label;
 
+  const [activeSection, setActiveSection] = useState('colors');
   const [colors, setColors] = useState(DEFAULT_COLORS);
   const [fonts, setFonts] = useState(DEFAULT_FONTS);
   const [assets, setAssets] = useState([]);
@@ -535,6 +562,16 @@ function IdentityStudioContent() {
       (assetsLen >= 1 ? 20 : 0)
     ) || 0;
 
+  const sectionDone = {
+    colors: colorsLen >= 5,
+    typography: fontsLen >= 4,
+    assets: assetsLen >= 1,
+  };
+  const completedCount = SECTIONS.filter((s) => sectionDone[s.id]).length;
+  const sectionIndex = SECTIONS.findIndex((s) => s.id === activeSection);
+  const prevSection = sectionIndex > 0 ? SECTIONS[sectionIndex - 1] : null;
+  const nextSection = sectionIndex < SECTIONS.length - 1 ? SECTIONS[sectionIndex + 1] : null;
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -580,37 +617,37 @@ function IdentityStudioContent() {
           </div>
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div
-                className="flex items-center gap-2 px-3 py-1.5"
-                style={CARD_STYLE}
-              >
+              <div style={{ textAlign: 'right' }}>
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center"
-                  style={{ border: '2px solid var(--cth-command-crimson)' }}
-                >
-                  <span
-                    style={{
-                      fontFamily: SERIF,
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: 'var(--cth-command-ink)',
-                    }}
-                  >
-                    {identityScore}%
-                  </span>
-                </div>
-                <span
                   style={{
                     fontFamily: SANS,
-                    fontSize: 10,
-                    fontWeight: 600,
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
+                    fontSize: 11,
                     color: 'var(--cth-command-muted)',
+                    marginBottom: 5,
                   }}
                 >
-                  Score
-                </span>
+                  {completedCount} of {SECTIONS.length} complete
+                </div>
+                <div
+                  style={{
+                    width: 120,
+                    height: 3,
+                    background: 'var(--cth-command-border)',
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    marginLeft: 'auto',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${Math.round((completedCount / SECTIONS.length) * 100)}%`,
+                      background: 'var(--cth-command-success)',
+                      borderRadius: 2,
+                      transition: 'width 0.6s ease',
+                    }}
+                  />
+                </div>
               </div>
 
               {hasUnsaved && (
@@ -646,8 +683,104 @@ function IdentityStudioContent() {
         </header>
 
         {/* Main content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="max-w-[1200px] mx-auto space-y-8">
+        <div className="flex-1 overflow-auto">
+          {/* Mobile section nav */}
+          <div
+            className="md:hidden overflow-x-auto flex gap-2 px-4 py-3"
+            style={{ borderBottom: '1px solid var(--cth-command-border)', background: 'var(--cth-command-panel)' }}
+          >
+            {SECTIONS.map((section) => {
+              const isActive = activeSection === section.id;
+              const isDone = sectionDone[section.id];
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                  style={{
+                    flexShrink: 0,
+                    padding: '6px 14px',
+                    fontFamily: SANS,
+                    fontSize: 12,
+                    fontWeight: isActive ? 600 : 400,
+                    background: isActive ? 'var(--cth-command-crimson)' : 'var(--cth-command-blush)',
+                    color: isActive ? '#fff' : 'var(--cth-command-ink)',
+                    border: '1px solid var(--cth-command-border)',
+                    borderRadius: 999,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {isDone ? '✓ ' : ''}{section.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mx-auto flex max-w-[1100px] flex-col md:flex-row">
+            {/* Left section nav */}
+            <aside
+              className="hidden md:flex md:flex-col"
+              style={{
+                width: 148,
+                flexShrink: 0,
+                borderRight: '0.5px solid var(--cth-command-border)',
+                background: 'var(--cth-command-blush)',
+                padding: '16px 0',
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 8,
+                  letterSpacing: '0.16em',
+                  textTransform: 'uppercase',
+                  color: 'var(--cth-command-muted)',
+                  fontWeight: 600,
+                  padding: '0 14px 8px',
+                }}
+              >
+                Sections
+              </div>
+              {SECTIONS.map((section) => {
+                const isActive = activeSection === section.id;
+                const state = isActive ? 'active' : sectionDone[section.id] ? 'done' : 'todo';
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => setActiveSection(section.id)}
+                    data-testid={`section-nav-${section.id}`}
+                    className="text-left"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      width: '100%',
+                      padding: '8px 14px',
+                      cursor: 'pointer',
+                      border: 'none',
+                      borderLeft: `2px solid ${isActive ? 'var(--cth-command-crimson)' : 'transparent'}`,
+                      background: isActive ? 'var(--cth-command-panel)' : 'transparent',
+                    }}
+                  >
+                    <SectionStateIcon state={state} />
+                    <span
+                      style={{
+                        fontFamily: SANS,
+                        fontSize: 11,
+                        fontWeight: isActive ? 500 : 400,
+                        color: isActive ? 'var(--cth-command-crimson)' : 'var(--cth-command-muted)',
+                      }}
+                    >
+                      {section.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </aside>
+
+            {/* Right section area */}
+            <main className="min-w-0 flex-1" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
             {draftRecovery ? (
               <div
                 data-testid="identity-draft-recovery-banner"
@@ -713,6 +846,7 @@ function IdentityStudioContent() {
             ) : null}
 
             {/* Brand Colors */}
+            {activeSection === 'colors' && (
             <section style={{ ...CARD_STYLE, padding: 28 }}>
               <div className="flex items-start justify-between mb-5 gap-4">
                 <div>
@@ -944,8 +1078,10 @@ function IdentityStudioContent() {
                 })}
               </div>
             </section>
+            )}
 
             {/* Typography */}
+            {activeSection === 'typography' && (
             <section style={{ ...CARD_STYLE, padding: 28 }}>
               <div className="flex items-start justify-between mb-5 gap-4">
                 <div>
@@ -1133,8 +1269,10 @@ function IdentityStudioContent() {
                 ))}
               </div>
             </section>
+            )}
 
             {/* Brand Assets */}
+            {activeSection === 'assets' && (
             <section style={{ ...CARD_STYLE, padding: 28 }}>
               <div className="mb-5">
                 <h2 style={SECTION_HEADING_STYLE}>Brand Assets</h2>
@@ -1154,39 +1292,113 @@ function IdentityStudioContent() {
                 onDeleteAsset={handleDeleteAsset}
               />
             </section>
+            )}
 
-            {/* Next Step */}
-            {nextStep ? (
-              <section
-                className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-                style={{ ...CARD_STYLE, padding: 24 }}
-              >
-                <div>
-                  <p style={SECTION_LABEL_STYLE}>
-                    {nextStep.upgradeTo ? 'Upgrade' : 'Next Step'}
-                  </p>
-                  <p
-                    style={{
-                      fontFamily: SANS,
-                      fontSize: 14,
-                      lineHeight: 1.65,
-                      color: 'var(--cth-command-ink)',
-                      margin: '8px 0 0',
-                      maxWidth: 620,
-                    }}
-                  >
-                    {nextStep.copy}
-                  </p>
-                </div>
-                <a
-                  href={nextStepHref}
-                  className="shrink-0"
-                  style={NEXT_STEP_PILL_STYLE}
+            {/* Zuri inline suggestion — static per-section guidance (AI wiring deferred to a future per-section endpoint) */}
+            <div style={{ background: '#1a0828', borderRadius: 10, padding: '13px 15px' }} data-testid="zuri-inline">
+              <div className="flex items-center gap-2" style={{ marginBottom: 9 }}>
+                <span
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: '50%',
+                    background: 'var(--cth-command-crimson)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    fontFamily: SANS,
+                    fontSize: 8,
+                    fontWeight: 600,
+                    color: '#fff',
+                  }}
                 >
-                  {nextStepLabel}
-                </a>
-              </section>
-            ) : null}
+                  Z
+                </span>
+                <span
+                  style={{
+                    fontFamily: SANS,
+                    fontSize: 8,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: '#7a6090',
+                  }}
+                >
+                  Zuri · suggestion
+                </span>
+              </div>
+              <div
+                style={{
+                  fontFamily: SERIF,
+                  fontStyle: 'italic',
+                  fontSize: 15,
+                  lineHeight: 1.45,
+                  color: 'rgba(255,255,255,0.85)',
+                }}
+              >
+                {ZURI_GUIDANCE[activeSection]}
+              </div>
+            </div>
+            </div>
+
+            {/* Page footer */}
+            <div
+              className="flex items-center justify-between"
+              style={{
+                marginTop: 'auto',
+                padding: '14px 24px',
+                borderTop: '0.5px solid var(--cth-command-border)',
+                background: 'color-mix(in srgb, var(--cth-command-blush) 60%, var(--cth-command-panel))',
+              }}
+            >
+              <button
+                onClick={() => prevSection && setActiveSection(prevSection.id)}
+                disabled={!prevSection}
+                data-testid="prev-section-btn"
+                className="inline-flex items-center gap-1.5"
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 12,
+                  color: 'var(--cth-command-muted)',
+                  background: 'var(--cth-command-panel)',
+                  border: '0.5px solid var(--cth-command-border)',
+                  borderRadius: 7,
+                  padding: '7px 16px',
+                  cursor: prevSection ? 'pointer' : 'default',
+                  opacity: prevSection ? 1 : 0.4,
+                }}
+              >
+                <ChevronLeft size={14} />
+                {prevSection?.label || 'Previous'}
+              </button>
+
+              <span style={{ fontFamily: SANS, fontSize: 11, color: 'var(--cth-command-muted)' }}>
+                {sectionIndex + 1} of {SECTIONS.length}
+              </span>
+
+              <button
+                onClick={() => nextSection && setActiveSection(nextSection.id)}
+                disabled={!nextSection}
+                data-testid="next-section-btn"
+                className="inline-flex items-center gap-1.5"
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: '#fff',
+                  background: 'var(--cth-command-crimson)',
+                  border: 'none',
+                  borderRadius: 7,
+                  padding: '7px 20px',
+                  cursor: nextSection ? 'pointer' : 'default',
+                  opacity: nextSection ? 1 : 0.4,
+                }}
+              >
+                {nextSection ? nextSection.label : 'Done'}
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </main>
           </div>
         </div>
 
