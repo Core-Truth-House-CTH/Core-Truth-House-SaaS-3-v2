@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
 import { getNextStep } from "../config/brandCoreNextStep";
@@ -561,10 +561,22 @@ export default function MessagingStructure() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Messaging Structure"
-        subtitle="Turn your positioning into the brand promise, pitch, one-liner, and core message your brand speaks from."
-        action={
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: SERIF, fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Messaging Structure
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: SANS }}
+          >
+            Turn your positioning into the brand promise, pitch, one-liner, and core message your brand speaks from.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <div className="flex flex-wrap items-center gap-4">
             <div style={{ textAlign: "right" }}>
               <div
@@ -599,8 +611,8 @@ export default function MessagingStructure() {
               </div>
             </div>
           </div>
-        }
-      />
+        </div>
+      </header>
 
       <div
         className="flex-1 overflow-auto"

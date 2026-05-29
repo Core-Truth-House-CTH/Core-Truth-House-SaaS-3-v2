@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
 import { useBrandHealth } from "../context/BrandHealthContext";
@@ -610,10 +610,22 @@ export default function BrandFoundation() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Brand Foundation"
-        subtitle="Define the core truth your brand is built on so every strategy, offer, and content decision pulls from the same source of truth."
-        action={
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: SERIF, fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Brand Foundation
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: SANS }}
+          >
+            Define the core truth your brand is built on so every strategy, offer, and content decision pulls from the same source of truth.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <div className="flex flex-wrap items-center gap-4">
             <div style={{ textAlign: "right" }}>
               <div
@@ -649,8 +661,8 @@ export default function BrandFoundation() {
             </div>
             <BrandGuidelinesExportButton />
           </div>
-        }
-      />
+        </div>
+      </header>
 
       <div
         className="flex-1 overflow-auto"

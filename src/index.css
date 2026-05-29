@@ -5,6 +5,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Avatar portrait generation — indeterminate progress bar */
+@keyframes cth-portrait-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
 /* ============================================================
    Phase 1 redesign — display typeface on top-level page headings.
    Cormorant Garamond (loaded in index.html) at weight 500 for all
@@ -414,6 +420,38 @@ canvas {
   min-height: 68px !important;
 }
 
+
+/* Global app controls (Ask the House + notifications) — float top-right over
+   content at the Layout level, replacing what TopBar used to render per-page.
+   Transparent so no colored band is added; the buttons keep their own bg. */
+.cth-global-controls {
+  position: fixed;
+  top: 14px;
+  right: 20px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+}
+
+/* Inline page header that replaces TopBar on each page. Right padding on
+   md+ reserves space so the page's own action area clears the floating
+   global controls above. */
+.cth-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+}
+
+@media (min-width: 768px) {
+  .cth-page-header {
+    padding: 20px 28px;
+    padding-right: 220px;
+  }
+}
 
 .cth-app-stage {
   min-height: 100vh;

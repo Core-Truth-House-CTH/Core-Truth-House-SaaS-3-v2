@@ -922,7 +922,7 @@ export function TopBar({ title, subtitle, action }) {
 }
 
 export function DashboardLayout({ children }) {
-  const { isOpen, close, sectionId } = useAskTheHouse();
+  const { isOpen, close, sectionId, toggle } = useAskTheHouse();
   const location = useLocation();
   const surface = getSurfaceFromPath(location.pathname);
 
@@ -930,6 +930,31 @@ export function DashboardLayout({ children }) {
     <div className="cth-app-shell">
       <Sidebar />
       <div className="cth-app-main">
+        <div className="cth-global-controls">
+          <button
+            onClick={toggle}
+            title="Ask the House"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "6px 12px",
+              background: "var(--cth-command-purple)",
+              color: "var(--cth-command-gold)",
+              border: "1px solid var(--cth-command-border)",
+              borderRadius: 0,
+              fontSize: "12px",
+              fontWeight: 600,
+              fontFamily: '"DM Sans", system-ui, sans-serif',
+              letterSpacing: "0.05em",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Ask the House
+          </button>
+          <NotificationBell />
+        </div>
         <div className="cth-app-stage">
           <div className="cth-app-body">
             {children}
