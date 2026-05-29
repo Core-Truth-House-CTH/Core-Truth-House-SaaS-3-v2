@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useUser } from '../hooks/useAuth';
-import { DashboardLayout, TopBar } from '../components/Layout';
+import { DashboardLayout } from '../components/Layout';
 import { Loader2, Plus, Zap, Calendar as CalendarIcon, X, Trash2, RefreshCw, Pencil } from 'lucide-react';
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import UploadZone from '../components/shared/UploadZone';
@@ -1414,10 +1414,22 @@ function CampaignBuilderPageContent() {
  isProcessing={hooksRegenerating}
  />
 
- <TopBar
- title="Campaign Builder"
- subtitle="MAGNET Framework — Mission · Audience · Gravity · Narrative · Engagement · Transaction"
- action={
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Campaign Builder
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            MAGNET Framework — Mission · Audience · Gravity · Narrative · Engagement · Transaction
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
  <button
  type="button"
  onClick={() => navigate('/campaign-setup')}
@@ -1437,8 +1449,8 @@ function CampaignBuilderPageContent() {
  >
  <Plus size={14} /> New Campaign
  </button>
- }
- />
+        </div>
+      </header>
 
  <div className="mx-auto w-full max-w-[1200px] flex flex-col md:flex-row flex-1 overflow-hidden">
  <div className="md:w-60 flex-shrink-0 border-b md:border-b-0 md:border-r border-[var(--cth-command-border)] flex flex-col bg-[var(--cth-command-panel)]/85 backdrop-blur-sm">

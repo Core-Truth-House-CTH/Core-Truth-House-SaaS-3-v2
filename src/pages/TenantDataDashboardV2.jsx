@@ -31,7 +31,7 @@ import {
   X,
 } from "lucide-react";
 
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { useUser } from "../hooks/useAuth";
 import { usePlan } from "../context/PlanContext";
@@ -952,11 +952,25 @@ export default function TenantDataDashboard() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Workspace Library"
-        subtitle="Documents, media, and brand files for this workspace — in one place."
-        action={headerAction}
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Workspace Library
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Documents, media, and brand files for this workspace — in one place.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          {headerAction}
+        </div>
+      </header>
 
       <main className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6">
         {error ? (

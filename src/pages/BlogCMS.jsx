@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../hooks/useAuth';
 import apiClient from '../lib/apiClient';
 import { toast } from 'sonner';
-import { DashboardLayout, TopBar } from '../components/Layout';
+import { DashboardLayout } from '../components/Layout';
 import {
  Plus, Search, PenLine, Loader2, X, Trash2, Archive,
  Wand2, Tags, ChevronRight, Image, Images,
@@ -719,10 +719,22 @@ export default function BlogCMS({ embedded = false }) {
  className="flex-1 overflow-y-auto"
  style={{ backgroundColor: 'var(--cth-command-blush)', minHeight: '100vh' }}
  >
- <TopBar
- title="Blog"
- subtitle="Write and manage your field notes and articles"
- action={
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Blog
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Write and manage your field notes and articles
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
  <button
  data-testid="new-post-btn"
  onClick={() => setEditingPost({})}
@@ -737,8 +749,8 @@ export default function BlogCMS({ embedded = false }) {
  >
  <Plus size={16} /> New Post
  </button>
- }
- />
+        </div>
+      </header>
 
  <div className="max-w-[1200px] mx-auto px-4 py-5 md:px-6 md:py-8">
  <div className="flex items-center gap-4 mb-6 flex-wrap">
