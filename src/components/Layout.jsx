@@ -413,7 +413,6 @@ export function Sidebar() {
         items: [
           { path: "/workspace-library", label: "Workspace Library", icon: FolderOpen },
           { path: "/workspace-controls", label: "Workspace Controls", icon: Settings },
-          { path: "/billing", label: "Plan & Billing", icon: CreditCard },
           { path: "/members", label: "Members", icon: Users },
           { path: "/settings", label: "Settings", icon: Settings },
         ],
@@ -437,7 +436,6 @@ export function Sidebar() {
                 { path: "/mail", label: "Mail", icon: Mail },
                 { path: "/platform-store", label: "Store", icon: Package },
                 { path: "/ai-keys", label: "AI API Keys", icon: Key },
-                { path: "/tutorials", label: "Video Tutorials", icon: Video },
               ],
             },
           ]

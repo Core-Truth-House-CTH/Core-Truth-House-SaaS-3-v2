@@ -3108,7 +3108,7 @@ export default function SocialMediaManager() {
  fontFamily: SERIF, fontSize: 15, fontWeight: 600,
  color: "var(--cth-command-ink)", lineHeight: 1.2,
  }}>
- Generate with AI
+ Ask the House
  </div>
  <div style={{
  fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)",

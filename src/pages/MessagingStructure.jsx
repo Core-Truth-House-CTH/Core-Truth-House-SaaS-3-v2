@@ -893,7 +893,7 @@ export default function MessagingStructure() {
                     ) : (
                       <>
                         <Wand2 size={16} />
-                        Generate with AI
+                        Ask the House
                       </>
                     )}
                   </button>

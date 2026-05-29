@@ -944,7 +944,7 @@ export default function BrandFoundation() {
                     ) : (
                       <>
                         <Wand2 size={16} />
-                        Generate with AI
+                        Ask the House
                       </>
                     )}
                   </button>

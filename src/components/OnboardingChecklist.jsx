@@ -27,7 +27,7 @@ const STEPS = [
     icon: BookOpen,
     route: '/brand-foundation',
     cta: 'Build Foundation',
-    tip: 'Click Generate with AI and let the platform draft every section from your Brand Memory. Edit anything that does not feel accurate before saving.',
+    tip: 'Click Ask the House and let the platform draft every section from your Brand Memory. Edit anything that does not feel accurate before saving.',
     successCriteria: 'Brand Clarity Score 75+',
     minutesEstimate: 10,
   },
