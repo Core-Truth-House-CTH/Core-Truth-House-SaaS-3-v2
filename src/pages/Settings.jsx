@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useUser } from '../hooks/useAuth';
-import { DashboardLayout, TopBar } from '../components/Layout';
+import { DashboardLayout } from '../components/Layout';
 import { useWorkspace } from '../context/WorkspaceContext';
 import {
   User,
@@ -517,7 +517,22 @@ export default function Settings() {
 
   return (
     <DashboardLayout>
-      <TopBar title="Settings" subtitle="Manage your profile, social links, and preferences" />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Settings
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Manage your profile, social links, and preferences
+          </p>
+        </div>
+      </header>
 
       <div
         className="flex-1 overflow-auto px-4 py-7 md:px-8"

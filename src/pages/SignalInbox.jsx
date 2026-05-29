@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import apiClient from "../lib/apiClient";
 import { API_PATHS } from "../lib/apiPaths";
 
@@ -172,10 +172,22 @@ export default function SignalInbox() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Signal Inbox"
-        subtitle="Pending buyer signals awaiting your read. Confirm the ones that are real, dismiss the noise."
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Signal Inbox
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Pending buyer signals awaiting your read. Confirm the ones that are real, dismiss the noise.
+          </p>
+        </div>
+      </header>
 
       <main className="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:px-6">
         {error ? (

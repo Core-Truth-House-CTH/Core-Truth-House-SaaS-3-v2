@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { useBrandHealth } from "../context/BrandHealthContext";
 import apiClient from "../lib/apiClient";
@@ -836,10 +836,22 @@ export default function SystemsBuilder() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Systems Builder"
-        subtitle={`${systems.length} system${systems.length !== 1 ? 's' : ''}`}
-        action={
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Systems Builder
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            {`${systems.length} system${systems.length !== 1 ? 's' : ''}`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <button
             type="button"
             onClick={() => handleOpenModal()}
@@ -859,8 +871,8 @@ export default function SystemsBuilder() {
           >
             <Plus size={14} /> New System
           </button>
-        }
-      />
+        </div>
+      </header>
 
       <div
         className="flex-1 overflow-auto px-4 py-7 md:px-8"

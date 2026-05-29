@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import apiClient from "../lib/apiClient";
 import {
@@ -2018,10 +2018,22 @@ export default function SocialMediaManager() {
 
  return (
  <DashboardLayout>
- <TopBar
- title="Social Media Manager"
- subtitle={`${totalPosts} posts / ${totalScheduled} scheduled / ${totalPublished} published`}
- action={
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Social Media Manager
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            {`${totalPosts} posts / ${totalScheduled} scheduled / ${totalPublished} published`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
  <button
  type="button"
@@ -2049,8 +2061,8 @@ export default function SocialMediaManager() {
  <Plus size={16} /> Create Post
  </button>
  </div>
- }
- />
+        </div>
+      </header>
 
  <CampaignContextBanner
  campaignId={activeCampaignId}

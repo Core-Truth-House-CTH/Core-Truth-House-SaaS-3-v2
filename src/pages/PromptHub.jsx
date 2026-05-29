@@ -5,7 +5,7 @@ import { usePlan } from '../context/PlanContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { PLAN_ORDER } from '../config/routeConfig';
 import { useNavigate } from 'react-router-dom';
-import { DashboardLayout, TopBar } from '../components/Layout';
+import { DashboardLayout } from '../components/Layout';
 import { Search, Star, Copy, ShoppingBag, Wand2, ChevronRight, Check, Loader2, Sparkles } from 'lucide-react';
 import { PromptCard } from '../components/prompts/PromptCard';
 import { toast } from 'sonner';
@@ -260,10 +260,22 @@ export default function PromptHub() {
 
  return (
  <DashboardLayout>
- <TopBar
- title="Prompt Hub"
- subtitle="Your AI prompt library, premium packs, and generators"
- />
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Prompt Hub
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Your AI prompt library, premium packs, and generators
+          </p>
+        </div>
+      </header>
  <div
  className="max-w-[1200px] mx-auto w-full px-4 py-6 md:px-7 md:py-8 space-y-8"
  data-testid="prompt-hub-page"
