@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
-import { DashboardLayout, TopBar } from '../components/Layout';
+import { DashboardLayout } from '../components/Layout';
 import {
  Activity,
  ArrowRight,
@@ -150,10 +150,22 @@ export default function BrandHealthDashboard() {
 
  return (
  <DashboardLayout>
- <TopBar
- title="Brand Health Score"
- subtitle="Track your brand-building progress across all modules"
- />
+ <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Brand Health Score
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Track your brand-building progress across all modules
+          </p>
+        </div>
+      </header>
 
  <div className="cth-page flex-1 overflow-auto px-4 py-4 md:px-7 md:py-6">
  {loading ? (

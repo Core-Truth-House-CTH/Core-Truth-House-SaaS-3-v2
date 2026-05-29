@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, CreditCard, Loader2, RefreshCw, XCircle } from "lucide-react";
 
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
 import { useUser, useClerk } from "../hooks/useAuth";
@@ -721,10 +721,22 @@ export default function Billing() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Billing"
-        subtitle="Manage your subscription, credits, and checkout status."
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Billing
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Manage your subscription, credits, and checkout status.
+          </p>
+        </div>
+      </header>
 
       <div
         className="flex-1 overflow-auto px-4 py-7 md:px-8"

@@ -4,22 +4,21 @@ import { toast } from "sonner";
 import {
   AlertCircle,
   ArrowUpRight,
-  ChevronRight,
   Plus,
   RefreshCw,
   Search,
   UsersRound,
 } from "lucide-react";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
-import { getNextStep } from "../config/brandCoreNextStep";
 import apiClient from "../lib/apiClient";
 import { API_PATHS } from "../lib/apiPaths";
 import AvatarCard from "../components/audience/AvatarCard";
+import PortraitGenModal from "../components/audience/PortraitGenModal";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 const PLAN_AVATAR_LIMITS = {
   foundation: 3,
@@ -47,41 +46,28 @@ const BODY_WRAP_STYLE = {
 
 const CARD_STYLE = {
   background: "var(--cth-command-panel)",
-  border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
-};
-
-const SECTION_LABEL_STYLE = {
-  fontFamily: SANS,
-  fontSize: 11,
-  fontWeight: 600,
-  letterSpacing: "0.18em",
-  textTransform: "uppercase",
-  color: "var(--cth-command-muted)",
-  margin: 0,
+  border: "0.5px solid var(--cth-command-border)",
+  borderRadius: 12,
 };
 
 const PRIMARY_CTA_STYLE = {
-  background: "var(--cth-command-purple)",
-  color: "var(--cth-command-gold)",
+  background: "var(--cth-command-crimson)",
+  color: "#fff",
   border: "none",
-  borderRadius: 999,
-  padding: "12px 22px",
+  borderRadius: 8,
+  padding: "9px 18px",
   fontFamily: SANS,
-  fontSize: 13,
-  fontWeight: 600,
-  letterSpacing: "0.04em",
+  fontSize: 12,
+  fontWeight: 500,
   cursor: "pointer",
   display: "inline-flex",
   alignItems: "center",
-  gap: 8,
+  gap: 6,
   textDecoration: "none",
 };
 
 const UPGRADE_CTA_STYLE = {
   ...PRIMARY_CTA_STYLE,
-  background: "var(--cth-command-crimson)",
-  color: "#fff",
 };
 
 const SECONDARY_BUTTON_STYLE = {
@@ -269,9 +255,6 @@ export default function Audience() {
   const navigate = useNavigate();
   const { activeWorkspaceId } = useWorkspace();
   const { plan } = usePlan();
-  const nextStep = getNextStep("/audience", plan);
-  const nextStepHref = nextStep?.upgradeTo ? "/billing" : nextStep?.href;
-  const nextStepLabel = nextStep?.upgradeTo ? nextStep.ctaLabel : nextStep?.label;
 
   const [avatars, setAvatars] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -309,6 +292,76 @@ export default function Audience() {
   const [sortOrder, setSortOrder] = useState("newest");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Portrait generation
+  const [models, setModels] = useState([]);
+  const [genAvatar, setGenAvatar] = useState(null);
+  const [genPrompt, setGenPrompt] = useState("");
+  const [genModelId, setGenModelId] = useState("");
+  const [genLoading, setGenLoading] = useState(false);
+  const [generatingId, setGeneratingId] = useState(null);
+
+  const openPortraitGen = useCallback(
+    async (avatar) => {
+      setGenAvatar(avatar);
+      setGenLoading(true);
+      setGenPrompt(avatar.portrait_prompt || "");
+      setGenModelId("");
+      try {
+        let list = models;
+        if (!list.length) {
+          const res = await apiClient.get(API_PATHS.audience.portraitModels);
+          list = Array.isArray(res?.models) ? res.models : [];
+          setModels(list);
+        }
+        // Default to the model that produced the last portrait, else the first.
+        const defaultModel =
+          avatar.portrait_model && list.some((m) => m.id === avatar.portrait_model)
+            ? avatar.portrait_model
+            : list[0]?.id || "";
+        setGenModelId(defaultModel);
+
+        // Regenerate pre-fills the last prompt; first time drafts one via Zuri.
+        if (avatar.portrait_prompt) {
+          setGenPrompt(avatar.portrait_prompt);
+        } else {
+          const draft = await apiClient.post(
+            API_PATHS.audience.draftPortraitPrompt(avatar.id),
+            {}
+          );
+          setGenPrompt((draft?.prompt || "").trim());
+        }
+      } catch (err) {
+        toast.error("Couldn't start portrait generation. Try again.");
+      } finally {
+        setGenLoading(false);
+      }
+    },
+    [models]
+  );
+
+  const handleGeneratePortrait = useCallback(
+    async (prompt, modelId) => {
+      if (!genAvatar) return;
+      const avatarId = genAvatar.id;
+      setGenAvatar(null);
+      setGeneratingId(avatarId);
+      try {
+        const res = await apiClient.post(
+          API_PATHS.audience.generatePortrait(avatarId),
+          { prompt, model_id: modelId }
+        );
+        if (res?.avatar) {
+          setAvatars((prev) => prev.map((a) => (a.id === avatarId ? res.avatar : a)));
+        }
+      } catch (err) {
+        toast.error("Portrait generation failed. Try again.");
+      } finally {
+        setGeneratingId(null);
+      }
+    },
+    [genAvatar]
+  );
 
   const displayedAvatars = avatars
     .filter((a) =>
@@ -353,11 +406,25 @@ export default function Audience() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Audience"
-        subtitle={`${avatars.length} avatar${avatars.length !== 1 ? "s" : ""} · ${used} of ${limit === Infinity ? "∞" : limit} used`}
-        action={headerAction}
-      />
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Audience
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            {`${avatars.length} avatar${avatars.length !== 1 ? "s" : ""} · ${used} of ${limit === Infinity ? "∞" : limit} used`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          {headerAction}
+        </div>
+      </header>
 
       <div style={PAGE_STYLE}>
         <div style={BODY_WRAP_STYLE}>
@@ -393,8 +460,8 @@ export default function Audience() {
                   paddingRight: 12,
                   paddingTop: 8,
                   paddingBottom: 8,
-                  border: "1px solid var(--cth-command-border)",
-                  borderRadius: 0,
+                  border: "0.5px solid var(--cth-command-border)",
+                  borderRadius: 8,
                   background: "var(--cth-command-panel)",
                   color: "var(--cth-command-ink)",
                   fontSize: 13,
@@ -407,8 +474,8 @@ export default function Audience() {
               onChange={(e) => setSortOrder(e.target.value)}
               style={{
                 padding: "8px 12px",
-                border: "1px solid var(--cth-command-border)",
-                borderRadius: 0,
+                border: "0.5px solid var(--cth-command-border)",
+                borderRadius: 8,
                 background: "var(--cth-command-panel)",
                 color: "var(--cth-command-ink)",
                 fontSize: 13,
@@ -437,6 +504,8 @@ export default function Audience() {
                 <AvatarCard
                   key={avatar.id}
                   avatar={avatar}
+                  isGenerating={generatingId === avatar.id}
+                  onGeneratePortrait={openPortraitGen}
                   onOpen={() => navigate(`/audience/avatars/${avatar.id}`)}
                   onEdit={() => navigate(`/audience/avatars/${avatar.id}`)}
                   onDelete={() => setDeleteTarget(avatar)}
@@ -453,38 +522,6 @@ export default function Audience() {
             </div>
           )}
 
-          {nextStep ? (
-            <div
-              className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-              style={{ ...CARD_STYLE, padding: 24, marginTop: 32 }}
-            >
-              <div>
-                <p style={SECTION_LABEL_STYLE}>
-                  {nextStep.upgradeTo ? "Upgrade" : "Next Step"}
-                </p>
-                <p
-                  style={{
-                    fontFamily: SANS,
-                    fontSize: 14,
-                    lineHeight: 1.65,
-                    color: "var(--cth-command-ink)",
-                    margin: "8px 0 0",
-                    maxWidth: 620,
-                  }}
-                >
-                  {nextStep.copy}
-                </p>
-              </div>
-              <a
-                href={nextStepHref}
-                className="inline-flex shrink-0 items-center gap-2"
-                style={PRIMARY_CTA_STYLE}
-              >
-                {nextStepLabel}
-                <ChevronRight size={14} />
-              </a>
-            </div>
-          ) : null}
         </div>
       </div>
       {deleteTarget && (
@@ -502,14 +539,14 @@ export default function Audience() {
           <div
             style={{
               background: "var(--cth-command-panel)",
-              border: "1px solid var(--cth-command-border)",
+              border: "0.5px solid var(--cth-command-border)",
               padding: 32,
               maxWidth: 400,
               width: "90%",
-              borderRadius: 0,
+              borderRadius: 12,
             }}
           >
-            <h3 style={{ margin: "0 0 8px", color: "var(--cth-command-ink)" }}>
+            <h3 style={{ margin: "0 0 8px", color: "var(--cth-command-ink)", fontFamily: SERIF, fontWeight: 500 }}>
               Delete Avatar
             </h3>
             <p
@@ -529,11 +566,11 @@ export default function Audience() {
                 disabled={deleting}
                 style={{
                   padding: "8px 16px",
-                  border: "1px solid var(--cth-command-border)",
+                  border: "0.5px solid var(--cth-command-border)",
                   background: "transparent",
                   color: "var(--cth-command-ink)",
                   cursor: "pointer",
-                  borderRadius: 0,
+                  borderRadius: 7,
                 }}
               >
                 Cancel
@@ -547,7 +584,7 @@ export default function Audience() {
                   background: "var(--cth-command-crimson)",
                   color: "#fff",
                   cursor: deleting ? "not-allowed" : "pointer",
-                  borderRadius: 0,
+                  borderRadius: 7,
                 }}
               >
                 {deleting ? "Deleting..." : "Delete"}
@@ -555,6 +592,20 @@ export default function Audience() {
             </div>
           </div>
         </div>
+      )}
+
+      {genAvatar && (
+        <PortraitGenModal
+          avatar={genAvatar}
+          models={models}
+          prompt={genPrompt}
+          onPromptChange={setGenPrompt}
+          modelId={genModelId}
+          onModelChange={setGenModelId}
+          loading={genLoading}
+          onGenerate={handleGeneratePortrait}
+          onClose={() => setGenAvatar(null)}
+        />
       )}
     </DashboardLayout>
   );

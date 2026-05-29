@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { DashboardLayout, TopBar } from "../components/Layout";
+import { DashboardLayout } from "../components/Layout";
 import apiClient from "../lib/apiClient";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
@@ -563,10 +563,22 @@ export default function ContentStudio() {
 
   return (
     <DashboardLayout>
-      <TopBar
-        title="Content Studio"
-        subtitle="Generate, refine, and save content using your current brand system."
-        action={
+      <header className="cth-page-header">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-2xl md:text-[32px] leading-tight truncate"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+          >
+            Content Studio
+          </h1>
+          <p
+            className="text-xs md:text-sm truncate"
+            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Generate, refine, and save content using your current brand system.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <button
             type="button"
             disabled={generating}
@@ -589,8 +601,8 @@ export default function ContentStudio() {
             {generating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
             {generating ? 'Generating...' : 'Generate Content'}
           </button>
-        }
-      />
+        </div>
+      </header>
 
       <div
         className="flex-1 overflow-auto px-4 py-7 md:px-8"
