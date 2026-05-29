@@ -24,7 +24,7 @@ import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import apiClient from '../lib/apiClient';
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 const PAGE_STYLE = {
   background: 'var(--cth-command-blush)',
@@ -34,7 +34,7 @@ const PAGE_STYLE = {
 const CARD_STYLE = {
   background: 'var(--cth-command-panel)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 0,
+  borderRadius: 12,
 };
 
 const SECTION_LABEL_STYLE = {
@@ -88,7 +88,7 @@ const INPUT_STYLE = {
   background: 'var(--cth-command-panel)',
   color: 'var(--cth-command-ink)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 0,
+  borderRadius: 8,
   padding: '10px 14px',
   fontFamily: SANS,
   fontSize: 13,
@@ -106,7 +106,7 @@ const PRIMARY_CTA_STYLE = {
   background: 'var(--cth-command-purple)',
   color: 'var(--cth-command-gold)',
   border: 'none',
-  borderRadius: 0,
+  borderRadius: 8,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -123,7 +123,7 @@ const SECONDARY_BUTTON_STYLE = {
   background: 'transparent',
   color: 'var(--cth-command-ink)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 0,
+  borderRadius: 8,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -139,7 +139,7 @@ const DESTRUCTIVE_BUTTON_STYLE = {
   background: 'var(--cth-command-crimson)',
   color: 'var(--cth-command-ivory)',
   border: 'none',
-  borderRadius: 0,
+  borderRadius: 8,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -155,7 +155,7 @@ const ICON_BUTTON_STYLE = {
   background: 'transparent',
   color: 'var(--cth-command-muted)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 0,
+  borderRadius: 8,
   padding: 8,
   cursor: 'pointer',
   display: 'inline-flex',
@@ -187,9 +187,17 @@ function normalizeOffer(raw) {
     sales_page_url: raw?.sales_page_url || '',
     checkout_url: raw?.checkout_url || '',
     booking_url: raw?.booking_url || '',
+    sales_copy: raw?.sales_copy || '',
     created_at: raw?.created_at || '',
     updated_at: raw?.updated_at || '',
   };
+}
+
+// Offers have no stored status — derive it. Draft = no price OR no audience.
+function getOfferStatus(offer) {
+  const priceSet = Number(offer?.price) > 0;
+  const audienceSet = Boolean((offer?.target_audience || '').trim());
+  return priceSet && audienceSet ? 'active' : 'draft';
 }
 
 function hasOfferFormContent(formData) {
@@ -525,19 +533,20 @@ function OfferBuilderContent() {
             className="text-xs md:text-sm truncate"
             style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
           >
-            {`${offers.length} offer${offers.length !== 1 ? 's' : ''}`}
+            {`${offers.length} offer${offers.length !== 1 ? 's' : ''}`} · Build and manage every offer your brand delivers.
           </p>
         </div>
         <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <button
             type="button"
+            data-testid="create-offer-btn"
             onClick={() => handleOpenModal()}
             style={{
-              padding: '8px 16px',
+              padding: '9px 18px',
               background: 'var(--cth-command-crimson)',
               color: '#fff',
               border: 'none',
-              borderRadius: 0,
+              borderRadius: 8,
               fontSize: '13px',
               fontWeight: 600,
               cursor: 'pointer',
@@ -546,7 +555,7 @@ function OfferBuilderContent() {
               gap: '6px',
             }}
           >
-            <Plus size={14} /> New Offer
+            <Plus size={14} /> New offer
           </button>
         </div>
       </header>
@@ -556,37 +565,7 @@ function OfferBuilderContent() {
         style={PAGE_STYLE}
         data-testid="offer-builder-page"
       >
-        <div className="mx-auto max-w-[1200px] space-y-8">
-          {/* Stats header */}
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:justify-between">
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', flex: 1 }}>
-              <StatTile
-                label="Offers"
-                value={offers.length}
-                subtitle={offerCountSubtitle}
-              />
-              <StatTile
-                label="Features Mapped"
-                value={totalFeatures}
-                subtitle="What's included across all offers"
-              />
-            </div>
-
-            <button
-              type="button"
-              data-testid="create-offer-btn"
-              onClick={() => handleOpenModal()}
-              style={{ ...PRIMARY_CTA_STYLE, alignSelf: 'flex-start' }}
-            >
-              <Plus size={14} />
-              New Offer
-            </button>
-          </div>
-
-          {workspaceId ? (
-            <p style={{ ...MUTED_STYLE, fontSize: 11 }}>Workspace: {workspaceId}</p>
-          ) : null}
-
+        <div className="mx-auto max-w-[1200px] space-y-6">
           {error ? (
             <div
               style={{
@@ -671,27 +650,19 @@ function OfferBuilderContent() {
           ) : (
             <>
               {/* Search + sort toolbar */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '12px 0',
-                  borderBottom: '1px solid var(--cth-command-border)',
-                  marginBottom: '8px',
-                }}
-              >
-                <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
-                  <Search
-                    size={14}
-                    style={{
-                      position: 'absolute',
-                      left: 10,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: 'var(--cth-command-muted)',
-                    }}
-                  />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div
+                  className="flex items-center gap-2"
+                  style={{
+                    flex: 1,
+                    maxWidth: 340,
+                    background: 'var(--cth-command-panel)',
+                    border: '1px solid var(--cth-command-border)',
+                    borderRadius: 8,
+                    padding: '8px 12px',
+                  }}
+                >
+                  <Search size={14} style={{ color: 'var(--cth-command-muted)', flexShrink: 0 }} />
                   <input
                     type="text"
                     placeholder="Search offers..."
@@ -699,16 +670,12 @@ function OfferBuilderContent() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     style={{
                       width: '100%',
-                      paddingLeft: '32px',
-                      paddingRight: '12px',
-                      paddingTop: '8px',
-                      paddingBottom: '8px',
-                      border: '1px solid var(--cth-command-border)',
-                      borderRadius: 0,
-                      background: 'var(--cth-command-panel)',
-                      color: 'var(--cth-command-ink)',
-                      fontSize: '13px',
+                      border: 'none',
                       outline: 'none',
+                      background: 'transparent',
+                      color: 'var(--cth-command-ink)',
+                      fontFamily: SANS,
+                      fontSize: 13,
                     }}
                   />
                 </div>
@@ -718,10 +685,11 @@ function OfferBuilderContent() {
                   style={{
                     padding: '8px 12px',
                     border: '1px solid var(--cth-command-border)',
-                    borderRadius: 0,
+                    borderRadius: 8,
                     background: 'var(--cth-command-panel)',
                     color: 'var(--cth-command-ink)',
-                    fontSize: '13px',
+                    fontFamily: SANS,
+                    fontSize: 13,
                     cursor: 'pointer',
                   }}
                 >
@@ -739,227 +707,192 @@ function OfferBuilderContent() {
                   </p>
                 </div>
               ) : (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))',
-                    gap: 20,
-                  }}
-                >
-                  {displayedOffers.map((offer) => (
-                <div
-                  key={offer.id}
-                  data-testid={`offer-card-${offer.id}`}
-                  style={{ ...CARD_STYLE, padding: 24 }}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p style={SECTION_LABEL_STYLE}>Offer</p>
-                      <h3
-                        style={{
-                          fontFamily: SERIF,
-                          fontSize: 20,
-                          fontWeight: 600,
-                          color: 'var(--cth-command-ink)',
-                          margin: '6px 0 0',
-                          letterSpacing: '-0.005em',
-                          lineHeight: 1.25,
-                        }}
-                      >
-                        {offer.name || 'Untitled offer'}
-                      </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+                  {displayedOffers.map((offer) => {
+                    const isDraft = getOfferStatus(offer) === 'draft';
+                    const hasCopy = Boolean((offer.sales_copy || '').trim());
+                    const priceSet = Number(offer.price) > 0;
+                    return (
                       <div
-                        className="flex items-baseline gap-1"
-                        style={{ marginTop: 10 }}
-                      >
-                        <DollarSign size={14} style={{ color: 'var(--cth-command-crimson)' }} />
-                        <span
-                          style={{
-                            fontFamily: SERIF,
-                            fontSize: 28,
-                            fontWeight: 700,
-                            color: 'var(--cth-command-crimson)',
-                            lineHeight: 1,
-                            letterSpacing: '-0.01em',
-                          }}
-                        >
-                          {offer.price || 0}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        data-testid={`edit-offer-${offer.id}`}
-                        onClick={() => handleOpenModal(offer)}
-                        aria-label={`Edit ${offer.name}`}
-                        style={ICON_BUTTON_STYLE}
-                      >
-                        <Edit2 size={14} />
-                      </button>
-
-                      <button
-                        type="button"
-                        data-testid={`delete-offer-${offer.id}`}
-                        onClick={() => handleDeleteOffer(offer)}
-                        aria-label={`Delete ${offer.name}`}
+                        key={offer.id}
+                        data-testid={`offer-card-${offer.id}`}
                         style={{
-                          ...ICON_BUTTON_STYLE,
-                          color: 'var(--cth-command-crimson)',
-                          borderColor:
-                            'color-mix(in srgb, var(--cth-command-crimson) 35%, var(--cth-command-border))',
-                        }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {offer.description ? (
-                    <p
-                      style={{
-                        ...BODY_STYLE,
-                        fontSize: 13,
-                        marginTop: 16,
-                        color: 'var(--cth-command-muted)',
-                      }}
-                    >
-                      {offer.description}
-                    </p>
-                  ) : null}
-
-                  {offer.target_audience ? (
-                    <div
-                      className="flex items-center gap-2"
-                      style={{ marginTop: 12 }}
-                    >
-                      <Users size={14} style={{ color: 'var(--cth-command-muted)' }} />
-                      <span
-                        style={{
-                          fontFamily: SANS,
-                          fontSize: 12,
-                          color: 'var(--cth-command-muted)',
-                        }}
-                      >
-                        For: {offer.target_audience}
-                      </span>
-                    </div>
-                  ) : null}
-
-                  {offer.transformation ? (
-                    <div
-                      className="flex items-start gap-2"
-                      style={{ marginTop: 6 }}
-                    >
-                      <Target
-                        size={14}
-                        style={{
-                          color: 'var(--cth-command-muted)',
-                          marginTop: 2,
-                          flexShrink: 0,
-                        }}
-                      />
-                      <span
-                        style={{
-                          fontFamily: SANS,
-                          fontSize: 12,
-                          color: 'var(--cth-command-muted)',
-                          lineHeight: 1.55,
-                        }}
-                      >
-                        {offer.transformation}
-                      </span>
-                    </div>
-                  ) : null}
-
-                  {offer.features && offer.features.length > 0 ? (
-                    <div style={{ marginTop: 16 }}>
-                      <p style={SECTION_LABEL_STYLE}>What's Included</p>
-                      <ul
-                        style={{
-                          listStyle: 'none',
+                          ...CARD_STYLE,
                           padding: 0,
-                          margin: '10px 0 0',
+                          overflow: 'hidden',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          borderColor: hasCopy ? 'var(--cth-command-gold)' : 'var(--cth-command-border)',
                         }}
                       >
-                        {offer.features.slice(0, 4).map((feature, i) => (
-                          <li
-                            key={i}
+                        <div
+                          style={{
+                            height: 3,
+                            background: isDraft
+                              ? 'var(--cth-command-border)'
+                              : 'linear-gradient(90deg, var(--cth-command-crimson), var(--cth-command-cinnabar))',
+                          }}
+                        />
+
+                        <div style={{ padding: '16px 16px 12px', flex: 1 }}>
+                          <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
+                            <span
+                              style={{
+                                fontFamily: SANS,
+                                fontSize: 9,
+                                letterSpacing: '0.1em',
+                                textTransform: 'uppercase',
+                                fontWeight: 600,
+                                padding: '3px 8px',
+                                borderRadius: 20,
+                                background: isDraft
+                                  ? 'var(--cth-command-panel-soft)'
+                                  : 'color-mix(in srgb, var(--cth-command-success) 12%, var(--cth-command-panel))',
+                                color: isDraft ? 'var(--cth-command-muted)' : 'var(--cth-command-success)',
+                                border: `1px solid ${isDraft ? 'var(--cth-command-border)' : 'color-mix(in srgb, var(--cth-command-success) 35%, var(--cth-command-border))'}`,
+                              }}
+                            >
+                              {isDraft ? 'Draft' : 'Active'}
+                            </span>
+                            {hasCopy ? (
+                              <span className="inline-flex items-center gap-1" style={{ fontFamily: SANS, fontSize: 9, color: 'var(--cth-command-gold)' }}>
+                                <Sparkles size={11} /> Copy ready
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div style={{ marginBottom: 10 }}>
+                            <div style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 600, lineHeight: 1, color: priceSet ? 'var(--cth-command-crimson)' : 'var(--cth-command-muted)' }}>
+                              {priceSet ? `$${offer.price}` : '—'}
+                            </div>
+                            <div style={{ fontFamily: SANS, fontSize: 9, color: 'var(--cth-command-muted)', marginTop: 3, letterSpacing: '0.04em' }}>
+                              {priceSet ? 'Price' : 'Price not set'}
+                            </div>
+                          </div>
+
+                          <h3 style={{ fontFamily: SERIF, fontSize: 16, fontWeight: 500, lineHeight: 1.35, margin: '0 0 6px', color: isDraft ? 'var(--cth-command-muted)' : 'var(--cth-command-ink)' }}>
+                            {offer.name || 'Untitled offer'}
+                          </h3>
+
+                          {(offer.transformation || offer.description) ? (
+                            <p
+                              style={{
+                                fontFamily: SANS,
+                                fontSize: 11,
+                                lineHeight: 1.6,
+                                color: 'var(--cth-command-muted)',
+                                margin: '0 0 10px',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              {offer.transformation || offer.description}
+                            </p>
+                          ) : null}
+
+                          <span
+                            className="inline-flex items-center gap-1"
                             style={{
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: 10,
                               fontFamily: SANS,
-                              fontSize: 13,
-                              color: 'var(--cth-command-ink)',
-                              lineHeight: 1.55,
-                              paddingLeft: 0,
-                              marginBottom: 6,
+                              fontSize: 10,
+                              padding: '3px 8px',
+                              borderRadius: 20,
+                              background: 'var(--cth-command-panel-soft)',
+                              border: '1px solid var(--cth-command-border)',
+                              color: 'var(--cth-command-muted)',
                             }}
                           >
-                            <span
-                              aria-hidden="true"
+                            <Users size={10} />
+                            {offer.target_audience ? `For: ${offer.target_audience}` : 'No audience linked'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2" style={{ padding: '10px 16px', borderTop: '1px solid var(--cth-command-border)' }}>
+                          <button
+                            type="button"
+                            data-testid={`edit-offer-${offer.id}`}
+                            onClick={() => handleOpenModal(offer)}
+                            style={{ flex: 1, fontFamily: SANS, fontSize: 11, fontWeight: 500, color: 'var(--cth-command-ink)', background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 6, padding: '6px', cursor: 'pointer' }}
+                          >
+                            {isDraft ? 'Edit & complete' : 'Edit'}
+                          </button>
+
+                          {!isDraft ? (
+                            <button
+                              type="button"
+                              data-testid={`generate-copy-${offer.id}`}
+                              onClick={() => handleGenerateCopy(offer)}
+                              disabled={generatingCopy === offer.id}
+                              className="inline-flex items-center gap-1"
                               style={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: '50%',
-                                background: 'var(--cth-command-crimson)',
-                                display: 'inline-block',
-                                marginTop: 7,
-                                flexShrink: 0,
+                                fontFamily: SANS,
+                                fontSize: 11,
+                                fontWeight: 500,
+                                color: hasCopy ? 'var(--cth-command-gold)' : 'var(--cth-command-muted)',
+                                background: 'transparent',
+                                border: `1px solid ${hasCopy ? 'color-mix(in srgb, var(--cth-command-gold) 40%, transparent)' : 'var(--cth-command-border)'}`,
+                                borderRadius: 6,
+                                padding: '6px 10px',
+                                cursor: generatingCopy === offer.id ? 'wait' : 'pointer',
+                                opacity: generatingCopy === offer.id ? 0.7 : 1,
                               }}
-                            />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
+                            >
+                              {generatingCopy === offer.id ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                              {hasCopy ? 'Sales copy' : 'Generate copy'}
+                            </button>
+                          ) : null}
 
-                      {offer.features.length > 4 ? (
-                        <p style={{ ...MUTED_STYLE, fontSize: 11, marginTop: 4 }}>
-                          +{offer.features.length - 4} more features
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
+                          <button
+                            type="button"
+                            data-testid={`tracking-links-${offer.id}`}
+                            onClick={() => setViewingTrackingLinks(offer)}
+                            aria-label={`Tracking links for ${offer.name}`}
+                            style={{ ...ICON_BUTTON_STYLE, borderRadius: 6, padding: 7 }}
+                          >
+                            <Link2 size={14} />
+                          </button>
 
+                          <button
+                            type="button"
+                            data-testid={`delete-offer-${offer.id}`}
+                            onClick={() => handleDeleteOffer(offer)}
+                            aria-label={`Delete ${offer.name}`}
+                            style={{ fontFamily: SANS, fontSize: 11, color: 'var(--cth-command-crimson)', background: 'transparent', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer' }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Add another offer */}
                   <button
                     type="button"
-                    data-testid={`generate-copy-${offer.id}`}
-                    onClick={() => handleGenerateCopy(offer)}
-                    disabled={generatingCopy === offer.id}
+                    data-testid="add-offer-card"
+                    onClick={() => handleOpenModal()}
                     style={{
-                      ...SECONDARY_BUTTON_STYLE,
-                      width: '100%',
-                      marginTop: 16,
-                      cursor: generatingCopy === offer.id ? 'wait' : 'pointer',
-                      opacity: generatingCopy === offer.id ? 0.7 : 1,
+                      background: 'transparent',
+                      border: '1px dashed var(--cth-command-border)',
+                      borderRadius: 12,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      padding: '32px 16px',
+                      cursor: 'pointer',
+                      minHeight: 220,
+                      color: 'var(--cth-command-muted)',
+                      fontFamily: SANS,
+                      fontSize: 12,
                     }}
                   >
-                    {generatingCopy === offer.id ? (
-                      <>
-                        <Loader2 size={14} className="animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles size={14} />
-                        Generate Sales Copy
-                      </>
-                    )}
+                    <Package size={20} style={{ color: 'var(--cth-command-border)' }} />
+                    Add another offer
                   </button>
-
-                  <button
-                    type="button"
-                    data-testid={`tracking-links-${offer.id}`}
-                    onClick={() => setViewingTrackingLinks(offer)}
-                    style={{ ...SECONDARY_BUTTON_STYLE, width: '100%', marginTop: 12 }}
-                  >
-                    <Link2 size={14} />
-                    Manage Tracking Links
-                  </button>
-                </div>
-              ))}
                 </div>
               )}
             </>
