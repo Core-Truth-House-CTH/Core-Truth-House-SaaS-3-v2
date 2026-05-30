@@ -151,9 +151,24 @@ export const API_PATHS = {
   },
 
   campaigns: {
+    list: "/api/campaigns",
     regenerateBrief: (id) => `/api/campaigns/${encode(id)}/regenerate-brief`,
     regenerateHooks: (id) => `/api/campaigns/${encode(id)}/regenerate-hooks`,
     retrospective: (id) => `/api/campaigns/${encode(id)}/retrospective`,
+  },
+
+  offers: {
+    list: "/api/offers",
+  },
+
+  trackingLinks: {
+    list: "/api/mail/tracking-links",
+    create: "/api/mail/tracking-links",
+    dashboard: "/api/mail/tracking-links/dashboard",
+    byId: (id) => `/api/mail/tracking-links/${encode(id)}`,
+    conversions: (id) => `/api/mail/tracking-links/${encode(id)}/conversions`,
+    conversionById: (id, cid) =>
+      `/api/mail/tracking-links/${encode(id)}/conversions/${encode(cid)}`,
   },
 
    osWorkflow: {

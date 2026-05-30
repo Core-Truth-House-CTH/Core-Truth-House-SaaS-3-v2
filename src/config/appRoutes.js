@@ -198,6 +198,16 @@ export const APP_ROUTES = [
     lockedTooltip: "Upgrade to Structure to unlock the Signal Inbox.",
   },
     {
+    path: "/tracking-links",
+    label: "Tracking Links",
+    icon: Share2,
+    group: "systems",
+    requiredPlan: "structure",
+    gateType: "page",
+    tooltip: "Create trackable links and watch buyer signal move through your funnel.",
+    lockedTooltip: "Upgrade to Structure to unlock Tracking Links.",
+  },
+    {
     path: "/customer-journey",
     label: "Customer Journey",
     icon: Map,
@@ -427,7 +437,6 @@ export const APP_ROUTES = [
 
   // Placeholder pages — registered so React Router resolves them; content is "Coming soon"
   { path: "/automations", label: "Automations", group: "placeholder", requiredPlan: "structure", gateType: null },
-  { path: "/tracking-links", label: "Tracking Links", group: "placeholder", requiredPlan: "structure", gateType: null },
   { path: "/documents", label: "Documents", group: "placeholder", requiredPlan: "foundation", gateType: null },
   { path: "/join", label: "Join Workspace", group: "placeholder", requiredPlan: null, gateType: null },
   { path: "/workspace-controls", label: "Workspace Controls", group: "placeholder", requiredPlan: "foundation", gateType: null },
