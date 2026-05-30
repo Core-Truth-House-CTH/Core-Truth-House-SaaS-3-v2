@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DashboardLayout } from '../components/Layout';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { usePlan } from '../context/PlanContext';
 import { useBrandHealth } from '../context/BrandHealthContext';
 import { useUser } from '../hooks/useAuth';
 import { BrandGuidelinesExportButton } from '../components/shared/BrandGuidelinesExport';
 import IdentityStudioAssets from '../components/shared/IdentityStudioAssets';
-import { getNextStep } from '../config/brandCoreNextStep';
 import apiClient from "../lib/apiClient";
 import { toast } from 'sonner';
 import { Check, Pencil, Circle, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -47,67 +45,108 @@ const DEFAULT_COLORS = [
   { id: 'text', role: 'text', label: 'Text', hex: 'var(--cth-on-dark)' },
 ];
 
+// Two font roles per the reference: a display/heading face and a body/UI face.
+// Each role carries its source so an uploaded font can round-trip and re-load
+// via the FontFace API on reload.
 const DEFAULT_FONTS = [
   {
-    id: 'primary',
-    role: 'primary',
-    label: 'Primary Font',
-    family: 'Playfair Display',
-    weight: '700',
-    style: 'normal',
-    sizeRem: 3.5,
-    lineHeight: 1.1,
-    letterSpacing: '-0.02em',
-    preview: 'Where Serious Brands Are Built.',
-  },
-  {
-    id: 'secondary',
-    role: 'secondary',
-    label: 'Secondary Font',
-    family: 'DM Sans',
-    weight: '400',
-    style: 'normal',
-    sizeRem: 1.1,
-    lineHeight: 1.65,
-    letterSpacing: '0.01em',
-    preview: 'The founders who build the deepest brands start with truth.',
-  },
-  {
-    id: 'accent',
-    role: 'accent',
-    label: 'Accent Font',
+    id: 'display',
+    role: 'display',
+    label: 'Display / Heading',
     family: 'Cormorant Garamond',
-    weight: '600',
-    style: 'italic',
-    sizeRem: 1.5,
-    lineHeight: 1.3,
-    letterSpacing: '0.01em',
-    preview: 'Elegant accents create visual distinction.',
+    source: 'system',
+    asset_id: '',
+    url: '',
+    preview: 'The quick brown fox jumps over the lazy dog',
+    usage: 'Used for page titles, section headers, and card headings',
+  },
+  {
+    id: 'body',
+    role: 'body',
+    label: 'Body / UI',
+    family: 'DM Sans',
+    source: 'system',
+    asset_id: '',
+    url: '',
+    preview:
+      'The quick brown fox jumps over the lazy dog. Brand infrastructure is not a marketing problem — it is a structural one.',
+    usage: 'Used for paragraphs, labels, navigation, and UI text',
   },
 ];
 
+// Merge saved fonts onto the two canonical roles so the page always renders
+// exactly two role cards (with static usage copy) regardless of legacy data.
+function mergeLoadedFonts(saved) {
+  const list = Array.isArray(saved) ? saved : [];
+  return DEFAULT_FONTS.map((def, i) => {
+    const match =
+      list.find((f) => f.id === def.id) ||
+      list.find((f) => f.role === def.role) ||
+      list[i];
+    if (!match) return { ...def };
+    return {
+      ...def,
+      family: match.family || def.family,
+      source: match.source || 'system',
+      asset_id: match.asset_id || '',
+      url: match.url || '',
+      preview: match.preview || def.preview,
+    };
+  });
+}
 
-const FONT_ROLE_OPTIONS = ['Primary Font', 'Secondary Font', 'Accent Font'];
-const FONT_FAMILY_OPTIONS = [
-  'Playfair Display',
-  'DM Sans',
-  'DM Sans',
+// System / web fonts offered in every role selector. Uploaded fonts are appended
+// at runtime as a separate <optgroup>.
+const SYSTEM_FONT_OPTIONS = [
   'Cormorant Garamond',
+  'Playfair Display',
+  'DM Serif Display',
+  'DM Sans',
+  'Inter',
+  'Plus Jakarta Sans',
   'Georgia',
-  'Arial',
-  'Helvetica',
-  'Times New Roman',
   'Montserrat',
   'Poppins',
   'Lora',
   'Merriweather',
 ];
-const FONT_WEIGHT_OPTIONS = ['300', '400', '500', '600', '700', '800'];
-const FONT_STYLE_OPTIONS = ['normal', 'italic'];
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 const MONO = "'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace";
+
+const API = import.meta.env.VITE_BACKEND_URL;
+
+// Stable family name for an uploaded font asset — reused so the same FontFace
+// is registered once and selections round-trip across reloads.
+function uploadedFontFamily(asset) {
+  return asset?.label || asset?.filename || asset?.asset_id || '';
+}
+
+// Module-level cache of FontFace families already registered on document.fonts,
+// so re-selecting or reloading the same font doesn't re-fetch it.
+const loadedFontFamilies = new Set();
+
+async function ensureFontLoaded(family, url) {
+  if (!family || !url || typeof window === 'undefined' || !window.FontFace) return;
+  if (loadedFontFamilies.has(family)) return;
+  try {
+    const absUrl = url.startsWith('http') ? url : `${API || ''}${url}`;
+    const face = new FontFace(family, `url("${absUrl}")`);
+    await face.load();
+    document.fonts.add(face);
+    loadedFontFamilies.add(family);
+  } catch (e) {
+    console.error('Font load failed:', family, e);
+  }
+}
+
+function formatFontBytes(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1048576).toFixed(1)} MB`;
+}
 
 const PAGE_STYLE = {
   background: 'var(--cth-command-blush)',
@@ -145,7 +184,7 @@ const SECTION_SUBTEXT_STYLE = {
 const CARD_STYLE = {
   background: 'var(--cth-command-panel)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 0,
+  borderRadius: 12,
 };
 
 const FIELD_LABEL_STYLE = {
@@ -164,7 +203,7 @@ const INPUT_STYLE = {
   background: 'var(--cth-command-panel)',
   color: 'var(--cth-command-ink)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 0,
+  borderRadius: 8,
   padding: '8px 12px',
   fontFamily: SANS,
   fontSize: 13,
@@ -175,7 +214,7 @@ const PRIMARY_CTA_STYLE = {
   background: 'var(--cth-command-purple)',
   color: 'var(--cth-command-gold)',
   border: 'none',
-  borderRadius: 0,
+  borderRadius: 8,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -192,7 +231,7 @@ const SAVE_BUTTON_STYLE = {
   background: 'var(--cth-command-crimson)',
   color: 'var(--cth-command-panel)',
   border: 'none',
-  borderRadius: 0,
+  borderRadius: 8,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -206,12 +245,6 @@ const SAVE_BUTTON_DISABLED_STYLE = {
   background: 'var(--cth-command-panel-soft)',
   color: 'var(--cth-command-muted)',
   cursor: 'not-allowed',
-};
-
-const NEXT_STEP_PILL_STYLE = {
-  ...PRIMARY_CTA_STYLE,
-  borderRadius: 999,
-  padding: '12px 22px',
 };
 
 const SECTIONS = [
@@ -241,13 +274,9 @@ function SectionStateIcon({ state }) {
 
 function IdentityStudioContent() {
   const { activeWorkspace } = useWorkspace();
-  const { plan } = usePlan();
   const { user } = useUser();
   const { refresh: refreshBrandHealth } = useBrandHealth();
   const userId = user?.id;
-  const nextStep = getNextStep('/identity-studio', plan);
-  const nextStepHref = nextStep?.upgradeTo ? '/billing' : nextStep?.href;
-  const nextStepLabel = nextStep?.upgradeTo ? nextStep.ctaLabel : nextStep?.label;
 
   const [activeSection, setActiveSection] = useState('colors');
   const [colors, setColors] = useState(DEFAULT_COLORS);
@@ -260,10 +289,14 @@ function IdentityStudioContent() {
   const [saveToastVisible, setSaveToastVisible] = useState(false);
   const [draftRecovery, setDraftRecovery] = useState(null);
   const [hexErrors, setHexErrors] = useState({});
+  const [uploadedFonts, setUploadedFonts] = useState([]);
+  const [fontUploading, setFontUploading] = useState(false);
 
   const originalColorsRef = useRef(null);
   const lastValidHexRef = useRef({});
   const errorTimersRef = useRef({});
+  const fontInputRef = useRef(null);
+  const fontUploadRoleRef = useRef(null);
 
   const workspaceId =
     activeWorkspace?.id || activeWorkspace?.workspace_id || '';
@@ -316,7 +349,14 @@ function IdentityStudioContent() {
         }
 
         if (Array.isArray(res?.fonts) && res.fonts.length > 0) {
-          setFonts(res.fonts);
+          const merged = mergeLoadedFonts(res.fonts);
+          setFonts(merged);
+          // Re-register any persisted uploaded fonts so their previews render.
+          merged.forEach((f) => {
+            if (f?.source === 'uploaded' && f?.family && f?.url) {
+              ensureFontLoaded(f.family, f.url);
+            }
+          });
         }
 
         if (Array.isArray(res?.assets)) {
@@ -367,8 +407,157 @@ function IdentityStudioContent() {
     loadData();
   }, [userId, draftKey]);
 
+  // Load tenant-uploaded font files (category=font_file) and register each via
+  // the FontFace API so they preview correctly and can be offered in selectors.
+  const loadUploadedFonts = useCallback(async () => {
+    if (!workspaceId) return;
+    try {
+      const res = await apiClient.get("/api/media-upload/assets", {
+        params: { category: "font_file", workspace_id: workspaceId },
+      });
+      const list = Array.isArray(res?.assets) ? res.assets : [];
+      setUploadedFonts(list);
+      list.forEach((a) => {
+        const fam = uploadedFontFamily(a);
+        if (fam && a.preview_url) ensureFontLoaded(fam, a.preview_url);
+      });
+    } catch (e) {
+      console.error('Failed to load uploaded fonts:', e);
+      setUploadedFonts([]);
+    }
+  }, [workspaceId]);
+
+  useEffect(() => {
+    loadUploadedFonts();
+  }, [loadUploadedFonts]);
+
+  // Pick a font for a role: system family or an uploaded asset (which we load
+  // via FontFace before applying so the preview renders).
+  const handleFontSelect = useCallback((roleId, value) => {
+    if (value.startsWith('uploaded:')) {
+      const assetId = value.slice('uploaded:'.length);
+      const asset = uploadedFonts.find((a) => a.asset_id === assetId);
+      if (!asset) return;
+      const fam = uploadedFontFamily(asset);
+      ensureFontLoaded(fam, asset.preview_url);
+      setFonts((prev) =>
+        prev.map((f) =>
+          f.id === roleId
+            ? { ...f, family: fam, source: 'uploaded', asset_id: asset.asset_id, url: asset.preview_url || '' }
+            : f
+        )
+      );
+    } else {
+      setFonts((prev) =>
+        prev.map((f) =>
+          f.id === roleId
+            ? { ...f, family: value, source: 'system', asset_id: '', url: '' }
+            : f
+        )
+      );
+    }
+    setHasUnsaved(true);
+  }, [uploadedFonts]);
+
+  // The select's current value: an uploaded asset reference or the system family.
+  const fontSelectValue = useCallback((font) => {
+    if (font?.source === 'uploaded' && font?.asset_id) return `uploaded:${font.asset_id}`;
+    return font?.family || '';
+  }, []);
+
+  function triggerFontUpload(roleId) {
+    fontUploadRoleRef.current = roleId || null;
+    fontInputRef.current?.click();
+  }
+
+  async function handleFontFileChange(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    const ok = /\.(ttf|otf|woff|woff2)$/i.test(file.name);
+    if (!ok) {
+      toast.error('Unsupported font type. Use .ttf, .otf, .woff, or .woff2.');
+      return;
+    }
+
+    const targetRole = fontUploadRoleRef.current;
+    fontUploadRoleRef.current = null;
+    setFontUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('context', 'font_file');
+      formData.append('category', 'font_file');
+      formData.append('label', file.name.replace(/\.[^/.]+$/, ''));
+      formData.append('workspace_id', workspaceId || '');
+
+      const res = await apiClient.post("/api/media-upload/upload-asset", formData);
+      const asset = {
+        asset_id: res.asset_id,
+        filename: res.filename || file.name,
+        file_type: res.file_type || file.type,
+        file_size: res.file_size || file.size,
+        category: 'font_file',
+        label: res.label || file.name.replace(/\.[^/.]+$/, ''),
+        preview_url: res.preview_url || '',
+      };
+      setUploadedFonts((prev) => [asset, ...prev]);
+      const fam = uploadedFontFamily(asset);
+      await ensureFontLoaded(fam, asset.preview_url);
+
+      // If a specific role triggered the upload, assign the new font to it.
+      if (targetRole) {
+        setFonts((prev) =>
+          prev.map((f) =>
+            f.id === targetRole
+              ? { ...f, family: fam, source: 'uploaded', asset_id: asset.asset_id, url: asset.preview_url || '' }
+              : f
+          )
+        );
+        setHasUnsaved(true);
+      }
+      toast.success('Font uploaded.');
+    } catch (err) {
+      console.error('Font upload failed:', err);
+      toast.error(err.response?.data?.detail || 'Font upload failed.');
+    } finally {
+      setFontUploading(false);
+    }
+  }
+
+  const handleDeleteUploadedFont = useCallback(async (assetId) => {
+    if (!assetId) return;
+    try {
+      await apiClient.delete(`/api/media-upload/assets/${assetId}`);
+      setUploadedFonts((prev) => prev.filter((a) => a.asset_id !== assetId));
+      // Any role still pointing at this asset falls back to its default family.
+      setFonts((prev) =>
+        prev.map((f) => {
+          if (f.source === 'uploaded' && f.asset_id === assetId) {
+            const fallback = f.id === 'display' ? 'Cormorant Garamond' : 'DM Sans';
+            setHasUnsaved(true);
+            return { ...f, family: fallback, source: 'system', asset_id: '', url: '' };
+          }
+          return f;
+        })
+      );
+    } catch (err) {
+      console.error('Delete font failed:', err);
+      toast.error('Could not delete font.');
+    }
+  }, []);
+
   const handleAssetsChange = useCallback((nextAssets) => {
     setAssets(Array.isArray(nextAssets) ? nextAssets : []);
+    setHasUnsaved(true);
+  }, []);
+
+  const handleAddColor = useCallback(() => {
+    setColors((prev) => [
+      ...prev,
+      { id: `color-custom-${prev.length}`, role: 'custom', label: 'New Color', hex: '#000000' },
+    ]);
     setHasUnsaved(true);
   }, []);
 
@@ -558,13 +747,13 @@ function IdentityStudioContent() {
   const identityScore =
     Math.round(
       (colorsLen >= 5 ? 40 : (colorsLen / 5) * 40) +
-      (fontsLen >= 4 ? 40 : (fontsLen / 4) * 40) +
+      (fontsLen >= 2 ? 40 : (fontsLen / 2) * 40) +
       (assetsLen >= 1 ? 20 : 0)
     ) || 0;
 
   const sectionDone = {
     colors: colorsLen >= 5,
-    typography: fontsLen >= 4,
+    typography: fontsLen >= 2,
     assets: assetsLen >= 1,
   };
   const completedCount = SECTIONS.filter((s) => sectionDone[s.id]).length;
@@ -788,7 +977,7 @@ function IdentityStudioContent() {
                 style={{
                   background: 'var(--cth-command-panel-soft)',
                   border: '1px solid var(--cth-command-gold)',
-                  borderRadius: 0,
+                  borderRadius: 8,
                   padding: '12px 20px',
                 }}
               >
@@ -812,7 +1001,7 @@ function IdentityStudioContent() {
                       background: 'var(--cth-command-purple)',
                       color: 'var(--cth-command-gold)',
                       border: 'none',
-                      borderRadius: 0,
+                      borderRadius: 8,
                       padding: '8px 14px',
                       fontFamily: SANS,
                       fontSize: 12,
@@ -831,7 +1020,7 @@ function IdentityStudioContent() {
                       background: 'transparent',
                       color: 'var(--cth-command-ink)',
                       border: '1px solid var(--cth-command-border)',
-                      borderRadius: 0,
+                      borderRadius: 8,
                       padding: '8px 14px',
                       fontFamily: SANS,
                       fontSize: 12,
@@ -954,7 +1143,7 @@ function IdentityStudioContent() {
                             color: 'var(--cth-command-ivory)',
                             background: 'rgba(13, 0, 16, 0.45)',
                             padding: '4px 8px',
-                            borderRadius: 0,
+                            borderRadius: 8,
                           }}
                         >
                           Click to change
@@ -1019,7 +1208,7 @@ function IdentityStudioContent() {
                                 background: 'transparent',
                                 color: 'var(--cth-command-crimson)',
                                 border: '1px solid var(--cth-command-border)',
-                                borderRadius: 0,
+                                borderRadius: 8,
                                 padding: '5px 10px',
                                 fontFamily: SANS,
                                 fontSize: 11,
@@ -1076,6 +1265,31 @@ function IdentityStudioContent() {
                     </div>
                   );
                 })}
+
+                <button
+                  type="button"
+                  data-testid="add-color-btn"
+                  onClick={handleAddColor}
+                  style={{
+                    minHeight: 80,
+                    border: '1px dashed var(--cth-command-border)',
+                    borderRadius: 10,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                    cursor: 'pointer',
+                    background: 'var(--cth-command-panel-soft)',
+                    color: 'var(--cth-command-muted)',
+                    fontFamily: SANS,
+                    fontSize: 12,
+                    fontWeight: 500,
+                  }}
+                >
+                  <span style={{ fontSize: 18, lineHeight: 1 }}>+</span>
+                  Add color
+                </button>
               </div>
             </section>
             )}
@@ -1105,168 +1319,189 @@ function IdentityStudioContent() {
               </div>
 
               <p style={{ fontSize: '13px', color: 'var(--cth-command-muted)', marginTop: '4px', marginBottom: '16px' }}>
-                Typography shapes how your brand feels before anyone reads a word. Choose fonts that match your positioning.
+                Assign font roles for your brand. Upload your own fonts or choose from the system library.
               </p>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {fonts.map((font, index) => (
-                  <div key={font.id || index} style={{ ...CARD_STYLE, padding: 16 }}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                      <div>
-                        <label style={FIELD_LABEL_STYLE}>Role</label>
-                        <select
-                          value={font.label || ''}
-                          onChange={(e) => {
-                            const next = [...fonts];
-                            next[index] = { ...next[index], label: e.target.value };
-                            setFonts(next);
-                            setHasUnsaved(true);
-                          }}
-                          style={INPUT_STYLE}
-                        >
-                          {FONT_ROLE_OPTIONS.map((option) => (
-                            <option key={option} value={option} style={{ color: 'var(--cth-command-ink)' }}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
+              {/* Hidden font file input — shared by all upload buttons */}
+              <input
+                ref={fontInputRef}
+                type="file"
+                accept=".ttf,.otf,.woff,.woff2"
+                onChange={handleFontFileChange}
+                style={{ display: 'none' }}
+              />
 
-                      <div>
-                        <label style={FIELD_LABEL_STYLE}>Font family</label>
-                        <select
-                          value={FONT_FAMILY_OPTIONS.includes(font.family || '') ? (font.family || '') : '__custom__'}
-                          onChange={(e) => {
-                            const next = [...fonts];
-                            next[index] = {
-                              ...next[index],
-                              family: e.target.value === '__custom__' ? '' : e.target.value,
-                            };
-                            setFonts(next);
-                            setHasUnsaved(true);
-                          }}
-                          style={INPUT_STYLE}
-                        >
-                          {FONT_FAMILY_OPTIONS.map((option) => (
-                            <option key={option} value={option} style={{ color: 'var(--cth-command-ink)' }}>{option}</option>
-                          ))}
-                          <option value="__custom__" style={{ color: 'var(--cth-command-ink)' }}>Custom font…</option>
-                        </select>
-
-                        <input
-                          value={font.family || ''}
-                          onChange={(e) => {
-                            const next = [...fonts];
-                            next[index] = { ...next[index], family: e.target.value };
-                            setFonts(next);
-                            setHasUnsaved(true);
-                          }}
-                          style={{ ...INPUT_STYLE, marginTop: 8 }}
-                          placeholder="Type custom font family if not listed"
-                        />
-                      </div>
-
-                      <div>
-                        <label style={FIELD_LABEL_STYLE}>Weight</label>
-                        <select
-                          value={font.weight || '400'}
-                          onChange={(e) => {
-                            const next = [...fonts];
-                            next[index] = { ...next[index], weight: e.target.value };
-                            setFonts(next);
-                            setHasUnsaved(true);
-                          }}
-                          style={INPUT_STYLE}
-                        >
-                          {FONT_WEIGHT_OPTIONS.map((option) => (
-                            <option key={option} value={option} style={{ color: 'var(--cth-command-ink)' }}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label style={FIELD_LABEL_STYLE}>Style</label>
-                        <select
-                          value={font.style || 'normal'}
-                          onChange={(e) => {
-                            const next = [...fonts];
-                            next[index] = { ...next[index], style: e.target.value };
-                            setFonts(next);
-                            setHasUnsaved(true);
-                          }}
-                          style={INPUT_STYLE}
-                        >
-                          {FONT_STYLE_OPTIONS.map((option) => (
-                            <option key={option} value={option} style={{ color: 'var(--cth-command-ink)' }}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label style={FIELD_LABEL_STYLE}>Size (rem)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={font.sizeRem || 1}
-                          onChange={(e) => {
-                            const next = [...fonts];
-                            next[index] = { ...next[index], sizeRem: parseFloat(e.target.value || '1') };
-                            setFonts(next);
-                            setHasUnsaved(true);
-                          }}
-                          style={INPUT_STYLE}
-                        />
-                      </div>
-
-                      <div>
-                        <label style={FIELD_LABEL_STYLE}>Line height</label>
-                        <input
-                          type="number"
-                          step="0.05"
-                          value={font.lineHeight || 1.4}
-                          onChange={(e) => {
-                            const next = [...fonts];
-                            next[index] = { ...next[index], lineHeight: parseFloat(e.target.value || '1.4') };
-                            setFonts(next);
-                            setHasUnsaved(true);
-                          }}
-                          style={INPUT_STYLE}
-                        />
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label style={FIELD_LABEL_STYLE}>Preview text</label>
-                        <input
-                          value={font.preview || ''}
-                          onChange={(e) => {
-                            const next = [...fonts];
-                            next[index] = { ...next[index], preview: e.target.value };
-                            setFonts(next);
-                            setHasUnsaved(true);
-                          }}
-                          style={INPUT_STYLE}
-                          placeholder="Preview text"
-                        />
-                      </div>
-                    </div>
-
-                    <div style={{ ...CARD_STYLE, padding: 16, background: 'var(--cth-command-panel-soft)' }}>
-                      <p style={{ ...SECTION_LABEL_STYLE, marginBottom: 8 }}>Preview</p>
-                      <p
-                        style={{
-                          fontFamily: font.family || 'DM Sans',
-                          fontWeight: font.weight || '400',
-                          fontStyle: font.style || 'normal',
-                          fontSize: `${font.sizeRem || 1.25}rem`,
-                          lineHeight: font.lineHeight || 1.4,
-                          letterSpacing: font.letterSpacing || '0',
-                          color: 'var(--cth-command-ink)',
-                          margin: 0,
-                        }}
+              <div className="flex flex-col gap-4">
+                {fonts.map((font) => {
+                  const previewFamily = `${font.family || 'DM Sans'}, ${font.id === 'display' ? 'Georgia, serif' : 'sans-serif'}`;
+                  const isDisplay = font.id === 'display';
+                  return (
+                    <div key={font.id} style={{ ...CARD_STYLE, borderRadius: 10, overflow: 'hidden' }}>
+                      <div
+                        className="flex items-center justify-between"
+                        style={{ padding: '10px 14px', borderBottom: '1px solid var(--cth-command-border)' }}
                       >
-                        {font.preview || 'The quick brown fox jumps over the lazy dog.'}
-                      </p>
+                        <span style={{ ...SECTION_LABEL_STYLE, fontSize: 10 }}>{font.label}</span>
+                        <span style={{ fontFamily: SANS, fontSize: 9, color: 'var(--cth-command-success)' }}>
+                          {font.source === 'uploaded' ? 'Custom font' : 'System'}
+                        </span>
+                      </div>
+
+                      <div style={{ padding: '12px 14px' }}>
+                        <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
+                          <select
+                            data-testid={`font-select-${font.id}`}
+                            value={fontSelectValue(font)}
+                            onChange={(e) => handleFontSelect(font.id, e.target.value)}
+                            style={{ ...INPUT_STYLE, flex: 1 }}
+                          >
+                            <optgroup label="System fonts">
+                              {SYSTEM_FONT_OPTIONS.map((option) => (
+                                <option key={option} value={option} style={{ color: 'var(--cth-command-ink)' }}>{option}</option>
+                              ))}
+                            </optgroup>
+                            {uploadedFonts.length > 0 ? (
+                              <optgroup label="Uploaded fonts">
+                                {uploadedFonts.map((a) => (
+                                  <option
+                                    key={a.asset_id}
+                                    value={`uploaded:${a.asset_id}`}
+                                    style={{ color: 'var(--cth-command-ink)' }}
+                                  >
+                                    {uploadedFontFamily(a)}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ) : null}
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={() => triggerFontUpload(font.id)}
+                            disabled={fontUploading}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              fontFamily: SANS,
+                              fontSize: 11,
+                              color: 'var(--cth-command-crimson)',
+                              background: 'transparent',
+                              border: '1px solid var(--cth-command-border)',
+                              borderRadius: 8,
+                              padding: '7px 12px',
+                              cursor: fontUploading ? 'default' : 'pointer',
+                              whiteSpace: 'nowrap',
+                              opacity: fontUploading ? 0.6 : 1,
+                            }}
+                          >
+                            {fontUploading ? 'Uploading…' : 'Upload'}
+                          </button>
+                        </div>
+
+                        <div
+                          style={{
+                            fontFamily: previewFamily,
+                            fontWeight: isDisplay ? 500 : 400,
+                            fontSize: isDisplay ? 22 : 13,
+                            lineHeight: isDisplay ? 1.3 : 1.6,
+                            color: isDisplay ? 'var(--cth-command-ink)' : 'var(--cth-command-muted)',
+                            margin: 0,
+                          }}
+                        >
+                          {font.preview}
+                        </div>
+                        <div style={{ fontFamily: SANS, fontSize: 9, color: 'var(--cth-command-muted)', marginTop: 6 }}>
+                          {font.family} · {font.usage}
+                        </div>
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+
+              {/* Uploaded fonts management list */}
+              <div style={{ marginTop: 16 }}>
+                <div style={{ ...SECTION_LABEL_STYLE, fontSize: 10, marginBottom: 8 }}>Uploaded fonts</div>
+                {uploadedFonts.length === 0 ? (
+                  <p style={{ fontFamily: SANS, fontSize: 11.5, color: 'var(--cth-command-muted)', margin: '0 0 8px' }}>
+                    No uploaded fonts yet. Upload a font file to use it across your brand.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-2" style={{ marginBottom: 8 }}>
+                    {uploadedFonts.map((a) => {
+                      const ext = (a.filename || '').split('.').pop()?.toUpperCase() || 'FONT';
+                      return (
+                        <div
+                          key={a.asset_id}
+                          className="flex items-center gap-2"
+                          style={{
+                            background: 'var(--cth-command-panel-soft)',
+                            border: '1px solid var(--cth-command-border)',
+                            borderRadius: 8,
+                            padding: '8px 12px',
+                          }}
+                        >
+                          <span style={{ fontFamily: SANS, fontSize: 11, color: 'var(--cth-command-ink)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {a.filename || uploadedFontFamily(a)}
+                          </span>
+                          <span
+                            style={{
+                              fontFamily: SANS,
+                              fontSize: 9,
+                              padding: '2px 7px',
+                              borderRadius: 20,
+                              background: 'var(--cth-command-panel)',
+                              color: 'var(--cth-command-muted)',
+                              border: '1px solid var(--cth-command-border)',
+                            }}
+                          >
+                            {ext}{a.file_size ? ` · ${formatFontBytes(a.file_size)}` : ''}
+                          </span>
+                          <button
+                            type="button"
+                            data-testid={`delete-font-${a.asset_id}`}
+                            onClick={() => handleDeleteUploadedFont(a.asset_id)}
+                            style={{
+                              fontFamily: SANS,
+                              fontSize: 11,
+                              color: 'var(--cth-command-error)',
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: '2px 4px',
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
+                <button
+                  type="button"
+                  onClick={() => triggerFontUpload(null)}
+                  disabled={fontUploading}
+                  style={{
+                    width: '100%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    fontFamily: SANS,
+                    fontSize: 11,
+                    color: 'var(--cth-command-crimson)',
+                    background: 'transparent',
+                    border: '1px solid var(--cth-command-border)',
+                    borderRadius: 8,
+                    padding: '9px 12px',
+                    cursor: fontUploading ? 'default' : 'pointer',
+                    opacity: fontUploading ? 0.6 : 1,
+                  }}
+                >
+                  {fontUploading ? 'Uploading…' : 'Upload a font file (.ttf .otf .woff .woff2)'}
+                </button>
               </div>
             </section>
             )}
@@ -1409,7 +1644,7 @@ function IdentityStudioContent() {
               background: 'var(--cth-command-purple)',
               color: 'var(--cth-command-gold)',
               padding: '10px 18px',
-              borderRadius: 0,
+              borderRadius: 8,
               fontFamily: SANS,
               fontSize: 13,
               fontWeight: 600,
@@ -1432,7 +1667,7 @@ function IdentityStudioContent() {
               background: 'var(--cth-command-purple)',
               color: 'var(--cth-command-gold)',
               padding: '12px 20px',
-              borderRadius: 0,
+              borderRadius: 8,
               fontFamily: SANS,
               fontSize: 13,
               fontWeight: 600,

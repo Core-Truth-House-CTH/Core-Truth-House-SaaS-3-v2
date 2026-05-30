@@ -982,7 +982,7 @@ export default function IdentityStudioAssets({
             style={{
               background: 'var(--cth-command-panel)',
               border: '1px solid var(--cth-command-border)',
-              borderRadius: 4,
+              borderRadius: 12,
               width: '100%',
               maxWidth: 480,
               padding: 28,
@@ -990,7 +990,7 @@ export default function IdentityStudioAssets({
           >
             <h2
               style={{
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
                 fontSize: 22,
                 fontWeight: 600,
                 color: 'var(--cth-command-ink)',
@@ -1033,7 +1033,7 @@ export default function IdentityStudioAssets({
                   background: 'transparent',
                   color: 'var(--cth-command-ink)',
                   border: '1px solid var(--cth-command-border)',
-                  borderRadius: 4,
+                  borderRadius: 8,
                   padding: '10px 18px',
                   fontFamily: "'DM Sans', sans-serif",
                   fontSize: 13,
@@ -1051,7 +1051,7 @@ export default function IdentityStudioAssets({
                   background: 'var(--cth-command-crimson)',
                   color: 'var(--cth-command-ivory)',
                   border: 'none',
-                  borderRadius: 4,
+                  borderRadius: 8,
                   padding: '10px 18px',
                   fontFamily: "'DM Sans', sans-serif",
                   fontSize: 13,
