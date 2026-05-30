@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTH Systems Builder — Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  /* Real CTH command tokens */
+  :root{
+    --blush:#efe7e3; --border:#d8c5c3; --cinnabar:#e04e35; --crimson:#af002a;
+    --gold:#c4a95b; --ink:#2b1040; --ivory:#f8f4f2; --muted:#7c6576;
+    --panel-soft:#f5ece8; --panel:#fffaf7; --purple:#33033c; --success:#2d6a4f;
+    --ruby:#7a0c2e; --tuscany:#c8743b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--blush);font-family:'DM Sans',sans-serif;color:var(--ink);padding:24px;}
+  .sans{font-family:'DM Sans',sans-serif;}
+  .serif{font-family:'Cormorant Garamond',Georgia,serif;}
+  h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;}
+  .sub{font-size:13px;color:var(--muted);margin-top:4px;}
+
+  /* ---- Category accent gradients ---- */
+  .accent-marketing{background:linear-gradient(90deg,var(--ruby),var(--tuscany));}
+  .accent-sales{background:linear-gradient(90deg,var(--crimson),var(--cinnabar));}
+  .accent-delivery{background:linear-gradient(90deg,var(--gold),#e6cf8a);}
+  .accent-operations{background:linear-gradient(90deg,var(--purple),var(--ruby));}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;padding:3px 9px;border-radius:999px;}
+  .pill-marketing{background:color-mix(in srgb,var(--ruby) 12%,transparent);color:var(--ruby);}
+  .pill-sales{background:color-mix(in srgb,var(--crimson) 12%,transparent);color:var(--crimson);}
+  .pill-delivery{background:color-mix(in srgb,var(--gold) 18%,transparent);color:#8a6d1f;}
+  .pill-operations{background:color-mix(in srgb,var(--purple) 14%,transparent);color:var(--purple);}
+
+  /* ---- Controls row ---- */
+  .controls{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:18px 0 16px;flex-wrap:wrap;}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;}
+  .chip{font-size:12px;font-weight:500;padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;}
+  .chip.active{background:var(--purple);color:var(--gold);border-color:var(--purple);font-weight:600;}
+  .search{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;width:220px;color:var(--ink);}
+
+  /* ---- Gallery ---- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;}
+  .card-accent{height:3px;width:100%;}
+  .card-body{padding:16px 18px;flex:1;display:flex;flex-direction:column;gap:10px;}
+  .card-top{display:flex;align-items:center;justify-content:space-between;}
+  .stepcount{font-size:11px;color:var(--muted);}
+  .card-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:21px;font-weight:600;line-height:1.15;}
+  .card-desc{font-size:12.5px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .card-footer{display:flex;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid var(--border);}
+  .fbtn{flex:1;text-align:center;font-size:12px;font-weight:500;padding:7px 0;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--ink);cursor:pointer;}
+  .fbtn.danger{color:var(--crimson);border-color:color-mix(in srgb,var(--crimson) 30%,var(--border));}
+  .add-card{border:1.5px dashed var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:180px;color:var(--muted);cursor:pointer;background:var(--panel-soft);font-size:13px;font-weight:500;}
+  .add-card .plus{font-size:26px;line-height:1;}
+
+  /* ---- Modal (2-section Phase 3) ---- */
+  .scrim{position:fixed;inset:0;background:rgba(13,0,16,.6);display:flex;align-items:center;justify-content:center;padding:24px;}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;width:100%;max-width:760px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+  .m-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 22px;border-bottom:1px solid var(--border);}
+  .m-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;}
+  .m-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .m-progress{font-size:11px;color:var(--muted);}
+  .m-close{width:32px;height:32px;border-radius:999px;border:1px solid var(--border);background:var(--panel);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);}
+  .m-body{display:grid;grid-template-columns:160px 1fr;flex:1;overflow:hidden;}
+  .m-nav{border-right:1px solid var(--border);background:var(--panel-soft);padding:14px 0;}
+  .nav-lbl{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 16px 8px;}
+  .ni{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;border-left:2px solid transparent;font-size:12px;color:var(--muted);}
+  .ni.active{border-left-color:var(--crimson);background:var(--panel);color:var(--crimson);font-weight:500;}
+  .ni .dot{width:14px;height:14px;border-radius:999px;border:1.5px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:9px;}
+  .ni.done .dot{background:var(--success);border-color:var(--success);color:#fff;}
+  .ni.active .dot{border-color:var(--crimson);}
+  .m-field{padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
+  .f-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:600;}
+  .f-desc{font-size:12px;color:var(--muted);margin-top:2px;}
+  label.lbl{display:block;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--ink);margin-bottom:6px;}
+  .inp,.ta,.sel{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);}
+  .ta{min-height:72px;resize:vertical;}
+  /* steps */
+  .step{display:flex;gap:10px;background:var(--panel-soft);border:1px solid var(--border);border-radius:10px;padding:12px;}
+  .step-num{width:24px;height:24px;border-radius:999px;background:var(--purple);color:var(--gold);font-size:11px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .step-fields{flex:1;display:flex;flex-direction:column;gap:8px;}
+  .step-del{background:transparent;border:none;color:var(--crimson);cursor:pointer;align-self:flex-start;}
+  .add-step{width:100%;border:1.5px dashed var(--border);border-radius:10px;background:transparent;color:var(--muted);padding:10px;font-size:12px;font-weight:500;cursor:pointer;}
+  /* zuri */
+  .zuri{background:#1a0828;border-radius:10px;padding:14px 16px;}
+  .zuri-hd{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+  .zuri-z{width:16px;height:16px;border-radius:999px;background:var(--cinnabar);color:#fff;font-size:8px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;}
+  .zuri-lbl{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#7a6090;}
+  .zuri-copy{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:13px;color:#e8dff0;line-height:1.45;margin-bottom:10px;}
+  .zuri-btns{display:flex;gap:8px;}
+  .zbtn{font-size:11px;font-weight:600;border-radius:8px;padding:7px 12px;cursor:pointer;border:1px solid rgba(255,255,255,.18);background:transparent;color:#e8dff0;}
+  /* footer */
+  .m-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 22px;border-top:1px solid var(--border);background:var(--panel-soft);}
+  .btn{font-size:12px;font-weight:500;border-radius:8px;padding:8px 16px;cursor:pointer;border:1px solid var(--border);background:var(--panel);color:var(--ink);}
+  .btn-ghost{background:transparent;}
+  .btn-save{background:var(--success);color:#fff;border:none;font-weight:600;}
+  .btn-next{background:var(--crimson);color:#fff;border:none;font-weight:600;}
+  .foot-right{display:flex;gap:8px;}
+  .section{margin-bottom:34px;}
+  .stamp{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.16em;margin-bottom:10px;}
+</style>
+</head>
+<body>
+  <h1>Systems Builder</h1>
+  <div class="sub">4 systems</div>
+
+  <!-- ============ GALLERY ============ -->
+  <div class="section" style="margin-top:18px;">
+    <div class="controls">
+      <div class="chips">
+        <button class="chip active">All</button>
+        <button class="chip">Marketing</button>
+        <button class="chip">Sales</button>
+        <button class="chip">Delivery</button>
+        <button class="chip">Operations</button>
+      </div>
+      <input class="search" placeholder="Search systems…">
+    </div>
+
+    <div class="grid">
+      <!-- Marketing -->
+      <div class="card">
+        <div class="card-accent accent-marketing"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <span class="pill pill-marketing">◆ Marketing</span>
+            <span class="stepcount">5 steps</span>
+          </div>
+          <div class="card-name">Lead Nurture Workflow</div>
+          <div class="card-desc">Moves new inquiries from first contact to a booked consultation with timed touches and qualification gates.</div>
+        </div>
+        <div class="card-footer">
+          <button class="fbtn">View</button>
+          <button class="fbtn">Edit</button>
+          <button class="fbtn danger">Delete</button>
+        </div>
+      </div>
+      <!-- Sales -->
+      <div class="card">
+        <div class="card-accent accent-sales"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <span class="pill pill-sales">◆ Sales</span>
+            <span class="stepcount">4 steps</span>
+          </div>
+          <div class="card-name">Discovery to Close</div>
+          <div class="card-desc">A repeatable path from discovery call through proposal, objection handling, and signed agreement.</div>
+        </div>
+        <div class="card-footer">
+          <button class="fbtn">View</button>
+          <button class="fbtn">Edit</button>
+          <button class="fbtn danger">Delete</button>
+        </div>
+      </div>
+      <!-- Delivery -->
+      <div class="card">
+        <div class="card-accent accent-delivery"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <span class="pill pill-delivery">◆ Delivery</span>
+            <span class="stepcount">6 steps</span>
+          </div>
+          <div class="card-name">Client Onboarding</div>
+          <div class="card-desc">Everything from welcome packet to kickoff so every new client starts with the same clear experience.</div>
+        </div>
+        <div class="card-footer">
+          <button class="fbtn">View</button>
+          <button class="fbtn">Edit</button>
+          <button class="fbtn danger">Delete</button>
+        </div>
+      </div>
+      <!-- Operations -->
+      <div class="card">
+        <div class="card-accent accent-operations"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <span class="pill pill-operations">◆ Operations</span>
+            <span class="stepcount">3 steps</span>
+          </div>
+          <div class="card-name">Weekly Content Production</div>
+          <div class="card-desc">The cadence that turns raw ideas into published content every week without last-minute scrambles.</div>
+        </div>
+        <div class="card-footer">
+          <button class="fbtn">View</button>
+          <button class="fbtn">Edit</button>
+          <button class="fbtn danger">Delete</button>
+        </div>
+      </div>
+      <!-- Add another -->
+      <div class="add-card">
+        <span class="plus">+</span>
+        Add another system
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL (2-section Phase 3) ============ -->
+  <div class="stamp">Modal — reference (rendered inline, not overlaid)</div>
+  <div style="position:relative;">
+    <div class="modal" style="margin:0 auto;">
+      <div class="m-head">
+        <div>
+          <div class="m-title">Lead Nurture Workflow</div>
+          <div class="m-sub">Document a repeatable operating system</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="m-progress">1 of 2 complete</div>
+          <button class="m-close">✕</button>
+        </div>
+      </div>
+
+      <div class="m-body">
+        <div class="m-nav">
+          <div class="nav-lbl">Sections</div>
+          <div class="ni done"><span class="dot">✓</span> Overview</div>
+          <div class="ni active"><span class="dot"></span> Steps</div>
+        </div>
+
+        <div class="m-field">
+          <div>
+            <div class="f-title">Steps</div>
+            <div class="f-desc">Outline the sequence so this becomes a repeatable operating system.</div>
+          </div>
+
+          <div class="step">
+            <span class="step-num">1</span>
+            <div class="step-fields">
+              <input class="inp" value="Capture the inquiry" placeholder="Step title">
+              <textarea class="ta" placeholder="What happens at this step and why">Log the lead in the CRM and tag the source within 5 minutes.</textarea>
+            </div>
+            <button class="step-del">✕</button>
+          </div>
+          <div class="step">
+            <span class="step-num">2</span>
+            <div class="step-fields">
+              <input class="inp" value="Send the welcome sequence" placeholder="Step title">
+              <textarea class="ta" placeholder="What happens at this step and why">Trigger the 3-email nurture that frames the problem and the offer.</textarea>
+            </div>
+            <button class="step-del">✕</button>
+          </div>
+          <button class="add-step">+ Add step</button>
+
+          <div class="zuri">
+            <div class="zuri-hd"><span class="zuri-z">Z</span><span class="zuri-lbl">Zuri · systems assist</span></div>
+            <div class="zuri-copy">"Name the system first, then let me draft the steps — or describe the whole thing and I'll build it end to end."</div>
+            <div class="zuri-btns">
+              <button class="zbtn">✦ Generate steps</button>
+              <button class="zbtn">✦ Generate full system</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="m-foot">
+        <button class="btn btn-ghost">← Previous</button>
+        <div class="foot-right">
+          <button class="btn btn-ghost">Cancel</button>
+          <button class="btn btn-save">Save system</button>
+          <button class="btn btn-next">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
