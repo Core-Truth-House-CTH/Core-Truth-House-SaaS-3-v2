@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useUser } from '../hooks/useAuth';
 import { DashboardLayout } from '../components/Layout';
-import { Loader2, Plus, Zap, Calendar as CalendarIcon, X, Trash2, RefreshCw, Pencil, Radio, Search, User, Package, Megaphone } from 'lucide-react';
+import { Loader2, Plus, Zap, Calendar as CalendarIcon, X, Trash2, RefreshCw, Pencil, Radio, Search, User, Package, Megaphone, Check } from 'lucide-react';
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import UploadZone from '../components/shared/UploadZone';
 import apiClient from '../lib/apiClient';
@@ -105,6 +105,7 @@ const DEFAULT_FORM = {
  platforms: [],
  target_metric: '',
  target_value: '',
+ avatar_id: '',
  audience_description: '',
  audience_problem: '',
  audience_desire: '',
@@ -1033,6 +1034,7 @@ function CampaignBuilderPageContent() {
  const [overviewDraft, setOverviewDraft] = useState({});
  const [loading, setLoading] = useState(true);
  const [savedOffers, setSavedOffers] = useState([]);
+ const [avatars, setAvatars] = useState([]); // Audience-tab avatars for the Audience step dropdown
  const [calendarCampaign, setCalendarCampaign] = useState(null);
  const [calendarDone, setCalendarDone] = useState({});
 
@@ -1093,11 +1095,26 @@ function CampaignBuilderPageContent() {
  }
  }, [workspaceId, userId]);
 
+ // Avatars come from the Audience collection (same source as Offer Builder)
+ // so the Audience step is a dropdown of real avatars, not free text.
+ const loadAvatars = useCallback(async () => {
+ if (!workspaceId) return;
+ try {
+ const res = await apiClient.get(API_PATHS.audience.avatars);
+ const list = Array.isArray(res?.avatars) ? res.avatars : Array.isArray(res) ? res : [];
+ setAvatars(list.filter((a) => a?.id && a?.name));
+ } catch (e) {
+ console.error('Failed to load avatars:', e);
+ setAvatars([]);
+ }
+ }, [workspaceId]);
+
  useEffect(() => {
  if (!workspaceId) return;
  loadCampaigns();
  loadOffers();
- }, [workspaceId, loadCampaigns, loadOffers]);
+ loadAvatars();
+ }, [workspaceId, loadCampaigns, loadOffers, loadAvatars]);
 
  const selected = useMemo(
  () => campaigns.find((c) => c.id === selectedId) || null,
@@ -1421,6 +1438,97 @@ function CampaignBuilderPageContent() {
  }
  };
 
+ // ---- MAGNET editor modal (create + edit) ----
+ const [editorOpen, setEditorOpen] = useState(false);
+ const [editorCampaign, setEditorCampaign] = useState(null); // null = creating
+ const [form, setForm] = useState(DEFAULT_FORM);
+ const [activeMagnetStep, setActiveMagnetStep] = useState('message');
+ const [savingCampaign, setSavingCampaign] = useState(false);
+ const [zuriBusyStep, setZuriBusyStep] = useState(null);
+ const [zuriOutput, setZuriOutput] = useState(null); // { step, text }
+
+ const openEditor = useCallback((campaign) => {
+ if (campaign) {
+ setEditorCampaign(campaign);
+ setForm({ ...DEFAULT_FORM, ...campaign });
+ } else {
+ setEditorCampaign(null);
+ setForm({ ...DEFAULT_FORM });
+ }
+ setActiveMagnetStep('message');
+ setZuriOutput(null);
+ setEditorOpen(true);
+ }, []);
+
+ const setField = useCallback((key, value) => {
+ setForm((prev) => ({ ...prev, [key]: value }));
+ }, []);
+
+ const handleSaveCampaign = async () => {
+ if (!(form.name || '').trim()) {
+ toast.error('Give the campaign a name first.');
+ return;
+ }
+ setSavingCampaign(true);
+ try {
+ if (editorCampaign?.id) {
+ await apiClient.put(`/api/campaigns/${editorCampaign.id}`, form);
+ const updated = { ...editorCampaign, ...form };
+ handleCampaignUpdate(updated);
+ setEditorCampaign(updated);
+ toast.success('Campaign saved.');
+ } else {
+ const res = await apiClient.post('/api/campaigns', { ...form, user_id: userId, workspace_id: workspaceId });
+ if (res?.id) {
+ setCampaigns((prev) => [res, ...prev.filter((c) => c.id !== res.id)]);
+ // Keep the modal open and switch to edit mode: now that the campaign
+ // has an id, the next save is a PUT and the founder can keep building
+ // MAGNET steps without reopening anything.
+ setEditorCampaign(res);
+ setForm({ ...DEFAULT_FORM, ...res });
+ }
+ toast.success('Campaign created.');
+ }
+ // Modal intentionally stays open after save (create or update) so the
+ // founder can continue building MAGNET steps. Use Cancel/Close to dismiss.
+ } catch (e) {
+ console.error('Save campaign failed:', e);
+ toast.error('Could not save the campaign. Please try again.');
+ } finally {
+ setSavingCampaign(false);
+ }
+ };
+
+ // Per-step Zuri — scoped to the ACTIVE step only. We send just that step's
+ // fields (plus campaign name + goal for context), never the whole campaign
+ // document, so the generation stays anchored to the step the founder is on.
+ const handleZuriStep = async (step) => {
+ if (!editorCampaign?.id) {
+ toast.error('Save the campaign first, then Zuri can help.');
+ return;
+ }
+ // Build the scoped payload for exactly this step.
+ const payload = { step, name: form.name || '', goal: form.goal || '' };
+ if (step === 'message') {
+ payload.emotional_hook = form.emotional_hook || '';
+ payload.promise = form.promise || '';
+ payload.problem_statement = form.problem_statement || '';
+ } else if (step === 'narrative') {
+ payload.emotional_hook = form.emotional_hook || '';
+ payload.narrative_arc = form.narrative_arc || '';
+ }
+ setZuriBusyStep(step);
+ setZuriOutput(null);
+ try {
+ const res = await apiClient.post(`/api/campaigns/${editorCampaign.id}/zuri-step`, payload);
+ setZuriOutput({ step, text: res?.text || '' });
+ } catch (e) {
+ toast.error('Zuri could not generate that right now.');
+ } finally {
+ setZuriBusyStep(null);
+ }
+ };
+
  if (!workspaceId || loading) {
  return (
  <DashboardLayout>
@@ -1452,7 +1560,7 @@ function CampaignBuilderPageContent() {
           <button
             type="button"
             data-testid="campaigns-new-button"
-            onClick={() => navigate('/campaign-setup')}
+            onClick={() => openEditor(null)}
             style={{ padding: '9px 18px', background: 'var(--cth-command-crimson)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'DM Sans', sans-serif" }}
           >
             <Plus size={14} /> New campaign
@@ -1482,7 +1590,7 @@ function CampaignBuilderPageContent() {
               </div>
               <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 600, color: 'var(--cth-command-ink)', marginTop: 16 }}>Build your first campaign</h3>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: 'var(--cth-command-muted)', margin: '8px auto 20px', maxWidth: 440, lineHeight: 1.6 }}>Every piece of content should serve a campaign.</p>
-              <button type="button" onClick={() => navigate('/campaign-setup')} style={{ padding: '10px 18px', background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 8, fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <button type="button" onClick={() => openEditor(null)} style={{ padding: '10px 18px', background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 8, fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <Plus size={14} /> New campaign
               </button>
             </div>
@@ -1501,7 +1609,7 @@ function CampaignBuilderPageContent() {
                   ? 'linear-gradient(90deg, var(--cth-command-success), #4a9e7a)'
                   : 'var(--cth-command-border)';
                 const editLabel = dispStatus === 'complete' ? 'View results' : dispStatus === 'draft' ? 'Edit & complete' : 'Edit campaign';
-                const onEdit = () => (dispStatus === 'complete' ? navigate('/analytics') : navigate('/campaign-setup', { state: { campaignId: c.id } }));
+                const onEdit = () => (dispStatus === 'complete' ? navigate('/analytics') : openEditor(c));
                 return (
                   <div key={c.id} data-testid={`campaign-card-${c.id}`} style={{ background: 'var(--cth-command-panel)', border: `1px solid ${dispStatus === 'active' ? 'var(--cth-command-crimson)' : 'var(--cth-command-border)'}`, borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ height: 3, background: accent }} />
@@ -1557,7 +1665,7 @@ function CampaignBuilderPageContent() {
                 );
               })}
 
-              <button type="button" data-testid="add-campaign-card" onClick={() => navigate('/campaign-setup')} style={{ background: 'transparent', border: '1px dashed var(--cth-command-border)', borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '32px 16px', cursor: 'pointer', minHeight: 200, color: 'var(--cth-command-muted)', fontFamily: "'DM Sans', sans-serif", fontSize: 12 }}>
+              <button type="button" data-testid="add-campaign-card" onClick={() => openEditor(null)} style={{ background: 'transparent', border: '1px dashed var(--cth-command-border)', borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '32px 16px', cursor: 'pointer', minHeight: 200, color: 'var(--cth-command-muted)', fontFamily: "'DM Sans', sans-serif", fontSize: 12 }}>
                 <Megaphone size={20} style={{ color: 'var(--cth-command-border)' }} />
                 Add another campaign
               </button>
@@ -1565,6 +1673,219 @@ function CampaignBuilderPageContent() {
           )}
         </div>
       </div>
+
+      {editorOpen && (() => {
+        const stepDoneMap = magnetStepDone(form);
+        const doneCount = Object.values(stepDoneMap).filter(Boolean).length;
+        const idx = MAGNET_ORDER.findIndex((s) => s.key === activeMagnetStep);
+        const active = MAGNET_ORDER[idx] || MAGNET_ORDER[0];
+        const prev = idx > 0 ? MAGNET_ORDER[idx - 1] : null;
+        const next = idx < MAGNET_ORDER.length - 1 ? MAGNET_ORDER[idx + 1] : null;
+        const canZuri = Boolean(editorCampaign?.id);
+        const fld = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+        const labelStyle = { fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--cth-command-muted)', fontWeight: 500 };
+        const inputStyle = { padding: '9px 12px', background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 8, fontSize: 12, color: 'var(--cth-command-ink)', fontFamily: "'DM Sans', sans-serif", outline: 'none', width: '100%' };
+        const areaStyle = { ...inputStyle, resize: 'none', lineHeight: 1.6, minHeight: 72 };
+        const GUIDE = {
+          message: 'Lead with the one true thing your audience already feels but has not heard named. Recognition before revelation.',
+          audience: 'Name one person, one problem. The sharper the audience, the sharper everything downstream.',
+          goal: 'A campaign goal is a movement between signal levels — pick the shift you want, then the timeline and platforms that serve it.',
+          narrative: 'The strongest narrative for a Lv 2→3 campaign leads with recognition, not revelation. Name the problem precisely before they can.',
+          execution: 'Content is the vehicle, not the campaign. Map the few pieces that actually carry the narrative each week.',
+          tracking: 'If you cannot see the signal, you cannot improve it. Define the one CTA and the path you will measure.',
+        };
+        return (
+          <div role="dialog" aria-modal="true" aria-label={editorCampaign ? 'Edit campaign' : 'New campaign'} onClick={() => setEditorOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(26,8,40,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+            <div data-testid="campaign-editor-modal" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 14, width: '100%', maxWidth: 820, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              {/* Header */}
+              <div className="flex items-start justify-between" style={{ padding: '16px 22px 14px', borderBottom: '1px solid var(--cth-command-border)', background: 'var(--cth-command-panel)', flexShrink: 0, gap: 12 }}>
+                <div className="min-w-0">
+                  <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 19, fontWeight: 600, color: 'var(--cth-command-ink)', lineHeight: 1.2 }}>{(form.name || '').trim() || (editorCampaign ? 'Edit campaign' : 'New campaign')}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'var(--cth-command-muted)', marginTop: 2 }}>Build out each MAGNET step to complete this campaign.</div>
+                </div>
+                <div className="flex items-center" style={{ gap: 10, flexShrink: 0 }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'var(--cth-command-muted)', marginBottom: 4 }}>{doneCount} of 6 complete</div>
+                    <div style={{ width: 90, height: 2, background: 'var(--cth-command-panel-soft)', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${Math.round((doneCount / 6) * 100)}%`, background: 'var(--cth-command-success)', borderRadius: 2 }} />
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => setEditorOpen(false)} aria-label="Close" style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--cth-command-panel-soft)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--cth-command-muted)', flexShrink: 0 }}><X size={11} /></button>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '152px 1fr', overflow: 'hidden', minHeight: 0 }}>
+                {/* Step nav */}
+                <div style={{ borderRight: '1px solid var(--cth-command-border)', padding: '14px 0', background: 'var(--cth-command-panel-soft)', overflowY: 'auto' }}>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--cth-command-muted)', padding: '0 14px 8px', fontWeight: 600 }}>MAGNET steps</div>
+                  {MAGNET_ORDER.map((step) => {
+                    const isActive = step.key === activeMagnetStep;
+                    const done = stepDoneMap[step.key];
+                    const barColor = done ? 'var(--cth-command-success)' : isActive ? 'var(--cth-command-gold)' : 'var(--cth-command-panel-soft)';
+                    return (
+                      <button key={step.key} type="button" onClick={() => { setActiveMagnetStep(step.key); setZuriOutput(null); }} data-testid={`magnet-step-${step.key}`} className="text-left" style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', cursor: 'pointer', border: 'none', borderLeft: `2px solid ${isActive ? 'var(--cth-command-crimson)' : 'transparent'}`, background: isActive ? 'var(--cth-command-panel)' : 'transparent' }}>
+                        {done ? <Check size={12} style={{ color: 'var(--cth-command-success)', flexShrink: 0 }} /> : isActive ? <Pencil size={12} style={{ color: 'var(--cth-command-crimson)', flexShrink: 0 }} /> : <span style={{ width: 12, height: 12, borderRadius: '50%', border: '1.5px solid var(--cth-command-border)', flexShrink: 0, display: 'inline-block' }} />}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="flex items-center" style={{ gap: 6 }}>
+                            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 700, color: isActive ? 'var(--cth-command-crimson)' : 'var(--cth-command-muted)' }}>{step.letter}</span>
+                            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: isActive ? 500 : 400, color: isActive ? 'var(--cth-command-crimson)' : 'var(--cth-command-muted)' }}>{step.label}</span>
+                          </div>
+                          <div style={{ height: 2, borderRadius: 2, marginTop: 4, width: '100%', background: barColor }} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Field area */}
+                <div style={{ padding: '18px 20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 17, fontWeight: 600, color: 'var(--cth-command-ink)', marginBottom: 2 }}>{active.label}</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'var(--cth-command-muted)', lineHeight: 1.5 }}>{active.desc}</div>
+                  </div>
+
+                  {activeMagnetStep === 'message' && (<>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Campaign name</div><input data-testid="campaign-name-input" style={inputStyle} value={form.name || ''} onChange={(e) => fld('name', e.target.value)} placeholder="Name this campaign" /></div>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Campaign hook</div><input style={inputStyle} value={form.emotional_hook || ''} onChange={(e) => fld('emotional_hook', e.target.value)} placeholder="The one true thing they already feel…" /></div>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Promise</div><textarea style={areaStyle} value={form.promise || ''} onChange={(e) => fld('promise', e.target.value)} placeholder="What this campaign promises to change." /></div>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Problem statement</div><input style={inputStyle} value={form.problem_statement || ''} onChange={(e) => fld('problem_statement', e.target.value)} placeholder="The problem this names." /></div>
+                  </>)}
+
+                  {activeMagnetStep === 'audience' && (<>
+                    <div className="flex flex-col" style={{ gap: 5 }}>
+                      <div style={labelStyle}>Target audience</div>
+                      <select
+                        data-testid="campaign-audience-select"
+                        style={inputStyle}
+                        value={form.avatar_id || ''}
+                        onChange={(e) => {
+                          const a = avatars.find((x) => x.id === e.target.value);
+                          setForm((p) => {
+                            if (!a) return { ...p, avatar_id: '' };
+                            const next = { ...p, avatar_id: a.id };
+                            // Auto-fill from the selected avatar, but never clobber custom content the founder already typed.
+                            if (!String(p.audience_description || '').trim()) next.audience_description = a.description || a.name || '';
+                            if (!String(p.audience_problem || '').trim()) next.audience_problem = a.core_fear || a.primary_problem || '';
+                            // awareness_stage has a default ('problem_aware'); treat the untouched default as fillable.
+                            if (!p.awareness_stage || p.awareness_stage === 'problem_aware') next.awareness_stage = a.stage || a.awareness_stage || p.awareness_stage || '';
+                            return next;
+                          });
+                        }}
+                      >
+                        <option value="">{avatars.length ? 'Select an avatar…' : 'No avatars yet'}</option>
+                        {avatars.map((a) => (<option key={a.id} value={a.id}>{a.name}</option>))}
+                      </select>
+                      {avatars.length === 0 ? (
+                        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10.5, color: 'var(--cth-command-muted)' }}>Create an avatar in the Audience tab, then select it here.</span>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Audience problem</div><textarea style={areaStyle} value={form.audience_problem || ''} onChange={(e) => fld('audience_problem', e.target.value)} placeholder="The problem in their words." /></div>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Awareness stage</div><select style={inputStyle} value={form.awareness_stage || ''} onChange={(e) => fld('awareness_stage', e.target.value)}><option value="">Select stage…</option>{AWARENESS_STAGE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}</select></div>
+                  </>)}
+
+                  {activeMagnetStep === 'goal' && (<>
+                    <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Goal</div><select style={inputStyle} value={form.goal || ''} onChange={(e) => fld('goal', e.target.value)}><option value="">Choose a goal…</option>{GOAL_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}</select></div>
+                      <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Linked offer</div><input style={inputStyle} value={form.offer_name || ''} onChange={(e) => fld('offer_name', e.target.value)} placeholder="Offer name" /></div>
+                      <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Start date</div><input type="date" style={inputStyle} value={form.start_date || ''} onChange={(e) => fld('start_date', e.target.value)} /></div>
+                      <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>End date</div><input type="date" style={inputStyle} value={form.end_date || ''} onChange={(e) => fld('end_date', e.target.value)} /></div>
+                      <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Target metric</div><input style={inputStyle} value={form.target_metric || ''} onChange={(e) => fld('target_metric', e.target.value)} placeholder="e.g. Leads" /></div>
+                      <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Target value</div><input style={inputStyle} value={form.target_value || ''} onChange={(e) => fld('target_value', e.target.value)} placeholder="e.g. 50" /></div>
+                    </div>
+                    <div className="flex flex-col" style={{ gap: 5 }}>
+                      <div style={labelStyle}>Platforms</div>
+                      <div className="flex flex-wrap" style={{ gap: 6 }}>
+                        {PLATFORM_OPTIONS.map((o) => {
+                          const on = (form.platforms || []).includes(o.value);
+                          return (<button key={o.value} type="button" onClick={() => fld('platforms', on ? (form.platforms || []).filter((p) => p !== o.value) : [...(form.platforms || []), o.value])} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, padding: '5px 11px', borderRadius: 20, cursor: 'pointer', border: `1px solid ${on ? 'var(--cth-command-crimson)' : 'var(--cth-command-border)'}`, background: on ? 'color-mix(in srgb, var(--cth-command-crimson) 10%, var(--cth-command-panel))' : 'var(--cth-command-panel)', color: on ? 'var(--cth-command-crimson)' : 'var(--cth-command-muted)' }}>{o.label}</button>);
+                        })}
+                      </div>
+                    </div>
+                  </>)}
+
+                  {activeMagnetStep === 'narrative' && (<>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Campaign hook</div><input style={inputStyle} value={form.emotional_hook || ''} onChange={(e) => fld('emotional_hook', e.target.value)} placeholder="The hook the story leads with." /></div>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Core narrative arc</div><textarea style={{ ...areaStyle, minHeight: 96 }} value={form.narrative_arc || ''} onChange={(e) => fld('narrative_arc', e.target.value)} placeholder="How this campaign takes your audience from where they are to where they want to be." /></div>
+                  </>)}
+
+                  {activeMagnetStep === 'execution' && (<>
+                    <div className="flex flex-col" style={{ gap: 6 }}>
+                      <div className="flex items-center justify-between"><div style={labelStyle}>Content plan</div><button type="button" onClick={() => fld('content_plan', [...(form.content_plan || []), { id: `cp-${Date.now()}`, week: 1, format: '', platform: 'instagram', topic: '', status: 'pending' }])} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10.5, color: 'var(--cth-command-crimson)', background: 'transparent', border: 'none', cursor: 'pointer' }}>+ Add item</button></div>
+                      {(form.content_plan || []).length === 0 ? (<p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'var(--cth-command-muted)' }}>No content items yet.</p>) : (form.content_plan || []).map((it, i) => (
+                        <div key={it.id || i} className="grid items-center" style={{ gridTemplateColumns: '1fr 110px 70px 24px', gap: 6 }}>
+                          <input style={{ ...inputStyle, padding: '7px 10px' }} value={it.format || ''} placeholder="Format / topic" onChange={(e) => { const n = [...(form.content_plan || [])]; n[i] = { ...n[i], format: e.target.value }; fld('content_plan', n); }} />
+                          <select style={{ ...inputStyle, padding: '7px 10px' }} value={it.platform || 'instagram'} onChange={(e) => { const n = [...(form.content_plan || [])]; n[i] = { ...n[i], platform: e.target.value }; fld('content_plan', n); }}>{PLATFORM_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}</select>
+                          <select style={{ ...inputStyle, padding: '7px 10px' }} value={it.week || 1} onChange={(e) => { const n = [...(form.content_plan || [])]; n[i] = { ...n[i], week: Number(e.target.value) }; fld('content_plan', n); }}>{[1, 2, 3, 4].map((w) => (<option key={w} value={w}>W{w}</option>))}</select>
+                          <button type="button" onClick={() => fld('content_plan', (form.content_plan || []).filter((_, j) => j !== i))} style={{ background: 'transparent', border: 'none', color: 'var(--cth-command-muted)', cursor: 'pointer' }}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-col" style={{ gap: 6 }}>
+                      <div className="flex items-center justify-between"><div style={labelStyle}>Engagement tactics</div><button type="button" onClick={() => fld('engagement_tactics', [...(form.engagement_tactics || []), ''])} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10.5, color: 'var(--cth-command-crimson)', background: 'transparent', border: 'none', cursor: 'pointer' }}>+ Add tactic</button></div>
+                      {(form.engagement_tactics || []).length === 0 ? (<p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'var(--cth-command-muted)' }}>No tactics yet.</p>) : (form.engagement_tactics || []).map((t, i) => (
+                        <div key={i} className="grid items-center" style={{ gridTemplateColumns: '1fr 24px', gap: 6 }}>
+                          <input style={{ ...inputStyle, padding: '7px 10px' }} value={t} placeholder="e.g. Reply to every comment in 1h" onChange={(e) => { const n = [...(form.engagement_tactics || [])]; n[i] = e.target.value; fld('engagement_tactics', n); }} />
+                          <button type="button" onClick={() => fld('engagement_tactics', (form.engagement_tactics || []).filter((_, j) => j !== i))} style={{ background: 'transparent', border: 'none', color: 'var(--cth-command-muted)', cursor: 'pointer' }}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Lead magnet idea</div><input style={inputStyle} value={form.lead_magnet_idea || ''} onChange={(e) => fld('lead_magnet_idea', e.target.value)} placeholder="Optional" /></div>
+                  </>)}
+
+                  {activeMagnetStep === 'tracking' && (<>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Primary CTA</div><input style={inputStyle} value={form.cta_primary || ''} onChange={(e) => fld('cta_primary', e.target.value)} placeholder="The one action you want." /></div>
+                    <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Landing page URL</div><input style={inputStyle} value={form.landing_page_url || ''} onChange={(e) => fld('landing_page_url', e.target.value)} placeholder="https://" /></div>
+                      <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>CTA URL</div><input style={inputStyle} value={form.cta_url || ''} onChange={(e) => fld('cta_url', e.target.value)} placeholder="https://" /></div>
+                    </div>
+                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Urgency trigger</div><input style={inputStyle} value={form.urgency_trigger || ''} onChange={(e) => fld('urgency_trigger', e.target.value)} placeholder="Deadline, scarcity, bonus…" /></div>
+                  </>)}
+
+                  {/* Zuri card */}
+                  <div style={{ background: '#1a0828', borderRadius: 10, padding: '13px 15px' }} data-testid="zuri-campaign-step">
+                    <div className="flex items-center gap-2" style={{ marginBottom: 9 }}>
+                      <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--cth-command-crimson)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: "'DM Sans', sans-serif", fontSize: 8, fontWeight: 600, color: '#fff' }}>Z</span>
+                      <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7a6090' }}>Zuri · {active.label.toLowerCase()} guidance</span>
+                    </div>
+                    {zuriBusyStep === activeMagnetStep ? (
+                      <div className="flex items-center gap-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: 'italic', fontSize: 13, color: 'rgba(255,255,255,0.75)' }}><Loader2 size={13} className="animate-spin" /> Zuri is drafting…</div>
+                    ) : (zuriOutput && zuriOutput.step === activeMagnetStep && zuriOutput.text) ? (
+                      <>
+                        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#e8dff0', lineHeight: 1.55, whiteSpace: 'pre-wrap', maxHeight: 150, overflowY: 'auto', marginBottom: 8 }} data-testid="zuri-campaign-output">{zuriOutput.text}</div>
+                        <div className="flex items-center gap-2">
+                          {activeMagnetStep === 'narrative' ? (<button type="button" onClick={() => { fld('narrative_arc', zuriOutput.text); setZuriOutput(null); }} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, color: 'var(--cth-command-crimson)', background: 'transparent', border: '0.5px solid rgba(224,78,53,0.4)', borderRadius: 5, padding: '4px 10px', cursor: 'pointer' }}>Use as narrative arc</button>) : null}
+                          <button type="button" onClick={() => setZuriOutput(null)} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: '#7a6090', background: 'transparent', border: 'none', padding: '4px 6px', cursor: 'pointer' }}>Dismiss</button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 13, fontWeight: 500, color: '#e8dff0', lineHeight: 1.5, fontStyle: 'italic', marginBottom: 8 }}>&ldquo;{GUIDE[activeMagnetStep]}&rdquo;</div>
+                        {(activeMagnetStep === 'message' || activeMagnetStep === 'narrative') ? (
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => handleZuriStep(activeMagnetStep)} disabled={!canZuri} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, color: 'var(--cth-command-crimson)', background: 'transparent', border: '0.5px solid rgba(224,78,53,0.4)', borderRadius: 5, padding: '4px 10px', cursor: canZuri ? 'pointer' : 'not-allowed', opacity: canZuri ? 1 : 0.5 }}>{activeMagnetStep === 'message' ? 'Draft hooks' : 'Draft narrative arc'}</button>
+                            {!canZuri ? (<span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: '#5a4868' }}>Save the campaign first · uses AI credits</span>) : (<span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: '#5a4868' }}>Uses AI credits</span>)}
+                          </div>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between" style={{ padding: '11px 20px', borderTop: '1px solid var(--cth-command-border)', background: 'var(--cth-command-panel-soft)', flexShrink: 0, gap: 10 }}>
+                <button type="button" onClick={() => prev && setActiveMagnetStep(prev.key)} disabled={!prev} data-testid="magnet-prev" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'var(--cth-command-muted)', background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 7, padding: '7px 14px', cursor: prev ? 'pointer' : 'default', opacity: prev ? 1 : 0.4 }}>{prev ? `← ${prev.label}` : '← Previous'}</button>
+                <div className="flex items-center" style={{ gap: 8 }}>
+                  <button type="button" onClick={() => setEditorOpen(false)} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'var(--cth-command-muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}>Cancel</button>
+                  <button type="button" data-testid="save-campaign-btn" onClick={handleSaveCampaign} disabled={savingCampaign || !(form.name || '').trim()} className="inline-flex items-center gap-1.5" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 500, color: '#fff', background: 'var(--cth-command-success)', border: 'none', borderRadius: 7, padding: '7px 16px', cursor: (savingCampaign || !(form.name || '').trim()) ? 'not-allowed' : 'pointer', opacity: (savingCampaign || !(form.name || '').trim()) ? 0.6 : 1 }}>{savingCampaign ? (<><Loader2 size={12} className="animate-spin" /> Saving…</>) : 'Save campaign'}</button>
+                </div>
+                <button type="button" onClick={() => next && setActiveMagnetStep(next.key)} disabled={!next} data-testid="magnet-next" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 500, color: '#fff', background: 'var(--cth-command-crimson)', border: 'none', borderRadius: 7, padding: '7px 16px', cursor: next ? 'pointer' : 'default', opacity: next ? 1 : 0.4 }}>{next ? `${next.label} →` : 'Last'}</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {deleteTarget && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,0,16,0.6)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => !deleting && setDeleteTarget(null)}>

@@ -143,6 +143,11 @@ export const API_PATHS = {
     avatars: "/api/audience/avatars",
     avatarById: (avatarId) => `/api/audience/avatars/${encode(avatarId)}`,
     setPrimary: (avatarId) => `/api/audience/avatars/${encode(avatarId)}/set-primary`,
+    draftPortraitPrompt: (avatarId) =>
+      `/api/audience/avatars/${encode(avatarId)}/draft-portrait-prompt`,
+    portraitModels: "/api/audience/portrait-models",
+    generatePortrait: (avatarId) =>
+      `/api/audience/avatars/${encode(avatarId)}/generate-portrait`,
   },
 
   campaigns: {
