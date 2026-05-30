@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useUser } from '../hooks/useAuth';
 import { DashboardLayout } from '../components/Layout';
-import { Loader2, Plus, Zap, Calendar as CalendarIcon, X, Trash2, RefreshCw, Pencil } from 'lucide-react';
+import { Loader2, Plus, Zap, Calendar as CalendarIcon, X, Trash2, RefreshCw, Pencil, Radio, Search, User, Package, Megaphone } from 'lucide-react';
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import UploadZone from '../components/shared/UploadZone';
 import apiClient from '../lib/apiClient';
@@ -162,6 +162,49 @@ function magnetCompletion(c) {
  E: (c.engagement_tactics || []).length >= 1,
  T: !!c.cta_primary,
  };
+}
+
+// New MAGNET steps (rebuild) — labels per the Campaign Builder reference.
+const MAGNET_ORDER = [
+ { key: 'message', letter: 'M', label: 'Message', desc: 'The core message and promise this campaign leads with.' },
+ { key: 'audience', letter: 'A', label: 'Audience', desc: 'Who this campaign is for and the problem it speaks to.' },
+ { key: 'goal', letter: 'G', label: 'Goal', desc: 'What this campaign drives, on what timeline and platforms.' },
+ { key: 'narrative', letter: 'N', label: 'Narrative', desc: 'The story arc — how it moves your audience from where they are to where they want to be.' },
+ { key: 'execution', letter: 'E', label: 'Execution', desc: 'The content plan and engagement tactics that carry the campaign.' },
+ { key: 'tracking', letter: 'T', label: 'Tracking', desc: 'The conversion path and the links you track it with.' },
+];
+
+// Completion derived from each step's actual fields (not the legacy booleans).
+function magnetStepDone(c) {
+ return {
+ message: !!(c.emotional_hook && c.promise),
+ audience: !!(c.audience_description && c.audience_problem && c.awareness_stage),
+ goal: !!(c.goal && c.start_date && c.end_date && (c.platforms || []).length && (!goalRequiresOffer(c.goal) || c.offer_name)),
+ narrative: !!c.narrative_arc,
+ execution: (c.content_plan || []).length >= 1 && (c.engagement_tactics || []).length >= 1,
+ tracking: !!c.cta_primary,
+ };
+}
+
+function magnetDoneCount(c) {
+ return Object.values(magnetStepDone(c)).filter(Boolean).length;
+}
+
+// Active = launched; Complete = marked complete; Draft = otherwise.
+function campaignDisplayStatus(c) {
+ const s = c?.status || 'draft';
+ if (s === 'complete' || s.startsWith('completed')) return 'complete';
+ if (s === 'active') return 'active';
+ return 'draft';
+}
+
+function getGoalDescription(c) {
+ return (
+ c.transformation ||
+ c.promise ||
+ c.emotional_hook ||
+ (GOAL_CONFIG[c.goal]?.label || '')
+ );
 }
 
 export function buildCalendarItems(campaign) {
@@ -1118,12 +1161,13 @@ function CampaignBuilderPageContent() {
  }
 
  const sorted = [...list];
+ const STATUS_RANK = { active: 0, draft: 1, complete: 2 };
  switch (sortOrder) {
- case 'oldest':
- sorted.sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+ case 'status':
+ sorted.sort((a, b) => (STATUS_RANK[campaignDisplayStatus(a)] ?? 9) - (STATUS_RANK[campaignDisplayStatus(b)] ?? 9));
  break;
- case 'name-asc':
- sorted.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+ case 'magnet':
+ sorted.sort((a, b) => magnetDoneCount(b) - magnetDoneCount(a));
  break;
  case 'newest':
  default:
@@ -1387,34 +1431,9 @@ function CampaignBuilderPageContent() {
  );
  }
 
- return (
- <DashboardLayout>
- <div className="flex flex-col h-full" style={{ fontFamily: "'DM Sans', sans-serif", backgroundColor: 'var(--cth-command-blush)', minHeight: '100vh' }}>
- {calendarCampaign && (
- <CalendarPopulateModal
- campaign={calendarCampaign}
- onConfirm={handleCalendarConfirm}
- onCancel={() => setCalendarCampaign(null)}
- />
- )}
-
- <RegenerateModal
- isOpen={briefModalOpen}
- onClose={() => setBriefModalOpen(false)}
- onConfirm={handleBriefRegenerate}
- target="brief"
- isProcessing={briefRegenerating}
- />
-
- <RegenerateModal
- isOpen={hooksModalOpen}
- onClose={() => setHooksModalOpen(false)}
- onConfirm={handleHooksRegenerate}
- target="hooks"
- isProcessing={hooksRegenerating}
- />
-
- <header className="cth-page-header">
+  return (
+    <DashboardLayout>
+      <header className="cth-page-header">
         <div className="min-w-0 flex-1">
           <h1
             className="text-2xl md:text-[32px] leading-tight truncate"
@@ -1426,857 +1445,143 @@ function CampaignBuilderPageContent() {
             className="text-xs md:text-sm truncate"
             style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
           >
-            MAGNET Framework — Mission · Audience · Gravity · Narrative · Engagement · Transaction
+            {`${campaigns.length} campaign${campaigns.length !== 1 ? 's' : ''}`} · Build campaigns that move your audience through the five signal levels.
           </p>
         </div>
         <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
- <button
- type="button"
- onClick={() => navigate('/campaign-setup')}
- style={{
- padding: '8px 16px',
- background: 'var(--cth-command-crimson)',
- color: '#fff',
- border: 'none',
- borderRadius: 0,
- fontSize: '13px',
- fontWeight: 600,
- cursor: 'pointer',
- display: 'flex',
- alignItems: 'center',
- gap: '6px',
- }}
- >
- <Plus size={14} /> New Campaign
- </button>
+          <button
+            type="button"
+            data-testid="campaigns-new-button"
+            onClick={() => navigate('/campaign-setup')}
+            style={{ padding: '9px 18px', background: 'var(--cth-command-crimson)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'DM Sans', sans-serif" }}
+          >
+            <Plus size={14} /> New campaign
+          </button>
         </div>
       </header>
 
- <div className="mx-auto w-full max-w-[1200px] flex flex-col md:flex-row flex-1 overflow-hidden">
- <div className="md:w-60 flex-shrink-0 border-b md:border-b-0 md:border-r border-[var(--cth-command-border)] flex flex-col bg-[var(--cth-command-panel)]/85 backdrop-blur-sm">
- <div className="px-3.5 py-3 border-b border-[var(--cth-command-border)] space-y-2">
- <button
- onClick={() => {
- navigate('/campaign-setup');
- }}
- data-testid="campaigns-new-button"
- className="w-full inline-flex items-center justify-center gap-2 transition-all hover:opacity-90"
- style={{
- background: 'var(--cth-command-purple)',
- color: 'var(--cth-command-gold)',
- border: 'none',
- borderRadius: 0,
- padding: '9px 12px',
- fontFamily: "'DM Sans', sans-serif",
- fontSize: 13,
- fontWeight: 600,
- cursor: 'pointer',
- }}
- >
- <Plus size={14} /> New Campaign
- </button>
+      <div className="flex-1 overflow-auto px-4 py-7 md:px-8" style={{ background: 'var(--cth-command-blush)', minHeight: '100vh' }} data-testid="campaign-builder-page">
+        <div className="mx-auto w-full max-w-[1100px]" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* Toolbar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="flex items-center gap-2" style={{ flex: 1, maxWidth: 360, background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 8, padding: '8px 12px' }}>
+              <Search size={14} style={{ color: 'var(--cth-command-muted)', flexShrink: 0 }} />
+              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search campaigns..." data-testid="campaigns-search-input" style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: 'var(--cth-command-ink)', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }} />
+            </div>
+            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} data-testid="campaigns-sort-select" style={{ padding: '8px 12px', border: '1px solid var(--cth-command-border)', borderRadius: 8, background: 'var(--cth-command-panel)', color: 'var(--cth-command-ink)', fontFamily: "'DM Sans', sans-serif", fontSize: 13, cursor: 'pointer' }}>
+              <option value="newest">Newest first</option>
+              <option value="status">Status</option>
+              <option value="magnet">MAGNET progress</option>
+            </select>
+          </div>
 
- <input
- type="text"
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- placeholder="Search campaigns..."
- data-testid="campaigns-search-input"
- style={{
- width: '100%',
- background: 'var(--cth-command-panel)',
- color: 'var(--cth-command-ink)',
- border: '1px solid var(--cth-command-border)',
- borderRadius: 0,
- padding: '8px 12px',
- fontFamily: "'DM Sans', sans-serif",
- fontSize: 13,
- outline: 'none',
- boxSizing: 'border-box',
- }}
- />
+          {campaigns.length === 0 ? (
+            <div style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 12, padding: 48, textAlign: 'center' }}>
+              <div className="mx-auto flex items-center justify-center" style={{ width: 56, height: 56, borderRadius: 12, background: 'var(--cth-command-panel-soft)', border: '1px solid var(--cth-command-border)' }}>
+                <Megaphone size={22} style={{ color: 'var(--cth-command-muted)' }} />
+              </div>
+              <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 600, color: 'var(--cth-command-ink)', marginTop: 16 }}>Build your first campaign</h3>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: 'var(--cth-command-muted)', margin: '8px auto 20px', maxWidth: 440, lineHeight: 1.6 }}>Every piece of content should serve a campaign.</p>
+              <button type="button" onClick={() => navigate('/campaign-setup')} style={{ padding: '10px 18px', background: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none', borderRadius: 8, fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Plus size={14} /> New campaign
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14 }}>
+              {filtered.map((c) => {
+                const dispStatus = campaignDisplayStatus(c);
+                const stepDone = magnetStepDone(c);
+                const firstTodo = MAGNET_ORDER.findIndex((s) => !stepDone[s.key]);
+                const audience = c.avatar_snapshot?.name || c.audience_description || '';
+                const offer = c.offer_name || '';
+                const signals = c.signal_count || 0;
+                const accent = dispStatus === 'active'
+                  ? 'linear-gradient(90deg, var(--cth-command-crimson), var(--cth-command-cinnabar))'
+                  : dispStatus === 'complete'
+                  ? 'linear-gradient(90deg, var(--cth-command-success), #4a9e7a)'
+                  : 'var(--cth-command-border)';
+                const editLabel = dispStatus === 'complete' ? 'View results' : dispStatus === 'draft' ? 'Edit & complete' : 'Edit campaign';
+                const onEdit = () => (dispStatus === 'complete' ? navigate('/analytics') : navigate('/campaign-setup', { state: { campaignId: c.id } }));
+                return (
+                  <div key={c.id} data-testid={`campaign-card-${c.id}`} style={{ background: 'var(--cth-command-panel)', border: `1px solid ${dispStatus === 'active' ? 'var(--cth-command-crimson)' : 'var(--cth-command-border)'}`, borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ height: 3, background: accent }} />
+                    <div style={{ padding: '15px 16px 11px', flex: 1 }}>
+                      <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
+                        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: dispStatus === 'draft' ? 'var(--cth-command-panel-soft)' : 'color-mix(in srgb, var(--cth-command-success) 12%, var(--cth-command-panel))', color: dispStatus === 'draft' ? 'var(--cth-command-muted)' : 'var(--cth-command-success)', border: `1px solid ${dispStatus === 'draft' ? 'var(--cth-command-border)' : 'color-mix(in srgb, var(--cth-command-success) 35%, var(--cth-command-border))'}` }}>
+                          {dispStatus === 'active' ? 'Active' : dispStatus === 'complete' ? 'Complete' : 'Draft'}
+                        </span>
+                        <span className="inline-flex items-center gap-1" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, color: 'var(--cth-command-gold)' }}>
+                          <Radio size={11} /> {signals} signal{signals === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                      <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 17, fontWeight: 500, lineHeight: 1.3, margin: '0 0 5px', color: 'var(--cth-command-ink)' }}>{c.name || 'Untitled campaign'}</h3>
+                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, lineHeight: 1.55, color: 'var(--cth-command-muted)', margin: '0 0 10px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{getGoalDescription(c)}</p>
+                      <div className="flex flex-wrap" style={{ gap: 6 }}>
+                        <span className="inline-flex items-center gap-1" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, padding: '3px 8px', borderRadius: 20, background: 'var(--cth-command-panel-soft)', border: '1px solid var(--cth-command-border)', color: 'var(--cth-command-muted)', opacity: audience ? 1 : 0.6 }}>
+                          <User size={10} /> {audience ? (audience.length > 28 ? `${audience.slice(0, 28)}…` : audience) : 'No audience linked'}
+                        </span>
+                        <span className="inline-flex items-center gap-1" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, padding: '3px 8px', borderRadius: 20, background: 'var(--cth-command-panel-soft)', border: '1px solid var(--cth-command-border)', color: 'var(--cth-command-muted)', opacity: offer ? 1 : 0.6 }}>
+                          <Package size={10} /> {offer || 'No offer linked'}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ padding: '0 16px 12px' }}>
+                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--cth-command-muted)', marginBottom: 7, fontWeight: 600 }}>MAGNET progress</div>
+                      <div className="flex" style={{ gap: 4 }}>
+                        {MAGNET_ORDER.map((step, i) => {
+                          const st = stepDone[step.key] ? 'done' : (i === firstTodo ? 'active' : 'todo');
+                          const barColor = st === 'done' ? 'var(--cth-command-success)' : st === 'active' ? 'var(--cth-command-gold)' : 'var(--cth-command-panel-soft)';
+                          return (
+                            <div key={step.key} className="flex flex-col items-center" style={{ flex: 1, gap: 3 }}>
+                              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, fontWeight: 500, color: 'var(--cth-command-muted)', letterSpacing: '0.06em' }}>{step.letter}</span>
+                              <div style={{ width: '100%', height: 3, borderRadius: 2, background: barColor }} />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="flex items-center" style={{ gap: 6, padding: '10px 16px', borderTop: '1px solid var(--cth-command-border)' }}>
+                      <button type="button" data-testid={`campaign-edit-${c.id}`} onClick={onEdit} style={{ flex: 1, fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, color: 'var(--cth-command-ink)', background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 6, padding: '6px', cursor: 'pointer' }}>
+                        {editLabel}
+                      </button>
+                      {dispStatus === 'draft' ? (
+                        <button type="button" data-testid={`campaign-launch-${c.id}`} onClick={() => handleStatusChange(c.id, 'active')} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, color: '#fff', background: 'var(--cth-command-crimson)', border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer' }}>
+                          Launch
+                        </button>
+                      ) : null}
+                      <button type="button" data-testid={`campaign-delete-${c.id}`} onClick={() => handleDelete(c.id)} aria-label={`Delete ${c.name}`} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'var(--cth-command-crimson)', background: 'transparent', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer' }}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
 
- <select
- value={sortOrder}
- onChange={(e) => setSortOrder(e.target.value)}
- data-testid="campaigns-sort-select"
- style={{
- width: '100%',
- background: 'var(--cth-command-panel)',
- color: 'var(--cth-command-ink)',
- border: '1px solid var(--cth-command-border)',
- borderRadius: 0,
- padding: '8px 12px',
- fontFamily: "'DM Sans', sans-serif",
- fontSize: 13,
- outline: 'none',
- boxSizing: 'border-box',
- }}
- >
- <option value="newest">Newest First</option>
- <option value="oldest">Oldest First</option>
- <option value="name-asc">Name A-Z</option>
- </select>
+              <button type="button" data-testid="add-campaign-card" onClick={() => navigate('/campaign-setup')} style={{ background: 'transparent', border: '1px dashed var(--cth-command-border)', borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '32px 16px', cursor: 'pointer', minHeight: 200, color: 'var(--cth-command-muted)', fontFamily: "'DM Sans', sans-serif", fontSize: 12 }}>
+                <Megaphone size={20} style={{ color: 'var(--cth-command-border)' }} />
+                Add another campaign
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
- <select
- value={statusFilter}
- onChange={(e) => setStatusFilter(e.target.value)}
- className="w-full border border-[var(--cth-command-border)] bg-white/80 px-3 py-2.5 text-xs font-medium cth-heading focus:outline-none focus:border-[var(--cth-command-crimson)]"
- >
- <option value="all">All Campaigns</option>
- <option value="active">Active</option>
- <option value="draft">Draft</option>
- <option value="paused">Paused</option>
- <option value="complete">Complete</option>
- </select>
- </div>
-
- <div className="flex-1 overflow-y-auto px-3 py-3 max-h-40 md:max-h-none space-y-2">
- {filtered.length === 0 && (
- <p className="text-xs cth-muted text-center py-8">
- {searchQuery.trim()
- ? `No campaigns matching "${searchQuery.trim()}"`
- : 'No campaigns yet'}
- </p>
- )}
-
- {filtered.map((c) => {
- const isActive = selectedId === c.id;
- return (
- <button
- key={c.id}
- onClick={() => {
- setSelectedId(c.id);
- setDetailTab('overview');
- }}
- className="w-full text-left px-4 py-3 transition-all"
- style={{
- background: isActive ? 'rgba(175, 0, 42, 0.04)' : 'var(--cth-command-panel-soft)',
- border: isActive ? '1px solid var(--cth-command-crimson)' : '1px solid var(--cth-command-border)',
- borderRadius: 0,
- }}
- >
- <div className="flex items-start justify-between mb-1.5">
- <span
- style={{
- fontFamily: '"DM Sans", system-ui, sans-serif',
- fontSize: 13,
- fontWeight: 600,
- color: 'var(--cth-command-ink)',
- }}
- >
- {c.name}
- </span>
- <StatusBadge status={c.status} />
- </div>
- <GoalBadge goal={c.goal} />
- <div className="mt-2.5">
- <MAGNETProgress campaign={c} />
- </div>
- {c.end_date && c.status === 'active' && (
- <p style={{ fontSize: 11, color: 'var(--cth-command-muted)', marginTop: 6 }}>
- {daysLeft(c.end_date)} days left
- </p>
- )}
- </button>
- );
- })}
- </div>
- </div>
-
- {selected ? (
- <div className="flex flex-1 overflow-hidden bg-[var(--cth-command-panel)] pt-4 md:pt-6">
- <div className="flex-1 overflow-y-auto space-y-8">
- <div className="px-5 py-5 md:px-8 md:py-7 border-b border-[var(--cth-command-border)] space-y-5">
- <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
- <div>
- <div className="flex flex-wrap items-center gap-2.5 mb-3">
- <StatusBadge status={selected.status} />
- <GoalBadge goal={selected.goal} />
- </div>
- <h2 className="text-2xl font-bold cth-heading" >
- {selected.name}
- </h2>
- <p className="text-sm cth-muted mt-1">{selected.offer_name}</p>
- </div>
-
- <div className="flex flex-wrap items-center gap-2">
- {selected.status !== 'active' && (
- <button
- onClick={() => handleStatusChange(selected.id, 'active')}
- className="px-3.5 py-2.5 text-xs font-semibold transition-all hover:opacity-90"
- style={{
- background: 'var(--cth-command-purple)',
- color: 'var(--cth-command-gold)',
- border: 'none',
- borderRadius: 0,
- fontFamily: '"DM Sans", system-ui, sans-serif',
- }}
- >
- Activate
- </button>
- )}
-
- {selected.status === 'active' && (
- <button
- onClick={() => handleStatusChange(selected.id, 'paused')}
- className="px-3.5 py-2.5 text-xs font-semibold transition-all hover:opacity-80"
- style={{
- border: '1px solid var(--cth-command-gold)',
- background: 'transparent',
- color: 'var(--cth-command-gold)',
- borderRadius: 0,
- fontFamily: '"DM Sans", system-ui, sans-serif',
- }}
- >
- Pause
- </button>
- )}
-
- <button
- onClick={() => handleStatusChange(selected.id, 'completed_won')}
- className="px-3.5 py-2.5 text-xs font-semibold transition-all hover:opacity-90"
- style={{
- background: 'var(--cth-command-crimson)',
- color: 'var(--cth-command-ivory)',
- border: 'none',
- borderRadius: 0,
- fontFamily: '"DM Sans", system-ui, sans-serif',
- }}
- >
- Complete
- </button>
-
- <button
- onClick={() => handleDelete(selected.id)}
- title="Delete campaign"
- className="px-3 py-2.5 text-xs font-semibold transition-all hover:opacity-80 inline-flex items-center gap-1.5"
- style={{
- border: '1px solid var(--cth-command-border)',
- background: 'transparent',
- color: 'var(--cth-command-muted)',
- borderRadius: 0,
- fontFamily: '"DM Sans", system-ui, sans-serif',
- }}
- >
- <Trash2 size={14} />
- Delete
- </button>
- </div>
- </div>
-
- <MAGNETProgress campaign={selected} />
-
- <div
- className="flex flex-wrap items-center gap-0"
- style={{ borderBottom: '1px solid var(--cth-command-border)' }}
- >
- {['overview', 'content', 'launch', 'funnel', 'results', 'assets', 'brief', 'hooks'].map((tab) => {
- const active = detailTab === tab;
- return (
- <button
- key={tab}
- onClick={() => setDetailTab(tab)}
- className="text-sm transition-all"
- style={{
- padding: '10px 16px',
- background: 'transparent',
- borderBottom: active ? '2px solid var(--cth-command-crimson)' : '2px solid transparent',
- marginBottom: -1,
- color: active ? 'var(--cth-command-ink)' : 'var(--cth-command-muted)',
- fontWeight: active ? 600 : 500,
- fontFamily: '"DM Sans", system-ui, sans-serif',
- }}
- >
- {tab === 'overview' ? 'Overview' : tab === 'content' ? 'Checklist' : tab === 'launch' ? 'Launch View' : tab === 'funnel' ? 'Funnel' : tab === 'results' ? 'Results' : tab === 'assets' ? 'Assets' : tab === 'brief' ? 'Brief' : tab === 'hooks' ? 'Hooks' : tab}
- </button>
- );
- })}
- </div>
- </div>
-
- <div className="px-8 py-6">
- {detailTab === 'overview' && (
- <div className="space-y-4">
- {!isEditingOverview ? (
- <>
- <div className="flex items-center justify-end">
- <button
- type="button"
- onClick={handleStartEditOverview}
- data-testid="edit-campaign-btn"
- className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
- style={{
- background: 'transparent',
- color: 'var(--cth-command-ink)',
- border: '1px solid var(--cth-command-border)',
- fontFamily: '"DM Sans", system-ui, sans-serif',
- cursor: 'pointer',
- }}
- >
- <Pencil size={14} /> Edit Campaign
- </button>
- </div>
-
- <div className="grid grid-cols-2 gap-4">
- {[
- { label: 'Emotional Hook', value: selected.emotional_hook },
- { label: 'Audience', value: selected.avatar_snapshot?.name || selected.audience_description },
- { label: 'Promise', value: selected.promise },
- { label: 'Primary CTA', value: selected.cta_primary },
- ].map((item) => (
- <div
- key={item.label}
- style={{
- padding: 16,
- background: 'var(--cth-command-panel)',
- border: '1px solid var(--cth-command-border)',
- borderRadius: 0,
- }}
- >
- <p
- style={{
- fontFamily: '"DM Sans", system-ui, sans-serif',
- fontSize: 11,
- fontWeight: 600,
- letterSpacing: '0.18em',
- textTransform: 'uppercase',
- color: 'var(--cth-command-muted)',
- margin: 0,
- marginBottom: 8,
- }}
- >
- {item.label}
- </p>
- <p
- style={{
- fontFamily: '"DM Sans", system-ui, sans-serif',
- fontSize: 15,
- lineHeight: 1.7,
- color: 'var(--cth-command-ink)',
- margin: 0,
- }}
- >
- {item.value || 'Not set'}
- </p>
- </div>
- ))}
- </div>
-
- <RetrospectiveSection campaign={selected} onUpdate={handleCampaignUpdate} />
-
- <div className="pt-2">
- <button
- onClick={() => {
- navigate('/campaign-setup');
- }}
- className="flex items-center gap-2 px-4 py-2 bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold shadow-sm"
- >
- <Plus size={14} /> New Campaign
- </button>
- </div>
- </>
- ) : (
- <OverviewEditForm
- draft={overviewDraft}
- onChange={handleOverviewDraftChange}
- onTogglePlatform={handleTogglePlatform}
- onSave={handleSaveOverview}
- onCancel={() => setIsEditingOverview(false)}
- />
- )}
- </div>
- )}
-
- {detailTab === 'content' && (
- <div className="space-y-4">
- <p className="text-sm font-semibold cth-muted mb-3">Content Checklist</p>
- {(() => {
- const allItems = selected.content_plan || [];
- const generatedItems = allItems.filter((item) => item.status === 'generated' || item.status === 'published' || item.status === 'complete').length;
- const pendingItems = allItems.filter((item) => !['generated', 'published', 'complete'].includes(item.status)).length;
- const completionPct = allItems.length ? Math.round((generatedItems / allItems.length) * 100) : 0;
-
- return (
- <div className="grid grid-cols-4 gap-3 mb-2">
- <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
- <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Checklist Items</p>
- <p className="text-lg font-semibold cth-heading">{allItems.length}</p>
- </div>
- <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
- <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Generated</p>
- <p className="text-lg font-semibold cth-heading">{generatedItems}</p>
- </div>
- <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
- <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Pending</p>
- <p className="text-lg font-semibold cth-heading">{pendingItems}</p>
- </div>
- <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
- <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Completion</p>
- <p className="text-lg font-semibold cth-heading">{completionPct}%</p>
- </div>
- </div>
- );
- })()}
-
- {[1, 2, 3, 4].map((week) => {
- const weekTypes = { 1: 'Awareness', 2: 'Education', 3: 'Authority', 4: 'Promotion' };
- const items = (selected.content_plan || []).filter((i) => i.week === week);
- if (!items.length) return null;
-
- return (
- <div key={week}>
- <p className="text-[10px] font-semibold uppercase tracking-widest cth-muted mb-2">
- Week {week} — {weekTypes[week]}
- </p>
- <div className="cth-card-muted border border-[var(--cth-command-border)] divide-y divide-white/[0.05]">
- {items.map((item) => (
- <div key={item.id} className="flex items-center justify-between px-4 py-3">
- <div>
- <p className="text-xs font-medium cth-muted">{item.format}</p>
- <p className="text-[10px] cth-muted">
- {item.platform}
- {item.topic ? ` · ${item.topic}` : ''}
- </p>
- </div>
- <button
- onClick={() =>
- navigate('/content-studio', {
- state: {
- campaignId: selected.id,
- contentItemId: item.id,
- format: item.format,
- platform: item.platform,
- topic:
- item.topic ||
- `${selected.offer_name || selected.name || 'Campaign'} ${item.format || 'content'}`,
- },
- })
- }
- className="text-[10.5px] px-2.5 py-1 bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/20 cth-text-accent font-medium"
- >
- {item.status === 'pending' ? 'Generate' : 'View'}
- </button>
- </div>
- ))}
- </div>
- </div>
- );
- })}
- </div>
- )}
-
- {detailTab === 'launch' && (
- <div className="space-y-4">
- <p className="text-sm font-semibold cth-muted mb-1">Launch View</p>
- <p className="text-xs cth-muted mb-4">
- Read-only launch timeline derived from this campaign’s content checklist.
- </p>
- {(() => {
- const allItems = selected.content_plan || [];
- const completedItems = allItems.filter((item) => item.status === 'generated' || item.status === 'published' || item.status === 'complete').length;
- const pendingItems = allItems.filter((item) => !['generated', 'published', 'complete'].includes(item.status)).length;
- const completionPct = allItems.length ? Math.round((completedItems / allItems.length) * 100) : 0;
-
- return (
- <div className="grid grid-cols-4 gap-3">
- <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
- <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Checklist Items</p>
- <p className="text-lg font-semibold cth-heading">{allItems.length}</p>
- </div>
- <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
- <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Generated</p>
- <p className="text-lg font-semibold cth-heading">{completedItems}</p>
- </div>
- <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
- <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Pending</p>
- <p className="text-lg font-semibold cth-heading">{pendingItems}</p>
- </div>
- <div className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-3 shadow-sm">
- <p className="text-[9px] font-semibold uppercase tracking-widest cth-muted mb-1">Completion</p>
- <p className="text-lg font-semibold cth-heading">{completionPct}%</p>
- </div>
- </div>
- );
- })()}
-
-
- {[
- { id: 'pre-launch', name: 'Pre-Launch', weeks: [1, 2] },
- { id: 'launch', name: 'Launch', weeks: [3] },
- { id: 'post-launch', name: 'Post-Launch', weeks: [4] },
- ].map((phase) => {
- const items = (selected.content_plan || []).filter((item) => phase.weeks.includes(item.week));
- const completed = items.filter((item) => item.status === 'generated' || item.status === 'published' || item.status === 'complete').length;
-
- return (
- <div key={phase.id} className="border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] p-4 shadow-sm">
- <div className="flex items-center justify-between mb-3">
- <div>
- <p className="text-sm font-semibold cth-heading">{phase.name}</p>
- <p className="text-[10px] cth-muted">
- {items.length} item{items.length !== 1 ? 's' : ''} · {completed}/{items.length} complete
- </p>
- </div>
- </div>
-
- {items.length === 0 ? (
- <p className="text-xs cth-muted">No campaign items mapped to this phase yet.</p>
- ) : (
- <div className="space-y-2">
- {items.map((item) => (
- <div
- key={item.id}
- className="flex items-center justify-between border border-[var(--cth-command-border)] px-3 py-2"
- >
- <div>
- <p className="text-xs font-medium cth-muted">{item.format || 'Content item'}</p>
- <p className="text-[10px] cth-muted">
- Week {item.week}
- {item.platform ? ` · ${item.platform}` : ''}
- {item.topic ? ` · ${item.topic}` : ''}
- </p>
- </div>
- <span className="text-[10px] font-semibold uppercase tracking-widest cth-text-accent">
- {item.status || 'pending'}
- </span>
- </div>
- ))}
- </div>
- )}
- </div>
- );
- })}
- </div>
- )}
-
- {detailTab === 'funnel' && (
- <div>
- <p className="text-sm font-semibold cth-muted mb-4">Conversion Funnel</p>
- <div className="space-y-1">
- {(selected.conversion_funnel || []).map((step, idx) => (
- <div key={step.id} className="flex items-start gap-3">
- <div className="flex flex-col items-center">
- <div className="w-7 h-7 rounded-full cth-card-muted border border-[var(--cth-command-border)] flex items-center justify-center text-[10px] font-bold cth-muted">
- {idx + 1}
- </div>
- </div>
- <div className="flex-1 p-3 cth-card-muted border border-[var(--cth-command-border)] mb-1">
- <p className="text-xs font-medium cth-muted">{step.label}</p>
- <p className="text-[10px] cth-muted capitalize">{(step.type || '').replace(/_/g, ' ')}</p>
- </div>
- </div>
- ))}
- </div>
-
- <hr style={{ border: "none", borderTop: "1px solid var(--cth-command-border)", margin: "24px 0" }} />
-
- <TrackingLinkManager
- title="Campaign Tracking Links"
- subtitle="Create campaign-specific tracked links for CTAs, launch emails, funnels, and social posts."
- defaultLabel={selected?.cta_primary || selected?.name || "Campaign CTA"}
- defaultUrl={selected?.cta_url || selected?.landing_page_url || selected?.url || ""}
- context={{
- source: "campaign_builder",
- campaign_id: selected?.id || selected?.campaign_id || "",
- metadata: {
- campaign_name: selected?.name || selected?.title || "",
- campaign_goal: selected?.goal || "",
- landing_page_url: selected?.landing_page_url || "",
- cta_url: selected?.cta_url || "",
- },
- }}
- />
-</div>
-)}
-
- {detailTab === 'results' && (
- <TabResults campaign={selected} onSaveResults={handleSaveResults} />
- )}
-
- {detailTab === 'assets' && (
- <div>
- <p className="text-sm font-semibold cth-muted mb-1">Campaign Assets</p>
- <p className="text-xs cth-muted mb-4">
- Upload creative files, ad images, and campaign assets.
- </p>
- <UploadZone
- context={`campaign-${selected.id}`}
- accept={['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'video/mp4', 'application/pdf']}
- maxFiles={30}
- maxSizeMB={50}
- assets={selected.campaign_assets || []}
- onUploadComplete={(newAssets) => {
- const updated = [...(selected.campaign_assets || []), ...newAssets];
- handleAssetsUpdate(selected.id, updated);
- }}
- onRemove={(assetId) => {
- const updated = (selected.campaign_assets || []).filter((a) => a.id !== assetId);
- handleAssetsUpdate(selected.id, updated);
- }}
- label="Campaign Creative"
- helpText="Ad images, videos, PDFs — up to 50MB each"
- />
-
- <hr style={{ border: "none", borderTop: "1px solid var(--cth-command-border)", margin: "24px 0" }} />
-
-<CampaignLinkagePanels
- selected={selected}
- linkedMedia={linkedMedia}
- linkedContent={linkedContent}
- linkedSocialPosts={linkedSocialPosts}
- linkageLoading={linkageLoading}
- onRemoveMedia={handleRemoveLinkedMedia}
- onAddMedia={() => navigate('/media-studio', { state: { campaignId: selected.id, campaignName: selected.name } })}
- onAddContent={() => navigate('/content-studio', { state: { campaignId: selected.id } })}
- onAddSocial={() => navigate('/social-media-manager', { state: { campaignId: selected.id, campaignName: selected.name } })}
- />
-</div>
-)}
-
- {detailTab === 'brief' && (
- <div>
- <div className="flex items-center justify-between mb-4">
- <p className="text-sm font-semibold cth-muted">Campaign Brief</p>
- {selected.brief && (
- <button
- type="button"
- onClick={() => setBriefModalOpen(true)}
- disabled={briefRegenerating}
- className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/20 text-[10.5px] cth-text-accent disabled:opacity-50"
- >
- <RefreshCw size={12} />
- Regenerate Brief
- </button>
- )}
- </div>
- {selected.brief ? (
- <div className="p-5 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] shadow-sm">
- <div
- className="cth-body text-sm cth-muted leading-relaxed [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mb-2 [&_p]:mb-3 [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:pl-5 [&_ol]:mb-3 [&_li]:mb-1"
- dangerouslySetInnerHTML={{ __html: renderedCampaignBrief }}
- />
- </div>
- ) : (
- <div className="p-6 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] shadow-sm text-center">
- <p className="text-sm cth-muted mb-4">No brief generated yet.</p>
- <button
- type="button"
- onClick={handleGenerateBrief}
- disabled={briefGenerating}
- className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold disabled:opacity-50"
- >
- {briefGenerating ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
- {briefGenerating ? 'Generating…' : 'Generate Brief'}
- </button>
- </div>
- )}
- </div>
- )}
-
- {detailTab === 'hooks' && (
- <div>
- <div className="flex items-center justify-between mb-4">
- <p className="text-sm font-semibold cth-muted">Campaign Hooks</p>
- {(selected.generated_hooks || []).length > 0 && (
- <button
- type="button"
- onClick={() => setHooksModalOpen(true)}
- disabled={hooksRegenerating}
- className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/20 text-[10.5px] cth-text-accent disabled:opacity-50"
- >
- <RefreshCw size={12} />
- Regenerate Hooks
- </button>
- )}
- </div>
- {(selected.generated_hooks || []).length > 0 ? (
- <div className="p-5 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] shadow-sm">
- <ol className="space-y-2.5 list-decimal list-inside text-sm cth-muted leading-relaxed">
- {selected.generated_hooks.map((hook, i) => (
- <li key={i}>{hook}</li>
- ))}
- </ol>
- </div>
- ) : (
- <div className="p-6 border border-[var(--cth-command-border)] bg-[var(--cth-command-panel)] shadow-sm text-center">
- <p className="text-sm cth-muted mb-4">No hooks generated yet.</p>
- <button
- type="button"
- onClick={handleGenerateHooks}
- disabled={hooksGenerating}
- className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-xs font-semibold disabled:opacity-50"
- >
- {hooksGenerating ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
- {hooksGenerating ? 'Generating…' : 'Generate Hooks'}
- </button>
- </div>
- )}
- </div>
- )}
- </div>
- </div>
-
- <div
- className="w-56 flex-shrink-0 self-start mt-6 mr-4 space-y-3"
- style={{
- background: 'var(--cth-command-panel)',
- border: '1px solid var(--cth-command-border)',
- borderRadius: 0,
- padding: 16,
- }}
- >
- <p
- style={{
- fontFamily: '"DM Sans", system-ui, sans-serif',
- fontSize: 11,
- fontWeight: 600,
- letterSpacing: '0.18em',
- textTransform: 'uppercase',
- color: 'var(--cth-command-muted)',
- margin: 0,
- marginBottom: 8,
- }}
- >
- Quick Actions
- </p>
- <div className="space-y-2">
- <button
- onClick={() => navigate('/content-studio', { state: { campaignId: selected.id } })}
- className="w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors hover:opacity-90"
- style={{
- border: '1px solid var(--cth-command-border)',
- background: 'transparent',
- color: 'var(--cth-command-ink)',
- borderRadius: 0,
- fontFamily: '"DM Sans", system-ui, sans-serif',
- fontSize: 13,
- }}
- onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cth-command-panel-soft)'; }}
- onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
- >
- Open Content Studio
- </button>
- <button
- onClick={() => navigate('/media-studio', { state: { campaignId: selected.id } })}
- className="w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors hover:opacity-90"
- style={{
- border: '1px solid var(--cth-command-border)',
- background: 'transparent',
- color: 'var(--cth-command-ink)',
- borderRadius: 0,
- fontFamily: '"DM Sans", system-ui, sans-serif',
- fontSize: 13,
- }}
- onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cth-command-panel-soft)'; }}
- onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
- >
- Open Media Studio
- </button>
- {selected.status === 'active' && selected.content_plan?.length > 0 && (
- <button
- onClick={() => setCalendarCampaign(selected)}
- className="w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors hover:opacity-90"
- style={{
- border: '1px solid var(--cth-command-border)',
- background: 'transparent',
- color: 'var(--cth-command-ink)',
- borderRadius: 0,
- fontFamily: '"DM Sans", system-ui, sans-serif',
- fontSize: 13,
- }}
- onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cth-command-panel-soft)'; }}
- onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
- >
- <CalendarIcon size={12} /> Push to Calendar
- </button>
- )}
- </div>
- </div>
- </div>
- ) : (
- <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
- <div className="w-16 h-16 bg-[var(--cth-command-crimson)]/10 border border-[var(--cth-command-crimson)]/15 flex items-center justify-center mb-5">
- <span className="text-2xl font-black cth-text-accent/50">M</span>
- </div>
- <h3 className="text-base font-semibold cth-muted mb-2" >
- Build your first campaign
- </h3>
- <p className="text-sm cth-muted max-w-sm leading-relaxed mb-6">
- Every piece of content should serve a campaign.
- </p>
- <button
- onClick={() => navigate('/campaign-setup')}
- className="px-5 py-2.5 bg-[var(--cth-command-purple)] text-[var(--cth-command-gold)] text-sm font-semibold"
- >
- Create Your First Campaign
- </button>
- </div>
- )}
- </div>
- </div>
-
- {deleteTarget && (
- <div
- style={{
- position: 'fixed',
- inset: 0,
- background: 'rgba(0,0,0,0.5)',
- zIndex: 50,
- display: 'flex',
- alignItems: 'center',
- justifyContent: 'center',
- }}
- >
- <div
- style={{
- background: 'var(--cth-command-panel)',
- border: '1px solid var(--cth-command-border)',
- padding: '32px',
- maxWidth: '400px',
- width: '90%',
- borderRadius: 0,
- }}
- >
- <h3 style={{ margin: '0 0 8px', color: 'var(--cth-command-ink)' }}>Delete Campaign</h3>
- <p style={{ margin: '0 0 24px', color: 'var(--cth-command-muted)', fontSize: '14px' }}>
- Are you sure you want to delete <strong>{deleteTarget.name || deleteTarget.title}</strong>? This cannot be undone.
- </p>
- <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
- <button
- onClick={() => setDeleteTarget(null)}
- disabled={deleting}
- style={{
- padding: '8px 16px',
- border: '1px solid var(--cth-command-border)',
- background: 'transparent',
- color: 'var(--cth-command-ink)',
- cursor: 'pointer',
- borderRadius: 0,
- }}
- >
- Cancel
- </button>
- <button
- onClick={handleConfirmDelete}
- disabled={deleting}
- style={{
- padding: '8px 16px',
- border: 'none',
- background: 'var(--cth-command-crimson)',
- color: '#fff',
- cursor: deleting ? 'not-allowed' : 'pointer',
- borderRadius: 0,
- }}
- >
- {deleting ? 'Deleting...' : 'Delete'}
- </button>
- </div>
- </div>
- </div>
- )}
- </DashboardLayout>
- );
+      {deleteTarget && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,0,16,0.6)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => !deleting && setDeleteTarget(null)}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', padding: 28, maxWidth: 440, width: '100%', borderRadius: 12 }}>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 600, margin: '0 0 8px', color: 'var(--cth-command-ink)' }}>Delete Campaign</h3>
+            <p style={{ margin: '0 0 24px', color: 'var(--cth-command-muted)', fontSize: 14, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
+              Are you sure you want to delete <strong>{deleteTarget.name || deleteTarget.title}</strong>? This cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button onClick={() => setDeleteTarget(null)} disabled={deleting} style={{ padding: '9px 16px', border: '1px solid var(--cth-command-border)', background: 'transparent', color: 'var(--cth-command-ink)', cursor: 'pointer', borderRadius: 8, fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>Cancel</button>
+              <button onClick={handleConfirmDelete} disabled={deleting} data-testid="confirm-delete-campaign-btn" style={{ padding: '9px 16px', border: 'none', background: 'var(--cth-command-crimson)', color: '#fff', cursor: deleting ? 'not-allowed' : 'pointer', borderRadius: 8, fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600 }}>{deleting ? 'Deleting…' : 'Delete'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
+  );
 }
 
 export default function CampaignBuilderPage() {
