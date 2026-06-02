@@ -2,18 +2,15 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
-import { getNextStep } from "../config/brandCoreNextStep";
 import apiClient from "../lib/apiClient";
 import {
-  CheckCircle2,
-  ChevronLeft,
+  Check,
   ChevronRight,
-  FileText,
+  Circle,
   Loader2,
   Lock,
-  Sparkles,
+  Pencil,
   Wand2,
-  X,
 } from "lucide-react";
 
 const STAGES = [
@@ -373,6 +370,83 @@ const STAGES = [
   },
 ];
 
+// Presentational extras keyed by stage id — tips row + Zuri idle suggestion.
+// Kept separate from STAGES so persisted field ids are never touched.
+const STAGE_EXTRAS = {
+  awareness: {
+    tips: [
+      "Lead with the problem they already feel, not your brand name",
+      "Your first three seconds decide everything — earn the next three",
+      "Show up where they already are, not where you wish they were",
+    ],
+    zuriHint:
+      "“Awareness isn't about being seen — it's about being recognized by the person who's been looking for you.”",
+  },
+  education: {
+    tips: [
+      "Teach the one idea that reframes how they see their problem",
+      "Make your method feel inevitable, not optional",
+      "Answer the question they're too unsure to ask out loud",
+    ],
+    zuriHint:
+      "“People don't buy what they understand — they buy from the person who helped them understand it.”",
+  },
+  trustBuilding: {
+    tips: [
+      "Proof beats promise — show the result before you describe it",
+      "Name the objection before they do, then dissolve it",
+      "Consistency is the trust signal no competitor can fake",
+    ],
+    zuriHint:
+      "“Trust is built in the gap between what you said you'd do and what they watched you actually do.”",
+  },
+  leadMagnet: {
+    tips: [
+      "Make it solve one specific problem, not everything at once",
+      "Name it so clearly the right person knows it is for them",
+      "The CTA should feel like the obvious next step, not a sale",
+    ],
+    zuriHint:
+      "“A strong lead magnet names the problem so precisely that your ideal client feels seen before they've even clicked.”",
+  },
+  offerRecommendation: {
+    tips: [
+      "Recommend the offer that fits where they are, not your top tier",
+      "Frame the price against the cost of staying stuck",
+      "Remove every decision except the one that matters",
+    ],
+    zuriHint:
+      "“The right offer doesn't feel like a pitch — it feels like the answer to a question they were already asking.”",
+  },
+  purchase: {
+    tips: [
+      "Make buying feel as confident as the decision to buy",
+      "Confirm the win immediately — silence breeds regret",
+      "Every friction point is a reason to reconsider; remove them",
+    ],
+    zuriHint:
+      "“The moment after purchase is where loyalty is won or quietly lost — make it feel like a beginning.”",
+  },
+  onboarding: {
+    tips: [
+      "Deliver a real win in the first session, not the first month",
+      "Set the rhythm now — it's the hardest thing to change later",
+      "Make them feel they chose well, today and out loud",
+    ],
+    zuriHint:
+      "“Onboarding isn't orientation — it's the first proof that everything you promised was true.”",
+  },
+  retentionReferral: {
+    tips: [
+      "Keep delivering value after the result, not just during",
+      "Make the next step obvious before they go looking elsewhere",
+      "Referrals follow remarkable moments — engineer them on purpose",
+    ],
+    zuriHint:
+      "“The best clients don't just stay — they bring others, because you became the story they wanted to tell.”",
+  },
+};
+
 function buildEmptyData() {
   const out = {};
   for (const stage of STAGES) {
@@ -427,16 +501,6 @@ function getStageStatus(stageData, stage) {
   return "empty";
 }
 
-function getScore(data) {
-  const scores = STAGES.map((stage) => {
-    const status = getStageStatus(data[stage.id], stage);
-    if (status === "complete") return 1;
-    if (status === "draft") return 0.5;
-    return 0;
-  });
-  return Math.round((scores.reduce((s, v) => s + v, 0) / STAGES.length) * 100);
-}
-
 function stripMarkdown(text) {
   if (!text) return "";
   return text
@@ -458,170 +522,59 @@ function getErrorMessage(error, fallback) {
 const LOCKED_PLANS = new Set(["free", "audit", "foundation"]);
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 const PAGE_STYLE = {
-  background: "var(--cth-command-blush)",
+  background: "#f8f4f2",
   minHeight: "100vh",
 };
 
-const SECTION_LABEL_STYLE = {
-  fontFamily: SANS,
-  fontSize: 11,
-  fontWeight: 600,
-  letterSpacing: "0.18em",
-  textTransform: "uppercase",
-  color: "var(--cth-command-muted)",
-  margin: 0,
-};
-
-const FIELD_HEADING_STYLE = {
-  fontFamily: SERIF,
-  fontSize: 26,
-  fontWeight: 600,
-  color: "var(--cth-command-ink)",
-  margin: 0,
-  letterSpacing: "-0.005em",
-  lineHeight: 1.2,
-};
-
-const CARD_STYLE = {
-  background: "var(--cth-command-panel)",
-  border: "1px solid var(--cth-command-border)",
-  borderRadius: 0,
-};
-
-const PRIMARY_CTA_STYLE = {
-  background: "var(--cth-command-purple)",
-  color: "var(--cth-command-gold)",
-  border: "none",
-  borderRadius: 0,
-  padding: "12px 22px",
-  fontFamily: SANS,
-  fontSize: 13,
-  fontWeight: 600,
-  letterSpacing: "0.04em",
-  cursor: "pointer",
-  textDecoration: "none",
-};
-
-const SECONDARY_BUTTON_STYLE = {
-  background: "transparent",
-  color: "var(--cth-command-ink)",
-  border: "1px solid var(--cth-command-border)",
-  borderRadius: 0,
-  padding: "11px 20px",
-  fontFamily: SANS,
-  fontSize: 13,
-  fontWeight: 500,
-  cursor: "pointer",
-};
-
-const INPUT_STYLE = {
+// Reference-matched field styling (docs/references/CTH_customer_journey.html)
+const REF_INPUT_STYLE = {
   width: "100%",
-  background: "var(--cth-command-panel)",
-  color: "var(--cth-command-ink)",
+  padding: "9px 12px",
+  background: "#fff",
+  border: "0.5px solid #d8c5c3",
+  borderRadius: 8,
+  fontSize: 12,
+  color: "#1a0828",
   fontFamily: SANS,
-  fontSize: 14,
-  lineHeight: 1.5,
-  padding: "10px 12px",
-  border: "1px solid var(--cth-command-border)",
-  borderRadius: 0,
   outline: "none",
 };
 
-function ScoreRing({ score }) {
-  const r = 22;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (score / 100) * circ;
-  const stroke = score === 100 ? "var(--cth-command-success)" : "var(--cth-command-crimson)";
+const REF_TA_STYLE = {
+  ...REF_INPUT_STYLE,
+  resize: "none",
+  lineHeight: 1.6,
+  minHeight: 90,
+};
 
-  return (
-    <div className="relative h-16 w-16 shrink-0">
-      <svg className="h-full w-full -rotate-90" viewBox="0 0 52 52">
-        <circle cx="26" cy="26" r={r} fill="none" stroke="var(--cth-command-border)" strokeWidth="4" />
-        <circle
-          cx="26"
-          cy="26"
-          r={r}
-          fill="none"
-          stroke={stroke}
-          strokeWidth="4"
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 0.7s ease" }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span style={{ fontFamily: SERIF, fontSize: 14, fontWeight: 600, color: "var(--cth-command-ink)" }}>
-          {score}%
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function StatusDot({ status }) {
-  let fill = "var(--cth-command-muted)";
-  if (status === "complete") fill = "var(--cth-command-success)";
-  else if (status === "draft") fill = "var(--cth-command-gold)";
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: "inline-block",
-        width: 8,
-        height: 8,
-        borderRadius: 999,
-        background: fill,
-      }}
-    />
-  );
-}
-
-function StatusPill({ status }) {
-  if (status === "complete") {
-    return (
-      <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-500">
-        <CheckCircle2 size={12} />
-        Complete
-      </span>
-    );
-  }
-  if (status === "draft") {
-    return (
-      <span className="inline-flex items-center gap-1.5 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-500">
-        <Loader2 size={12} />
-        In progress
-      </span>
-    );
-  }
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium"
-      style={{ background: "var(--cth-command-panel-soft)", color: "var(--cth-command-muted)" }}
-    >
-      <FileText size={12} />
-      Not started
-    </span>
-  );
-}
+const REF_FIELD_LABEL_STYLE = {
+  fontFamily: SANS,
+  fontSize: 10,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "#7c6576",
+  fontWeight: 500,
+};
 
 function LockedView() {
   return (
     <DashboardLayout>
-      <header className="cth-page-header">
+      <header
+        className="cth-page-header"
+        style={{ background: "#fff", borderBottom: "0.5px solid #e8d5d0" }}
+      >
         <div className="min-w-0 flex-1">
           <h1
             className="text-2xl md:text-[32px] leading-tight truncate"
-            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+            style={{ fontFamily: SERIF, fontWeight: 500, color: "#1a0828", margin: 0 }}
           >
             Customer Journey
           </h1>
           <p
             className="text-xs md:text-sm truncate"
-            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+            style={{ margin: "6px 0 0 0", color: "#7c6576", fontFamily: SANS }}
           >
             Map how your ideal client moves from stranger to buyer to advocate.
           </p>
@@ -629,25 +582,56 @@ function LockedView() {
       </header>
       <div className="flex-1 overflow-auto" style={PAGE_STYLE}>
         <div className="mx-auto max-w-3xl px-4 py-16 md:px-8 md:py-24">
-          <div style={{ ...CARD_STYLE, padding: 40, textAlign: "center" }}>
+          <div
+            style={{
+              background: "#fff",
+              border: "0.5px solid #e8d5d0",
+              borderRadius: 12,
+              padding: 40,
+              textAlign: "center",
+            }}
+          >
             <div
               className="mx-auto flex h-14 w-14 items-center justify-center"
               style={{
-                borderRadius: 0,
-                background: "color-mix(in srgb, var(--cth-command-crimson) 12%, transparent)",
-                color: "var(--cth-command-crimson)",
+                borderRadius: 10,
+                background: "color-mix(in srgb, #5d0012 12%, transparent)",
+                color: "#5d0012",
               }}
             >
               <Lock size={22} />
             </div>
-            <p style={{ ...SECTION_LABEL_STYLE, marginTop: 18 }}>Structure Plan Required</p>
-            <h2 style={{ ...FIELD_HEADING_STYLE, marginTop: 8 }}>Customer Journey</h2>
+            <p
+              style={{
+                fontFamily: SANS,
+                fontSize: 10,
+                fontWeight: 500,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "#7c6576",
+                margin: "18px 0 0",
+              }}
+            >
+              Structure Plan Required
+            </p>
+            <h2
+              style={{
+                fontFamily: SERIF,
+                fontSize: 26,
+                fontWeight: 500,
+                color: "#1a0828",
+                margin: "8px 0 0",
+                lineHeight: 1.2,
+              }}
+            >
+              Customer Journey
+            </h2>
             <p
               style={{
                 fontFamily: SANS,
                 fontSize: 14,
                 lineHeight: 1.65,
-                color: "var(--cth-command-muted)",
+                color: "#7c6576",
                 margin: "14px auto 24px",
                 maxWidth: 520,
               }}
@@ -659,7 +643,19 @@ function LockedView() {
             <a
               href="/billing"
               className="inline-flex items-center gap-2"
-              style={PRIMARY_CTA_STYLE}
+              style={{
+                background: "#5d0012",
+                color: "#fff",
+                border: "none",
+                borderRadius: 8,
+                padding: "12px 22px",
+                fontFamily: SANS,
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: "0.04em",
+                cursor: "pointer",
+                textDecoration: "none",
+              }}
             >
               Upgrade to Structure
               <ChevronRight size={14} />
@@ -679,10 +675,6 @@ export default function CustomerJourney() {
   const normalizedPlan = String(plan || "free").toLowerCase();
   const isLocked = LOCKED_PLANS.has(normalizedPlan);
 
-  const nextStep = getNextStep("/customer-journey", plan);
-  const nextStepHref = nextStep?.upgradeTo ? "/billing" : nextStep?.href;
-  const nextStepLabel = nextStep?.upgradeTo ? nextStep.ctaLabel : nextStep?.label;
-
   const [data, setData] = useState(EMPTY_DATA);
   const [activeStageId, setActiveStageId] = useState(STAGES[0].id);
   const [isLoading, setIsLoading] = useState(true);
@@ -692,8 +684,6 @@ export default function CustomerJourney() {
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPreview, setGeneratedPreview] = useState(null);
-  const [pendingStageSwitch, setPendingStageSwitch] = useState(null);
-  const [viewAllOpen, setViewAllOpen] = useState(false);
 
   const saveTimeout = useRef(null);
   const narrativeRef = useRef(null);
@@ -703,8 +693,6 @@ export default function CustomerJourney() {
     [activeStageId]
   );
   const activeData = data[activeStage.id] || { narrative: "" };
-  const activeStatus = getStageStatus(activeData, activeStage);
-  const score = getScore(data);
   const completedCount = STAGES.filter(
     (stage) => getStageStatus(data[stage.id], stage) === "complete"
   ).length;
@@ -738,7 +726,7 @@ export default function CustomerJourney() {
   useEffect(() => {
     if (narrativeRef.current) {
       narrativeRef.current.style.height = "auto";
-      narrativeRef.current.style.height = `${Math.max(220, narrativeRef.current.scrollHeight)}px`;
+      narrativeRef.current.style.height = `${Math.max(90, narrativeRef.current.scrollHeight)}px`;
     }
   }, [activeData.narrative, activeStage.id]);
 
@@ -880,25 +868,19 @@ export default function CustomerJourney() {
 
   const handleStageSwitch = useCallback(
     (stageId) => {
-      if (generatedPreview && stageId !== activeStage.id) {
-        setPendingStageSwitch(stageId);
+      if (stageId === activeStage.id) return;
+      if (
+        generatedPreview &&
+        !window.confirm(
+          "You have an AI-generated draft that has not been accepted. Leaving this stage will discard it. Continue?"
+        )
+      ) {
         return;
       }
       performStageSwitch(stageId);
     },
     [generatedPreview, activeStage.id, performStageSwitch]
   );
-
-  const confirmDiscardAndSwitch = useCallback(() => {
-    if (pendingStageSwitch) {
-      performStageSwitch(pendingStageSwitch);
-    }
-    setPendingStageSwitch(null);
-  }, [pendingStageSwitch, performStageSwitch]);
-
-  const cancelStageSwitch = useCallback(() => {
-    setPendingStageSwitch(null);
-  }, []);
 
   const stageIndex = STAGES.findIndex((stage) => stage.id === activeStage.id);
   const prevStage = stageIndex > 0 ? STAGES[stageIndex - 1] : null;
@@ -915,7 +897,7 @@ export default function CustomerJourney() {
           <div
             style={{
               fontFamily: SANS,
-              color: "var(--cth-command-muted)",
+              color: "#7c6576",
               padding: "120px 24px",
               display: "inline-flex",
               alignItems: "center",
@@ -932,867 +914,605 @@ export default function CustomerJourney() {
 
   const narrativeLength = (activeData.narrative || "").length;
 
+  const extras = STAGE_EXTRAS[activeStage.id] || { tips: [], zuriHint: "" };
+  const progressPct = Math.round((completedCount / STAGES.length) * 100);
+
   return (
     <DashboardLayout>
-      <header className="cth-page-header">
+      <header
+        className="cth-page-header"
+        style={{ background: "#fff", borderBottom: "0.5px solid #e8d5d0" }}
+      >
         <div className="min-w-0 flex-1">
           <h1
-            className="text-2xl md:text-[32px] leading-tight truncate"
-            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+            style={{
+              fontFamily: SERIF,
+              fontSize: 22,
+              fontWeight: 500,
+              color: "#1a0828",
+              margin: 0,
+              lineHeight: 1.15,
+            }}
           >
             Customer Journey
           </h1>
           <p
-            className="text-xs md:text-sm truncate"
-            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+            style={{
+              margin: "2px 0 0",
+              fontFamily: SANS,
+              fontSize: 11,
+              color: "#7c6576",
+            }}
           >
-            Map how your ideal client moves from stranger to buyer to advocate across all 8 stages.
+            Map how your ideal client moves from stranger to buyer across all 8 stages.
           </p>
         </div>
-        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-3 px-4 py-2" style={CARD_STYLE}>
-              <ScoreRing score={score} />
-              <div>
-                <div
-                  style={{
-                    fontFamily: SANS,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "var(--cth-command-ink)",
-                  }}
-                >
-                  Journey Score
-                </div>
-                <div
-                  style={{
-                    fontFamily: SANS,
-                    fontSize: 11,
-                    color: "var(--cth-command-muted)",
-                    marginTop: 2,
-                  }}
-                >
-                  {completedCount}/{STAGES.length} stages complete
-                </div>
-              </div>
-            </div>
+        <div style={{ textAlign: "right", flexShrink: 0 }}>
+          <div
+            style={{
+              fontFamily: SANS,
+              fontSize: 10,
+              color: "#7c6576",
+              marginBottom: 4,
+            }}
+          >
+            {completedCount} of {STAGES.length} complete
+          </div>
+          <div
+            style={{
+              width: 110,
+              height: 3,
+              background: "#f0e8e5",
+              borderRadius: 2,
+              overflow: "hidden",
+              marginLeft: "auto",
+            }}
+          >
+            <div
+              style={{
+                width: `${progressPct}%`,
+                height: "100%",
+                background: "#2d6a4f",
+                borderRadius: 2,
+                transition: "width 0.4s ease",
+              }}
+            />
           </div>
         </div>
       </header>
 
       <div
-        className="flex-1 overflow-auto"
-        style={PAGE_STYLE}
+        className="flex-1"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          background: "#f8f4f2",
+          minHeight: 0,
+        }}
         data-testid="customer-journey-page"
       >
         {loadError ? (
-          <div className="mx-auto mt-5 max-w-[1200px] px-4 md:px-8" style={{ fontFamily: SANS }}>
-            <div
-              style={{
-                ...CARD_STYLE,
-                borderColor: "color-mix(in srgb, var(--cth-danger) 25%, var(--cth-command-border))",
-                background: "color-mix(in srgb, var(--cth-danger) 8%, var(--cth-command-panel))",
-                color: "var(--cth-danger)",
-                padding: "12px 16px",
-                fontSize: 13,
-              }}
-            >
-              {loadError}
-            </div>
+          <div
+            style={{
+              margin: "12px 24px 0",
+              fontFamily: SANS,
+              fontSize: 12,
+              color: "var(--cth-danger)",
+              background: "color-mix(in srgb, var(--cth-danger) 8%, #fff)",
+              border: "0.5px solid color-mix(in srgb, var(--cth-danger) 25%, #e8d5d0)",
+              borderRadius: 8,
+              padding: "10px 14px",
+            }}
+          >
+            {loadError}
           </div>
         ) : null}
 
-        <div className="mx-auto flex max-w-[1200px] flex-col md:flex-row">
-          <aside className="hidden w-60 shrink-0 md:block">
-            <div className="sticky top-0 px-5 py-6">
-              <div style={SECTION_LABEL_STYLE}>Journey Stages</div>
-
-              <button
-                type="button"
-                onClick={() => setViewAllOpen(true)}
-                data-testid="view-all-journey-btn"
-                style={{
-                  marginTop: 10,
-                  background: "transparent",
-                  border: "1px solid var(--cth-command-border)",
-                  borderRadius: 0,
-                  color: "var(--cth-command-muted)",
-                  fontFamily: SANS,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  padding: "6px 12px",
-                  cursor: "pointer",
-                }}
-              >
-                View All
-              </button>
-
-              <div className="mt-4 space-y-2">
-                {STAGES.map((stage) => {
-                  const status = getStageStatus(data[stage.id], stage);
-                  const isActive = activeStage.id === stage.id;
-                  return (
-                    <button
-                      key={stage.id}
-                      onClick={() => handleStageSwitch(stage.id)}
-                      data-testid={`stage-nav-${stage.id}`}
-                      className="w-full px-4 py-3 text-left transition"
-                      style={{
-                        ...CARD_STYLE,
-                        borderColor: isActive
-                          ? "var(--cth-command-crimson)"
-                          : "var(--cth-command-border)",
-                      }}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <span
-                            style={{
-                              fontFamily: SANS,
-                              fontSize: 10,
-                              fontWeight: 700,
-                              letterSpacing: "0.12em",
-                              color: "var(--cth-command-muted)",
-                            }}
-                          >
-                            {String(stage.number).padStart(2, "0")}
-                          </span>
-                          <div
-                            style={{
-                              fontFamily: SANS,
-                              fontSize: 13,
-                              fontWeight: isActive ? 600 : 500,
-                              color: "var(--cth-command-ink)",
-                            }}
-                          >
-                            {stage.label}
-                          </div>
-                        </div>
-                        <StatusDot status={status} />
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: SANS,
-                          fontSize: 11,
-                          lineHeight: 1.5,
-                          color: "var(--cth-command-muted)",
-                          marginTop: 6,
-                        }}
-                      >
-                        {stage.subtitle}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+        <div
+          style={{
+            flex: 1,
+            display: "grid",
+            gridTemplateColumns: "148px 1fr",
+            overflow: "hidden",
+            minHeight: 0,
+          }}
+        >
+          {/* Stage nav */}
+          <nav
+            style={{
+              borderRight: "0.5px solid #e8d5d0",
+              padding: "14px 0",
+              background: "#faf7f5",
+              overflowY: "auto",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: SANS,
+                fontSize: 8,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "#7c6576",
+                fontWeight: 500,
+                padding: "0 14px 8px",
+              }}
+            >
+              Journey Stages
             </div>
-          </aside>
-
-          <main className="min-w-0 flex-1 px-4 py-5 md:px-8 md:py-8">
-            <div className="mx-auto max-w-3xl space-y-8">
-              <div style={{ ...CARD_STYLE, padding: 28 }}>
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="flex h-10 w-10 shrink-0 items-center justify-center"
-                      style={{
-                        borderRadius: 0,
-                        background:
-                          "color-mix(in srgb, var(--cth-command-crimson) 12%, transparent)",
-                        color: "var(--cth-command-crimson)",
-                        fontFamily: SANS,
-                        fontSize: 14,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {String(activeStage.number).padStart(2, "0")}
-                    </div>
-                    <div>
-                      <h2 style={FIELD_HEADING_STYLE}>{activeStage.label}</h2>
-                      <p
-                        style={{
-                          fontFamily: SANS,
-                          fontSize: 13,
-                          color: "var(--cth-command-muted)",
-                          margin: "4px 0 0",
-                        }}
-                      >
-                        {activeStage.subtitle}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <StatusPill status={activeStatus} />
-                    <div
-                      style={{
-                        fontFamily: SANS,
-                        fontSize: 11,
-                        color: "var(--cth-command-muted)",
-                      }}
-                    >
-                      {saveState === "saving" && "Saving..."}
-                      {saveState === "saved" && "Saved"}
-                      {saveState === "idle" && lastSavedAt
-                        ? `Last saved ${lastSavedAt.toLocaleTimeString([], {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}`
-                        : ""}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ ...CARD_STYLE, padding: 16, marginTop: 20 }}>
-                  <p style={SECTION_LABEL_STYLE}>What this stage is</p>
-                  <p
-                    style={{
-                      fontFamily: SANS,
-                      fontSize: 14,
-                      lineHeight: 1.65,
-                      color: "var(--cth-command-ink)",
-                      margin: "8px 0 0",
-                    }}
-                  >
-                    {activeStage.description}
-                  </p>
-                </div>
-
-                {/* Structured fields */}
-                <div className="mt-6">
-                  <p style={SECTION_LABEL_STYLE}>Stage Details</p>
-                  <div className="mt-3 space-y-4">
-                    {activeStage.fields.map((field) => {
-                      const value = activeData[field.id] || "";
-                      return (
-                        <div key={field.id}>
-                          <label
-                            style={{
-                              display: "block",
-                              fontFamily: SANS,
-                              fontSize: 13,
-                              fontWeight: 600,
-                              color: "var(--cth-command-ink)",
-                              marginBottom: 6,
-                            }}
-                          >
-                            {field.label}
-                          </label>
-                          {field.type === "select" ? (
-                            <select
-                              value={value}
-                              onChange={(event) => handleFieldChange(field.id, event.target.value)}
-                              data-testid={`field-${activeStage.id}-${field.id}`}
-                              style={INPUT_STYLE}
-                            >
-                              <option value="">Select...</option>
-                              {field.options.map((option) => (
-                                <option key={option} value={option}>
-                                  {option}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <input
-                              type="text"
-                              value={value}
-                              onChange={(event) => handleFieldChange(field.id, event.target.value)}
-                              placeholder={field.placeholder}
-                              data-testid={`field-${activeStage.id}-${field.id}`}
-                              style={INPUT_STYLE}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Narrative */}
-                <div className="mt-6">
-                  <p style={SECTION_LABEL_STYLE}>Your Narrative</p>
-                  <label
-                    style={{
-                      display: "block",
-                      fontFamily: SANS,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "var(--cth-command-ink)",
-                      margin: "10px 0 8px",
-                    }}
-                  >
-                    {activeStage.narrative.label}
-                  </label>
-                  <div className="relative" style={{ ...CARD_STYLE, overflow: "hidden" }}>
-                    <textarea
-                      ref={narrativeRef}
-                      value={activeData.narrative || ""}
-                      onChange={(event) => handleNarrativeChange(event.target.value)}
-                      placeholder={activeStage.narrative.placeholder}
-                      data-testid={`narrative-${activeStage.id}`}
-                      className="w-full resize-none"
-                      style={{
-                        minHeight: 220,
-                        background: "var(--cth-command-panel)",
-                        color: "var(--cth-command-ink)",
-                        fontFamily: SANS,
-                        fontSize: 14,
-                        lineHeight: 1.65,
-                        padding: "18px 18px 36px",
-                        border: "none",
-                        outline: "none",
-                        boxShadow: "none",
-                        display: "block",
-                      }}
-                      maxLength={activeStage.narrative.maxLength}
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 12,
-                        right: 16,
-                        fontFamily: SANS,
-                        fontSize: 10,
-                        color: "var(--cth-command-muted)",
-                      }}
-                    >
-                      {narrativeLength}/{activeStage.narrative.maxLength}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={handleGenerate}
-                    disabled={isGenerating}
-                    data-testid="generate-stage-strategy-btn"
-                    className="inline-flex items-center gap-2"
-                    style={{
-                      ...PRIMARY_CTA_STYLE,
-                      opacity: isGenerating ? 0.65 : 1,
-                      cursor: isGenerating ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 size={16} />
-                        Generate Stage Strategy
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {saveError ? (
-                  <div
-                    style={{
-                      marginTop: 16,
-                      padding: "10px 14px",
-                      borderRadius: 0,
-                      border:
-                        "1px solid color-mix(in srgb, var(--cth-danger) 25%, var(--cth-command-border))",
-                      background:
-                        "color-mix(in srgb, var(--cth-danger) 8%, var(--cth-command-panel))",
-                      color: "var(--cth-danger)",
-                      fontFamily: SANS,
-                      fontSize: 13,
-                    }}
-                  >
-                    {saveError}
-                  </div>
-                ) : null}
-
-                {/* Generated preview */}
-                {generatedPreview ? (
-                  <div
-                    className="mt-5"
-                    style={{
-                      ...CARD_STYLE,
-                      borderColor: "var(--cth-command-crimson)",
-                      background:
-                        "color-mix(in srgb, var(--cth-command-crimson) 6%, var(--cth-command-panel))",
-                      padding: 16,
-                    }}
-                    data-testid="generated-preview"
-                  >
-                    <div
-                      className="flex items-center gap-2"
-                      style={{
-                        fontFamily: SANS,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        letterSpacing: "0.2em",
-                        textTransform: "uppercase",
-                        color: "var(--cth-command-crimson)",
-                      }}
-                    >
-                      <Sparkles size={12} />
-                      AI Stage Strategy
-                    </div>
-
-                    {Object.values(generatedPreview.structured || {}).some((v) => v) ? (
-                      <div className="mt-3 space-y-2">
-                        <p style={SECTION_LABEL_STYLE}>Suggested stage details</p>
-                        {activeStage.fields.map((field) => {
-                          const suggestion = generatedPreview.structured?.[field.id] || "";
-                          if (!suggestion) return null;
-                          return (
-                            <div key={field.id}>
-                              <span
-                                style={{
-                                  fontFamily: SANS,
-                                  fontSize: 12,
-                                  fontWeight: 600,
-                                  color: "var(--cth-command-ink)",
-                                }}
-                              >
-                                {field.label}:
-                              </span>{" "}
-                              <span
-                                style={{
-                                  fontFamily: SANS,
-                                  fontSize: 13,
-                                  color: "var(--cth-command-ink)",
-                                }}
-                              >
-                                {suggestion}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : null}
-
-                    {generatedPreview.narrative ? (
-                      <div className="mt-3">
-                        <p style={SECTION_LABEL_STYLE}>Suggested narrative</p>
-                        <p
-                          style={{
-                            whiteSpace: "pre-wrap",
-                            fontFamily: SANS,
-                            fontSize: 14,
-                            lineHeight: 1.65,
-                            color: "var(--cth-command-ink)",
-                            margin: "8px 0 0",
-                          }}
-                        >
-                          {generatedPreview.narrative}
-                        </p>
-                      </div>
-                    ) : null}
-
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      <button
-                        onClick={handleAcceptGenerated}
-                        data-testid="accept-generated-btn"
-                        style={{
-                          background: "var(--cth-command-crimson)",
-                          color: "var(--cth-command-panel)",
-                          border: "none",
-                          borderRadius: 0,
-                          padding: "10px 18px",
-                          fontFamily: SANS,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          letterSpacing: "0.04em",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={handleGenerate}
-                        style={{ ...SECONDARY_BUTTON_STYLE, padding: "10px 18px" }}
-                      >
-                        Regenerate
-                      </button>
-                      <button
-                        onClick={() => setGeneratedPreview(null)}
-                        style={{
-                          background: "transparent",
-                          color: "var(--cth-command-muted)",
-                          border: "none",
-                          borderRadius: 0,
-                          padding: "10px 18px",
-                          fontFamily: SANS,
-                          fontSize: 13,
-                          fontWeight: 500,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Discard
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-
-                {/* Stage navigation */}
-                <div
-                  className="mt-6 flex items-center justify-between pt-5"
-                  style={{ borderTop: "1px solid var(--cth-command-border)" }}
+            {STAGES.map((stage) => {
+              const status = getStageStatus(data[stage.id], stage);
+              const isActive = activeStage.id === stage.id;
+              const state = isActive
+                ? "active"
+                : status === "complete"
+                ? "done"
+                : "todo";
+              const iconColor =
+                state === "active" ? "#5d0012" : state === "done" ? "#2d6a4f" : "#d8c5c3";
+              const textColor =
+                state === "active" ? "#5d0012" : state === "done" ? "#7c6576" : "#b0a0b8";
+              const Icon = state === "active" ? Pencil : state === "done" ? Check : Circle;
+              return (
+                <button
+                  key={stage.id}
+                  onClick={() => handleStageSwitch(stage.id)}
+                  data-testid={`stage-nav-${stage.id}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    padding: "8px 14px",
+                    cursor: "pointer",
+                    width: "100%",
+                    textAlign: "left",
+                    borderTop: "none",
+                    borderRight: "none",
+                    borderBottom: "none",
+                    borderLeft: `2px solid ${isActive ? "#5d0012" : "transparent"}`,
+                    background: isActive ? "#fff" : "transparent",
+                  }}
                 >
-                  <button
-                    onClick={() => prevStage && handleStageSwitch(prevStage.id)}
-                    disabled={!prevStage}
-                    data-testid="prev-stage-btn"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      background: "none",
-                      border: "none",
-                      cursor: prevStage ? "pointer" : "default",
-                      opacity: prevStage ? 1 : 0.25,
-                      fontFamily: SANS,
-                      fontSize: 13,
-                      color: "var(--cth-command-muted)",
-                      padding: 0,
-                    }}
-                  >
-                    <ChevronLeft size={16} />
-                    {prevStage?.label || "Previous"}
-                  </button>
-
+                  <Icon size={11} color={iconColor} style={{ flexShrink: 0 }} />
                   <span
                     style={{
                       fontFamily: SANS,
                       fontSize: 11,
-                      fontWeight: 600,
-                      letterSpacing: "0.2em",
-                      textTransform: "uppercase",
-                      color: "var(--cth-command-muted)",
+                      fontWeight: isActive ? 500 : 400,
+                      color: textColor,
                     }}
                   >
-                    {stageIndex + 1} of {STAGES.length}
+                    {stage.label}
                   </span>
+                </button>
+              );
+            })}
+          </nav>
 
-                  <button
-                    onClick={() => nextStageNav && handleStageSwitch(nextStageNav.id)}
-                    disabled={!nextStageNav}
-                    data-testid="next-stage-btn"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      background: "none",
-                      border: "none",
-                      cursor: nextStageNav ? "pointer" : "default",
-                      opacity: nextStageNav ? 1 : 0.25,
-                      fontFamily: SANS,
-                      fontSize: 13,
-                      color: "var(--cth-command-muted)",
-                      padding: 0,
-                    }}
-                  >
-                    {nextStageNav?.label || "Next"}
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              </div>
-
-              {nextStep ? (
-                <div
-                  className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-                  style={{ ...CARD_STYLE, padding: 24 }}
-                >
-                  <div>
-                    <p style={SECTION_LABEL_STYLE}>
-                      {nextStep.upgradeTo ? "Upgrade" : "Next Step"}
-                    </p>
-                    <p
-                      style={{
-                        fontFamily: SANS,
-                        fontSize: 14,
-                        lineHeight: 1.65,
-                        color: "var(--cth-command-ink)",
-                        margin: "8px 0 0",
-                        maxWidth: 620,
-                      }}
-                    >
-                      {nextStep.copy}
-                    </p>
-                  </div>
-                  <a
-                    href={nextStepHref}
-                    className="inline-flex shrink-0 items-center gap-2"
-                    style={PRIMARY_CTA_STYLE}
-                  >
-                    {nextStepLabel}
-                    <ChevronRight size={14} />
-                  </a>
-                </div>
-              ) : null}
-            </div>
-          </main>
-        </div>
-      </div>
-
-      {/* Unsaved AI Draft confirmation */}
-      {pendingStageSwitch ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Unsaved AI Draft"
-          onClick={cancelStageSwitch}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 1000,
-            background: "rgba(13, 0, 16, 0.6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 24,
-          }}
-        >
+          {/* Field area */}
           <div
-            onClick={(event) => event.stopPropagation()}
-            style={{ ...CARD_STYLE, width: "100%", maxWidth: 480, padding: 28 }}
-          >
-            <h2
-              style={{
-                fontFamily: SERIF,
-                fontSize: 22,
-                fontWeight: 600,
-                color: "var(--cth-command-ink)",
-                margin: 0,
-                letterSpacing: "-0.005em",
-                lineHeight: 1.25,
-              }}
-            >
-              Unsaved AI Draft
-            </h2>
-            <p
-              style={{
-                fontFamily: SANS,
-                fontSize: 14,
-                color: "var(--cth-command-muted)",
-                margin: "12px 0 24px",
-                lineHeight: 1.6,
-              }}
-            >
-              You have an AI-generated draft that has not been accepted. Leaving this stage will discard it.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={cancelStageSwitch}
-                data-testid="stay-and-review-btn"
-                style={{
-                  background: "transparent",
-                  color: "var(--cth-command-ink)",
-                  border: "1px solid var(--cth-command-border)",
-                  borderRadius: 0,
-                  padding: "10px 18px",
-                  fontFamily: SANS,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                }}
-              >
-                Stay and Review
-              </button>
-              <button
-                type="button"
-                onClick={confirmDiscardAndSwitch}
-                data-testid="discard-and-continue-btn"
-                style={{
-                  background: "var(--cth-command-crimson)",
-                  color: "var(--cth-command-ivory)",
-                  border: "none",
-                  borderRadius: 0,
-                  padding: "10px 18px",
-                  fontFamily: SANS,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  letterSpacing: "0.04em",
-                  cursor: "pointer",
-                }}
-              >
-                Discard and Continue
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* View All drawer */}
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 999,
-          pointerEvents: viewAllOpen ? "auto" : "none",
-          visibility: viewAllOpen ? "visible" : "hidden",
-        }}
-        aria-hidden={!viewAllOpen}
-      >
-        <div
-          onClick={() => setViewAllOpen(false)}
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(13, 0, 16, 0.4)",
-            opacity: viewAllOpen ? 1 : 0,
-            transition: "opacity 200ms ease",
-          }}
-        />
-        <div
-          role="dialog"
-          aria-label="Customer Journey Stages"
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: 520,
-            maxWidth: "100%",
-            background: "var(--cth-command-panel)",
-            borderLeft: "1px solid var(--cth-command-border)",
-            boxShadow: "-12px 0 40px rgba(13,0,16,0.18)",
-            transform: viewAllOpen ? "translateX(0)" : "translateX(100%)",
-            transition: "transform 240ms ease",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            className="flex items-center justify-between"
             style={{
               padding: "20px 24px",
-              borderBottom: "1px solid var(--cth-command-border)",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: 14,
             }}
           >
-            <h2
-              style={{
-                fontFamily: SERIF,
-                fontSize: 22,
-                fontWeight: 600,
-                color: "var(--cth-command-ink)",
-                margin: 0,
-                letterSpacing: "-0.005em",
-              }}
-            >
-              Customer Journey
-            </h2>
-            <button
-              type="button"
-              onClick={() => setViewAllOpen(false)}
-              aria-label="Close"
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                padding: 6,
-                color: "var(--cth-command-muted)",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <X size={18} />
-            </button>
-          </div>
+            <div>
+              <div
+                style={{
+                  fontFamily: SERIF,
+                  fontSize: 20,
+                  fontWeight: 500,
+                  color: "#1a0828",
+                  lineHeight: 1.2,
+                }}
+              >
+                {activeStage.label}
+              </div>
+              <div
+                style={{ fontFamily: SANS, fontSize: 11, color: "#7c6576", marginTop: 2 }}
+              >
+                {activeStage.subtitle}
+              </div>
+            </div>
 
-          <div className="flex-1 overflow-y-auto" style={{ padding: "20px 24px" }}>
-            <div className="space-y-6">
-              {STAGES.map((stage) => {
-                const stageData = data[stage.id] || { narrative: "" };
-                const status = getStageStatus(stageData, stage);
-                const narrative = (stageData.narrative || "").trim();
-                return (
-                  <div key={stage.id}>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <span
-                          style={{
-                            fontFamily: SANS,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            letterSpacing: "0.12em",
-                            color: "var(--cth-command-muted)",
-                          }}
-                        >
-                          {String(stage.number).padStart(2, "0")}
-                        </span>
-                        <p style={SECTION_LABEL_STYLE}>{stage.label}</p>
-                      </div>
-                      <StatusDot status={status} />
+            {/* Why this stage matters */}
+            <div
+              style={{
+                background: "#fff",
+                border: "0.5px solid #e8d5d0",
+                borderRadius: 10,
+                padding: "11px 14px",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 8,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "#7c6576",
+                  fontWeight: 500,
+                  marginBottom: 5,
+                }}
+              >
+                Why this stage matters
+              </div>
+              <div
+                style={{ fontFamily: SANS, fontSize: 11, color: "#4a3860", lineHeight: 1.6 }}
+              >
+                {activeStage.description}
+              </div>
+            </div>
+
+            {/* Tips row */}
+            {extras.tips && extras.tips.length ? (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: 8,
+                }}
+              >
+                {extras.tips.map((tip, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: "#fff",
+                      border: "0.5px solid #e8d5d0",
+                      borderRadius: 10,
+                      padding: "10px 12px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily: SANS,
+                        fontSize: 8,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: "#7c6576",
+                        fontWeight: 500,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Tip {i + 1}
                     </div>
-                    <div className="mt-3 space-y-1">
-                      {stage.fields.map((field) => {
-                        const value = (stageData[field.id] || "").trim();
+                    <div
+                      style={{
+                        fontFamily: SANS,
+                        fontSize: 11,
+                        color: "#3d2d4a",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {tip}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {/* Structured fields */}
+            {activeStage.fields.map((field) => {
+              const value = activeData[field.id] || "";
+              return (
+                <div key={field.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <div style={REF_FIELD_LABEL_STYLE}>{field.label}</div>
+                  {field.type === "select" ? (
+                    <select
+                      value={value}
+                      onChange={(event) => handleFieldChange(field.id, event.target.value)}
+                      data-testid={`field-${activeStage.id}-${field.id}`}
+                      style={REF_INPUT_STYLE}
+                    >
+                      <option value="">Select…</option>
+                      {field.options.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={(event) => handleFieldChange(field.id, event.target.value)}
+                      placeholder={field.placeholder}
+                      data-testid={`field-${activeStage.id}-${field.id}`}
+                      style={REF_INPUT_STYLE}
+                    />
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Narrative */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={REF_FIELD_LABEL_STYLE}>Your narrative for this stage</div>
+              <textarea
+                ref={narrativeRef}
+                value={activeData.narrative || ""}
+                onChange={(event) => handleNarrativeChange(event.target.value)}
+                placeholder={activeStage.narrative.placeholder}
+                data-testid={`narrative-${activeStage.id}`}
+                maxLength={activeStage.narrative.maxLength}
+                style={REF_TA_STYLE}
+              />
+              <div
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 10,
+                  color: "#b0a0b8",
+                  textAlign: "right",
+                  marginTop: 2,
+                }}
+              >
+                {narrativeLength} / {activeStage.narrative.maxLength}
+              </div>
+            </div>
+
+            {saveError ? (
+              <div
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 11,
+                  color: "var(--cth-danger)",
+                  background: "color-mix(in srgb, var(--cth-danger) 8%, #fff)",
+                  border: "0.5px solid color-mix(in srgb, var(--cth-danger) 25%, #e8d5d0)",
+                  borderRadius: 8,
+                  padding: "9px 12px",
+                }}
+              >
+                {saveError}
+              </div>
+            ) : null}
+
+            {/* Zuri stage strategy card */}
+            <div
+              style={{ background: "#1a0828", borderRadius: 10, padding: "13px 15px" }}
+              data-testid="zuri-inline"
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}
+              >
+                <div
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: "50%",
+                    background: "#e04e35",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span style={{ fontFamily: SANS, fontSize: 8, fontWeight: 500, color: "#fff" }}>
+                    Z
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontFamily: SANS,
+                    fontSize: 8,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#7a6090",
+                  }}
+                >
+                  Zuri · stage strategy
+                </span>
+              </div>
+
+              {isGenerating ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontFamily: SERIF,
+                    fontStyle: "italic",
+                    fontSize: 13,
+                    color: "#e8dff0",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <Loader2 size={13} className="animate-spin" />
+                  Zuri is drafting your {activeStage.label.toLowerCase()} strategy…
+                </div>
+              ) : generatedPreview ? (
+                <div data-testid="generated-preview">
+                  {Object.values(generatedPreview.structured || {}).some((v) => v) ? (
+                    <div style={{ marginBottom: 10 }}>
+                      {activeStage.fields.map((field) => {
+                        const suggestion = generatedPreview.structured?.[field.id] || "";
+                        if (!suggestion) return null;
                         return (
                           <div
                             key={field.id}
                             style={{
                               fontFamily: SANS,
                               fontSize: 12,
-                              color: value ? "var(--cth-command-ink)" : "var(--cth-command-muted)",
-                              fontStyle: value ? "normal" : "italic",
+                              color: "#e8dff0",
+                              lineHeight: 1.5,
+                              marginBottom: 3,
                             }}
                           >
-                            <span style={{ fontWeight: 600 }}>{field.label}:</span>{" "}
-                            {value || "Not set"}
+                            <span style={{ color: "#7a6090" }}>{field.label}: </span>
+                            {suggestion}
                           </div>
                         );
                       })}
                     </div>
+                  ) : null}
+
+                  {generatedPreview.narrative ? (
                     <div
                       style={{
-                        marginTop: 10,
-                        fontFamily: SANS,
+                        fontFamily: SERIF,
+                        fontStyle: "italic",
                         fontSize: 13,
-                        lineHeight: 1.6,
-                        color: narrative ? "var(--cth-command-ink)" : "var(--cth-command-muted)",
-                        fontStyle: narrative ? "normal" : "italic",
+                        color: "#e8dff0",
+                        lineHeight: 1.5,
+                        marginBottom: 10,
                         whiteSpace: "pre-wrap",
                       }}
                     >
-                      {narrative || "No narrative yet"}
+                      {generatedPreview.narrative}
                     </div>
+                  ) : null}
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                      onClick={handleAcceptGenerated}
+                      data-testid="accept-generated-btn"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        fontFamily: SANS,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: "#e04e35",
+                        background: "transparent",
+                        border: "0.5px solid rgba(224,78,53,0.4)",
+                        borderRadius: 6,
+                        padding: "5px 12px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Use this
+                    </button>
+                    <button
+                      onClick={handleGenerate}
+                      style={{
+                        fontFamily: SANS,
+                        fontSize: 10,
+                        color: "#7a6090",
+                        background: "transparent",
+                        border: "none",
+                        padding: "4px 6px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Try another →
+                    </button>
+                    <button
+                      onClick={() => setGeneratedPreview(null)}
+                      style={{
+                        fontFamily: SANS,
+                        fontSize: 10,
+                        color: "#52406a",
+                        background: "transparent",
+                        border: "none",
+                        padding: "4px 6px",
+                        cursor: "pointer",
+                        marginLeft: "auto",
+                      }}
+                    >
+                      Dismiss
+                    </button>
                   </div>
-                );
-              })}
+                </div>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      fontFamily: SERIF,
+                      fontStyle: "italic",
+                      fontSize: 13,
+                      color: "#e8dff0",
+                      lineHeight: 1.5,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {extras.zuriHint}
+                  </div>
+                  <button
+                    onClick={handleGenerate}
+                    data-testid="generate-stage-strategy-btn"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      fontFamily: SANS,
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: "#e04e35",
+                      background: "transparent",
+                      border: "0.5px solid rgba(224,78,53,0.4)",
+                      borderRadius: 6,
+                      padding: "5px 12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Wand2 size={11} />
+                    Generate stage strategy
+                  </button>
+                </>
+              )}
             </div>
           </div>
+        </div>
 
-          <div style={{ padding: "16px 24px", borderTop: "1px solid var(--cth-command-border)" }}>
-            {completedCount === STAGES.length && nextStep ? (
-              <a
-                href={nextStepHref}
-                style={{ ...PRIMARY_CTA_STYLE, width: "100%", justifyContent: "center" }}
-              >
-                {nextStepLabel}
-                <ChevronRight size={14} />
-              </a>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setViewAllOpen(false)}
-                style={{
-                  background: "transparent",
-                  color: "var(--cth-command-ink)",
-                  border: "1px solid var(--cth-command-border)",
-                  borderRadius: 0,
-                  padding: "12px 22px",
-                  fontFamily: SANS,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Keep Building
-              </button>
-            )}
-          </div>
+        {/* Footer */}
+        <div
+          style={{
+            padding: "12px 22px",
+            borderTop: "0.5px solid #e8d5d0",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: "#faf7f5",
+            flexShrink: 0,
+          }}
+        >
+          {prevStage ? (
+            <button
+              onClick={() => handleStageSwitch(prevStage.id)}
+              data-testid="prev-stage-btn"
+              style={{
+                fontFamily: SANS,
+                fontSize: 12,
+                color: "#7c6576",
+                background: "#fff",
+                border: "0.5px solid #d8c5c3",
+                borderRadius: 7,
+                padding: "7px 14px",
+                cursor: "pointer",
+              }}
+            >
+              ← {prevStage.label}
+            </button>
+          ) : (
+            <span />
+          )}
+
+          <span style={{ fontFamily: SANS, fontSize: 11, color: "#7c6576" }}>
+            {stageIndex + 1} of {STAGES.length}
+          </span>
+
+          <button
+            onClick={() => nextStageNav && handleStageSwitch(nextStageNav.id)}
+            disabled={!nextStageNav}
+            data-testid="next-stage-btn"
+            style={{
+              fontFamily: SANS,
+              fontSize: 12,
+              fontWeight: 500,
+              color: "#fff",
+              background: "#5d0012",
+              border: "none",
+              borderRadius: 7,
+              padding: "7px 20px",
+              cursor: nextStageNav ? "pointer" : "default",
+              opacity: nextStageNav ? 1 : 0.5,
+            }}
+          >
+            Save &amp; continue →
+          </button>
         </div>
       </div>
     </DashboardLayout>
