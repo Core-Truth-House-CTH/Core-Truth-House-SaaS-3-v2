@@ -83,6 +83,7 @@ export const API_PATHS = {
     meta: "/api/buyer-signals/meta",
     inbox: (query) => buildPath("/api/buyer-signals/inbox", query || {}),
     list: (query) => buildPath("/api/buyer-signals/", query || {}),
+    attribution: "/api/buyer-signals/attribution",
     create: "/api/buyer-signals/",
     byId: (signalId) => `/api/buyer-signals/${encode(signalId)}`,
   },

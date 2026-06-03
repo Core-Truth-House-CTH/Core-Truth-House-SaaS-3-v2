@@ -342,6 +342,22 @@ const SIGNAL_LEVELS = [
  { value: 5, label: "Purchase Movement" },
 ];
 
+// Entity types mirror backend buyer_signals.py SIGNAL_ENTITY_TYPES. Fixed order
+// for the Attribution section; unknown types fall through to a generic label.
+const ENTITY_TYPE_ORDER = ["campaign", "offer", "content", "contact", "diagnostic", "relationship", "message"];
+const ENTITY_TYPE_LABELS = {
+ campaign: "Campaign",
+ offer: "Offer",
+ content: "Content",
+ contact: "Contact",
+ diagnostic: "Diagnostic",
+ relationship: "Relationship",
+ message: "Message",
+};
+// Escalating color per buyer-signal level (matches the BrandAudit accent palette).
+const LEVEL_COLOR = { 1: "#7c6576", 2: "#763b5b", 3: "#5d0012", 4: "#e04e35", 5: "#2d6a4f" };
+const levelLabel = (n) => (SIGNAL_LEVELS.find((l) => l.value === Number(n)) || {}).label || "";
+
 // Read-only reporting surface, wired to confirmed buyer signals. Fetches
 // GET /api/buyer-signals?status=confirmed on mount (same pattern as the
 // TrackingLinksPage Signal Movement fetch), groups by week for the trend chart
@@ -358,6 +374,7 @@ function weekStartKey(iso) {
 function BuyerSignalsPanel() {
  const colors = useColors();
  const [confirmed, setConfirmed] = useState([]);
+ const [attribution, setAttribution] = useState([]);
  const [loading, setLoading] = useState(true);
 
  useEffect(() => {
@@ -365,14 +382,24 @@ function BuyerSignalsPanel() {
  (async () => {
  setLoading(true);
  try {
- const res = await apiClient.get(API_PATHS.buyerSignals.list({ status: "confirmed" }));
- const all = Array.isArray(res?.signals) ? res.signals : [];
+ const [sigRes, attrRes] = await Promise.all([
+ apiClient.get(API_PATHS.buyerSignals.list({ status: "confirmed" })),
+ apiClient.get(API_PATHS.buyerSignals.attribution),
+ ]);
+ const all = Array.isArray(sigRes?.signals) ? sigRes.signals : [];
  // Client-side confirmed filter as a safety net.
  const conf = all.filter((s) => String(s?.status).toLowerCase() === "confirmed");
- if (!cancelled) setConfirmed(conf);
+ const attr = Array.isArray(attrRes?.attribution) ? attrRes.attribution : [];
+ if (!cancelled) {
+ setConfirmed(conf);
+ setAttribution(attr);
+ }
  } catch (e) {
  console.error("Failed to load buyer signals", e);
- if (!cancelled) setConfirmed([]);
+ if (!cancelled) {
+ setConfirmed([]);
+ setAttribution([]);
+ }
  } finally {
  if (!cancelled) setLoading(false);
  }
@@ -407,6 +434,23 @@ function BuyerSignalsPanel() {
 
  const levelMax = Math.max(1, ...levelCounts.map((l) => l.count));
  const totalConfirmed = confirmed.length;
+
+ // Group attribution rows by entity_type, in the canonical order (unknown
+ // types appended after). Each row keeps entity_id, signal_count, max_level.
+ const attributionGroups = useMemo(() => {
+ const byType = {};
+ attribution.forEach((a) => {
+ const t = String(a.entity_type || "other").toLowerCase();
+ (byType[t] = byType[t] || []).push(a);
+ });
+ const known = ENTITY_TYPE_ORDER.filter((t) => byType[t]);
+ const extra = Object.keys(byType).filter((t) => !ENTITY_TYPE_ORDER.includes(t));
+ return [...known, ...extra].map((t) => ({
+ type: t,
+ label: ENTITY_TYPE_LABELS[t] || t.charAt(0).toUpperCase() + t.slice(1),
+ rows: byType[t].slice().sort((x, y) => (y.signal_count || 0) - (x.signal_count || 0)),
+ }));
+ }, [attribution]);
 
  const tooltipStyle = {
  backgroundColor: "var(--cth-command-panel)",
@@ -505,6 +549,62 @@ function BuyerSignalsPanel() {
  : "Counts reflect confirmed signals by level. All zero until the first confirmation lands."}
  </p>
  </div>
+ </div>
+
+ {/* Attribution — confirmed signals grouped by connected entity */}
+ <div className="mt-4" style={cardStyle}>
+ <div className="mb-3 flex items-center gap-2">
+ <BarChart3 size={16} style={{ color: "var(--cth-command-purple)" }} />
+ <h3 className="text-sm font-semibold cth-heading">Signal Attribution</h3>
+ </div>
+
+ {loading ? (
+ <div className="py-6 text-center text-sm cth-muted">Loading attribution…</div>
+ ) : attributionGroups.length === 0 ? (
+ <div className="py-6 text-center text-sm cth-muted">
+ No attribution yet. Confirmed signals connected to entities will appear here, grouped by what they are attached to.
+ </div>
+ ) : (
+ <div className="space-y-5">
+ {attributionGroups.map((group) => (
+ <div key={group.type}>
+ <div className="mb-2 text-xs font-semibold uppercase tracking-wide cth-muted">
+ {group.label}
+ </div>
+ <div className="space-y-1.5">
+ {group.rows.map((row) => (
+ <div
+ key={`${group.type}:${row.entity_id}`}
+ className="flex items-center gap-3 rounded-lg px-3 py-2"
+ style={{ background: "var(--cth-command-panel-soft)", border: "1px solid var(--cth-command-border)" }}
+ >
+ <div
+ className="min-w-0 flex-1 truncate text-xs"
+ style={{ color: "var(--cth-command-ink)", fontFamily: "monospace" }}
+ title={row.entity_id}
+ >
+ {row.entity_id}
+ </div>
+ <div className="shrink-0 text-xs cth-muted">
+ {row.signal_count} signal{row.signal_count === 1 ? "" : "s"}
+ </div>
+ <span
+ className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+ style={{
+ color: LEVEL_COLOR[row.max_level] || "var(--cth-command-muted)",
+ background: `color-mix(in srgb, ${LEVEL_COLOR[row.max_level] || "#7c6576"} 14%, transparent)`,
+ border: `1px solid color-mix(in srgb, ${LEVEL_COLOR[row.max_level] || "#7c6576"} 35%, transparent)`,
+ }}
+ >
+ L{row.max_level} · {levelLabel(row.max_level)}
+ </span>
+ </div>
+ ))}
+ </div>
+ </div>
+ ))}
+ </div>
+ )}
  </div>
  </div>
  );
