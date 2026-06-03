@@ -370,7 +370,6 @@ export const APP_ROUTES = [
     group: "insightsOps",
     requiredPlan: "foundation",
     gateType: "page",
-    hidden: true,
     tooltip: "Track performance across campaigns and content.",
     lockedTooltip: "Upgrade to Foundation to unlock Analytics.",
   },
