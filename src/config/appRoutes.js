@@ -368,7 +368,7 @@ export const APP_ROUTES = [
     label: "Analytics",
     icon: BarChart3,
     group: "insightsOps",
-    requiredPlan: "foundation",
+    requiredPlan: "structure",
     gateType: "page",
     tooltip: "Track performance across campaigns and content.",
     lockedTooltip: "Upgrade to Foundation to unlock Analytics.",

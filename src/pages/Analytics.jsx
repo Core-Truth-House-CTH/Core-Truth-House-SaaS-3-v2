@@ -18,6 +18,9 @@ import {
  BarChart,
  CartesianGrid,
  Cell,
+ Legend,
+ Line,
+ LineChart,
  Pie,
  PieChart,
  ResponsiveContainer,
@@ -514,7 +517,7 @@ export default function Analytics() {
 
  const normalizedPlan = String(plan || "free").toLowerCase();
  const planIndex = PLAN_ORDER.indexOf(normalizedPlan);
- const isLocked = normalizedPlan === "free" || normalizedPlan === "audit";
+ const isLocked = normalizedPlan === "free" || normalizedPlan === "audit" || normalizedPlan === "foundation";
  const isStructurePlus = planIndex >= PLAN_ORDER.indexOf("structure");
  const isHousePlus = planIndex >= PLAN_ORDER.indexOf("house");
  const isEstate = normalizedPlan === "estate";
@@ -757,8 +760,8 @@ export default function Analytics() {
  </div>
 
  {brandProgress.length > 0 ? (
- <ResponsiveContainer width="100%" height={240}>
- <AreaChart data={brandProgress}>
+ <ResponsiveContainer width="100%" height={280}>
+ <LineChart data={brandProgress}>
  <CartesianGrid strokeDasharray="3 3" stroke={`${colors.tuscany}15`} />
  <XAxis
  dataKey="date"
@@ -770,15 +773,28 @@ export default function Analytics() {
  />
  <YAxis tick={{ fontSize: 11, fill: colors.textMuted }} domain={[0, 100]} />
  <Tooltip contentStyle={tooltipStyle} />
- <Area
+ <Legend wrapperStyle={{ fontSize: 10 }} iconSize={8} />
+ {[
+ { key: "overall", name: "Overall", color: "var(--cth-command-crimson)", width: 2.5 },
+ { key: "foundation", name: "Foundation", color: "#763b5b", width: 1.5 },
+ { key: "identity", name: "Visual Identity", color: "#5d0012", width: 1.5 },
+ { key: "offers", name: "Offer Suite", color: "#e04e35", width: 1.5 },
+ { key: "systems", name: "Systems & SOPs", color: "#8a6900", width: 1.5 },
+ { key: "content", name: "Content Library", color: "#2b6cb0", width: 1.5 },
+ { key: "launch", name: "Launch Readiness", color: "#2d6a4f", width: 1.5 },
+ ].map((s) => (
+ <Line
+ key={s.key}
  type="monotone"
- dataKey="overall"
- stroke="var(--cth-command-crimson)"
- fill="var(--cth-command-crimson)22"
- strokeWidth={2}
- name="Overall"
+ dataKey={s.key}
+ name={s.name}
+ stroke={s.color}
+ strokeWidth={s.width}
+ dot={{ r: 2 }}
+ activeDot={{ r: 4 }}
  />
- </AreaChart>
+ ))}
+ </LineChart>
  </ResponsiveContainer>
  ) : (
  <EmptyChart text="Run a brand audit to see progress history." />
