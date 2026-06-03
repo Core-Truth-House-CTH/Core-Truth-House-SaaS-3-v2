@@ -124,7 +124,7 @@ function LockedOverlay() {
  margin: 0,
  }}
  >
- Foundation Plan Required
+ Structure Plan Required
  </p>
  <h2
  style={{
@@ -147,7 +147,7 @@ function LockedOverlay() {
  maxWidth: 520,
  }}
  >
- Track your brand system completion, content usage, and momentum over time. Available on The Foundation plan and above.
+ Track your brand system completion, content usage, and momentum over time. Available on The Structure plan and above.
  </p>
  <a
  href="/billing"
@@ -165,7 +165,7 @@ function LockedOverlay() {
  textDecoration: "none",
  }}
  >
- Upgrade to Foundation
+ Upgrade to Structure
  <ChevronRight size={14} />
  </a>
  </div>

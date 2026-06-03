@@ -371,7 +371,7 @@ export const APP_ROUTES = [
     requiredPlan: "structure",
     gateType: "page",
     tooltip: "Track performance across campaigns and content.",
-    lockedTooltip: "Upgrade to Foundation to unlock Analytics.",
+    lockedTooltip: "Upgrade to Structure to unlock Analytics.",
   },
     {
     path: "/blog-cms",
