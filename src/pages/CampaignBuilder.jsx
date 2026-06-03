@@ -7,7 +7,6 @@ import { useWorkspace } from '../context/WorkspaceContext';
 import { useUser } from '../hooks/useAuth';
 import { DashboardLayout } from '../components/Layout';
 import { Loader2, Plus, Zap, Calendar as CalendarIcon, X, Trash2, RefreshCw, Pencil, Radio, Search, User, Package, Megaphone, Check } from 'lucide-react';
-import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import UploadZone from '../components/shared/UploadZone';
 import apiClient from '../lib/apiClient';
 import { API_PATHS } from '../lib/apiPaths';
@@ -1447,6 +1446,29 @@ function CampaignBuilderPageContent() {
  const [zuriBusyStep, setZuriBusyStep] = useState(null);
  const [zuriOutput, setZuriOutput] = useState(null); // { step, text }
 
+ // Tracking step (Component E) — read-only links assigned to this campaign.
+ const [campaignLinks, setCampaignLinks] = useState([]);
+ const [campaignLinksLoading, setCampaignLinksLoading] = useState(false);
+
+ useEffect(() => {
+ const campaignId = editorCampaign?.id;
+ if (!editorOpen || activeMagnetStep !== 'tracking' || !campaignId) {
+ setCampaignLinks([]);
+ return;
+ }
+ let cancelled = false;
+ setCampaignLinksLoading(true);
+ apiClient.get(API_PATHS.trackingLinks.list)
+ .then((res) => {
+ if (cancelled) return;
+ const all = Array.isArray(res?.tracking_links) ? res.tracking_links : [];
+ setCampaignLinks(all.filter((l) => l.campaign_id === campaignId));
+ })
+ .catch(() => { if (!cancelled) setCampaignLinks([]); })
+ .finally(() => { if (!cancelled) setCampaignLinksLoading(false); });
+ return () => { cancelled = true; };
+ }, [editorOpen, activeMagnetStep, editorCampaign?.id]);
+
  const openEditor = useCallback((campaign) => {
  if (campaign) {
  setEditorCampaign(campaign);
@@ -1839,7 +1861,53 @@ function CampaignBuilderPageContent() {
                       <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Landing page URL</div><input style={inputStyle} value={form.landing_page_url || ''} onChange={(e) => fld('landing_page_url', e.target.value)} placeholder="https://" /></div>
                       <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>CTA URL</div><input style={inputStyle} value={form.cta_url || ''} onChange={(e) => fld('cta_url', e.target.value)} placeholder="https://" /></div>
                     </div>
-                    <div className="flex flex-col" style={{ gap: 5 }}><div style={labelStyle}>Urgency trigger</div><input style={inputStyle} value={form.urgency_trigger || ''} onChange={(e) => fld('urgency_trigger', e.target.value)} placeholder="Deadline, scarcity, bonus…" /></div>
+                    {/* Read-only tracking links assigned to this campaign (Component E).
+                        urgency_trigger field is intentionally kept in form state + payload;
+                        only its input was removed. */}
+                    <div className="flex flex-col" style={{ gap: 8 }}>
+                      <div className="flex items-center justify-between">
+                        <div style={labelStyle}>Tracking links on this campaign</div>
+                        <button
+                          type="button"
+                          onClick={() => navigate('/tracking-links')}
+                          style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 600, color: 'var(--cth-command-crimson)' }}
+                        >
+                          Manage in Tracking Links →
+                        </button>
+                      </div>
+                      <div style={{ border: '1px solid var(--cth-command-border)', borderRadius: 8, overflow: 'hidden' }}>
+                        {!editorCampaign?.id ? (
+                          <div style={{ padding: '14px 14px', fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'var(--cth-command-muted)' }}>
+                            Save the campaign first, then assign tracking links to it from the Tracking Links page.
+                          </div>
+                        ) : campaignLinksLoading ? (
+                          <div style={{ padding: '14px 14px', fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'var(--cth-command-muted)' }}>Loading…</div>
+                        ) : campaignLinks.length === 0 ? (
+                          <div style={{ padding: '14px 14px', fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'var(--cth-command-muted)' }}>
+                            No tracking links assigned to this campaign yet.
+                          </div>
+                        ) : (
+                          campaignLinks.map((l, i) => (
+                            <div
+                              key={l.id}
+                              className="flex items-center gap-3"
+                              style={{ padding: '10px 14px', borderTop: i === 0 ? 'none' : '1px solid var(--cth-command-border)' }}
+                            >
+                              <span style={{ flex: 1, minWidth: 0, fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, fontWeight: 600, color: 'var(--cth-command-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {l.link_name || l.label || 'Untitled link'}
+                              </span>
+                              <span style={{ flexShrink: 0, fontFamily: "'DM Sans', sans-serif", fontSize: 9, fontWeight: 600, padding: '1px 7px', borderRadius: 999, background: 'var(--cth-command-panel-soft)', color: 'var(--cth-command-muted)', border: '1px solid var(--cth-command-border)' }}>
+                                {l.signal_level ? `Signal ${l.signal_level}` : 'No signal'}
+                              </span>
+                              <span style={{ flexShrink: 0, textAlign: 'right', minWidth: 48 }}>
+                                <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 15, fontWeight: 600, color: 'var(--cth-command-ink)' }}>{l.click_count || 0}</span>
+                                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 8.5, color: 'var(--cth-command-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: 4 }}>clicks</span>
+                              </span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </>)}
 
                   {/* Zuri card */}
