@@ -92,8 +92,8 @@ export function AuditExportButton({ auditId = '', variant = 'secondary' }) {
         className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold"
         style={
           isPrimary
-            ? { borderRadius: 4, backgroundColor: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none' }
-            : { borderRadius: 4, border: '1px solid var(--cth-command-border)', color: 'var(--cth-command-ink)', background: 'transparent' }
+            ? { borderRadius: 10, backgroundColor: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none' }
+            : { borderRadius: 10, border: '1px solid var(--cth-command-border)', color: 'var(--cth-command-ink)', background: 'transparent' }
         }
       >
         <Download size={13} />
@@ -102,7 +102,7 @@ export function AuditExportButton({ auditId = '', variant = 'secondary' }) {
 
       {open ? (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ background: 'rgba(20, 15, 43, 0.45)' }}>
-          <div className="w-full max-w-2xl border p-5 shadow-2xl" style={{ background: 'var(--cth-command-panel)', borderColor: 'var(--cth-command-border)', borderRadius: 4 }}>
+          <div className="w-full max-w-2xl border p-5 shadow-2xl" style={{ background: 'var(--cth-command-panel)', borderColor: 'var(--cth-command-border)', borderRadius: 10 }}>
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <p className="cth-kicker m-0">Brand Audit</p>
@@ -112,7 +112,7 @@ export function AuditExportButton({ auditId = '', variant = 'secondary' }) {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                style={{ borderRadius: 4, border: '1px solid var(--cth-command-border)', color: 'var(--cth-command-ink)', background: 'transparent', padding: '6px 10px' }}
+                style={{ borderRadius: 10, border: '1px solid var(--cth-command-border)', color: 'var(--cth-command-ink)', background: 'transparent', padding: '6px 10px' }}
               >
                 <X size={15} />
               </button>
@@ -123,7 +123,7 @@ export function AuditExportButton({ auditId = '', variant = 'secondary' }) {
                 type="button"
                 onClick={() => setMode('print')}
                 className="border p-4 text-left"
-                style={{ borderRadius: 4, borderColor: mode === 'print' ? 'var(--cth-command-crimson)' : 'var(--cth-command-border)', background: 'var(--cth-command-panel)' }}
+                style={{ borderRadius: 10, borderColor: mode === 'print' ? 'var(--cth-command-crimson)' : 'var(--cth-command-border)', background: 'var(--cth-command-panel)' }}
               >
                 <Eye size={18} style={{ color: 'var(--cth-command-crimson)' }} />
                 <p className="m-0 mt-2 text-sm font-bold" style={{ color: 'var(--cth-command-ink)' }}>Preview / Print</p>
@@ -134,14 +134,14 @@ export function AuditExportButton({ auditId = '', variant = 'secondary' }) {
                 type="button"
                 onClick={() => setMode('download')}
                 className="border p-4 text-left"
-                style={{ borderRadius: 4, borderColor: mode === 'download' ? 'var(--cth-command-crimson)' : 'var(--cth-command-border)', background: 'var(--cth-command-panel)' }}
+                style={{ borderRadius: 10, borderColor: mode === 'download' ? 'var(--cth-command-crimson)' : 'var(--cth-command-border)', background: 'var(--cth-command-panel)' }}
               >
                 <Download size={18} style={{ color: 'var(--cth-command-crimson)' }} />
                 <p className="m-0 mt-2 text-sm font-bold" style={{ color: 'var(--cth-command-ink)' }}>Download PDF</p>
                 <p className="m-0 mt-1 text-xs" style={{ color: 'var(--cth-command-muted)' }}>Download the report.</p>
               </button>
 
-              <div className="border p-4" style={{ borderRadius: 4, borderColor: 'var(--cth-command-border)', background: 'var(--cth-command-panel-soft)' }}>
+              <div className="border p-4" style={{ borderRadius: 10, borderColor: 'var(--cth-command-border)', background: 'var(--cth-command-panel-soft)' }}>
                 <FileText size={18} style={{ color: 'var(--cth-command-crimson)' }} />
                 <p className="m-0 mt-2 text-sm font-bold" style={{ color: 'var(--cth-command-ink)' }}>Saved to Workspace Library</p>
                 <p className="m-0 mt-1 text-xs" style={{ color: 'var(--cth-command-muted)' }}>A generated copy is saved to documents.</p>
@@ -149,7 +149,7 @@ export function AuditExportButton({ auditId = '', variant = 'secondary' }) {
             </div>
 
             {error ? (
-              <div className="mt-4 border p-3 text-sm" style={{ borderRadius: 4, borderColor: 'var(--cth-command-crimson)', color: 'var(--cth-command-crimson)' }}>
+              <div className="mt-4 border p-3 text-sm" style={{ borderRadius: 10, borderColor: 'var(--cth-command-crimson)', color: 'var(--cth-command-crimson)' }}>
                 {error}
               </div>
             ) : null}
@@ -159,7 +159,7 @@ export function AuditExportButton({ auditId = '', variant = 'secondary' }) {
               onClick={() => runExport(mode)}
               disabled={busy}
               className="mt-5 w-full justify-center inline-flex items-center gap-2 px-4 py-3 text-sm font-semibold disabled:opacity-50"
-              style={{ borderRadius: 4, backgroundColor: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none' }}
+              style={{ borderRadius: 10, backgroundColor: 'var(--cth-command-purple)', color: 'var(--cth-command-gold)', border: 'none' }}
             >
               {busy ? 'Exporting…' : mode === 'print' ? 'Preview / Print' : 'Generate Report'}
             </button>

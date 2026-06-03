@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowUpRight, RefreshCw, RotateCcw } from 'lucide-react';
+import { RefreshCw, RotateCcw } from 'lucide-react';
 
 import { DashboardLayout } from '../components/Layout';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../lib/apiClient';
 import PreAuditIntake from '../components/Brand/PreAuditIntake';
-import { AuditAnalysisText, AuditNextSteps } from '../components/Brand/BrandAuditResults';
+import { AuditNextSteps } from '../components/Brand/BrandAuditResults';
 import { AuditExportButton } from '../components/Brand/AuditExportButton';
 
 const AUDIT_ENDPOINT = '/api/audit/latest';
@@ -195,7 +195,7 @@ function nextBestMovesFor(audit) {
 }
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 const PAGE_STYLE = {
   background: 'var(--cth-command-blush)',
@@ -212,121 +212,124 @@ const SECTION_LABEL_STYLE = {
   margin: 0,
 };
 
-const SECTION_HEADING_STYLE = {
-  fontFamily: SERIF,
-  fontSize: 26,
-  fontWeight: 600,
-  color: 'var(--cth-command-ink)',
-  margin: '8px 0 0',
-  letterSpacing: '-0.005em',
-  lineHeight: 1.2,
-};
-
 const CONTENT_CARD_STYLE = {
   background: 'var(--cth-command-panel)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 0,
+  borderRadius: 12,
   padding: 28,
 };
 
 const MODULE_META = {
-  brand_foundation: { label: 'Brand Foundation', accent: 'var(--cth-command-crimson)', path: '/brand-foundation' },
-  visual_identity: { label: 'Visual Identity', accent: 'var(--cth-command-purple)', path: '/identity-studio' },
-  offer_suite: { label: 'Offer Suite', accent: 'var(--cth-command-cinnabar)', path: '/systems-builder' },
-  systems_and_sops: { label: 'Systems & SOPs', accent: 'var(--cth-command-gold)', path: '/systems-builder' },
-  content_library: { label: 'Content Library', accent: 'var(--cth-command-purple-mid)', path: '/content-studio' },
-  launch_readiness: { label: 'Launch Readiness', accent: 'var(--cth-command-crimson)', path: '/strategic-os' },
+  brand_foundation: { label: 'Brand Foundation', accent: '#763b5b', path: '/brand-foundation', linkLabel: 'Go to Foundation' },
+  visual_identity: { label: 'Visual Identity', accent: '#5d0012', path: '/identity-studio', linkLabel: 'Go to Identity Studio' },
+  offer_suite: { label: 'Offer Suite', accent: '#e04e35', path: '/systems-builder', linkLabel: 'Go to Systems Builder' },
+  systems_and_sops: { label: 'Systems & SOPs', accent: '#8a6900', path: '/systems-builder', linkLabel: 'Go to Systems Builder' },
+  content_library: { label: 'Content Library', accent: '#2b6cb0', path: '/content-studio', linkLabel: 'Go to Content Studio' },
+  launch_readiness: { label: 'Launch Readiness', accent: '#2d6a4f', path: '/strategic-os', linkLabel: 'Go to Strategic OS' },
 };
 
-function MetricTile({ label, value, accent, path, onNavigate }) {
+// Static "Primary gap" copy per module per score band:
+//   < 60  -> critical   |   60–74 -> improve   |   75+ -> refine
+const GAP_COPY = {
+  brand_foundation: {
+    critical: 'Positioning is unclear — mission, audience, and promise need definition before anything built on top can hold.',
+    improve: 'Positioning statement needs sharper differentiation from competitors.',
+    refine: 'Strong foundation — tighten the brand voice and promise language for consistency.',
+  },
+  visual_identity: {
+    critical: 'No cohesive visual system yet — color, type, and logo usage are undefined or inconsistent.',
+    improve: 'Typography roles are incomplete — the display font is not confirmed.',
+    refine: 'Identity is solid — document usage rules so it stays consistent at scale.',
+  },
+  offer_suite: {
+    critical: "Offers lack clear packaging and pricing logic — buyers can't tell what to choose or why.",
+    improve: "Offer names and outcomes aren't clearly differentiated.",
+    refine: 'Offers are well-structured — refine the conversion path between them.',
+  },
+  systems_and_sops: {
+    critical: 'No repeatable systems in place — delivery depends on you remembering each step.',
+    improve: 'Delivery SOP is missing — no repeatable client onboarding process.',
+    refine: 'Systems are working — codify the edge cases so the team can run them without you.',
+  },
+  content_library: {
+    critical: "Little to no content engine — there's nothing consistent feeding awareness.",
+    improve: "Content isn't mapped to buyer awareness stages.",
+    refine: 'Content is consistent — sharpen the messaging to convert, not just reach.',
+  },
+  launch_readiness: {
+    critical: 'Not launch-ready — foundational clarity must come before any campaign push.',
+    improve: 'No tracking links set up to measure signal movement from campaigns.',
+    refine: 'Launch-ready — instrument the funnel so each launch teaches you something.',
+  },
+};
+
+function scoreBand(score) {
+  if (Number(score) >= 75) return 'refine';
+  if (Number(score) >= 60) return 'improve';
+  return 'critical';
+}
+
+function gapTextFor(key, score) {
+  const bands = GAP_COPY[key];
+  if (!bands) return '';
+  return bands[scoreBand(score)];
+}
+
+function ModuleCard({ label, value, accent, linkLabel, gapText, path, onNavigate }) {
   const [hovered, setHovered] = useState(false);
   const clickable = Boolean(path && onNavigate);
-
-  const handleClick = () => {
-    if (clickable) onNavigate(path);
-  };
 
   return (
     <button
       type="button"
-      onClick={handleClick}
+      onClick={() => clickable && onNavigate(path)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      data-testid={`metric-tile-${label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
+      data-testid={`module-card-${label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
       style={{
         background: 'var(--cth-command-panel)',
-        border: `1px solid ${hovered ? 'var(--cth-command-crimson)' : 'var(--cth-command-border)'}`,
-        borderRadius: 0,
-        padding: '20px 22px',
+        border: `1px solid ${hovered ? accent : 'var(--cth-command-border)'}`,
+        borderRadius: 12,
+        overflow: 'hidden',
+        padding: 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: 14,
         cursor: clickable ? 'pointer' : 'default',
         textAlign: 'left',
-        position: 'relative',
         width: '100%',
         transition: 'border-color 150ms ease',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span
-          aria-hidden="true"
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: accent,
-            display: 'inline-block',
-          }}
-        />
-        <p
-          style={{
-            ...SECTION_LABEL_STYLE,
-            fontSize: 10,
-            letterSpacing: '0.2em',
-          }}
-        >
+      {/* 2px accent bar */}
+      <div aria-hidden="true" style={{ height: 2, background: accent }} />
+
+      <div style={{ padding: '14px 15px 10px' }}>
+        <div style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--cth-command-muted)', marginBottom: 6 }}>
           {label}
-        </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+          <span style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 600, color: 'var(--cth-command-ink)', lineHeight: 1 }}>{value}</span>
+          <span style={{ fontFamily: SANS, fontSize: 9, color: 'var(--cth-command-muted)' }}>/100</span>
+        </div>
+        <div style={{ height: 3, background: 'var(--cth-command-blush)', borderRadius: 999, overflow: 'hidden', margin: '8px 0' }}>
+          <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, value))}%`, background: accent, borderRadius: 999 }} />
+        </div>
       </div>
-      <p
-        style={{
-          fontFamily: SERIF,
-          fontSize: 44,
-          fontWeight: 600,
-          color: 'var(--cth-command-ink)',
-          lineHeight: 1,
-          margin: 0,
-        }}
-      >
-        {value}
-        <span
-          style={{
-            fontFamily: SANS,
-            fontSize: 14,
-            fontWeight: 400,
-            color: 'var(--cth-command-muted)',
-            marginLeft: 6,
-          }}
-        >
-          /100
-        </span>
-      </p>
-      {clickable ? (
-        <ArrowUpRight
-          size={14}
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            bottom: 12,
-            right: 12,
-            color: hovered ? 'var(--cth-command-crimson)' : 'var(--cth-command-muted)',
-            transition: 'color 150ms ease',
-          }}
-        />
-      ) : null}
+
+      {/* Primary gap */}
+      <div style={{ background: 'var(--cth-command-panel-soft)', borderTop: '1px solid var(--cth-command-border)', padding: '10px 15px' }}>
+        <div style={{ fontFamily: SANS, fontSize: 8, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--cth-command-muted)', marginBottom: 4 }}>
+          Primary gap
+        </div>
+        <div style={{ fontFamily: SANS, fontSize: 11, color: 'var(--cth-command-ink)', lineHeight: 1.5 }}>{gapText}</div>
+      </div>
+
+      <div style={{ padding: '8px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: 'var(--cth-command-crimson)' }}>{linkLabel}</span>
+        <span aria-hidden="true" style={{ color: 'var(--cth-command-crimson)', fontSize: 13 }}>→</span>
+      </div>
     </button>
   );
 }
@@ -553,7 +556,7 @@ export default function BrandAudit() {
                 background: 'var(--cth-command-panel)',
                 border: '1px solid var(--cth-command-border)',
                 padding: 28,
-                borderRadius: 0,
+                borderRadius: 12,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
@@ -694,16 +697,19 @@ export default function BrandAudit() {
               ) : null;
             })()}
 
-            <div style={CONTENT_CARD_STYLE}>
-              <p style={SECTION_LABEL_STYLE}>Audit Summary</p>
-              <h2 style={SECTION_HEADING_STYLE}>Module Scores</h2>
-              <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div>
+              <p style={{ ...SECTION_LABEL_STYLE, fontSize: 9, letterSpacing: '0.14em', marginBottom: 10 }}>
+                Module Scores — click any module to see breakdown and improvement path
+              </p>
+              <div className="grid gap-3 md:grid-cols-3">
                 {Object.entries(MODULE_META).map(([key, meta]) => (
-                  <MetricTile
+                  <ModuleCard
                     key={key}
                     label={meta.label}
                     value={audit.moduleScores[key]}
                     accent={meta.accent}
+                    linkLabel={meta.linkLabel}
+                    gapText={gapTextFor(key, audit.moduleScores[key])}
                     path={meta.path}
                     onNavigate={navigate}
                   />
@@ -711,17 +717,31 @@ export default function BrandAudit() {
               </div>
             </div>
 
-            <div style={CONTENT_CARD_STYLE}>
-              <p style={SECTION_LABEL_STYLE}>AI Analysis</p>
-              <h2 style={SECTION_HEADING_STYLE}>Brand Audit Results</h2>
-              <div style={{ marginTop: 20 }}>
-                <AuditAnalysisText
-                  text={
-                    audit.aiAnalysisText ||
-                    'No analysis has been generated yet. Retake the audit to create a new answer-backed report.'
-                  }
-                />
+            {/* Zuri interpretation — replaces the old AI Analysis card */}
+            <div style={{ background: '#1a0828', borderRadius: 12, padding: '18px 20px' }} data-testid="zuri-brand-interpretation">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#e04e35', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 9, fontWeight: 500, color: '#fff' }}>Z</span>
+                </div>
+                <span style={{ fontFamily: SANS, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a6090' }}>
+                  Zuri · Brand Interpretation
+                </span>
               </div>
+              <div style={{ fontFamily: SERIF, fontSize: 16, color: '#e8dff0', fontStyle: 'italic', lineHeight: 1.55, marginBottom: nextMoves.length ? 12 : 0 }}>
+                {audit.aiAnalysisText
+                  ? `“${audit.aiAnalysisText}”`
+                  : '“Your audit is ready. Retake it any time to regenerate this interpretation from your latest answers.”'}
+              </div>
+              {nextMoves.length ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {nextMoves.map((move, i) => (
+                    <div key={move.path ? `${move.path}-${i}` : i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '9px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: '#e04e35', flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+                      <span style={{ fontFamily: SANS, fontSize: 11, color: 'rgba(232,223,240,0.8)', lineHeight: 1.5 }}>{move.text}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             <AuditNextSteps
@@ -756,7 +776,7 @@ export default function BrandAudit() {
             style={{
               background: 'var(--cth-command-panel)',
               border: '1px solid var(--cth-command-border)',
-              borderRadius: 0,
+              borderRadius: 12,
               width: '100%',
               maxWidth: 480,
               padding: 28,
@@ -794,7 +814,7 @@ export default function BrandAudit() {
                   background: 'transparent',
                   color: 'var(--cth-command-ink)',
                   border: '1px solid var(--cth-command-border)',
-                  borderRadius: 0,
+                  borderRadius: 8,
                   padding: '10px 18px',
                   fontFamily: SANS,
                   fontSize: 13,
@@ -815,7 +835,7 @@ export default function BrandAudit() {
                   background: 'var(--cth-command-crimson)',
                   color: 'var(--cth-command-ivory)',
                   border: 'none',
-                  borderRadius: 0,
+                  borderRadius: 8,
                   padding: '10px 18px',
                   fontFamily: SANS,
                   fontSize: 13,

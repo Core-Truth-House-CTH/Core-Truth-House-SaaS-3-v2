@@ -1,41 +1,70 @@
 /**
  * PreAuditIntake.jsx
- * CTH OS — Pre-Audit Intake Form
+ * CTH OS — Pre-Audit Intake Form (Phase 3 rebuild)
  *
- * Shows before the Brand Audit runs for the first time.
+ * Renders inside BrandAudit (no DashboardLayout). Phase 3 layout:
+ * inline header + progress, 148px left section nav, right field area with
+ * "why this matters" box, three tip cards, fields, and a Zuri card.
+ * Matches docs/references/CTH_brand_audit_intake.html.
+ *
  * Collects 12 questions across 4 sections.
- * On submit: saves answers to Brand Memory, then triggers the audit.
+ * On submit: POST /api/brand-audit/intake, then onComplete().
  */
 
 import React, { useState } from 'react';
-import { useColors } from '../../context/ThemeContext';
 import { useUser } from '../../hooks/useAuth';
-import axios from 'axios';
-import { Shield, ChevronRight, ChevronLeft, Loader2, Check, Target, Megaphone, Globe, Crosshair, Sparkles } from 'lucide-react';
-import apiClient from "../../lib/apiClient";
+import { Check, Pencil, Circle, Loader2, Sparkles } from 'lucide-react';
+import apiClient from '../../lib/apiClient';
 
-const API = `${import.meta.env.VITE_BACKEND_URL}/api`;
+const SANS = "'DM Sans', sans-serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
+
+const INK = '#1a0828';
+const MUTED = '#7c6576';
+const CRIMSON = '#5d0012';
+const GREEN = '#2d6a4f';
+const ACCENT = '#e04e35';
+const BORDER = '#e8d5d0';
+const BORDER2 = '#d8c5c3';
+const BG = '#f8f4f2';
+const NAVBG = '#faf7f5';
+const BODYTEXT = '#3d2d4a';
+const WHYTEXT = '#4a3860';
 
 const SECTIONS = [
   {
     id: 'brand',
     number: 1,
     label: 'Your Brand',
-    Icon: Shield,
-    desc: "Tell us about the brand we're auditing.",
+    subtitle: "Tell us about the brand we're auditing — the name, the promise, and who it's for.",
+    why: 'Your brand foundation score measures how clearly you have defined who you are, what you do, and who you serve. This section is the bedrock everything else is scored against.',
+    tips: [
+      'Use the name you actually operate under publicly, not your legal entity name',
+      "Describe what you do in plain language — the way you'd say it to a friend",
+      'Name one specific person you serve, not a broad demographic',
+    ],
+    zuriLabel: 'Zuri · brand context',
+    zuriText: 'Clarity beats cleverness. The brands that score highest here can describe who they serve in one sentence without hedging.',
     questions: [
       { id: 'brand_name', label: 'What is your brand name?', sublabel: 'The name you operate under publicly.', type: 'input', placeholder: 'e.g. Oak & Ember Studio', required: true },
       { id: 'tagline', label: 'Do you have a tagline?', sublabel: "One sentence that describes what you do. Leave blank if you don't have one yet.", type: 'input', placeholder: 'e.g. Strategy that turns scattered effort into steady growth.', required: false },
       { id: 'what_you_do', label: 'What do you do?', sublabel: 'Describe your service, product, or expertise in 1-2 sentences.', type: 'textarea', placeholder: 'e.g. I help service-based founders clarify their message, package their offers, and build a repeatable marketing system.', required: true, rows: 3 },
-      { id: 'who_you_serve', label: 'Who do you serve?', sublabel: 'Describe your ideal client. One specific person, not a broad demographic.', type: 'textarea', placeholder: "e.g. Service-based business owners who are getting referrals but struggling to turn online attention into consistent sales.", required: true, rows: 3 },
+      { id: 'who_you_serve', label: 'Who do you serve?', sublabel: 'Describe your ideal client. One specific person, not a broad demographic.', type: 'textarea', placeholder: 'e.g. Service-based business owners who are getting referrals but struggling to turn online attention into consistent sales.', required: true, rows: 3 },
     ],
   },
   {
     id: 'offer',
     number: 2,
     label: 'Your Offer',
-    Icon: Target,
-    desc: 'Tell us what you sell and how.',
+    subtitle: 'Tell us about your primary offer and how you monetize your expertise.',
+    why: 'Your offer suite score measures how clearly your offers are positioned, priced, and differentiated. This section tells us what we are scoring.',
+    tips: [
+      'Name your most important offer — the one that generates most of your revenue',
+      'Price point helps us assess positioning alignment with your market',
+      'Select the type that best describes how you deliver your work',
+    ],
+    zuriLabel: 'Zuri · offer context',
+    zuriText: 'A clear primary offer is the anchor of every strong brand. If you have more than three offers, list the one you most want to be known for.',
     questions: [
       { id: 'primary_offer', label: 'What is your primary offer?', sublabel: 'The main thing you want people to buy from you right now.', type: 'input', placeholder: 'e.g. A 6-week brand strategy intensive, monthly consulting plan, or digital toolkit.', required: true },
       { id: 'price_point', label: 'What is the price?', sublabel: 'Monthly, one-time, or hourly — just give us the number.', type: 'input', placeholder: 'e.g. $97/month, $2,500 one-time, $350/hour', required: true },
@@ -47,8 +76,15 @@ const SECTIONS = [
     id: 'presence',
     number: 3,
     label: 'Your Presence',
-    Icon: Globe,
-    desc: 'Tell us where you show up and how often.',
+    subtitle: 'Tell us where you show up and how consistently you publish.',
+    why: 'Your content library and launch readiness scores draw on where you are active and how often you show up. Consistency and platform fit matter more than being everywhere.',
+    tips: [
+      'Select only the platforms where you publish regularly — not every account you own',
+      'Posting frequency helps us gauge whether your engine is built for momentum',
+      "A live website strengthens launch readiness, but it's optional here",
+    ],
+    zuriLabel: 'Zuri · presence context',
+    zuriText: "Presence isn't about being on every platform. It's about showing up consistently where your buyers already are.",
     questions: [
       { id: 'active_platforms', label: 'Where are you currently active?', sublabel: 'Select all platforms where you publish content regularly.', type: 'checkboxes', required: true, options: ['LinkedIn', 'Instagram', 'TikTok', 'Twitter/X', 'Threads', 'YouTube', 'Facebook', 'Pinterest', 'Email list', 'Podcast', 'Blog'] },
       { id: 'posting_frequency', label: 'How often do you post?', type: 'pills', required: false, options: ['Daily', '4-5x per week', '2-3x per week', 'Weekly', 'A few times a month', 'Rarely or never'] },
@@ -59,8 +95,15 @@ const SECTIONS = [
     id: 'goals',
     number: 4,
     label: 'Your Goals',
-    Icon: Crosshair,
-    desc: 'Tell us where you want to go.',
+    subtitle: 'Tell us where you want to go so the audit can point you there.',
+    why: 'Your goals shape how we weight the recommendations. The audit scores where you are; your goals decide which gaps matter most right now.',
+    tips: [
+      'Pick the single goal that matters most for the next 90 days',
+      'Be specific about your biggest challenge — precision produces a sharper audit',
+      'A concrete revenue target lets us prioritize the highest-leverage moves',
+    ],
+    zuriLabel: 'Zuri · goal context',
+    zuriText: "Specific goals produce specific strategy. 'More clients' tells me little; '$10K MRR in 90 days' tells me where to focus.",
     questions: [
       { id: 'primary_goal', label: 'What is your primary goal right now?', type: 'pills', required: true, options: ['Get my first paying clients', 'Scale past 6 figures', 'Build to 7 figures', 'Launch a new offer', 'Build recurring revenue', 'Grow my audience', 'Position as an authority', 'Systematize and scale'] },
       { id: 'biggest_challenge', label: 'What is your biggest brand challenge right now?', sublabel: 'Be specific. The more precise, the more useful the audit.', type: 'textarea', placeholder: "e.g. I post consistently but nothing converts. I'm not sure if my messaging is off or if I'm reaching the wrong people.", required: true, rows: 3 },
@@ -69,25 +112,25 @@ const SECTIONS = [
   },
 ];
 
-const ALL_QUESTIONS = SECTIONS.flatMap(s => s.questions);
-const REQUIRED_COUNT = ALL_QUESTIONS.filter(q => q.required).length;
+const ALL_QUESTIONS = SECTIONS.flatMap((s) => s.questions);
+const REQUIRED_COUNT = ALL_QUESTIONS.filter((q) => q.required).length;
 
-function QuestionInput({ question: q, value, onChange, colors }) {
-  const [focused, setFocused] = useState(false);
+function isFilled(val) {
+  if (Array.isArray(val)) return val.length > 0;
+  return Boolean(val && val.toString().trim().length > 0);
+}
 
-  const inputSt = {
-    width: '100%',
-    background: focused ? `${colors.cinnabar}0F` : `${colors.tuscany}0A`,
-    border: `1px solid ${focused ? colors.cinnabar + '55' : colors.tuscany + '18'}`,
-    borderRadius: 9,
-    padding: '10px 13px',
-    fontSize: 13,
-    color: colors.textPrimary,
-    fontFamily: "'DM Sans', sans-serif",
+function FieldInput({ q, value, onChange, hasError }) {
+  const base = {
+    padding: '9px 12px',
+    background: '#fff',
+    border: `0.5px solid ${hasError ? CRIMSON : BORDER2}`,
+    borderRadius: 8,
+    fontSize: 12,
+    color: INK,
+    fontFamily: SANS,
     outline: 'none',
-    boxSizing: 'border-box',
-    lineHeight: 1.6,
-    transition: 'border-color 0.15s, background 0.15s',
+    width: '100%',
   };
 
   if (q.type === 'textarea') {
@@ -95,12 +138,10 @@ function QuestionInput({ question: q, value, onChange, colors }) {
       <textarea
         data-testid={`intake-${q.id}`}
         value={value || ''}
-        onChange={e => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         placeholder={q.placeholder}
         rows={q.rows || 3}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={{ ...inputSt, resize: 'vertical' }}
+        style={{ ...base, resize: 'vertical', lineHeight: 1.6, minHeight: 72 }}
       />
     );
   }
@@ -108,22 +149,25 @@ function QuestionInput({ question: q, value, onChange, colors }) {
   if (q.type === 'pills') {
     const selected = value || '';
     return (
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {q.options.map(opt => {
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {q.options.map((opt) => {
           const isSelected = selected === opt;
           return (
             <button
+              type="button"
               key={opt}
               data-testid={`intake-${q.id}-${opt.replace(/\s/g, '-').toLowerCase()}`}
               onClick={() => onChange(isSelected ? '' : opt)}
               style={{
-                padding: '7px 16px', borderRadius: 20,
-                border: `1px solid ${isSelected ? colors.cinnabar + '60' : colors.tuscany + '18'}`,
-                background: isSelected ? `${colors.cinnabar}18` : `${colors.tuscany}0A`,
-                color: isSelected ? colors.cinnabar : colors.textMuted,
-                fontSize: 12.5, cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-                transition: 'all 0.12s',
+                padding: '5px 12px',
+                borderRadius: 20,
+                fontSize: 11,
+                fontWeight: 500,
+                border: `0.5px solid ${isSelected ? CRIMSON : BORDER2}`,
+                background: isSelected ? CRIMSON : '#fff',
+                color: isSelected ? '#fff' : BODYTEXT,
+                fontFamily: SANS,
+                cursor: 'pointer',
               }}
             >
               {opt}
@@ -135,35 +179,47 @@ function QuestionInput({ question: q, value, onChange, colors }) {
   }
 
   if (q.type === 'checkboxes') {
-    const selectedArr = Array.isArray(value) ? value : [];
-    const toggle = opt =>
-      onChange(
-        selectedArr.includes(opt)
-          ? selectedArr.filter(x => x !== opt)
-          : [...selectedArr, opt]
-      );
+    const arr = Array.isArray(value) ? value : [];
+    const toggle = (opt) =>
+      onChange(arr.includes(opt) ? arr.filter((x) => x !== opt) : [...arr, opt]);
     return (
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {q.options.map(opt => {
-          const isSelected = selectedArr.includes(opt);
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+        {q.options.map((opt) => {
+          const isSelected = arr.includes(opt);
           return (
             <button
+              type="button"
               key={opt}
               data-testid={`intake-${q.id}-${opt.replace(/\s/g, '-').toLowerCase()}`}
               onClick={() => toggle(opt)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                padding: '6px 14px', borderRadius: 20,
-                border: `1px solid ${isSelected ? colors.cinnabar + '60' : colors.tuscany + '18'}`,
-                background: isSelected ? `${colors.cinnabar}15` : `${colors.tuscany}0A`,
-                color: isSelected ? colors.cinnabar : colors.textMuted,
-                fontSize: 12.5, cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-                transition: 'all 0.12s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                padding: '7px 10px',
+                background: isSelected ? '#f0e8e5' : '#fff',
+                border: `0.5px solid ${isSelected ? '#c7a09d' : BORDER2}`,
+                borderRadius: 8,
+                cursor: 'pointer',
+                textAlign: 'left',
               }}
             >
-              {isSelected && <Check size={10} />}
-              {opt}
+              <span
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: 3,
+                  border: `0.5px solid ${isSelected ? CRIMSON : BORDER2}`,
+                  background: isSelected ? CRIMSON : 'transparent',
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {isSelected ? <Check size={10} style={{ color: '#fff' }} /> : null}
+              </span>
+              <span style={{ fontSize: 11, color: INK }}>{opt}</span>
             </button>
           );
         })}
@@ -176,42 +232,10 @@ function QuestionInput({ question: q, value, onChange, colors }) {
       data-testid={`intake-${q.id}`}
       type="text"
       value={value || ''}
-      onChange={e => onChange(e.target.value)}
+      onChange={(e) => onChange(e.target.value)}
       placeholder={q.placeholder}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={inputSt}
+      style={base}
     />
-  );
-}
-
-function IntakeProgress({ current, total, colors }) {
-  return (
-    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-      {Array.from({ length: total }).map((_, i) => {
-        const n = i + 1;
-        const isPast = n < current;
-        const isCurrent = n === current;
-        return (
-          <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{
-              width: 24, height: 24, borderRadius: '50%',
-              background: isPast ? 'rgba(16,185,129,0.2)' : isCurrent ? `${colors.cinnabar}25` : `${colors.tuscany}0A`,
-              border: `1.5px solid ${isPast ? 'rgba(16,185,129,0.5)' : isCurrent ? `${colors.cinnabar}60` : colors.tuscany + '18'}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.2s',
-            }}>
-              {isPast ? (
-                <Check size={10} style={{ color: 'var(--cth-command-success)' }} />
-              ) : (
-                <span style={{ fontSize: 10, fontWeight: 700, color: isCurrent ? colors.cinnabar : colors.textMuted }}>{n}</span>
-              )}
-            </div>
-            {n < total && <div style={{ width: 20, height: 1.5, background: isPast ? 'rgba(16,185,129,0.3)' : colors.tuscany + '18' }} />}
-          </div>
-        );
-      })}
-    </div>
   );
 }
 
@@ -219,10 +243,10 @@ function IntakeProgress({ current, total, colors }) {
  * PreAuditIntake
  * Props:
  *   onComplete  — called after intake + audit trigger succeeds
- *   onSkip      — allow skipping intake
+ *   onSkip      — allow skipping intake (optional; renders a skip link if passed)
+ *   workspaceId — scopes the localStorage draft key
  */
 export default function PreAuditIntake({ onComplete, onSkip, workspaceId = '' }) {
-  const colors = useColors();
   const { user } = useUser();
   const userId = user?.id;
   const storageKey = `cth-brand-audit-intake:${workspaceId || userId || 'default'}`;
@@ -250,51 +274,47 @@ export default function PreAuditIntake({ onComplete, onSkip, workspaceId = '' })
   const [errorFields, setErrorFields] = useState([]);
 
   const currentSection = SECTIONS[step - 1];
-  const SectionIcon = currentSection.Icon;
   const isLastStep = step === SECTIONS.length;
 
   const persistDraft = (nextAnswers, nextStep = step) => {
     try {
-      localStorage.setItem(storageKey, JSON.stringify({
-        answers: nextAnswers,
-        step: nextStep,
-        updatedAt: new Date().toISOString(),
-      }));
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({ answers: nextAnswers, step: nextStep, updatedAt: new Date().toISOString() })
+      );
     } catch {
       // localStorage can fail in private mode; do not block the form.
     }
   };
 
   const setAnswer = (qId, value) => {
-    setAnswers(prev => {
+    setAnswers((prev) => {
       const next = { ...prev, [qId]: value };
       persistDraft(next);
       return next;
     });
   };
 
-  const canAdvance = () => {
-    return currentSection.questions
-      .filter(q => q.required)
-      .every(q => {
-        const val = answers[q.id];
-        if (Array.isArray(val)) return val.length > 0;
-        return val && val.toString().trim().length > 0;
-      });
+  const sectionComplete = (idx) =>
+    SECTIONS[idx].questions.filter((q) => q.required).every((q) => isFilled(answers[q.id]));
+
+  const completedCount = SECTIONS.filter((_, i) => sectionComplete(i)).length;
+
+  const canAdvance = () =>
+    currentSection.questions.filter((q) => q.required).every((q) => isFilled(answers[q.id]));
+
+  const flagMissing = () => {
+    const missingIds = currentSection.questions
+      .filter((q) => q.required)
+      .filter((q) => !isFilled(answers[q.id]))
+      .map((q) => q.id);
+    setErrorFields(missingIds);
+    setError('Please fill in the required fields before continuing.');
   };
 
   const handleNext = () => {
     if (!canAdvance()) {
-      const missingIds = currentSection.questions
-        .filter(q => q.required)
-        .filter(q => {
-          const val = answers[q.id];
-          if (Array.isArray(val)) return val.length === 0;
-          return !val || !val.toString().trim();
-        })
-        .map(q => q.id);
-      setErrorFields(missingIds);
-      setError('Please fill in the required fields before continuing.');
+      flagMissing();
       return;
     }
     setError(null);
@@ -302,22 +322,55 @@ export default function PreAuditIntake({ onComplete, onSkip, workspaceId = '' })
     if (isLastStep) {
       setShowReview(true);
     } else {
-      setStep(s => s + 1);
+      const next = step + 1;
+      setStep(next);
+      persistDraft(answers, next);
     }
+  };
+
+  const handleBack = () => {
+    setError(null);
+    setErrorFields([]);
+    setStep((s) => {
+      const nextStep = Math.max(1, s - 1);
+      persistDraft(answers, nextStep);
+      return nextStep;
+    });
+  };
+
+  // Left-nav navigation: back is always free; forward requires the current and
+  // any intervening sections to be valid (lands on the first incomplete one).
+  const goToSection = (targetStep) => {
+    if (targetStep === step) return;
+    if (targetStep < step) {
+      setError(null);
+      setErrorFields([]);
+      setStep(targetStep);
+      persistDraft(answers, targetStep);
+      return;
+    }
+    if (!canAdvance()) {
+      flagMissing();
+      return;
+    }
+    for (let i = step; i < targetStep; i += 1) {
+      if (!sectionComplete(i - 1)) {
+        setError(null);
+        setErrorFields([]);
+        setStep(i);
+        persistDraft(answers, i);
+        return;
+      }
+    }
+    setError(null);
+    setErrorFields([]);
+    setStep(targetStep);
+    persistDraft(answers, targetStep);
   };
 
   const handleBackToEdit = () => {
     setError(null);
     setShowReview(false);
-  };
-
-  const handleBack = () => {
-    setError(null);
-    setStep(s => {
-      const nextStep = Math.max(1, s - 1);
-      persistDraft(answers, nextStep);
-      return nextStep;
-    });
   };
 
   const handleSubmit = async () => {
@@ -328,7 +381,7 @@ export default function PreAuditIntake({ onComplete, onSkip, workspaceId = '' })
     setSubmitting(true);
     setError(null);
     try {
-      await apiClient.post("/api/brand-audit/intake", {
+      await apiClient.post('/api/brand-audit/intake', {
         answers,
         user_id: userId || 'default',
       });
@@ -340,448 +393,294 @@ export default function PreAuditIntake({ onComplete, onSkip, workspaceId = '' })
     }
   };
 
-  const filledRequired = ALL_QUESTIONS
-    .filter(q => q.required)
-    .filter(q => {
-      const val = answers[q.id];
-      if (Array.isArray(val)) return val.length > 0;
-      return val && val.toString().trim().length > 0;
-    }).length;
+  // ---------- Review screen ----------
+  if (showReview) {
+    return (
+      <div data-testid="pre-audit-intake" style={{ background: BG, fontFamily: SANS, padding: '40px 24px', minHeight: '100%' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <h1 style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 500, color: INK, margin: 0, lineHeight: 1.2 }}>
+            Review your answers
+          </h1>
+          <p style={{ fontFamily: SANS, fontSize: 13, color: MUTED, margin: '8px 0 0', lineHeight: 1.6 }}>
+            Review your answers before running the audit. You can go back to make changes.
+          </p>
 
-  const overallProgress = Math.round((filledRequired / REQUIRED_COUNT) * 100);
-
-  return (
-    <div data-testid="pre-audit-intake" style={{ minHeight: '100%', fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@keyframes cth-spin{to{transform:rotate(360deg)}} @keyframes cth-fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
-
-      {/* Top bar */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 10,
-        background: `${colors.darkest}F2`,
-        backdropFilter: 'blur(8px)',
-        borderBottom: `1px solid ${colors.tuscany}15`,
-        padding: '14px 32px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 9,
-            background: `${colors.cinnabar}18`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Shield size={16} style={{ color: colors.cinnabar }} />
+          <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {SECTIONS.map((section) => (
+              <div key={section.id} style={{ background: '#fff', border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: 20 }}>
+                <p style={{ fontFamily: SANS, fontSize: 8, fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: MUTED, margin: 0 }}>
+                  Section {section.number}
+                </p>
+                <h2 style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 500, color: INK, margin: '4px 0 16px' }}>
+                  {section.label}
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {section.questions.map((q) => {
+                    const raw = answers[q.id];
+                    const empty = !isFilled(raw);
+                    const displayed = Array.isArray(raw) ? raw.join(', ') : raw == null ? '' : String(raw);
+                    return (
+                      <div key={q.id}>
+                        <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, margin: 0 }}>
+                          {q.label}
+                        </p>
+                        <p
+                          style={{
+                            fontFamily: SANS,
+                            fontSize: 13,
+                            lineHeight: 1.55,
+                            color: empty ? MUTED : INK,
+                            fontStyle: empty ? 'italic' : 'normal',
+                            margin: '6px 0 0',
+                            whiteSpace: 'pre-wrap',
+                          }}
+                        >
+                          {empty ? 'Not answered' : displayed}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>Brand Audit Intake</p>
-            <p style={{ fontSize: 10, color: colors.textMuted, margin: 0 }}>Answer a few questions to get a meaningful score</p>
-          </div>
-        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <IntakeProgress current={step} total={SECTIONS.length} colors={colors} />
-          {onSkip && (
+          {error ? (
+            <div style={{ marginTop: 16, padding: '10px 14px', background: 'color-mix(in srgb, var(--cth-danger) 8%, #fff)', border: '0.5px solid color-mix(in srgb, var(--cth-danger) 25%, #e8d5d0)', borderRadius: 8 }}>
+              <p data-testid="intake-error" style={{ fontFamily: SANS, fontSize: 12, color: 'var(--cth-danger)', margin: 0 }}>{error}</p>
+            </div>
+          ) : null}
+
+          <div style={{ marginTop: 24, display: 'flex', gap: 10 }}>
             <button
-              data-testid="intake-skip-btn"
-              onClick={onSkip}
+              type="button"
+              data-testid="intake-back-to-edit-btn"
+              onClick={handleBackToEdit}
+              style={{ padding: '11px 22px', borderRadius: 8, border: `0.5px solid ${BORDER2}`, background: '#fff', color: INK, fontSize: 13, fontWeight: 500, fontFamily: SANS, cursor: 'pointer' }}
+            >
+              ← Back to edit
+            </button>
+            <button
+              type="button"
+              data-testid="intake-run-audit-btn"
+              onClick={handleSubmit}
+              disabled={submitting}
               style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: colors.textMuted, fontSize: 11,
-                fontFamily: "'DM Sans', sans-serif",
+                flex: 1,
+                padding: 11,
+                borderRadius: 8,
+                border: 'none',
+                background: GREEN,
+                color: '#fff',
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: '0.04em',
+                fontFamily: SANS,
+                cursor: submitting ? 'not-allowed' : 'pointer',
+                opacity: submitting ? 0.7 : 1,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
               }}
             >
+              {submitting ? (
+                <>
+                  <Loader2 size={14} style={{ animation: 'cth-spin 0.8s linear infinite' }} />
+                  Running your Brand Audit...
+                </>
+              ) : (
+                <>
+                  <Sparkles size={14} />
+                  Run Brand Audit
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+        <style>{`@keyframes cth-spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
+  }
+
+  // ---------- Section wizard ----------
+  return (
+    <div data-testid="pre-audit-intake" style={{ display: 'flex', flexDirection: 'column', background: BG, fontFamily: SANS, minHeight: '100%' }}>
+      <style>{`@keyframes cth-spin{to{transform:rotate(360deg)}}`}</style>
+
+      {/* Inline header */}
+      <div style={{ padding: '18px 24px 14px', borderBottom: `0.5px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: '#fff' }}>
+        <div>
+          <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: INK }}>Brand Audit</div>
+          <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>Answer a few questions so we can score your brand infrastructure.</div>
+        </div>
+        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: 16 }}>
+          {onSkip ? (
+            <button type="button" data-testid="intake-skip-btn" onClick={onSkip} style={{ background: 'none', border: 'none', cursor: 'pointer', color: MUTED, fontSize: 11, fontFamily: SANS }}>
               Skip intake
             </button>
-          )}
+          ) : null}
+          <div>
+            <div style={{ fontSize: 10, color: MUTED, marginBottom: 4 }}>{completedCount} of {SECTIONS.length} complete</div>
+            <div style={{ width: 100, height: 3, background: '#f0e8e5', borderRadius: 2, overflow: 'hidden', marginLeft: 'auto' }}>
+              <div style={{ width: `${(completedCount / SECTIONS.length) * 100}%`, height: '100%', background: GREEN, borderRadius: 2, transition: 'width 0.3s' }} />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      {showReview ? (
-        <div
-          style={{
-            background: 'var(--cth-command-blush)',
-            padding: '40px 24px',
-            minHeight: '100%',
-          }}
-        >
-          <div style={{ maxWidth: 720, margin: '0 auto' }}>
-            <h1
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: 28,
-                fontWeight: 600,
-                color: 'var(--cth-command-ink)',
-                margin: 0,
-                letterSpacing: '-0.005em',
-                lineHeight: 1.2,
-              }}
-            >
-              Review Your Answers
-            </h1>
-            <p
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 14,
-                color: 'var(--cth-command-muted)',
-                margin: '8px 0 0',
-                lineHeight: 1.6,
-              }}
-            >
-              Review your answers before running the audit. You can go back to make changes.
-            </p>
-
-            <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {SECTIONS.map((section) => (
-                <div
-                  key={section.id}
-                  style={{
-                    background: 'var(--cth-command-panel)',
-                    border: '1px solid var(--cth-command-border)',
-                    borderRadius: 4,
-                    padding: 20,
-                  }}
-                >
-                  <p
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      letterSpacing: '0.18em',
-                      textTransform: 'uppercase',
-                      color: 'var(--cth-command-muted)',
-                      margin: 0,
-                    }}
-                  >
-                    Section {section.number}
-                  </p>
-                  <h2
-                    style={{
-                      fontFamily: "'Playfair Display', serif",
-                      fontSize: 18,
-                      fontWeight: 600,
-                      color: 'var(--cth-command-ink)',
-                      margin: '4px 0 16px',
-                      letterSpacing: '-0.005em',
-                    }}
-                  >
-                    {section.label}
-                  </h2>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    {section.questions.map((q) => {
-                      const raw = answers[q.id];
-                      let displayed = '';
-                      let isEmpty = false;
-                      if (Array.isArray(raw)) {
-                        if (raw.length > 0) {
-                          displayed = raw.join(', ');
-                        } else {
-                          isEmpty = true;
-                        }
-                      } else if (typeof raw === 'string') {
-                        if (raw.trim().length > 0) {
-                          displayed = raw;
-                        } else {
-                          isEmpty = true;
-                        }
-                      } else if (raw == null || raw === '') {
-                        isEmpty = true;
-                      } else {
-                        displayed = String(raw);
-                      }
-
-                      return (
-                        <div key={q.id}>
-                          <p
-                            style={{
-                              fontFamily: "'DM Sans', sans-serif",
-                              fontSize: 11,
-                              fontWeight: 600,
-                              letterSpacing: '0.18em',
-                              textTransform: 'uppercase',
-                              color: 'var(--cth-command-muted)',
-                              margin: 0,
-                            }}
-                          >
-                            {q.label}
-                          </p>
-                          <p
-                            style={{
-                              fontFamily: "'DM Sans', sans-serif",
-                              fontSize: 14,
-                              lineHeight: 1.55,
-                              color: isEmpty ? 'var(--cth-command-muted)' : 'var(--cth-command-ink)',
-                              fontStyle: isEmpty ? 'italic' : 'normal',
-                              margin: '6px 0 0',
-                              whiteSpace: 'pre-wrap',
-                            }}
-                          >
-                            {isEmpty ? 'Not answered' : displayed}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {error && (
-              <div
-                style={{
-                  marginTop: 16,
-                  padding: '10px 14px',
-                  background: 'color-mix(in srgb, var(--cth-danger) 8%, var(--cth-command-panel))',
-                  border: '1px solid color-mix(in srgb, var(--cth-danger) 25%, var(--cth-command-border))',
-                  borderRadius: 4,
-                }}
-              >
-                <p
-                  data-testid="intake-error"
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 12,
-                    color: 'var(--cth-danger)',
-                    margin: 0,
-                  }}
-                >
-                  {error}
-                </p>
-              </div>
-            )}
-
-            <div style={{ marginTop: 24, display: 'flex', gap: 10 }}>
+      {/* Body: nav + field area */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '148px 1fr' }}>
+        {/* Left section nav */}
+        <nav style={{ borderRight: `0.5px solid ${BORDER}`, padding: '14px 0', background: NAVBG }}>
+          <div style={{ fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: MUTED, padding: '0 14px 8px', fontWeight: 500 }}>
+            Sections
+          </div>
+          {SECTIONS.map((section, idx) => {
+            const stepNum = idx + 1;
+            const isActive = stepNum === step;
+            const isDone = sectionComplete(idx);
+            const state = isActive ? 'act' : isDone ? 'done' : 'todo';
+            const Icon = isActive ? Pencil : isDone ? Check : Circle;
+            const iconColor = isActive ? CRIMSON : isDone ? GREEN : BORDER2;
+            const textColor = isActive ? CRIMSON : isDone ? MUTED : '#b0a0b8';
+            return (
               <button
+                key={section.id}
                 type="button"
-                data-testid="intake-back-to-edit-btn"
-                onClick={handleBackToEdit}
+                data-testid={`intake-nav-${section.id}`}
+                onClick={() => goToSection(stepNum)}
                 style={{
-                  padding: '11px 22px',
-                  borderRadius: 4,
-                  border: '1px solid var(--cth-command-border)',
-                  background: 'transparent',
-                  color: 'var(--cth-command-ink)',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  fontFamily: "'DM Sans', sans-serif",
-                  cursor: 'pointer',
-                  display: 'inline-flex',
+                  display: 'flex',
                   alignItems: 'center',
-                  gap: 6,
-                }}
-              >
-                <ChevronLeft size={14} />
-                Back to Edit
-              </button>
-              <button
-                type="button"
-                data-testid="intake-run-audit-btn"
-                onClick={handleSubmit}
-                disabled={submitting}
-                style={{
-                  flex: 1,
-                  padding: '11px',
-                  borderRadius: 4,
+                  gap: 7,
+                  padding: '8px 14px',
+                  borderLeft: `2px solid ${isActive ? CRIMSON : 'transparent'}`,
+                  width: '100%',
+                  background: isActive ? '#fff' : 'transparent',
                   border: 'none',
-                  background: 'var(--cth-command-crimson)',
-                  color: 'var(--cth-command-gold)',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  letterSpacing: '0.04em',
-                  fontFamily: "'DM Sans', sans-serif",
-                  cursor: submitting ? 'not-allowed' : 'pointer',
-                  opacity: submitting ? 0.7 : 1,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
+                  borderLeftWidth: 2,
+                  borderLeftStyle: 'solid',
+                  borderLeftColor: isActive ? CRIMSON : 'transparent',
+                  textAlign: 'left',
+                  cursor: 'pointer',
                 }}
               >
-                {submitting ? (
-                  <>
-                    <Loader2 size={14} style={{ animation: 'cth-spin 0.8s linear infinite' }} />
-                    Running your Brand Audit...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={14} />
-                    Run My Brand Audit
-                  </>
-                )}
+                <Icon size={11} style={{ color: iconColor, flexShrink: 0 }} />
+                <span style={{ color: textColor, fontSize: 11, fontWeight: isActive ? 500 : 400 }}>{section.label}</span>
               </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px 24px', animation: 'cth-fade 0.25s ease' }} key={step}>
+            );
+          })}
+        </nav>
 
-        {/* Section header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 32 }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 13,
-            background: `${colors.cinnabar}15`,
-            border: `1px solid ${colors.cinnabar}25`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <SectionIcon size={22} style={{ color: colors.cinnabar }} />
-          </div>
+        {/* Field area */}
+        <div key={step} style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div>
-            <p style={{
-              fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-              letterSpacing: '0.15em', color: colors.cinnabar, margin: '0 0 4px',
-            }}>
-              Section {currentSection.number} of {SECTIONS.length}
-            </p>
-            <h1 style={{
-              fontFamily: "'Playfair Display', Georgia, serif",
-              fontSize: 24, fontWeight: 700, color: colors.textPrimary,
-              margin: '0 0 6px', lineHeight: 1.2,
-            }}>
-              {currentSection.label}
-            </h1>
-            <p style={{ fontSize: 13, color: colors.textMuted, margin: 0 }}>{currentSection.desc}</p>
+            <div style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 500, color: INK }}>{currentSection.label}</div>
+            <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{currentSection.subtitle}</div>
           </div>
-        </div>
 
-        {/* Questions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {currentSection.questions.map(q => {
+          {/* Why this matters */}
+          <div style={{ background: '#fff', border: `0.5px solid ${BORDER}`, borderRadius: 10, padding: '11px 14px' }}>
+            <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: MUTED, fontWeight: 500, marginBottom: 4 }}>Why this matters</div>
+            <div style={{ fontSize: 11, color: WHYTEXT, lineHeight: 1.6 }}>{currentSection.why}</div>
+          </div>
+
+          {/* Tips */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {currentSection.tips.map((tip, i) => (
+              <div key={i} style={{ background: '#fff', border: `0.5px solid ${BORDER}`, borderRadius: 10, padding: '9px 11px' }}>
+                <div style={{ fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, fontWeight: 500, marginBottom: 3 }}>Tip {i + 1}</div>
+                <div style={{ fontSize: 10, color: BODYTEXT, lineHeight: 1.5 }}>{tip}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Fields */}
+          {currentSection.questions.map((q) => {
             const hasError = errorFields.includes(q.id);
             return (
-              <div key={q.id} style={{
-                background: colors.cardBg,
-                border: hasError
-                  ? '1px solid var(--cth-command-crimson)'
-                  : `1px solid ${colors.tuscany}15`,
-                borderRadius: 12, padding: '18px 20px',
-              }}>
-                <div style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: q.sublabel ? 3 : 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: colors.textPrimary, margin: 0 }}>{q.label}</p>
-                    {q.required && <span style={{ fontSize: 11, color: colors.cinnabar }}>*</span>}
-                  </div>
-                  {q.sublabel && (
-                    <p style={{ fontSize: 11.5, color: colors.textMuted, margin: 0, lineHeight: 1.5 }}>{q.sublabel}</p>
-                  )}
+              <div key={q.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, fontWeight: 500 }}>
+                  {q.label}
+                  {q.required ? <span style={{ color: ACCENT, marginLeft: 4 }}>*</span> : null}
                 </div>
-                <QuestionInput
-                  question={q}
+                {q.sublabel ? <div style={{ fontSize: 10.5, color: MUTED, lineHeight: 1.5, marginBottom: 2 }}>{q.sublabel}</div> : null}
+                <FieldInput
+                  q={q}
                   value={answers[q.id]}
-                  onChange={val => {
+                  hasError={hasError}
+                  onChange={(val) => {
                     setAnswer(q.id, val);
                     setError(null);
-                    setErrorFields(prev => prev.filter(id => id !== q.id));
+                    setErrorFields((prev) => prev.filter((id) => id !== q.id));
                   }}
-                  colors={colors}
                 />
-                {hasError && (
-                  <p
-                    data-testid={`intake-required-${q.id}`}
-                    style={{
-                      marginTop: 6,
-                      fontSize: 11,
-                      fontWeight: 500,
-                      color: 'var(--cth-command-crimson)',
-                      fontFamily: "'DM Sans', sans-serif",
-                      letterSpacing: '0.04em',
-                    }}
-                  >
+                {hasError ? (
+                  <p data-testid={`intake-required-${q.id}`} style={{ marginTop: 2, fontSize: 11, fontWeight: 500, color: CRIMSON, fontFamily: SANS, letterSpacing: '0.04em' }}>
                     Required
                   </p>
-                )}
+                ) : null}
               </div>
             );
           })}
-        </div>
 
-        {/* Error */}
-        {error && (
-          <div style={{
-            marginTop: 16, padding: '10px 14px',
-            background: 'rgba(239,68,68,0.08)',
-            border: '1px solid rgba(239,68,68,0.2)',
-            borderRadius: 9,
-          }}>
-            <p data-testid="intake-error" style={{ fontSize: 12, color: 'var(--cth-command-error)', margin: 0 }}>{error}</p>
+          {/* Error banner */}
+          {error ? (
+            <div style={{ padding: '10px 14px', background: 'color-mix(in srgb, var(--cth-danger) 8%, #fff)', border: '0.5px solid color-mix(in srgb, var(--cth-danger) 25%, #e8d5d0)', borderRadius: 8 }}>
+              <p data-testid="intake-error" style={{ fontSize: 12, color: 'var(--cth-danger)', margin: 0 }}>{error}</p>
+            </div>
+          ) : null}
+
+          {/* Zuri card */}
+          <div style={{ background: INK, borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+              <div style={{ width: 16, height: 16, borderRadius: '50%', background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 8, fontWeight: 500, color: '#fff' }}>Z</span>
+              </div>
+              <span style={{ fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7a6090' }}>{currentSection.zuriLabel}</span>
+            </div>
+            <div style={{ fontFamily: SERIF, fontSize: 12, color: '#e8dff0', fontStyle: 'italic', lineHeight: 1.5 }}>
+              &ldquo;{currentSection.zuriText}&rdquo;
+            </div>
           </div>
-        )}
-
-        {/* Navigation */}
-        <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-          {step > 1 && (
-            <button
-              data-testid="intake-back-btn"
-              onClick={handleBack}
-              style={{
-                padding: '11px 22px', borderRadius: 9,
-                border: `1px solid ${colors.tuscany}22`,
-                background: 'none', color: colors.textMuted,
-                fontSize: 13, cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}
-            >
-              <ChevronLeft size={14} /> Back
-            </button>
-          )}
-          <button
-            data-testid="intake-next-btn"
-            onClick={handleNext}
-            disabled={submitting}
-            style={{
-              flex: 1, padding: '11px', borderRadius: 9,
-              border: 'none',
-              background: canAdvance()
-                ? `linear-gradient(135deg, ${colors.cinnabar}, ${colors.crimson})`
-                : `${colors.tuscany}0F`,
-              color: canAdvance() ? 'var(--cth-white)' : colors.textMuted,
-              fontSize: 13, fontWeight: 600,
-              cursor: canAdvance() && !submitting ? 'pointer' : 'not-allowed',
-              fontFamily: "'DM Sans', sans-serif",
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              boxShadow: canAdvance() ? `0 4px 16px ${colors.cinnabar}40` : 'none',
-              transition: 'all 0.15s',
-            }}
-          >
-            {submitting ? (
-              <>
-                <Loader2 size={14} style={{ animation: 'cth-spin 0.8s linear infinite' }} />
-                Running your Brand Audit...
-              </>
-            ) : isLastStep ? (
-              <>
-                <Shield size={14} /> Run my Brand Audit <ChevronRight size={14} />
-              </>
-            ) : (
-              <>Continue <ChevronRight size={14} /></>
-            )}
-          </button>
         </div>
-
-        {/* Progress summary */}
-        <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ flex: 1, height: 3, background: `${colors.tuscany}0F`, borderRadius: 2, overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', width: `${overallProgress}%`,
-              background: colors.cinnabar, borderRadius: 2,
-              transition: 'width 0.3s',
-            }} />
-          </div>
-          <span style={{ fontSize: 10, color: colors.textMuted, flexShrink: 0 }}>{filledRequired}/{REQUIRED_COUNT} required</span>
-        </div>
-
-        {isLastStep && (
-          <p style={{
-            fontSize: 11, color: colors.textMuted,
-            textAlign: 'center', margin: '12px 0 0', lineHeight: 1.6,
-          }}>
-            Your answers pre-populate Brand Memory and give the AI the context it needs to produce a meaningful score — even on day one.
-          </p>
-        )}
       </div>
-      )}
+
+      {/* Footer */}
+      <div style={{ padding: '12px 22px', borderTop: `0.5px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: NAVBG, flexShrink: 0 }}>
+        {step > 1 ? (
+          <button type="button" data-testid="intake-back-btn" onClick={handleBack} style={{ fontSize: 12, color: MUTED, background: '#fff', border: `0.5px solid ${BORDER2}`, borderRadius: 7, padding: '7px 14px', cursor: 'pointer', fontFamily: SANS }}>
+            ← {SECTIONS[step - 2].label}
+          </button>
+        ) : (
+          <span />
+        )}
+        <span style={{ fontSize: 11, color: MUTED }}>{step} of {SECTIONS.length}</span>
+        <button
+          type="button"
+          data-testid="intake-next-btn"
+          onClick={handleNext}
+          disabled={submitting}
+          style={{
+            fontSize: 12,
+            fontWeight: 500,
+            color: '#fff',
+            background: isLastStep ? GREEN : CRIMSON,
+            border: 'none',
+            borderRadius: 7,
+            padding: '7px 20px',
+            cursor: submitting ? 'not-allowed' : 'pointer',
+            fontFamily: SANS,
+            opacity: submitting ? 0.7 : 1,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+          }}
+        >
+          {isLastStep ? 'Run Brand Audit' : 'Save & continue →'}
+        </button>
+      </div>
     </div>
   );
 }
-
