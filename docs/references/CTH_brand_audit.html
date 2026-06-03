@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTH Brand Audit — Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:#f8f4f2;padding:24px;}
+.wrap{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
+.pt{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#1a0828;}
+.ps{font-size:11px;color:#7c6576;margin-top:3px;}
+.hbtns{display:flex;gap:8px;}
+.hbtn{font-size:11px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.hbtn-ghost{background:#fff;color:#7c6576;border:.5px solid #d8c5c3;}
+.hbtn-primary{background:#5d0012;color:#fff;border:none;}
+.hero{background:#fff;border:.5px solid #e8d5d0;border-radius:12px;padding:24px;display:grid;grid-template-columns:300px 1fr;gap:24px;}
+.score-block{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.donut{width:120px;height:120px;border-radius:50%;background:conic-gradient(#5d0012 0deg 230deg,#f0e8e5 230deg 360deg);display:flex;align-items:center;justify-content:center;}
+.donut-inner{width:90px;height:90px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+.score-num{font-family:'Cormorant Garamond',Georgia,serif;font-size:36px;font-weight:600;color:#1a0828;line-height:1;}
+.score-rating{font-size:12px;font-weight:500;color:#5d0012;letter-spacing:.04em;}
+.score-trend{font-size:11px;color:#2d6a4f;}
+.metrics{display:flex;flex-direction:column;gap:10px;justify-content:center;}
+.metric-row{display:flex;flex-direction:column;gap:4px;}
+.metric-header{display:flex;justify-content:space-between;}
+.metric-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#7c6576;font-weight:500;}
+.metric-val{font-size:11px;font-weight:500;color:#1a0828;}
+.mbar{height:5px;background:#f0e8e5;border-radius:999px;overflow:hidden;}
+.mfill{height:100%;border-radius:999px;}
+.modules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.mod-card{background:#fff;border:.5px solid #e8d5d0;border-radius:12px;overflow:hidden;cursor:pointer;}
+.mod-accent{height:2px;}
+.mod-top{padding:14px 15px 10px;}
+.mod-label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7c6576;font-weight:500;margin-bottom:6px;}
+.mod-score{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:600;color:#1a0828;line-height:1;}
+.mod-score-sub{font-size:9px;color:#7c6576;}
+.mod-bar{height:3px;background:#f0e8e5;border-radius:999px;overflow:hidden;margin:8px 0;}
+.mod-fill{height:100%;border-radius:999px;}
+.mod-gap{background:#faf7f5;border-top:.5px solid #f0e8e5;padding:10px 15px;}
+.gap-lbl{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#7c6576;font-weight:500;margin-bottom:4px;}
+.gap-text{font-size:11px;color:#3d2d4a;line-height:1.5;}
+.mod-action{padding:8px 15px;display:flex;align-items:center;justify-content:space-between;}
+.mod-link{font-size:11px;color:#5d0012;font-weight:500;}
+.zuri-card{background:#1a0828;border-radius:12px;padding:18px 20px;}
+.zh{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.zav{width:20px;height:20px;border-radius:50%;background:#e04e35;display:flex;align-items:center;justify-content:center;}
+.zlbl{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#7a6090;}
+.ztext{font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;color:#e8dff0;font-style:italic;line-height:1.55;margin-bottom:12px;}
+.zmoves{display:flex;flex-direction:column;gap:6px;}
+.zmove{display:flex;align-items:flex-start;gap:8px;padding:9px 12px;background:rgba(255,255,255,0.05);border-radius:8px;border:.5px solid rgba(255,255,255,0.08);}
+.zmove-num{font-size:11px;font-weight:600;color:#e04e35;flex-shrink:0;margin-top:1px;}
+.zmove-text{font-size:11px;color:rgba(232,223,240,0.8);line-height:1.5;}
+.section-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#7c6576;font-weight:500;margin-bottom:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ph">
+    <div><div class="pt">Brand Audit</div><div class="ps">Your live brand health score — updated each time you complete an audit.</div></div>
+    <div class="hbtns"><button class="hbtn hbtn-ghost">Retake audit</button><button class="hbtn hbtn-primary">Export report</button></div>
+  </div>
+
+  <div class="hero">
+    <div class="score-block">
+      <div class="donut"><div class="donut-inner"><div class="score-num">64</div><div style="font-size:9px;color:#7c6576;">/100</div></div></div>
+      <div class="score-rating">GAINING TRACTION</div>
+      <div class="score-trend">↑ Up 8 points since last audit</div>
+    </div>
+    <div class="metrics">
+      <div class="metric-row"><div class="metric-header"><span class="metric-label">Clarity</span><span class="metric-val">72</span></div><div class="mbar"><div class="mfill" style="width:72%;background:#763b5b;"></div></div></div>
+      <div class="metric-row"><div class="metric-header"><span class="metric-label">Structure</span><span class="metric-val">58</span></div><div class="mbar"><div class="mfill" style="width:58%;background:#5d0012;"></div></div></div>
+      <div class="metric-row"><div class="metric-header"><span class="metric-label">Execution</span><span class="metric-val">61</span></div><div class="mbar"><div class="mfill" style="width:61%;background:#e04e35;"></div></div></div>
+      <div class="metric-row"><div class="metric-header"><span class="metric-label">Optimization</span><span class="metric-val">64</span></div><div class="mbar"><div class="mfill" style="width:64%;background:#c7a09d;"></div></div></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-lbl">Module Scores — click any module to see breakdown and improvement path</div>
+    <div class="modules-grid">
+      <div class="mod-card"><div class="mod-accent" style="background:#763b5b;"></div><div class="mod-top"><div class="mod-label">Brand Foundation</div><div style="display:flex;align-items:baseline;gap:4px;"><div class="mod-score">78</div><div class="mod-score-sub">/100</div></div><div class="mod-bar"><div class="mod-fill" style="width:78%;background:#763b5b;"></div></div></div><div class="mod-gap"><div class="gap-lbl">Primary gap</div><div class="gap-text">Positioning statement needs sharper differentiation from competitors.</div></div><div class="mod-action"><span class="mod-link">Go to Foundation</span><span>→</span></div></div>
+      <div class="mod-card"><div class="mod-accent" style="background:#5d0012;"></div><div class="mod-top"><div class="mod-label">Visual Identity</div><div style="display:flex;align-items:baseline;gap:4px;"><div class="mod-score">66</div><div class="mod-score-sub">/100</div></div><div class="mod-bar"><div class="mod-fill" style="width:66%;background:#5d0012;"></div></div></div><div class="mod-gap"><div class="gap-lbl">Primary gap</div><div class="gap-text">Typography roles are incomplete — display font not confirmed.</div></div><div class="mod-action"><span class="mod-link">Go to Identity Studio</span><span>→</span></div></div>
+      <div class="mod-card"><div class="mod-accent" style="background:#e04e35;"></div><div class="mod-top"><div class="mod-label">Offer Suite</div><div style="display:flex;align-items:baseline;gap:4px;"><div class="mod-score">54</div><div class="mod-score-sub">/100</div></div><div class="mod-bar"><div class="mod-fill" style="width:54%;background:#e04e35;"></div></div></div><div class="mod-gap"><div class="gap-lbl">Primary gap</div><div class="gap-text">Offer names and outcomes aren't clearly differentiated.</div></div><div class="mod-action"><span class="mod-link">Go to Offers</span><span>→</span></div></div>
+      <div class="mod-card"><div class="mod-accent" style="background:#8a6900;"></div><div class="mod-top"><div class="mod-label">Systems & SOPs</div><div style="display:flex;align-items:baseline;gap:4px;"><div class="mod-score">61</div><div class="mod-score-sub">/100</div></div><div class="mod-bar"><div class="mod-fill" style="width:61%;background:#8a6900;"></div></div></div><div class="mod-gap"><div class="gap-lbl">Primary gap</div><div class="gap-text">Delivery SOP is missing — no repeatable client onboarding process.</div></div><div class="mod-action"><span class="mod-link">Go to Systems Builder</span><span>→</span></div></div>
+      <div class="mod-card"><div class="mod-accent" style="background:#2b6cb0;"></div><div class="mod-top"><div class="mod-label">Content Library</div><div style="display:flex;align-items:baseline;gap:4px;"><div class="mod-score">58</div><div class="mod-score-sub">/100</div></div><div class="mod-bar"><div class="mod-fill" style="width:58%;background:#2b6cb0;"></div></div></div><div class="mod-gap"><div class="gap-lbl">Primary gap</div><div class="gap-text">Content isn't mapped to buyer awareness stages.</div></div><div class="mod-action"><span class="mod-link">Go to Content Studio</span><span>→</span></div></div>
+      <div class="mod-card"><div class="mod-accent" style="background:#2d6a4f;"></div><div class="mod-top"><div class="mod-label">Launch Readiness</div><div style="display:flex;align-items:baseline;gap:4px;"><div class="mod-score">67</div><div class="mod-score-sub">/100</div></div><div class="mod-bar"><div class="mod-fill" style="width:67%;background:#2d6a4f;"></div></div></div><div class="mod-gap"><div class="gap-lbl">Primary gap</div><div class="gap-text">No tracking links set up to measure signal movement from campaigns.</div></div><div class="mod-action"><span class="mod-link">Go to Strategic OS</span><span>→</span></div></div>
+    </div>
+  </div>
+
+  <div class="zuri-card">
+    <div class="zh"><div class="zav"><span style="font-size:9px;font-weight:500;color:#fff;">Z</span></div><span class="zlbl">Zuri · Brand Interpretation</span></div>
+    <div class="ztext">"Your brand has clarity at its core — foundation and identity are your strongest layers. The gap holding your score back is structural: your offer suite and content library aren't connected to how your audience moves through awareness. The work is not about adding more. It's about linking what already exists into a coherent path."</div>
+    <div class="zmoves">
+      <div class="zmove"><span class="zmove-num">1</span><span class="zmove-text">Clarify the outcome language on your top offer so it speaks to problem-aware founders, not just solution-aware ones.</span></div>
+      <div class="zmove"><span class="zmove-num">2</span><span class="zmove-text">Map your existing content pieces to the five buyer awareness stages in the Customer Journey builder.</span></div>
+      <div class="zmove"><span class="zmove-num">3</span><span class="zmove-text">Create one tracking link for your diagnostic page and connect it to your primary campaign to start measuring signal movement.</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

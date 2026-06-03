@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTH Brand Audit Intake — Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#e8e0dc;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;font-family:'DM Sans',sans-serif;}
+.shell{display:flex;height:680px;width:100%;max-width:1100px;border-radius:14px;overflow:hidden;border:0.5px solid #d8c5c3;box-shadow:0 4px 32px rgba(26,8,40,0.12);}
+.main{flex:1;background:#f8f4f2;display:flex;flex-direction:column;overflow:hidden;}
+.ph{padding:18px 24px 14px;border-bottom:.5px solid #e8d5d0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff;}
+.pt{font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:500;color:#1a0828;}
+.ps{font-size:11px;color:#7c6576;margin-top:2px;}
+.body{flex:1;display:grid;grid-template-columns:148px 1fr;overflow:hidden;}
+.snav{border-right:.5px solid #e8d5d0;padding:14px 0;background:#faf7f5;}
+.snl{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:#7c6576;padding:0 14px 8px;font-weight:500;}
+.si{display:flex;align-items:center;gap:7px;padding:8px 14px;border-left:2px solid transparent;width:100%;background:transparent;border:none;text-align:left;}
+.si.done i{color:#2d6a4f;} .si.done span{color:#7c6576;font-size:11px;}
+.si.act{border-left-color:#5d0012;background:#fff;}
+.si.act i{color:#5d0012;} .si.act span{color:#5d0012;font-weight:500;font-size:11px;}
+.si.todo i{color:#d8c5c3;} .si.todo span{color:#b0a0b8;font-size:11px;}
+.si i{font-size:11px;flex-shrink:0;}
+.fa{padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+.ftt{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:500;color:#1a0828;}
+.fts{font-size:11px;color:#7c6576;margin-top:2px;}
+.why{background:#fff;border:.5px solid #e8d5d0;border-radius:10px;padding:11px 14px;}
+.wl{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#7c6576;font-weight:500;margin-bottom:4px;}
+.wt{font-size:11px;color:#4a3860;line-height:1.6;}
+.tips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.tip{background:#fff;border:.5px solid #e8d5d0;border-radius:10px;padding:9px 11px;}
+.tl{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#7c6576;font-weight:500;margin-bottom:3px;}
+.tt{font-size:10px;color:#3d2d4a;line-height:1.5;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#7c6576;font-weight:500;}
+.fi{padding:9px 12px;background:#fff;border:.5px solid #d8c5c3;border-radius:8px;font-size:12px;color:#1a0828;font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.fta{padding:9px 12px;background:#fff;border:.5px solid #d8c5c3;border-radius:8px;font-size:12px;color:#1a0828;font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:none;line-height:1.6;min-height:72px;}
+.pills{display:flex;flex-wrap:wrap;gap:6px;}
+.pill{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;border:.5px solid #d8c5c3;background:#fff;color:#3d2d4a;font-family:'DM Sans',sans-serif;}
+.pill.selected{background:#5d0012;color:#fff;border-color:#5d0012;}
+.check-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.check-item{display:flex;align-items:center;gap:7px;padding:7px 10px;background:#fff;border:.5px solid #d8c5c3;border-radius:8px;}
+.check-item.selected{background:#f0e8e5;border-color:#c7a09d;}
+.check-box{width:14px;height:14px;border-radius:3px;border:.5px solid #d8c5c3;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.check-item.selected .check-box{background:#5d0012;border-color:#5d0012;}
+.check-label{font-size:11px;color:#1a0828;}
+.zc{background:#1a0828;border-radius:10px;padding:12px 14px;}
+.zh{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.zav{width:16px;height:16px;border-radius:50%;background:#e04e35;display:flex;align-items:center;justify-content:center;}
+.zl{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#7a6090;}
+.zt{font-family:'Cormorant Garamond',Georgia,serif;font-size:12px;color:#e8dff0;font-style:italic;line-height:1.5;}
+.pf{padding:12px 22px;border-top:.5px solid #e8d5d0;display:flex;justify-content:space-between;align-items:center;background:#faf7f5;flex-shrink:0;}
+.pfp{font-size:12px;color:#7c6576;background:#fff;border:.5px solid #d8c5c3;border-radius:7px;padding:7px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.pfs{font-size:12px;font-weight:500;color:#fff;background:#5d0012;border:none;border-radius:7px;padding:7px 20px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <main class="main">
+    <div class="ph">
+      <div><div class="pt">Brand Audit</div><div class="ps">Answer a few questions so we can score your brand infrastructure.</div></div>
+      <div style="text-align:right;"><div style="font-size:10px;color:#7c6576;margin-bottom:4px;">1 of 4 complete</div><div style="width:100px;height:3px;background:#f0e8e5;border-radius:2px;overflow:hidden;margin-left:auto;"><div style="width:25%;height:100%;background:#2d6a4f;border-radius:2px;"></div></div></div>
+    </div>
+    <div class="body">
+      <nav class="snav">
+        <div class="snl">Sections</div>
+        <button class="si done"><i class="ti ti-check"></i><span>Your Brand</span></button>
+        <button class="si act"><i class="ti ti-pencil"></i><span>Your Offer</span></button>
+        <button class="si todo"><i class="ti ti-circle"></i><span>Your Presence</span></button>
+        <button class="si todo"><i class="ti ti-circle"></i><span>Your Goals</span></button>
+      </nav>
+      <div class="fa">
+        <div><div class="ftt">Your Offer</div><div class="fts">Tell us about your primary offer and how you monetize your expertise.</div></div>
+        <div class="why"><div class="wl">Why this matters</div><div class="wt">Your offer suite score measures how clearly your offers are positioned, priced, and differentiated. This section tells us what we are scoring.</div></div>
+        <div class="tips">
+          <div class="tip"><div class="tl">Tip 1</div><div class="tt">Name your most important offer — the one that generates most of your revenue</div></div>
+          <div class="tip"><div class="tl">Tip 2</div><div class="tt">Price point helps us assess positioning alignment with your market</div></div>
+          <div class="tip"><div class="tl">Tip 3</div><div class="tt">Select the type that best describes how you deliver your work</div></div>
+        </div>
+        <div class="fg"><div class="fl">Primary offer <span style="color:#e04e35;">*</span></div><input class="fi" placeholder="Your main offer name" /></div>
+        <div class="fg"><div class="fl">Price point <span style="color:#e04e35;">*</span></div><input class="fi" placeholder="e.g. $2,500 or $497/month" /></div>
+        <div class="fg"><div class="fl">Offer type <span style="color:#e04e35;">*</span></div>
+          <div class="pills"><button class="pill selected">Coaching/consulting</button><button class="pill">One-time service</button><button class="pill">Recurring subscription</button><button class="pill">Digital product</button><button class="pill">Course or program</button><button class="pill">Done-for-you</button><button class="pill">Agency retainer</button><button class="pill">Physical product</button></div>
+        </div>
+        <div class="fg"><div class="fl">Other offers</div><textarea class="fta" style="min-height:52px;" placeholder="List any other offers you currently have..."></textarea></div>
+        <div class="zc"><div class="zh"><div class="zav"><span style="font-size:8px;font-weight:500;color:#fff;">Z</span></div><span class="zl">Zuri · offer context</span></div><div class="zt">"A clear primary offer is the anchor of every strong brand. If you have more than three offers, list the one you most want to be known for."</div></div>
+      </div>
+    </div>
+    <div class="pf">
+      <button class="pfp">← Your Brand</button>
+      <span style="font-size:11px;color:#7c6576;">2 of 4</span>
+      <button class="pfs">Save & continue →</button>
+    </div>
+  </main>
+</div>
+</body>
+</html>
