@@ -2,31 +2,28 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  AlertTriangle,
-  ArrowLeft,
-  ChevronDown,
-  ChevronUp,
+  Check,
+  Circle,
   Loader2,
-  Save,
-  Star,
+  Pencil,
   Trash2,
+  Wand2,
   X,
 } from "lucide-react";
-import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import apiClient from "../lib/apiClient";
 import { API_PATHS } from "../lib/apiPaths";
 import DeleteAvatarModal from "../components/audience/DeleteAvatarModal";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 const STAGE_OPTIONS = [
-  { value: "unaware", label: "Unaware (no awareness of the problem yet)" },
-  { value: "problem_aware", label: "Problem Aware (knows the pain, not the solution)" },
-  { value: "solution_aware", label: "Solution Aware (knows solutions exist)" },
-  { value: "product_aware", label: "Product Aware (knows your product, comparing options)" },
-  { value: "most_aware", label: "Most Aware (ready, just needs the offer)" },
+  { value: "unaware", label: "Unaware" },
+  { value: "problem_aware", label: "Problem aware" },
+  { value: "solution_aware", label: "Solution aware" },
+  { value: "product_aware", label: "Product aware" },
+  { value: "most_aware", label: "Most aware" },
 ];
 
 const INITIAL_FORM = {
@@ -43,254 +40,75 @@ const INITIAL_FORM = {
   transformation_desired: "",
 };
 
-const PAGE_STYLE = {
-  background: "var(--cth-command-blush)",
-  minHeight: "100vh",
+// ---- Reference palette (docs/references/CTH_avatar_editor_modal.html) ----
+const C = {
+  modalBg: "#f8f4f2",
+  white: "#fff",
+  ink: "#1a0828",
+  muted: "#7c6576",
+  border: "#e8d5d0",
+  inputBorder: "#d8c5c3",
+  navBg: "#faf7f5",
+  crimson: "#5d0012",
+  green: "#2d6a4f",
+  track: "#f0e8e5",
+  todoIcon: "#d8c5c3",
+  todoText: "#b0a0b8",
+  whyText: "#4a3860",
+  tipText: "#3d2d4a",
+  asterisk: "#e04e35",
+  tagBg: "#f0e8e5",
+  tagBorder: "#e0d0d8",
+  zuriBg: "#1a0828",
+  zuriLabel: "#7a6090",
+  zuriText: "#e8dff0",
+  zuriAccent: "#e04e35",
 };
 
-const BODY_WRAP_STYLE = {
-  padding: "28px 24px 96px",
-  maxWidth: 880,
-  margin: "0 auto",
-  fontFamily: SANS,
-};
-
-const SECTION_STYLE = {
-  background: "var(--cth-command-panel)",
-  border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
-  marginBottom: 20,
-  overflow: "hidden",
-};
-
-const SECTION_HEADER_STYLE = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  width: "100%",
-  padding: "20px 24px",
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  textAlign: "left",
-  fontFamily: SANS,
-};
-
-const SECTION_TITLE_STYLE = {
-  fontFamily: SERIF,
-  fontSize: 22,
-  fontWeight: 600,
-  color: "var(--cth-command-ink)",
-  margin: 0,
-  letterSpacing: "-0.005em",
-};
-
-const SECTION_HINT_STYLE = {
-  fontFamily: SANS,
-  fontSize: 12,
-  color: "var(--cth-command-muted)",
-  margin: "4px 0 0 0",
-};
-
-const SECTION_BODY_STYLE = {
-  padding: "0 24px 24px",
-  borderTop: "1px solid var(--cth-command-border)",
-};
-
-const FIELD_GROUP_STYLE = {
-  marginTop: 22,
-};
-
-const FIELD_LABEL_STYLE = {
-  fontFamily: SANS,
-  fontSize: 12,
-  fontWeight: 600,
-  color: "var(--cth-command-ink)",
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
-  display: "inline-block",
-};
-
-const REQUIRED_MARK_STYLE = {
-  color: "var(--cth-command-crimson)",
-  marginLeft: 2,
-};
-
-const FIELD_HINT_STYLE = {
-  fontFamily: SANS,
-  fontSize: 12,
-  color: "var(--cth-command-muted)",
-  margin: "4px 0 8px 0",
-};
-
-const FIELD_ERROR_STYLE = {
-  fontFamily: SANS,
-  fontSize: 12,
-  color: "var(--cth-danger)",
-  margin: "6px 0 0 0",
-};
-
-const INPUT_STYLE = {
-  width: "100%",
-  padding: "11px 14px",
-  borderRadius: 4,
-  border: "1px solid var(--cth-command-border)",
-  background: "var(--cth-command-panel)",
-  color: "var(--cth-command-ink)",
-  fontFamily: SANS,
-  fontSize: 14,
-  marginTop: 8,
-  outline: "none",
-  boxSizing: "border-box",
-};
-
-const TEXTAREA_STYLE = {
-  ...INPUT_STYLE,
-  minHeight: 96,
-  resize: "vertical",
-  lineHeight: 1.55,
-};
-
-const PRIMARY_CTA_STYLE = {
-  background: "var(--cth-command-purple)",
-  color: "var(--cth-command-gold)",
-  border: "none",
-  borderRadius: 999,
-  padding: "12px 24px",
-  fontFamily: SANS,
-  fontSize: 13,
-  fontWeight: 600,
-  letterSpacing: "0.04em",
-  cursor: "pointer",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-};
-
-const SECONDARY_BUTTON_STYLE = {
-  background: "transparent",
-  color: "var(--cth-command-ink)",
-  border: "1px solid var(--cth-command-border)",
-  borderRadius: 999,
-  padding: "10px 18px",
-  fontFamily: SANS,
-  fontSize: 13,
-  fontWeight: 500,
-  cursor: "pointer",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-};
-
-const DESTRUCTIVE_BUTTON_STYLE = {
-  background: "transparent",
-  color: "var(--cth-danger)",
-  border: "1px solid color-mix(in srgb, var(--cth-danger) 35%, var(--cth-command-border))",
-  borderRadius: 999,
-  padding: "10px 18px",
-  fontFamily: SANS,
-  fontSize: 13,
-  fontWeight: 500,
-  cursor: "pointer",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-};
-
-const ACTIONS_ROW_STYLE = {
-  display: "flex",
-  alignItems: "center",
-  gap: 12,
-  marginTop: 28,
-  flexWrap: "wrap",
-};
-
-const INCOMPLETE_BANNER_STYLE = {
-  display: "flex",
-  alignItems: "flex-start",
-  gap: 12,
-  padding: "16px 18px",
-  borderRadius: 4,
-  background: "color-mix(in srgb, #B45309 10%, var(--cth-command-panel))",
-  border: "1px solid color-mix(in srgb, #B45309 30%, var(--cth-command-border))",
-  color: "#7A3E08",
-  marginBottom: 20,
-  fontFamily: SANS,
-};
-
-const PRIMARY_TOGGLE_ROW_STYLE = {
-  ...FIELD_GROUP_STYLE,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 16,
-  padding: "16px 0 0",
-  borderTop: "1px dashed var(--cth-command-border)",
-  flexWrap: "wrap",
-};
-
-const PRIMARY_PILL_STYLE = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "6px 14px",
-  borderRadius: 999,
-  background: "var(--cth-command-gold)",
-  color: "var(--cth-command-purple)",
-  fontFamily: SANS,
-  fontSize: 12,
-  fontWeight: 700,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-};
-
-const TAG_WRAP_STYLE = {
-  ...INPUT_STYLE,
-  display: "flex",
-  flexWrap: "wrap",
-  alignItems: "center",
-  gap: 6,
-  padding: "8px 10px",
-  minHeight: 44,
-};
-
-const TAG_CHIP_STYLE = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 4,
-  padding: "4px 4px 4px 10px",
-  borderRadius: 999,
-  background: "var(--cth-command-panel-soft)",
-  color: "var(--cth-command-ink)",
-  fontFamily: SANS,
-  fontSize: 12,
-  fontWeight: 500,
-};
-
-const TAG_REMOVE_STYLE = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: 18,
-  height: 18,
-  borderRadius: 999,
-  border: "none",
-  background: "transparent",
-  color: "var(--cth-command-muted)",
-  cursor: "pointer",
-};
-
-const TAG_INPUT_INLINE_STYLE = {
-  flex: 1,
-  minWidth: 120,
-  border: "none",
-  outline: "none",
-  background: "transparent",
-  fontFamily: SANS,
-  fontSize: 14,
-  color: "var(--cth-command-ink)",
-  padding: "4px 4px",
-};
+const SECTIONS = [
+  {
+    key: "identity",
+    label: "Identity",
+    title: "Identity",
+    subtitle: "Name this avatar and define their awareness stage.",
+    why: "A named, clearly positioned avatar gives every brand decision a specific human to answer to. Vague audiences produce vague brands.",
+    tips: [
+      "Give them a real name — it makes them feel like a person",
+      "Stage defines how aware they are of their problem",
+      "One primary avatar keeps your message focused",
+    ],
+    zuri: "“Start with the name of a real person you've served. Everything specific about that person is more useful than any generalized description.”",
+    zuriButton: "Ask the House",
+  },
+  {
+    key: "psychology",
+    label: "Psychology",
+    title: "Psychology",
+    subtitle: "What drives them under the surface.",
+    why: "People buy on emotion and justify with logic. When you know the fear and desire underneath, every message lands where the decision is actually made.",
+    tips: [
+      "Core fear is the worry they'd never say out loud",
+      "Core desire is the outcome beneath the wish list",
+      "Name the exact moment that pushes them to act",
+    ],
+    zuri: "“Don't write what they should feel. Write what they actually fear at 2am — that's where the real message lives.”",
+    zuriButton: "Generate psychology draft",
+  },
+  {
+    key: "behavior",
+    label: "Behavior",
+    title: "Behavior",
+    subtitle: "What they do, where they go, and what holds them back.",
+    why: "How they behave — the symptoms they notice, where they spend time, and the objections they raise — tells you where to show up and exactly what to say.",
+    tips: [
+      "Surface symptoms are what they'd describe out loud",
+      "List the channels you can actually reach them in",
+      "Write objections in their own words",
+    ],
+    zuri: "“List the words they'd actually use. Their objections, in their voice, become the copy that answers them.”",
+    zuriButton: "Generate behavior draft",
+  },
+];
 
 function validate(form, requireCoreFear) {
   const errors = {};
@@ -304,49 +122,61 @@ function validate(form, requireCoreFear) {
   return errors;
 }
 
-function CollapsibleSection({ title, hint, defaultOpen = true, children }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <section style={SECTION_STYLE}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        style={SECTION_HEADER_STYLE}
-        aria-expanded={open}
-      >
-        <div>
-          <h2 style={SECTION_TITLE_STYLE}>{title}</h2>
-          {hint && <p style={SECTION_HINT_STYLE}>{hint}</p>}
-        </div>
-        {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-      </button>
-      {open && <div style={SECTION_BODY_STYLE}>{children}</div>}
-    </section>
-  );
-}
+// Which section a field error lives in, so we can jump the user there on save.
+const FIELD_SECTION = {
+  name: 0,
+  stage: 0,
+  core_fear: 1,
+  core_desire: 1,
+  primary_problem: 1,
+  emotional_trigger: 1,
+};
 
-function FieldGroup({ label, hint, error, required, children, meta }) {
+// ---- Small presentational helpers ----
+function FieldShell({ label, required, error, children }) {
   return (
-    <div style={FIELD_GROUP_STYLE}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <label style={FIELD_LABEL_STYLE}>
-          {label}
-          {required && <span style={REQUIRED_MARK_STYLE}>*</span>}
-        </label>
-        {meta && (
-          <span style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)" }}>
-            {meta}
-          </span>
-        )}
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <div
+        style={{
+          fontSize: 10,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: C.muted,
+          fontWeight: 500,
+        }}
+      >
+        {label}
+        {required && <span style={{ color: C.asterisk, marginLeft: 4 }}>*</span>}
       </div>
-      {hint && <p style={FIELD_HINT_STYLE}>{hint}</p>}
       {children}
-      {error && <p style={FIELD_ERROR_STYLE}>{error}</p>}
+      {error && (
+        <div style={{ fontSize: 10, color: C.asterisk, marginTop: 1 }}>{error}</div>
+      )}
     </div>
   );
 }
 
-function TagInput({ label, hint, value, onChange, placeholder }) {
+const INPUT_STYLE = {
+  padding: "8px 11px",
+  background: C.white,
+  border: `0.5px solid ${C.inputBorder}`,
+  borderRadius: 8,
+  fontSize: 12,
+  color: C.ink,
+  fontFamily: SANS,
+  outline: "none",
+  width: "100%",
+  boxSizing: "border-box",
+};
+
+const TEXTAREA_STYLE = {
+  ...INPUT_STYLE,
+  resize: "vertical",
+  lineHeight: 1.6,
+  minHeight: 64,
+};
+
+function TagInput({ value, onChange, placeholder }) {
   const [draft, setDraft] = useState("");
   const tags = Array.isArray(value) ? value : [];
 
@@ -360,11 +190,7 @@ function TagInput({ label, hint, value, onChange, placeholder }) {
     onChange([...tags, t]);
     setDraft("");
   };
-
-  const removeTag = (index) => {
-    onChange(tags.filter((_, i) => i !== index));
-  };
-
+  const removeTag = (index) => onChange(tags.filter((_, i) => i !== index));
   const handleKeyDown = (e) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
@@ -375,97 +201,217 @@ function TagInput({ label, hint, value, onChange, placeholder }) {
   };
 
   return (
-    <FieldGroup label={label} hint={hint}>
-      <div style={TAG_WRAP_STYLE}>
-        {tags.map((tag, i) => (
-          <span key={`${tag}-${i}`} style={TAG_CHIP_STYLE}>
-            {tag}
-            <button
-              type="button"
-              onClick={() => removeTag(i)}
-              style={TAG_REMOVE_STYLE}
-              aria-label={`Remove ${tag}`}
-            >
-              <X size={12} />
-            </button>
-          </span>
-        ))}
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={() => draft && addTag(draft)}
-          placeholder={tags.length === 0 ? placeholder : ""}
-          style={TAG_INPUT_INLINE_STYLE}
-        />
-      </div>
-    </FieldGroup>
-  );
-}
-
-function PrimaryToggle({ isNew, isPrimary, isSaving, onSet }) {
-  return (
-    <div style={PRIMARY_TOGGLE_ROW_STYLE}>
-      <div style={{ minWidth: 0 }}>
-        <label style={FIELD_LABEL_STYLE}>Primary Avatar</label>
-        <p style={{ ...FIELD_HINT_STYLE, margin: "4px 0 0 0" }}>
-          {isNew
-            ? "Will be promoted to primary right after the avatar is created."
-            : isPrimary
-            ? "This is the avatar most campaigns default to."
-            : "Make this the avatar most campaigns default to."}
-        </p>
-      </div>
-      {isPrimary ? (
-        <span style={PRIMARY_PILL_STYLE}>
-          <Star size={12} fill="currentColor" stroke="currentColor" />
-          {isNew ? "Will be primary" : "Primary"}
-        </span>
-      ) : (
-        <button
-          type="button"
-          onClick={onSet}
-          disabled={isSaving}
+    <div
+      style={{
+        background: C.white,
+        border: `0.5px solid ${C.inputBorder}`,
+        borderRadius: 8,
+        padding: "6px 10px",
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 5,
+        alignItems: "center",
+        minHeight: 38,
+      }}
+    >
+      {tags.map((tag, i) => (
+        <span
+          key={`${tag}-${i}`}
           style={{
-            ...SECONDARY_BUTTON_STYLE,
-            opacity: isSaving ? 0.6 : 1,
-            cursor: isSaving ? "wait" : "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            padding: "2px 8px",
+            background: C.tagBg,
+            border: `0.5px solid ${C.tagBorder}`,
+            borderRadius: 20,
+            fontSize: 11,
+            color: C.tipText,
           }}
         >
-          {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Star size={14} />}
-          Set as Primary
-        </button>
-      )}
+          {tag}
+          <button
+            type="button"
+            onClick={() => removeTag(i)}
+            aria-label={`Remove ${tag}`}
+            style={{
+              fontSize: 10,
+              color: C.muted,
+              cursor: "pointer",
+              background: "none",
+              border: "none",
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+            }}
+          >
+            <X size={11} />
+          </button>
+        </span>
+      ))}
+      <input
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={() => draft && addTag(draft)}
+        placeholder={tags.length === 0 ? placeholder : ""}
+        style={{
+          border: "none",
+          outline: "none",
+          fontSize: 11,
+          color: C.ink,
+          fontFamily: SANS,
+          minWidth: 80,
+          background: "transparent",
+          flex: 1,
+        }}
+      />
     </div>
   );
 }
 
-function IncompleteBanner() {
+function WhyAndTips({ section }) {
   return (
-    <div style={INCOMPLETE_BANNER_STYLE}>
-      <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-      <div>
-        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
-          Complete this avatar
+    <>
+      <div
+        style={{
+          background: C.white,
+          border: `0.5px solid ${C.border}`,
+          borderRadius: 10,
+          padding: "10px 13px",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 8,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: C.muted,
+            fontWeight: 500,
+            marginBottom: 4,
+          }}
+        >
+          Why this matters
         </div>
-        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
-          This avatar was migrated from earlier campaign data and is missing its
-          core fear. Adding it sharpens every campaign and AI-generated asset
-          that uses this avatar.
-        </p>
+        <div style={{ fontSize: 11, color: C.whyText, lineHeight: 1.6 }}>
+          {section.why}
+        </div>
       </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
+        {section.tips.map((tip, i) => (
+          <div
+            key={i}
+            style={{
+              background: C.white,
+              border: `0.5px solid ${C.border}`,
+              borderRadius: 10,
+              padding: "8px 10px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 8,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: C.muted,
+                fontWeight: 500,
+                marginBottom: 3,
+              }}
+            >
+              Tip {i + 1}
+            </div>
+            <div style={{ fontSize: 10, color: C.tipText, lineHeight: 1.5 }}>{tip}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ZuriCard({ section, onAssist }) {
+  return (
+    <div style={{ background: C.zuriBg, borderRadius: 10, padding: "11px 13px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
+        <div
+          style={{
+            width: 16,
+            height: 16,
+            borderRadius: "50%",
+            background: C.zuriAccent,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <span style={{ fontSize: 8, fontWeight: 500, color: "#fff" }}>Z</span>
+        </div>
+        <span
+          style={{
+            fontSize: 8,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: C.zuriLabel,
+          }}
+        >
+          Zuri · avatar assist
+        </span>
+      </div>
+      <div
+        style={{
+          fontFamily: SERIF,
+          fontSize: 12,
+          color: C.zuriText,
+          fontStyle: "italic",
+          lineHeight: 1.5,
+          marginBottom: 8,
+        }}
+      >
+        {section.zuri}
+      </div>
+      <button
+        type="button"
+        onClick={onAssist}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 5,
+          fontSize: 11,
+          fontWeight: 500,
+          color: C.zuriAccent,
+          background: "transparent",
+          border: `0.5px solid rgba(224,78,53,0.4)`,
+          borderRadius: 6,
+          padding: "4px 10px",
+          cursor: "pointer",
+          fontFamily: SANS,
+        }}
+      >
+        <Wand2 size={11} />
+        {section.zuriButton}
+      </button>
     </div>
   );
 }
 
-export default function AvatarEditor() {
+export default function AvatarEditor({
+  avatarId: avatarIdProp,
+  isNew: isNewProp,
+  onClose,
+} = {}) {
   const navigate = useNavigate();
   const params = useParams();
-  const routeId = params.id;
-  const isNew = !routeId || routeId === "new";
+  // Modal usage passes props; legacy /audience/avatars/:id route falls back to params.
+  const routeId = avatarIdProp !== undefined ? avatarIdProp : params.id;
+  const isNew =
+    isNewProp !== undefined ? isNewProp : !routeId || routeId === "new";
   const draftKey = `cth.audience.draft.${isNew ? "new" : routeId}`;
   const { activeWorkspaceId } = useWorkspace();
+
+  const close = useCallback(() => {
+    if (onClose) onClose();
+    else navigate("/audience");
+  }, [onClose, navigate]);
 
   const [form, setForm] = useState(INITIAL_FORM);
   const [isPrimary, setIsPrimary] = useState(false);
@@ -475,6 +421,7 @@ export default function AvatarEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPrimarySaving, setIsPrimarySaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [activeSection, setActiveSection] = useState(0);
   const draftRestoredRef = useRef(false);
   const originalCoreFearWasEmptyRef = useRef(false);
 
@@ -512,7 +459,7 @@ export default function AvatarEditor() {
         if (cancelled) return;
         if (err?.status === 404) {
           toast.error("Avatar not found.");
-          navigate("/audience");
+          close();
           return;
         }
         toast.error("Failed to load avatar. Try again.");
@@ -523,7 +470,7 @@ export default function AvatarEditor() {
     return () => {
       cancelled = true;
     };
-  }, [routeId, isNew, activeWorkspaceId, navigate]);
+  }, [routeId, isNew, activeWorkspaceId, close]);
 
   // Restore localStorage draft once after initial load resolves
   useEffect(() => {
@@ -564,16 +511,42 @@ export default function AvatarEditor() {
     [],
   );
 
-  const showIncompleteBanner = useMemo(
-    () => !isNew && !form.core_fear?.trim(),
-    [isNew, form.core_fear],
+  // ---- Section completion (drives progress + nav states) ----
+  const identityComplete = useMemo(() => !!form.name?.trim(), [form.name]);
+  const psychologyComplete = useMemo(
+    () =>
+      ["core_fear", "core_desire", "primary_problem", "emotional_trigger"].every(
+        (k) => form[k]?.trim(),
+      ),
+    [form.core_fear, form.core_desire, form.primary_problem, form.emotional_trigger],
   );
+  const behaviorComplete = useMemo(
+    () =>
+      !!(
+        form.transformation_desired?.trim() ||
+        form.surface_symptoms.length ||
+        form.where_they_are.length ||
+        form.objections.length
+      ),
+    [
+      form.transformation_desired,
+      form.surface_symptoms,
+      form.where_they_are,
+      form.objections,
+    ],
+  );
+  const sectionDone = [identityComplete, psychologyComplete, behaviorComplete];
+  const completedCount = sectionDone.filter(Boolean).length;
+  const progressPct = Math.round((completedCount / SECTIONS.length) * 100);
 
   const handleSave = async () => {
     const requireCoreFear = isNew || !originalCoreFearWasEmptyRef.current;
     const validation = validate(form, requireCoreFear);
     if (Object.keys(validation).length > 0) {
       setErrors(validation);
+      // Jump to the first section that has an error so the user can see it.
+      const firstBad = Object.keys(validation)[0];
+      if (firstBad in FIELD_SECTION) setActiveSection(FIELD_SECTION[firstBad]);
       toast.error("Please fix the highlighted fields.");
       return;
     }
@@ -595,13 +568,14 @@ export default function AvatarEditor() {
           localStorage.removeItem(draftKey);
         } catch {}
         toast.success("Avatar created.");
-        navigate(`/audience/avatars/${created.id}`, { replace: true });
+        close();
       } else {
         await apiClient.patch(API_PATHS.audience.avatarById(routeId), payload);
         try {
           localStorage.removeItem(draftKey);
         } catch {}
         toast.success("Avatar saved.");
+        close();
       }
     } catch (err) {
       if (err?.status === 403) {
@@ -617,12 +591,12 @@ export default function AvatarEditor() {
     }
   };
 
-  const handleSetPrimary = async () => {
+  const handleTogglePrimary = async () => {
     if (isNew) {
       setPendingPrimary((v) => !v);
       return;
     }
-    if (isPrimary) return;
+    if (isPrimary) return; // backend has no "unset"; primary stays on
     setIsPrimarySaving(true);
     try {
       await apiClient.post(API_PATHS.audience.setPrimary(routeId));
@@ -640,259 +614,514 @@ export default function AvatarEditor() {
       localStorage.removeItem(draftKey);
     } catch {}
     toast.success("Avatar deleted.");
-    navigate("/audience");
+    close();
   };
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <header className="cth-page-header">
-          <div className="min-w-0 flex-1">
-            <h1
-              className="text-2xl md:text-[32px] leading-tight truncate"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
-            >
-              Avatar
-            </h1>
-            <p
-              className="text-xs md:text-sm truncate"
-              style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
-            >
-              Loading...
-            </p>
-          </div>
-        </header>
-        <div style={PAGE_STYLE}>
-          <div style={BODY_WRAP_STYLE}>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 12,
-                color: "var(--cth-command-muted)",
-                padding: "120px 0",
-                fontFamily: SANS,
-              }}
-            >
-              <Loader2 size={18} className="animate-spin" />
-              Loading avatar...
-            </div>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  // Zuri avatar drafting has no backend endpoint yet — graceful placeholder.
+  const handleZuriAssist = () => {
+    toast.message("Zuri avatar drafting is coming soon.");
+  };
+
+  const primaryOn = isNew ? pendingPrimary : isPrimary;
+  const section = SECTIONS[activeSection];
+  const isLastSection = activeSection === SECTIONS.length - 1;
+
+  const headerTitle = isNew ? "New avatar" : form.name?.trim() || "Avatar";
 
   return (
-    <DashboardLayout>
-      <header className="cth-page-header">
-        <div className="min-w-0 flex-1">
-          <h1
-            className="text-2xl md:text-[32px] leading-tight truncate"
-            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
-          >
-            {isNew ? "Create Avatar" : form.name || "Avatar"}
-          </h1>
-          <p
-            className="text-xs md:text-sm truncate"
-            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
-          >
-            {isNew
-              ? "Define a person your brand serves so every campaign pulls from the same source."
-              : "Edit this avatar to keep every connected campaign aligned."}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
-          <button
-            type="button"
-            onClick={() => navigate("/audience")}
-            style={SECONDARY_BUTTON_STYLE}
-          >
-            <ArrowLeft size={14} />
-            Back to Audience
-          </button>
-        </div>
-      </header>
-
-      <div style={PAGE_STYLE}>
-        <div style={BODY_WRAP_STYLE}>
-          {showIncompleteBanner && <IncompleteBanner />}
-
-          <CollapsibleSection
-            title="Identity"
-            hint="Who they are at the surface."
-            defaultOpen
-          >
-            <FieldGroup
-              label="Name"
-              required
-              error={errors.name}
-              meta={`${form.name.length}/200`}
+    <div
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) close();
+      }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(26,8,40,0.55)",
+        zIndex: 60,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+        fontFamily: SANS,
+      }}
+    >
+      <div
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{
+          background: C.modalBg,
+          borderRadius: 14,
+          width: "100%",
+          maxWidth: 820,
+          maxHeight: "88vh",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 8px 48px rgba(26,8,40,0.3)",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: "14px 18px 12px",
+            borderBottom: `0.5px solid ${C.border}`,
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            flexShrink: 0,
+            background: C.white,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                fontFamily: SERIF,
+                fontSize: 17,
+                fontWeight: 500,
+                color: C.ink,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
             >
-              <input
-                type="text"
-                value={form.name}
-                maxLength={200}
-                onChange={(e) => setField("name")(e.target.value)}
-                placeholder="e.g., Founder Sarah"
-                style={INPUT_STYLE}
-              />
-            </FieldGroup>
-
-            <FieldGroup label="Awareness Stage" required error={errors.stage}>
-              <select
-                value={form.stage}
-                onChange={(e) => setField("stage")(e.target.value)}
-                style={INPUT_STYLE}
+              {headerTitle}
+            </div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+              Build a detailed portrait of your ideal client.
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexShrink: 0,
+              marginLeft: 12,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: C.muted,
+                  textAlign: "right",
+                  marginBottom: 3,
+                }}
               >
-                {STAGE_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>
+                {completedCount} of {SECTIONS.length} complete
+              </div>
+              <div
+                style={{
+                  width: 80,
+                  height: 2,
+                  background: C.track,
+                  borderRadius: 2,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${progressPct}%`,
+                    background: C.green,
+                    borderRadius: 2,
+                  }}
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close"
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: "50%",
+                background: C.track,
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <X size={11} color={C.muted} />
+            </button>
+          </div>
+        </div>
+
+        {/* Body: section nav + field area */}
+        <div
+          style={{
+            flex: 1,
+            display: "grid",
+            gridTemplateColumns: "136px 1fr",
+            overflow: "hidden",
+            minHeight: 0,
+          }}
+        >
+          {/* Section nav */}
+          <nav
+            style={{
+              borderRight: `0.5px solid ${C.border}`,
+              padding: "12px 0",
+              background: C.navBg,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 8,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: C.muted,
+                padding: "0 13px 7px",
+                fontWeight: 500,
+              }}
+            >
+              Sections
+            </div>
+            {SECTIONS.map((s, i) => {
+              const isActive = i === activeSection;
+              const done = sectionDone[i] && !isActive;
+              const iconColor = isActive ? C.crimson : done ? C.green : C.todoIcon;
+              const textColor = isActive ? C.crimson : done ? C.muted : C.todoText;
+              const Icon = isActive ? Pencil : done ? Check : Circle;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => setActiveSection(i)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "7px 13px",
+                    cursor: "pointer",
+                    borderLeft: `2px solid ${isActive ? C.crimson : "transparent"}`,
+                    width: "100%",
+                    background: isActive ? C.white : "transparent",
+                    border: "none",
+                    borderLeftWidth: 2,
+                    borderLeftStyle: "solid",
+                    borderLeftColor: isActive ? C.crimson : "transparent",
+                    textAlign: "left",
+                  }}
+                >
+                  <Icon size={11} color={iconColor} style={{ flexShrink: 0 }} />
+                  <span
+                    style={{
+                      color: textColor,
+                      fontSize: 11,
+                      fontWeight: isActive ? 500 : 400,
+                    }}
+                  >
                     {s.label}
-                  </option>
-                ))}
-              </select>
-            </FieldGroup>
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
 
-            <PrimaryToggle
-              isNew={isNew}
-              isPrimary={isNew ? pendingPrimary : isPrimary}
-              isSaving={isPrimarySaving}
-              onSet={handleSetPrimary}
-            />
-          </CollapsibleSection>
-
-          <CollapsibleSection
-            title="Psychology"
-            hint="What drives them under the surface."
-            defaultOpen
+          {/* Field area */}
+          <div
+            style={{
+              padding: "16px 18px",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: 11,
+              minHeight: 0,
+            }}
           >
-            <FieldGroup
-              label="Core Fear"
-              required={isNew || !originalCoreFearWasEmptyRef.current}
-              hint="The deepest worry they carry, even if they wouldn't say it out loud."
-              error={errors.core_fear}
-            >
-              <textarea
-                value={form.core_fear}
-                onChange={(e) => setField("core_fear")(e.target.value)}
-                placeholder="Being seen as a fraud after building everything in public."
-                style={TEXTAREA_STYLE}
-              />
-            </FieldGroup>
+            {isLoading ? (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  color: C.muted,
+                  padding: "60px 0",
+                  fontSize: 13,
+                }}
+              >
+                <Loader2 size={16} className="animate-spin" />
+                Loading avatar...
+              </div>
+            ) : (
+              <>
+                <div>
+                  <div
+                    style={{
+                      fontFamily: SERIF,
+                      fontSize: 17,
+                      fontWeight: 500,
+                      color: C.ink,
+                    }}
+                  >
+                    {section.title}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                    {section.subtitle}
+                  </div>
+                </div>
 
-            <FieldGroup
-              label="Core Desire"
-              required
-              hint="The outcome they truly want, beneath the tactical wish list."
-              error={errors.core_desire}
-            >
-              <textarea
-                value={form.core_desire}
-                onChange={(e) => setField("core_desire")(e.target.value)}
-                placeholder="To build something durable that earns respect from people they respect."
-                style={TEXTAREA_STYLE}
-              />
-            </FieldGroup>
+                <WhyAndTips section={section} />
 
-            <FieldGroup
-              label="Primary Problem"
-              required
-              hint="The specific problem your brand exists to solve for them."
-              error={errors.primary_problem}
-            >
-              <textarea
-                value={form.primary_problem}
-                onChange={(e) => setField("primary_problem")(e.target.value)}
-                placeholder="They keep launching content but the strategy underneath is incoherent."
-                style={TEXTAREA_STYLE}
-              />
-            </FieldGroup>
+                {/* ---- Identity ---- */}
+                {activeSection === 0 && (
+                  <>
+                    <FieldShell label="Avatar name" required error={errors.name}>
+                      <input
+                        type="text"
+                        value={form.name}
+                        maxLength={200}
+                        onChange={(e) => setField("name")(e.target.value)}
+                        placeholder="e.g., The Established Founder"
+                        style={INPUT_STYLE}
+                      />
+                    </FieldShell>
 
-            <FieldGroup
-              label="Emotional Trigger"
-              required
-              hint="The moment or feeling that pushes them to finally take action."
-              error={errors.emotional_trigger}
-            >
-              <textarea
-                value={form.emotional_trigger}
-                onChange={(e) => setField("emotional_trigger")(e.target.value)}
-                placeholder="Watching a less-talented competitor get the recognition they expected."
-                style={TEXTAREA_STYLE}
-              />
-            </FieldGroup>
+                    <FieldShell label="Awareness stage" required error={errors.stage}>
+                      <select
+                        value={form.stage}
+                        onChange={(e) => setField("stage")(e.target.value)}
+                        style={INPUT_STYLE}
+                      >
+                        {STAGE_OPTIONS.map((s) => (
+                          <option key={s.value} value={s.value}>
+                            {s.label}
+                          </option>
+                        ))}
+                      </select>
+                    </FieldShell>
 
-            <FieldGroup
-              label="Description"
-              hint="Optional. Longer freeform notes about who this person really is."
-            >
-              <textarea
-                value={form.description}
-                onChange={(e) => setField("description")(e.target.value)}
-                placeholder="Background, lifestyle, decision habits, anything that doesn't fit elsewhere."
-                style={{ ...TEXTAREA_STYLE, minHeight: 120 }}
-              />
-            </FieldGroup>
-          </CollapsibleSection>
+                    {/* Primary avatar toggle */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        background: C.white,
+                        border: `0.5px solid ${C.border}`,
+                        borderRadius: 10,
+                        padding: "10px 13px",
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: C.ink }}>
+                          Primary avatar
+                        </div>
+                        <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>
+                          {primaryOn
+                            ? isNew
+                              ? "Will be set as the default after creation"
+                              : "This is the default across campaigns and messaging"
+                            : "Set as the default across campaigns and messaging"}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleTogglePrimary}
+                        disabled={isPrimarySaving || (!isNew && isPrimary)}
+                        aria-pressed={primaryOn}
+                        aria-label="Toggle primary avatar"
+                        style={{
+                          width: 34,
+                          height: 18,
+                          background: primaryOn ? C.crimson : C.todoIcon,
+                          borderRadius: 20,
+                          position: "relative",
+                          cursor:
+                            isPrimarySaving || (!isNew && isPrimary)
+                              ? "default"
+                              : "pointer",
+                          flexShrink: 0,
+                          border: "none",
+                          padding: 0,
+                          transition: "background 0.15s",
+                        }}
+                      >
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: 2,
+                            left: primaryOn ? 18 : 2,
+                            width: 14,
+                            height: 14,
+                            background: "#fff",
+                            borderRadius: "50%",
+                            transition: "left 0.15s",
+                          }}
+                        />
+                      </button>
+                    </div>
+                  </>
+                )}
 
-          <CollapsibleSection
-            title="Behavior"
-            hint="What they do, where they go, and what holds them back."
-            defaultOpen={false}
-          >
-            <TagInput
-              label="Surface Symptoms"
-              hint="The visible signs of the problem they'd describe out loud. Press Enter to add."
-              value={form.surface_symptoms}
-              onChange={setField("surface_symptoms")}
-              placeholder="Inconsistent posting, low engagement, copy that feels off..."
-            />
+                {/* ---- Psychology ---- */}
+                {activeSection === 1 && (
+                  <>
+                    <FieldShell
+                      label="Core fear"
+                      required={isNew || !originalCoreFearWasEmptyRef.current}
+                      error={errors.core_fear}
+                    >
+                      <textarea
+                        value={form.core_fear}
+                        onChange={(e) => setField("core_fear")(e.target.value)}
+                        placeholder="The deepest worry they carry, even if they'd never say it out loud."
+                        style={TEXTAREA_STYLE}
+                      />
+                    </FieldShell>
+                    <FieldShell label="Core desire" required error={errors.core_desire}>
+                      <textarea
+                        value={form.core_desire}
+                        onChange={(e) => setField("core_desire")(e.target.value)}
+                        placeholder="The outcome they truly want, beneath the tactical wish list."
+                        style={TEXTAREA_STYLE}
+                      />
+                    </FieldShell>
+                    <FieldShell
+                      label="Primary problem"
+                      required
+                      error={errors.primary_problem}
+                    >
+                      <textarea
+                        value={form.primary_problem}
+                        onChange={(e) => setField("primary_problem")(e.target.value)}
+                        placeholder="The specific problem your brand exists to solve for them."
+                        style={TEXTAREA_STYLE}
+                      />
+                    </FieldShell>
+                    <FieldShell
+                      label="Emotional trigger"
+                      required
+                      error={errors.emotional_trigger}
+                    >
+                      <textarea
+                        value={form.emotional_trigger}
+                        onChange={(e) => setField("emotional_trigger")(e.target.value)}
+                        placeholder="The moment or feeling that pushes them to finally take action."
+                        style={TEXTAREA_STYLE}
+                      />
+                    </FieldShell>
+                  </>
+                )}
 
-            <TagInput
-              label="Where They Are"
-              hint="Platforms, communities, and channels you can actually reach them in."
-              value={form.where_they_are}
-              onChange={setField("where_they_are")}
-              placeholder="LinkedIn, founder Slack groups, niche newsletters..."
-            />
+                {/* ---- Behavior ---- */}
+                {activeSection === 2 && (
+                  <>
+                    <FieldShell label="Surface symptoms">
+                      <TagInput
+                        value={form.surface_symptoms}
+                        onChange={setField("surface_symptoms")}
+                        placeholder="Inconsistent posting, low engagement... (press Enter)"
+                      />
+                    </FieldShell>
+                    <FieldShell label="Where they are">
+                      <TagInput
+                        value={form.where_they_are}
+                        onChange={setField("where_they_are")}
+                        placeholder="LinkedIn, founder Slack groups... (press Enter)"
+                      />
+                    </FieldShell>
+                    <FieldShell label="Objections">
+                      <TagInput
+                        value={form.objections}
+                        onChange={setField("objections")}
+                        placeholder="Too expensive, too soon... (press Enter)"
+                      />
+                    </FieldShell>
+                    <FieldShell label="Transformation desired">
+                      <textarea
+                        value={form.transformation_desired}
+                        onChange={(e) =>
+                          setField("transformation_desired")(e.target.value)
+                        }
+                        placeholder="The before-and-after picture from their point of view."
+                        style={TEXTAREA_STYLE}
+                      />
+                    </FieldShell>
+                  </>
+                )}
 
-            <TagInput
-              label="Objections"
-              hint="What they tell themselves to delay or refuse the offer."
-              value={form.objections}
-              onChange={setField("objections")}
-              placeholder="Too expensive, too soon, can do it myself..."
-            />
+                <ZuriCard section={section} onAssist={handleZuriAssist} />
+              </>
+            )}
+          </div>
+        </div>
 
-            <FieldGroup
-              label="Transformation Desired"
-              hint="The before-and-after picture from their point of view."
-            >
-              <textarea
-                value={form.transformation_desired}
-                onChange={(e) => setField("transformation_desired")(e.target.value)}
-                placeholder="From scattered output and shaky positioning to a clear, repeatable system."
-                style={TEXTAREA_STYLE}
-              />
-            </FieldGroup>
-          </CollapsibleSection>
-
-          <div style={ACTIONS_ROW_STYLE}>
+        {/* Footer */}
+        <div
+          style={{
+            padding: "10px 18px",
+            borderTop: `0.5px solid ${C.border}`,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: C.navBg,
+            flexShrink: 0,
+          }}
+        >
+          {/* Left: Delete (edit only) + Previous */}
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
             {!isNew && (
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(true)}
-                style={DESTRUCTIVE_BUTTON_STYLE}
+                style={{
+                  fontSize: 11,
+                  color: C.asterisk,
+                  background: C.white,
+                  border: `0.5px solid rgba(224,78,53,0.4)`,
+                  borderRadius: 7,
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                  fontFamily: SANS,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
               >
-                <Trash2 size={14} />
-                Delete Avatar
+                <Trash2 size={12} />
+                Delete
               </button>
             )}
-            <div style={{ flex: 1 }} />
             <button
               type="button"
-              onClick={() => navigate("/audience")}
-              style={SECONDARY_BUTTON_STYLE}
+              onClick={() => setActiveSection((i) => Math.max(0, i - 1))}
+              style={{
+                fontSize: 11,
+                color: C.muted,
+                background: C.white,
+                border: `0.5px solid ${C.inputBorder}`,
+                borderRadius: 7,
+                padding: "6px 12px",
+                cursor: "pointer",
+                fontFamily: SANS,
+                visibility: activeSection === 0 ? "hidden" : "visible",
+              }}
+            >
+              ← Previous
+            </button>
+          </div>
+
+          {/* Center: Cancel + Save */}
+          <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+            <button
+              type="button"
+              onClick={close}
+              style={{
+                fontSize: 11,
+                color: C.muted,
+                background: "transparent",
+                border: "none",
+                borderRadius: 7,
+                padding: "6px 12px",
+                cursor: "pointer",
+                fontFamily: SANS,
+              }}
             >
               Cancel
             </button>
@@ -901,19 +1130,47 @@ export default function AvatarEditor() {
               onClick={handleSave}
               disabled={isSaving}
               style={{
-                ...PRIMARY_CTA_STYLE,
-                opacity: isSaving ? 0.7 : 1,
+                fontSize: 11,
+                fontWeight: 500,
+                color: "#fff",
+                background: C.green,
+                border: "none",
+                borderRadius: 7,
+                padding: "6px 14px",
                 cursor: isSaving ? "wait" : "pointer",
+                fontFamily: SANS,
+                opacity: isSaving ? 0.7 : 1,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
-              {isSaving ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Save size={14} />
-              )}
-              {isNew ? "Create Avatar" : "Save Changes"}
+              {isSaving && <Loader2 size={12} className="animate-spin" />}
+              Save avatar
             </button>
           </div>
+
+          {/* Right: Next section */}
+          <button
+            type="button"
+            onClick={() =>
+              setActiveSection((i) => Math.min(SECTIONS.length - 1, i + 1))
+            }
+            style={{
+              fontSize: 11,
+              fontWeight: 500,
+              color: "#fff",
+              background: C.crimson,
+              border: "none",
+              borderRadius: 7,
+              padding: "6px 14px",
+              cursor: "pointer",
+              fontFamily: SANS,
+              visibility: isLastSection ? "hidden" : "visible",
+            }}
+          >
+            {isLastSection ? "Behavior →" : `${SECTIONS[activeSection + 1].label} →`}
+          </button>
         </div>
       </div>
 
@@ -924,6 +1181,6 @@ export default function AvatarEditor() {
           onDeleted={handleDeleted}
         />
       )}
-    </DashboardLayout>
+    </div>
   );
 }

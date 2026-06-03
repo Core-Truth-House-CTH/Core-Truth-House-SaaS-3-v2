@@ -16,6 +16,7 @@ import apiClient from "../lib/apiClient";
 import { API_PATHS } from "../lib/apiPaths";
 import AvatarCard from "../components/audience/AvatarCard";
 import PortraitGenModal from "../components/audience/PortraitGenModal";
+import AvatarEditor from "./AvatarEditor";
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
@@ -293,6 +294,23 @@ export default function Audience() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Avatar editor modal
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorAvatarId, setEditorAvatarId] = useState(null); // null => create
+  const openCreate = useCallback(() => {
+    setEditorAvatarId(null);
+    setEditorOpen(true);
+  }, []);
+  const openEdit = useCallback((id) => {
+    setEditorAvatarId(id);
+    setEditorOpen(true);
+  }, []);
+  const closeEditor = useCallback(() => {
+    setEditorOpen(false);
+    setEditorAvatarId(null);
+    loadAvatars();
+  }, [loadAvatars]);
+
   // Portrait generation
   const [models, setModels] = useState([]);
   const [genAvatar, setGenAvatar] = useState(null);
@@ -374,9 +392,8 @@ export default function Audience() {
       return new Date(b.created_at) - new Date(a.created_at);
     });
 
-  const handleCreate = () => navigate("/audience/avatars/new");
+  const handleCreate = openCreate;
   const handleUpgrade = () => navigate("/billing");
-  const handleOpen = (id) => navigate(`/audience/avatars/${id}`);
 
   const handleDeleteAvatar = async () => {
     if (!deleteTarget) return;
@@ -506,8 +523,8 @@ export default function Audience() {
                   avatar={avatar}
                   isGenerating={generatingId === avatar.id}
                   onGeneratePortrait={openPortraitGen}
-                  onOpen={() => navigate(`/audience/avatars/${avatar.id}`)}
-                  onEdit={() => navigate(`/audience/avatars/${avatar.id}`)}
+                  onOpen={() => openEdit(avatar.id)}
+                  onEdit={() => openEdit(avatar.id)}
                   onDelete={() => setDeleteTarget(avatar)}
                   onSetPrimary={async () => {
                     try {
@@ -605,6 +622,14 @@ export default function Audience() {
           loading={genLoading}
           onGenerate={handleGeneratePortrait}
           onClose={() => setGenAvatar(null)}
+        />
+      )}
+
+      {editorOpen && (
+        <AvatarEditor
+          avatarId={editorAvatarId}
+          isNew={!editorAvatarId}
+          onClose={closeEditor}
         />
       )}
     </DashboardLayout>
