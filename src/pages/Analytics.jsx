@@ -339,10 +339,80 @@ const SIGNAL_LEVELS = [
  { value: 5, label: "Purchase Movement" },
 ];
 
-// Read-only reporting surface. Trends + distribution populate once signals are
-// confirmed in the Signal Inbox; no confirmed data exists yet, so this is an
-// intentional placeholder rather than a live chart.
+// Read-only reporting surface, wired to confirmed buyer signals. Fetches
+// GET /api/buyer-signals?status=confirmed on mount (same pattern as the
+// TrackingLinksPage Signal Movement fetch), groups by week for the trend chart
+// and by confirmed_level for the distribution bars.
+function weekStartKey(iso) {
+ const d = new Date(iso);
+ if (Number.isNaN(d.getTime())) return null;
+ const day = d.getUTCDay(); // 0 Sun .. 6 Sat
+ const shift = day === 0 ? -6 : 1 - day; // back to Monday
+ const monday = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + shift));
+ return monday.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
 function BuyerSignalsPanel() {
+ const colors = useColors();
+ const [confirmed, setConfirmed] = useState([]);
+ const [loading, setLoading] = useState(true);
+
+ useEffect(() => {
+ let cancelled = false;
+ (async () => {
+ setLoading(true);
+ try {
+ const res = await apiClient.get(API_PATHS.buyerSignals.list({ status: "confirmed" }));
+ const all = Array.isArray(res?.signals) ? res.signals : [];
+ // Client-side confirmed filter as a safety net.
+ const conf = all.filter((s) => String(s?.status).toLowerCase() === "confirmed");
+ if (!cancelled) setConfirmed(conf);
+ } catch (e) {
+ console.error("Failed to load buyer signals", e);
+ if (!cancelled) setConfirmed([]);
+ } finally {
+ if (!cancelled) setLoading(false);
+ }
+ })();
+ return () => {
+ cancelled = true;
+ };
+ }, []);
+
+ const trendSeries = useMemo(() => {
+ const buckets = new Map();
+ confirmed.forEach((s) => {
+ const key = weekStartKey(s.created_at || s.createdAt);
+ if (!key) return;
+ buckets.set(key, (buckets.get(key) || 0) + 1);
+ });
+ return Array.from(buckets.entries())
+ .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+ .map(([date, count]) => ({ date, count }));
+ }, [confirmed]);
+
+ const levelCounts = useMemo(
+ () =>
+ SIGNAL_LEVELS.map((lvl) => ({
+ ...lvl,
+ count: confirmed.filter(
+ (s) => Number(s.confirmed_level ?? s.level ?? s.suggested_level) === lvl.value
+ ).length,
+ })),
+ [confirmed]
+ );
+
+ const levelMax = Math.max(1, ...levelCounts.map((l) => l.count));
+ const totalConfirmed = confirmed.length;
+
+ const tooltipStyle = {
+ backgroundColor: "var(--cth-command-panel)",
+ border: "1px solid var(--cth-command-border)",
+ borderRadius: 4,
+ fontSize: 12,
+ color: "var(--cth-command-ink)",
+ };
+
  const cardStyle = {
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-border)",
@@ -369,7 +439,32 @@ function BuyerSignalsPanel() {
  <TrendingUp size={16} style={{ color: "var(--cth-command-crimson)" }} />
  <h3 className="text-sm font-semibold cth-heading">Signal Trends</h3>
  </div>
+ {loading ? (
+ <EmptyChart text="Loading signals…" />
+ ) : trendSeries.length > 0 ? (
+ <ResponsiveContainer width="100%" height={240}>
+ <AreaChart data={trendSeries}>
+ <CartesianGrid strokeDasharray="3 3" stroke={`${colors.tuscany}15`} />
+ <XAxis
+ dataKey="date"
+ tick={{ fontSize: 10, fill: colors.textMuted }}
+ tickFormatter={(value) => (value ? String(value).slice(5, 10) : "")}
+ />
+ <YAxis tick={{ fontSize: 11, fill: colors.textMuted }} allowDecimals={false} />
+ <Tooltip contentStyle={tooltipStyle} />
+ <Area
+ type="monotone"
+ dataKey="count"
+ stroke="var(--cth-command-crimson)"
+ fill="var(--cth-command-crimson)22"
+ strokeWidth={2}
+ name="Confirmed signals"
+ />
+ </AreaChart>
+ </ResponsiveContainer>
+ ) : (
  <EmptyChart text="No confirmed signals yet. Trends over time will appear here." />
+ )}
  </div>
 
  <div style={cardStyle}>
@@ -378,22 +473,33 @@ function BuyerSignalsPanel() {
  <h3 className="text-sm font-semibold cth-heading">Level Distribution</h3>
  </div>
  <div className="space-y-2">
- {SIGNAL_LEVELS.map((lvl) => (
+ {levelCounts.map((lvl) => (
  <div key={lvl.value} className="flex items-center gap-3">
  <div className="w-40 shrink-0 text-xs cth-muted">
  {lvl.value} · {lvl.label}
  </div>
  <div
  className="h-2 flex-1 rounded-full"
- style={{ background: "var(--cth-command-panel-soft)" }}
+ style={{ background: "var(--cth-command-panel-soft)", overflow: "hidden" }}
+ >
+ <div
+ style={{
+ height: "100%",
+ width: `${(lvl.count / levelMax) * 100}%`,
+ minWidth: lvl.count > 0 ? 4 : 0,
+ background: "var(--cth-command-crimson)",
+ borderRadius: 999,
+ }}
  />
- <div className="w-8 shrink-0 text-right text-xs cth-muted">0</div>
+ </div>
+ <div className="w-8 shrink-0 text-right text-xs cth-muted">{lvl.count}</div>
  </div>
  ))}
  </div>
  <p className="mt-3 text-xs cth-muted">
- Counts reflect confirmed signals by level. All zero until the first
- confirmation lands.
+ {totalConfirmed > 0
+ ? `${totalConfirmed} confirmed signal${totalConfirmed === 1 ? "" : "s"}, grouped by confirmed level.`
+ : "Counts reflect confirmed signals by level. All zero until the first confirmation lands."}
  </p>
  </div>
  </div>
