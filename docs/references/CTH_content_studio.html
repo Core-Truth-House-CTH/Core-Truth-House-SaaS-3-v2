@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTH Content Studio — Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+/* Use only CTH CSS variables — no custom color schemes */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cth-command-blush,#f8f4f2);padding:24px;}
+.wrap{max-width:1060px;margin:0 auto;display:flex;flex-direction:column;gap:0;}
+/* Page header */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.pt{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.ps{font-size:11px;color:var(--cth-command-muted,#7c6576);margin-top:3px;}
+.usage{font-size:10px;padding:4px 12px;background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:20px;color:var(--cth-command-crimson,#5d0012);font-weight:500;}
+/* Tab pills */
+.tab-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.tab-pill{padding:6px 16px;border-radius:20px;font-size:11px;font-weight:500;color:var(--cth-command-ink,#1a0828);cursor:pointer;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-panel,#fff);font-family:'DM Sans',sans-serif;}
+.tab-pill.active{background:var(--cth-command-crimson,#5d0012);color:#fff;border-color:var(--cth-command-crimson,#5d0012);}
+/* Two-col */
+.grid{display:grid;grid-template-columns:330px 1fr;gap:14px;}
+/* Cards */
+.card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.card-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;margin-bottom:10px;}
+/* Content type pills */
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:12px;}
+.ct{padding:7px 10px;border-radius:7px;font-size:11px;font-weight:500;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;}
+.ct.on{background:var(--cth-command-crimson,#5d0012);color:#fff;border-color:var(--cth-command-crimson,#5d0012);}
+.div{height:.5px;background:var(--cth-command-border,#e8d5d0);margin:12px 0;}
+/* Fields */
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.fl{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;}
+.fi{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.fta{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:none;line-height:1.6;min-height:60px;}
+.fsel{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.opt{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:2px;}
+/* Generate button */
+.gbtn{width:100%;padding:10px;background:var(--cth-command-crimson,#5d0012);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+/* Output */
+.out-card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.act-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.abtn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.acopy{background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);border:.5px solid var(--cth-command-border,#e8d5d0);}
+.asave{background:#2d6a4f;color:#fff;border:none;}
+.out-ta{padding:12px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:10px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;line-height:1.7;resize:none;width:100%;min-height:180px;outline:none;}
+/* Library */
+.lib{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:14px;margin-top:12px;}
+.li{padding:9px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:9px;margin-bottom:6px;}
+.li-type{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;margin-bottom:2px;}
+.li-text{font-size:11px;color:var(--cth-command-ink,#1a0828);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.li-acts{display:flex;gap:4px;margin-top:5px;}
+.lbtn{font-size:10px;color:var(--cth-command-crimson,#5d0012);font-weight:500;background:transparent;border:.5px solid rgba(93,0,18,.25);border-radius:5px;padding:2px 7px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+/* Zuri card — bottom of page, matches existing Zuri pattern */
+.zuri-card{background:#1a0828;border-radius:12px;padding:18px 20px;margin-top:14px;}
+.zh{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.zav{width:20px;height:20px;border-radius:50%;background:#e04e35;display:flex;align-items:center;justify-content:center;}
+.zlbl{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#7a6090;}
+.ztext{font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;color:#e8dff0;font-style:italic;line-height:1.55;margin-bottom:10px;}
+.zbtn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:#e04e35;background:transparent;border:.5px solid rgba(224,78,53,.4);border-radius:6px;padding:5px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+/* Visual type grid */
+.vg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+.vc{padding:9px;border-radius:9px;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-blush,#f8f4f2);text-align:center;cursor:pointer;}
+.vc.on{background:var(--cth-command-crimson,#5d0012);border-color:var(--cth-command-crimson,#5d0012);}
+.vc.on .vl{color:#fff;}
+.vc.on .vi{color:rgba(255,255,255,.7);}
+.vi{font-size:15px;color:#763b5b;margin-bottom:3px;}
+.vl{font-size:10px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.pg2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ph">
+    <div><div class="pt">Content Studio</div><div class="ps">Where brand strategy turns into market-facing content.</div></div>
+    <span class="usage">14 / 20 generations this month</span>
+  </div>
+
+  <div class="tab-pills">
+    <button class="tab-pill active">Create Content</button>
+    <button class="tab-pill">Visual Prompts</button>
+    <button class="tab-pill">Video Scripts</button>
+    <button class="tab-pill">Repurpose</button>
+    <button class="tab-pill">Campaign Assets</button>
+    <button class="tab-pill">Saved Outputs</button>
+  </div>
+
+  <!-- CREATE CONTENT tab (shown) -->
+  <div class="grid">
+    <div class="card">
+      <div class="card-lbl">Content type</div>
+      <div class="type-grid">
+        <button class="ct">Social Caption</button>
+        <button class="ct">Short Form Hook</button>
+        <button class="ct">LinkedIn Post</button>
+        <button class="ct">Twitter/X Thread</button>
+        <button class="ct">Email Newsletter</button>
+        <button class="ct">Carousel Outline</button>
+        <button class="ct">Sales Page Copy</button>
+        <button class="ct on">Blog Post</button>
+        <button class="ct">TikTok Script</button>
+        <button class="ct">Pinterest</button>
+      </div>
+      <div class="div"></div>
+      <div class="fg"><div class="fl">Title or topic <span style="color:#e04e35;">*</span></div><input class="fi" placeholder="e.g. Why your brand isn't converting" /></div>
+      <div class="fg"><div class="fl">Target keyword</div><input class="fi" placeholder="Optional" /><div class="opt">Optional</div></div>
+      <div class="fg">
+        <div class="fl">Target audience</div>
+        <select class="fsel"><option value="">Select an avatar (optional)</option><option>The Established Founder</option></select>
+        <div class="opt">Pulls from your Audience tab</div>
+      </div>
+      <div class="fg"><div class="fl">Tone</div><input class="fi" placeholder="e.g. Direct, educational" /><div class="opt">Optional</div></div>
+      <button class="gbtn">Generate Blog Post</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="out-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="act-title">Generated output</div>
+          <div style="display:flex;gap:6px;"><button class="abtn acopy">Copy</button><button class="abtn asave">Save to library</button></div>
+        </div>
+        <textarea class="out-ta">Why Your Brand Isn't Converting (And It's Not a Marketing Problem)
+
+If you've been posting consistently but your ideal clients still aren't converting — the problem almost certainly isn't your content. It's your brand structure.
+
+Most service-based founders build their visibility before they build their foundation. They create content without a clear positioning statement. They show up everywhere without a decision architecture.
+
+This isn't a content problem. This is a structure problem.</textarea>
+      </div>
+      <div class="lib">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#7c6576;font-weight:500;">Recent saves</div>
+          <button class="lbtn">View all</button>
+        </div>
+        <div class="li"><div class="li-type">Blog Post</div><div class="li-text">Why Your Brand Isn't Converting</div><div class="li-acts"><button class="lbtn">Load</button><button class="lbtn">Delete</button></div></div>
+        <div class="li"><div class="li-type">Social Caption</div><div class="li-text">Brand problems are structure problems...</div><div class="li-acts"><button class="lbtn">Load</button><button class="lbtn">Add to social</button><button class="lbtn">Delete</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zuri card at bottom of page -->
+  <div class="zuri-card">
+    <div class="zh"><div class="zav"><span style="font-size:8px;font-weight:500;color:#fff;">Z</span></div><span class="zlbl">Zuri · Content Inspiration</span></div>
+    <div class="ztext">"A blog post that converts leads your reader from their current problem to your specific solution. What is the one belief you want them to hold by the end of this piece?"</div>
+    <button class="zbtn"><i class="ti ti-wand" style="font-size:11px;"></i> Inspire my angle</button>
+  </div>
+</div>
+</body>
+</html>
