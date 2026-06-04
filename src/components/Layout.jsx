@@ -725,14 +725,12 @@ export function Sidebar() {
                 {Object.entries(KEYBOARD_SHORTCUTS).map(([key, path]) => {
                   const labels = {
                     "/command-center": "Command Center",
-                    "/brand-intelligence": "Brand Intelligence",
                     "/strategic-os": "Strategic OS",
                     "/content-studio": "Content Studio",
                     "/media-studio": "Media Studio",
                     "/crm": "CRM Suite",
                     "/calendar": "Calendar",
                     "/settings": "Settings",
-                    "/billing": "Billing",
                   };
 
                   return (
