@@ -1869,7 +1869,7 @@ function CampaignBuilderPageContent() {
                         <div style={labelStyle}>Tracking links on this campaign</div>
                         <button
                           type="button"
-                          onClick={() => navigate('/tracking-links')}
+                          onClick={() => navigate('/signal-inbox')}
                           style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 600, color: 'var(--cth-command-crimson)' }}
                         >
                           Manage in Tracking Links →
