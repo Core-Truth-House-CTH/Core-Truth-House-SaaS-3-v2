@@ -328,6 +328,7 @@ export function Sidebar() {
             ? [{ path: "/automations", label: "Automations", icon: Workflow }]
             : []),
           { path: "/tracking-links", label: "Tracking Links", icon: Share2 },
+          { path: "/analytics", label: "Analytics", icon: BarChart2 },
         ],
       },
       {
