@@ -70,56 +70,6 @@ import {
 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 
-const ICON_MAP = {
-  "/admin": ShieldAlert,
-  "/prompt-engine": Wand2,
-  "/command-center": LayoutDashboard,
-  "/dashboard": LayoutDashboard,
-  "/my-data": Database,
-  "/brand-intelligence": Brain,
-  "/brand-foundation": Layers,
-  "/audience": UsersRound,
-  "/brand-memory": BookOpen,
-  "/brand-health": Activity,
-  "/brand-audit": Search,
-  "/brand-studio": Bot,
-  "/strategic-os": Zap,
-  "/audience-psychology": Brain,
-  "/differentiation": Target,
-  "/competitor-analysis": Search,
-  "/content-pillars": Columns,
-  "/platform-strategy": Share2,
-  "/monetization": DollarSign,
-  "/campaign-builder": Megaphone,
-  "/automations": Workflow,
-  "/content-studio": PenTool,
-  "/media-studio": Image,
-  "/identity-studio": Sparkles,
-  "/prompt-hub": Hash,
-  "/keyword-generator": Search,
-  "/export": Download,
-  "/offer-builder": Package,
-  "/systems-builder": Gift,
-  "/launch-planner": Rocket,
-  "/social-media": Radio,
-  "/blog-cms": FileText,
-  "/calendar": Calendar,
-  "/community": MessageCircle,
-  "/seo": Globe,
-  "/digest": Mail,
-  "/crm": PhoneCall,
-  "/pipeline-forecast": TrendingUp,
-  "/analytics": BarChart2,
-  "/team": Users,
-  "/tutorials": PlayCircle,
-  "/training": PlayCircle,
-  "/documents": FolderOpen,
-  "/workspace-library": FolderOpen,
-  "/addon-requests": PlusCircle,
-  "/billing": CreditCard,
-  "/settings": Settings,
-};
-
 const ADMIN_ROLES = [
   "SUPER_ADMIN",
   "OPS_ADMIN",
@@ -132,14 +82,12 @@ const SUPER_ADMIN_ROLES = ["SUPER_ADMIN", "OPS_ADMIN"];
 
 const KEYBOARD_SHORTCUTS = {
   "1": "/command-center",
-  "2": "/brand-intelligence",
   "3": "/strategic-os",
   "4": "/content-studio",
   "5": "/media-studio",
   "6": "/crm",
   "7": "/calendar",
   "8": "/settings",
-  "9": "/billing",
 };
 
 function mapUsagePayload(data) {
@@ -310,29 +258,6 @@ export function Sidebar() {
   const showLabels = isExpanded;
   const isHoverOverlay = sidebarCollapsed && hoverExpanded && !mobileOpen;
 
-  const adminUtilityItems = isSuperAdminRole
-    ? [
-        {
-          path: "/admin?tab=store_products",
-          label: "Store",
-          icon: Package,
-          group: "platformAdmin",
-        },
-        {
-          path: "/admin?tab=personal-keys",
-          label: "AI API Keys",
-          icon: Key,
-          group: "platformAdmin",
-        },
-        {
-          path: "/admin?tab=training",
-          label: "Video Tutorials",
-          icon: Video,
-          group: "platformAdmin",
-        },
-      ]
-    : [];
-
   const routeGroups = useMemo(() => {
     const role = String(userRole || "").toUpperCase();
     const canSeeCohortManager =
@@ -370,7 +295,6 @@ export function Sidebar() {
           { path: "/offer-builder", label: "Offers", icon: Package },
           { path: "/campaign-builder", label: "Campaign Builder", icon: Megaphone },
           { path: "/content-studio", label: "Content Studio", icon: PenTool },
-          { path: "/prompt-generator", label: "Prompt Generator", icon: Wand2 },
         ],
       },
       {
@@ -381,7 +305,6 @@ export function Sidebar() {
           { path: "/media-studio", label: "Media Studio", icon: Image },
           { path: "/crm", label: "CRM", icon: PhoneCall },
           { path: "/blog-cms", label: "Blog", icon: FileText },
-          { path: "/prompt-hub", label: "Prompt Library", icon: Hash },
         ],
       },
       {
@@ -558,7 +481,7 @@ export function Sidebar() {
                   <div className="space-y-1">
                     {group.items.map((item) => {
                       const active = isActive(item.path);
-                      const Icon = item.icon || ICON_MAP[item.path] || Layers;
+                      const Icon = item.icon || Layers;
                       const isLocked = !checkPlanAccess(item.path);
                       const isCollapsedView = sidebarCollapsed && !mobileOpen && !hoverExpanded;
 

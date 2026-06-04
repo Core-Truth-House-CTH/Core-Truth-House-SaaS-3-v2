@@ -284,17 +284,6 @@ export const APP_ROUTES = [
     tooltip: "Create on-brand written content.",
   },
     {
-    path: "/prompt-generator",
-    label: "Prompt Generator",
-    icon: Wand2,
-    group: "execution",
-    requiredPlan: "structure",
-    gateType: "page",
-    tooltip:
-      "Generate brand-specific AI image and video prompts tailored to your voice and positioning.",
-    lockedTooltip: "Upgrade to Structure to unlock Prompt Generator.",
-  },
-    {
     path: "/brand-studio",
     label: "Brand Studio",
     group: "execution",
@@ -392,16 +381,6 @@ export const APP_ROUTES = [
       gateType: null,
       tooltip:
         "Browse the files, records, assets, content, and documents stored in your workspace.",
-    },
-    {
-      path: "/prompt-hub",
-      label: "Prompt Library",
-      icon: BookOpen,
-      group: "library",
-      requiredPlan: "house",
-      gateType: "page",
-      tooltip:
-        "Save, reuse, and manage prompts that support your brand workflows.",
     },
     {
     path: "/tutorials",

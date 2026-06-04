@@ -38,8 +38,6 @@ const JoinWorkspace = lazy(() => import("../pages/JoinWorkspace"));
 const CohortManager = lazy(() => import("../pages/CohortManager"));
 const VideoTutorialsPage = lazy(() => import("../pages/VideoTutorialsPage"));
 const OnboardingWorkflow = lazy(() => import("../pages/OnboardingWorkflow"));
-const PromptHub = lazy(() => import("../pages/PromptHub"));
-const PromptGenerator = lazy(() => import("../pages/PromptGenerator"));
 const BrandStudio = lazy(() => import("../pages/BrandStudio"));
 const Automations = lazy(() => import("../pages/Automations"));
 const Members = lazy(() => import("../pages/Members"));
@@ -69,7 +67,6 @@ const pageRegistry = {
   "/customer-journey": CustomerJourney,
 
   "/content-studio": ContentStudio,
-  "/prompt-generator": PromptGenerator,
   "/brand-studio": BrandStudio,
   "/campaign-builder": CampaignBuilder,
   "/campaign-setup": CampaignSetup,
@@ -91,7 +88,6 @@ const pageRegistry = {
   "/blog-cms": BlogCMS,
 
   "/tutorials": VideoTutorialsPage,
-  "/prompt-hub": PromptHub,
   "/documents": TenantDataDashboardV2,
     "/workspace-library": TenantDataDashboardV2,
   "/billing": Billing,
