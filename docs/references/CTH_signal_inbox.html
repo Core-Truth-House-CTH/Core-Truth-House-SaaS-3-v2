@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTH Signal Inbox — Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+/* Use only --cth-command-* CSS variables — no custom color schemes */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cth-command-blush,#f8f4f2);padding:24px;}
+.wrap{max-width:1060px;margin:0 auto;}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.pt{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.ps{font-size:11px;color:var(--cth-command-muted,#7c6576);margin-top:3px;}
+.btn-primary{font-size:11px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;background:var(--cth-command-crimson,#5d0012);color:#fff;border:none;}
+/* Dashboard strip */
+.dash-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px;}
+.dash-card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:10px;padding:11px 13px;}
+.dash-lbl{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;margin-bottom:4px;}
+.dash-val{font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:500;color:var(--cth-command-ink,#1a0828);line-height:1.2;}
+.dash-sub{font-size:9px;color:var(--cth-command-muted,#7c6576);margin-top:2px;}
+/* Tab pills */
+.tab-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.tab-pill{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:500;color:var(--cth-command-ink,#1a0828);cursor:pointer;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-panel,#fff);font-family:'DM Sans',sans-serif;}
+.tab-pill.active{background:var(--cth-command-crimson,#5d0012);color:#fff;border-color:var(--cth-command-crimson,#5d0012);}
+/* Cards */
+.card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.card-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;margin-bottom:12px;}
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.fsel{padding:7px 11px;background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:11px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;}
+/* Signal cards */
+.sig-card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:10px;padding:13px 15px;margin-bottom:8px;}
+.sig-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.level-badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:500;}
+.l1{background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-muted,#7c6576);border:.5px solid var(--cth-command-border,#e8d5d0);}
+.l2{background:#f5ece8;color:#763b5b;border:.5px solid #e8d0d8;}
+.l3{background:#f0f5e8;color:#2d6a4f;border:.5px solid #c0d8c0;}
+.l4{background:#f0e8f5;color:#5d0012;border:.5px solid #e0c8e8;}
+.l5{background:#e8f0e8;color:#1a5226;border:.5px solid #b0d0b0;}
+.sig-source{font-size:9px;padding:2px 8px;border-radius:20px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);color:var(--cth-command-muted,#7c6576);}
+.sig-time{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-left:auto;}
+.sig-text{font-size:12px;color:var(--cth-command-ink,#1a0828);line-height:1.5;margin-bottom:6px;}
+.sig-actions{display:flex;gap:6px;margin-top:8px;}
+.a-confirm{font-size:11px;font-weight:500;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;background:var(--cth-command-success,#2d6a4f);color:#fff;border:none;}
+.a-dismiss{font-size:11px;font-weight:500;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-muted,#7c6576);border:.5px solid var(--cth-command-border,#e8d5d0);}
+.a-del{background:transparent;color:var(--cth-danger,#b05050);border:.5px solid rgba(176,80,80,.3);border-radius:6px;padding:5px 8px;cursor:pointer;}
+/* Level bars */
+.level-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.level-name{font-size:11px;color:var(--cth-command-ink,#1a0828);width:180px;flex-shrink:0;}
+.level-bar-wrap{flex:1;height:6px;background:var(--cth-command-blush,#f8f4f2);border-radius:999px;overflow:hidden;}
+.level-bar{height:100%;border-radius:999px;}
+.level-count{font-size:11px;font-weight:500;color:var(--cth-command-ink,#1a0828);width:28px;text-align:right;}
+/* Link rows */
+.link-row{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:10px;padding:12px 15px;margin-bottom:7px;}
+.link-name{font-size:12px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.link-meta{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:2px;}
+.link-actions{display:flex;gap:5px;margin-top:8px;}
+.lbtn{font-size:10px;color:var(--cth-command-crimson,#5d0012);font-weight:500;background:transparent;border:.5px solid rgba(93,0,18,.3);border-radius:5px;padding:3px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.active-pill{font-size:9px;padding:2px 8px;border-radius:20px;background:#e8f5ee;color:#2d6a4f;border:.5px solid #b8e0c8;font-weight:500;}
+.inactive-pill{font-size:9px;padding:2px 8px;border-radius:20px;background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-muted,#7c6576);border:.5px solid var(--cth-command-border,#e8d5d0);}
+/* Source activity */
+.src-row{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:9px;margin-bottom:7px;}
+.src-type{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;width:70px;}
+.src-name{font-size:12px;color:var(--cth-command-ink,#1a0828);flex:1;}
+.src-count{font-size:11px;font-weight:500;color:var(--cth-command-crimson,#5d0012);}
+.src-level{font-size:9px;padding:2px 8px;border-radius:20px;background:#f0e8e5;color:var(--cth-command-crimson,#5d0012);border:.5px solid #e0d0d8;}
+/* Conversion events */
+.conv-row{padding:10px 13px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:9px;margin-bottom:7px;}
+.conv-type{font-size:10px;font-weight:500;color:#2d6a4f;margin-bottom:2px;}
+.conv-note{font-size:11px;color:var(--cth-command-ink,#1a0828);}
+.conv-meta{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:3px;}
+/* Recommended — Zuri dark card */
+.rec-card{background:#1a0828;border-radius:12px;padding:18px 20px;}
+.rec-zh{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.rec-av{width:20px;height:20px;border-radius:50%;background:var(--cth-command-cinnabar,#e04e35);display:flex;align-items:center;justify-content:center;}
+.rec-lbl{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#7a6090;}
+.rec-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:500;color:#fff;margin-bottom:8px;line-height:1.3;}
+.rec-body{font-size:12px;color:rgba(232,220,240,.75);line-height:1.6;margin-bottom:14px;}
+.rec-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--cth-command-cinnabar,#e04e35);background:transparent;border:.5px solid rgba(224,78,53,.4);border-radius:6px;padding:5px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ph">
+    <div><div class="pt">Signal Inbox</div><div class="ps">Track, confirm, and act on every sign of buying intent.</div></div>
+    <button class="btn-primary"><i class="ti ti-plus" style="font-size:11px;"></i> Log a signal</button>
+  </div>
+
+  <!-- Dashboard strip — always visible regardless of active tab -->
+  <div class="dash-strip">
+    <div class="dash-card"><div class="dash-lbl">Total clicks</div><div class="dash-val">247</div><div class="dash-sub">across all links</div></div>
+    <div class="dash-card"><div class="dash-lbl">Top source</div><div class="dash-val" style="font-size:14px;">Instagram</div><div class="dash-sub">84 clicks</div></div>
+    <div class="dash-card"><div class="dash-lbl">Highest level</div><div class="dash-val">L4</div><div class="dash-sub">Offer Curiosity</div></div>
+    <div class="dash-card"><div class="dash-lbl">Best campaign</div><div class="dash-val" style="font-size:12px;line-height:1.3;">Brand Translation</div><div class="dash-sub">12 signals</div></div>
+    <div class="dash-card"><div class="dash-lbl">Drop-off stage</div><div class="dash-val" style="font-size:12px;line-height:1.3;">Results Page</div><div class="dash-sub">68% drop-off</div></div>
+    <div class="dash-card"><div class="dash-lbl">Pending signals</div><div class="dash-val" style="color:#e04e35;">3</div><div class="dash-sub">need review</div></div>
+  </div>
+
+  <!-- Tab pills: Foundation+ = New Signals, Signal Levels, Recommended Action. Structure+ = Tracking Links, Source Activity, Conversion Events -->
+  <div class="tab-pills">
+    <button class="tab-pill active">New Signals</button>
+    <button class="tab-pill">Signal Levels</button>
+    <button class="tab-pill">Tracking Links</button>
+    <button class="tab-pill">Source Activity</button>
+    <button class="tab-pill">Conversion Events</button>
+    <button class="tab-pill">Recommended Action</button>
+  </div>
+
+  <!-- NEW SIGNALS (shown) -->
+  <div class="toolbar">
+    <select class="fsel"><option>All sources</option><option>Manual</option><option>Instagram</option><option>LinkedIn</option></select>
+    <select class="fsel"><option>All levels</option><option>1 · Recognition</option><option>2 · Problem Ownership</option><option>3 · Solution Curiosity</option><option>4 · Offer Curiosity</option><option>5 · Purchase Movement</option></select>
+  </div>
+  <div class="sig-card">
+    <div class="sig-header"><span class="level-badge l4">L4 · Offer Curiosity</span><span class="sig-source">Instagram</span><span class="sig-time">2 hours ago</span></div>
+    <div class="sig-text">DM asking about the difference between Structure and House plans. Specifically mentioned they've been stuck at the same revenue for 8 months and want to know if the platform would help them structure their offer.</div>
+    <div class="sig-actions"><button class="a-confirm">Confirm</button><button class="a-dismiss">Dismiss</button><button class="a-del"><i class="ti ti-trash" style="font-size:11px;"></i></button></div>
+  </div>
+  <div class="sig-card">
+    <div class="sig-header"><span class="level-badge l3">L3 · Solution Curiosity</span><span class="sig-source">Manual</span><span class="sig-time">Yesterday</span></div>
+    <div class="sig-text">Founder commented "this is exactly what I've been trying to explain to my team" on the Brand Infrastructure post. Saved it and replied asking about working together.</div>
+    <div class="sig-actions"><button class="a-confirm">Confirm</button><button class="a-dismiss">Dismiss</button><button class="a-del"><i class="ti ti-trash" style="font-size:11px;"></i></button></div>
+  </div>
+</div>
+</body>
+</html>
