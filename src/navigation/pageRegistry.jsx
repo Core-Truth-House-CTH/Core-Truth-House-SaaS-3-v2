@@ -41,7 +41,6 @@ const OnboardingWorkflow = lazy(() => import("../pages/OnboardingWorkflow"));
 const BrandStudio = lazy(() => import("../pages/BrandStudio"));
 const Automations = lazy(() => import("../pages/Automations"));
 const Members = lazy(() => import("../pages/Members"));
-const TrackingLinksPage = lazy(() => import("../pages/TrackingLinksPage"));
 
 const FirstCampaign = CampaignBuilder;
 
@@ -94,7 +93,6 @@ const pageRegistry = {
   "/settings": Settings,
 
   "/automations": Automations,
-  "/tracking-links": TrackingLinksPage,
   "/join": JoinWorkspace,
   "/workspace-controls": makePlaceholder("Workspace Controls"),
   "/members": Members,

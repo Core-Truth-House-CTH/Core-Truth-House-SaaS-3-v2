@@ -198,16 +198,6 @@ export const APP_ROUTES = [
     lockedTooltip: "Upgrade to Structure to unlock the Signal Inbox.",
   },
     {
-    path: "/tracking-links",
-    label: "Tracking Links",
-    icon: Share2,
-    group: "systems",
-    requiredPlan: "structure",
-    gateType: "page",
-    tooltip: "Create trackable links and watch buyer signal move through your funnel.",
-    lockedTooltip: "Upgrade to Structure to unlock Tracking Links.",
-  },
-    {
     path: "/customer-journey",
     label: "Customer Journey",
     icon: Map,
