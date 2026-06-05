@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useUser } from '../hooks/useAuth';
 import { DashboardLayout } from '../components/Layout';
+import AvatarThumb from '../components/audience/AvatarThumb';
 import { Loader2, Plus, Zap, Calendar as CalendarIcon, X, Trash2, RefreshCw, Pencil, Radio, Search, User, Package, Megaphone, Check } from 'lucide-react';
 import UploadZone from '../components/shared/UploadZone';
 import apiClient from '../lib/apiClient';
@@ -1777,9 +1778,11 @@ function CampaignBuilderPageContent() {
                   {activeMagnetStep === 'audience' && (<>
                     <div className="flex flex-col" style={{ gap: 5 }}>
                       <div style={labelStyle}>Target audience</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {form.avatar_id ? <AvatarThumb avatar={avatars.find((x) => x.id === form.avatar_id)} size={24} /> : null}
                       <select
                         data-testid="campaign-audience-select"
-                        style={inputStyle}
+                        style={{ ...inputStyle, flex: 1, minWidth: 0 }}
                         value={form.avatar_id || ''}
                         onChange={(e) => {
                           const a = avatars.find((x) => x.id === e.target.value);
@@ -1798,6 +1801,7 @@ function CampaignBuilderPageContent() {
                         <option value="">{avatars.length ? 'Select an avatar…' : 'No avatars yet'}</option>
                         {avatars.map((a) => (<option key={a.id} value={a.id}>{a.name}</option>))}
                       </select>
+                      </div>
                       {avatars.length === 0 ? (
                         <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10.5, color: 'var(--cth-command-muted)' }}>Create an avatar in the Audience tab, then select it here.</span>
                       ) : null}

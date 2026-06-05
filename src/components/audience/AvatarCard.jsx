@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { RefreshCw, Trash2, Wand2, X } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { RefreshCw, Trash2, Upload, Wand2, X } from "lucide-react";
+import { toast } from "sonner";
 import apiClient from "../../lib/apiClient";
 
 const SANS = "'DM Sans', sans-serif";
@@ -51,11 +52,12 @@ const FOOTER_BTN = {
   cursor: "pointer",
 };
 
-function ImageHeader({ avatar, isGenerating, onGenerate, onView }) {
+function ImageHeader({ avatar, isGenerating, isUploading, onGenerate, onUploadClick, onView }) {
   const stageLabel = STAGE_LABELS[avatar.stage] || avatar.stage || "Unstaged";
   const src = avatar.portrait_image_url
     ? apiClient.buildApiUrl(avatar.portrait_image_url)
     : null;
+  const busy = isGenerating || isUploading;
 
   return (
     <div
@@ -67,7 +69,7 @@ function ImageHeader({ avatar, isGenerating, onGenerate, onView }) {
         flexShrink: 0,
       }}
     >
-      {isGenerating ? (
+      {busy ? (
         <div
           style={{
             width: "100%",
@@ -88,7 +90,7 @@ function ImageHeader({ avatar, isGenerating, onGenerate, onView }) {
               color: "rgba(255,255,255,0.45)",
             }}
           >
-            Zuri is generating your portrait
+            {isUploading ? "Uploading your photo" : "Zuri is generating your portrait"}
           </div>
           <div
             style={{
@@ -127,32 +129,63 @@ function ImageHeader({ avatar, isGenerating, onGenerate, onView }) {
               cursor: "zoom-in",
             }}
           />
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onGenerate();
-            }}
+          <div
             style={{
               position: "absolute",
               bottom: 8,
               right: 8,
-              display: "inline-flex",
+              display: "flex",
               alignItems: "center",
-              gap: 4,
-              fontFamily: SANS,
-              fontSize: 9,
-              color: "rgba(255,255,255,0.7)",
-              background: "rgba(0,0,0,0.45)",
-              border: "none",
-              borderRadius: 5,
-              padding: "3px 7px",
-              cursor: "pointer",
+              gap: 5,
             }}
           >
-            <RefreshCw size={10} />
-            Regenerate
-          </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onUploadClick) onUploadClick();
+              }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontFamily: SANS,
+                fontSize: 9,
+                color: "rgba(255,255,255,0.7)",
+                background: "rgba(0,0,0,0.45)",
+                border: "none",
+                borderRadius: 5,
+                padding: "3px 7px",
+                cursor: "pointer",
+              }}
+            >
+              <Upload size={10} />
+              Upload
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onGenerate();
+              }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontFamily: SANS,
+                fontSize: 9,
+                color: "rgba(255,255,255,0.7)",
+                background: "rgba(0,0,0,0.45)",
+                border: "none",
+                borderRadius: 5,
+                padding: "3px 7px",
+                cursor: "pointer",
+              }}
+            >
+              <RefreshCw size={10} />
+              Regenerate
+            </button>
+          </div>
         </>
       ) : (
         <div
@@ -177,30 +210,56 @@ function ImageHeader({ avatar, isGenerating, onGenerate, onView }) {
           >
             No portrait yet
           </div>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onGenerate();
-            }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              fontFamily: SANS,
-              fontSize: 10,
-              fontWeight: 500,
-              color: "rgba(224,78,53,0.85)",
-              background: "transparent",
-              border: "0.5px solid rgba(224,78,53,0.4)",
-              borderRadius: 5,
-              padding: "4px 10px",
-              cursor: "pointer",
-            }}
-          >
-            <Wand2 size={11} />
-            Generate with Zuri
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onGenerate();
+              }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                fontFamily: SANS,
+                fontSize: 10,
+                fontWeight: 500,
+                color: "rgba(224,78,53,0.85)",
+                background: "transparent",
+                border: "0.5px solid rgba(224,78,53,0.4)",
+                borderRadius: 5,
+                padding: "4px 10px",
+                cursor: "pointer",
+              }}
+            >
+              <Wand2 size={11} />
+              Generate with Zuri
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onUploadClick) onUploadClick();
+              }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                fontFamily: SANS,
+                fontSize: 10,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.7)",
+                background: "transparent",
+                border: "0.5px solid rgba(255,255,255,0.25)",
+                borderRadius: 5,
+                padding: "4px 10px",
+                cursor: "pointer",
+              }}
+            >
+              <Upload size={11} />
+              Upload photo
+            </button>
+          </div>
         </div>
       )}
 
@@ -231,11 +290,29 @@ export default function AvatarCard({
   onDelete,
   onSetPrimary,
   onGeneratePortrait,
+  onUploadPortrait,
   isGenerating = false,
+  isUploading = false,
 }) {
   const [hovered, setHovered] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const fileInputRef = useRef(null);
   if (!avatar) return null;
+
+  const handleFilePicked = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("That image is larger than 5MB.");
+      return;
+    }
+    if (onUploadPortrait) onUploadPortrait(avatar, file);
+  };
 
   const portraitFullUrl = avatar.portrait_image_url
     ? apiClient.buildApiUrl(avatar.portrait_image_url)
@@ -279,10 +356,19 @@ export default function AvatarCard({
         fontFamily: SANS,
       }}
     >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleFilePicked}
+      />
       <ImageHeader
         avatar={avatar}
         isGenerating={isGenerating}
+        isUploading={isUploading}
         onGenerate={() => onGeneratePortrait && onGeneratePortrait(avatar)}
+        onUploadClick={() => fileInputRef.current?.click()}
         onView={() => setLightboxOpen(true)}
       />
 

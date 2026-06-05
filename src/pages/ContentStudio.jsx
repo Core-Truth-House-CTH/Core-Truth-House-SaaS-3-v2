@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import { DashboardLayout } from "../components/Layout";
+import AvatarThumb from "../components/audience/AvatarThumb";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 import { useWorkspace } from "../context/WorkspaceContext";
@@ -473,14 +474,17 @@ function Field({ field, value, avatars, onChange }) {
         {field.required ? <span style={{ color: "var(--cth-command-cinnabar)" }}> *</span> : null}
       </div>
       {field.kind === "audience" ? (
-        <select style={SELECT_STYLE} value={value || ""} onChange={(e) => onChange(field.id, e.target.value)}>
-          <option value="">Select an avatar (optional)</option>
-          {avatars.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {value ? <AvatarThumb avatar={avatars.find((a) => a.id === value)} size={24} /> : null}
+          <select style={{ ...SELECT_STYLE, flex: 1, minWidth: 0 }} value={value || ""} onChange={(e) => onChange(field.id, e.target.value)}>
+            <option value="">Select an avatar (optional)</option>
+            {avatars.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+        </div>
       ) : (
         <input
           style={INPUT_STYLE}

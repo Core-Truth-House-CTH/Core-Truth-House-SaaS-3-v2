@@ -318,6 +318,7 @@ export default function Audience() {
   const [genModelId, setGenModelId] = useState("");
   const [genLoading, setGenLoading] = useState(false);
   const [generatingId, setGeneratingId] = useState(null);
+  const [uploadingId, setUploadingId] = useState(null);
 
   const openPortraitGen = useCallback(
     async (avatar) => {
@@ -380,6 +381,26 @@ export default function Audience() {
     },
     [genAvatar]
   );
+
+  // Upload a user-supplied photo as the avatar's portrait. Mirrors the generate
+  // flow: posts to upload-portrait, then swaps the returned avatar into state.
+  const handleUploadPortrait = useCallback(async (avatar, file) => {
+    if (!avatar || !file) return;
+    setUploadingId(avatar.id);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiClient.post(API_PATHS.audience.uploadPortrait(avatar.id), fd);
+      if (res?.avatar) {
+        setAvatars((prev) => prev.map((a) => (a.id === avatar.id ? res.avatar : a)));
+      }
+      toast.success("Portrait updated.");
+    } catch (err) {
+      toast.error("Photo upload failed. Try again.");
+    } finally {
+      setUploadingId(null);
+    }
+  }, []);
 
   const displayedAvatars = avatars
     .filter((a) =>
@@ -522,7 +543,9 @@ export default function Audience() {
                   key={avatar.id}
                   avatar={avatar}
                   isGenerating={generatingId === avatar.id}
+                  isUploading={uploadingId === avatar.id}
                   onGeneratePortrait={openPortraitGen}
+                  onUploadPortrait={handleUploadPortrait}
                   onOpen={() => openEdit(avatar.id)}
                   onEdit={() => openEdit(avatar.id)}
                   onDelete={() => setDeleteTarget(avatar)}

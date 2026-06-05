@@ -12,6 +12,7 @@ import {
 import apiClient from "../../lib/apiClient";
 import { API_PATHS } from "../../lib/apiPaths";
 import AvatarSelector from "./AvatarSelector";
+import AvatarThumb from "../audience/AvatarThumb";
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Playfair Display', serif";
@@ -404,7 +405,10 @@ function SelectedAvatarCard({ avatar, onChange }) {
             </span>
           )}
         </div>
-        <h4 style={SELECTED_NAME_STYLE}>{avatar.name || "Untitled avatar"}</h4>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <AvatarThumb avatar={avatar} size={28} />
+          <h4 style={SELECTED_NAME_STYLE}>{avatar.name || "Untitled avatar"}</h4>
+        </div>
         {problemText ? <p style={PROBLEM_LINE_STYLE}>{problemText}</p> : null}
       </div>
       <button type="button" onClick={onChange} style={SECONDARY_BUTTON_STYLE}>

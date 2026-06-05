@@ -7,6 +7,7 @@ import {
   Loader2,
   Pencil,
   Trash2,
+  Upload,
   Wand2,
   X,
 } from "lucide-react";
@@ -14,6 +15,100 @@ import { useWorkspace } from "../context/WorkspaceContext";
 import apiClient from "../lib/apiClient";
 import { API_PATHS } from "../lib/apiPaths";
 import DeleteAvatarModal from "../components/audience/DeleteAvatarModal";
+import PortraitGenModal from "../components/audience/PortraitGenModal";
+
+// Portrait section at the top of the editor. Uses --cth-command-* variables;
+// the only literal hex is #1a0828 for the dark panel (permitted).
+function EditorPortrait({ avatar, busy, onGenerate, onUploadClick, onView }) {
+  const src = avatar?.portrait_image_url
+    ? apiClient.buildApiUrl(avatar.portrait_image_url)
+    : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div
+        style={{
+          width: "100%",
+          height: 150,
+          borderRadius: 10,
+          overflow: "hidden",
+          position: "relative",
+          background: "#1a0828",
+          border: "0.5px solid var(--cth-command-border)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {busy ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.55)", fontFamily: SANS, fontSize: 11 }}>
+            <Loader2 size={14} className="animate-spin" />
+            Working on your portrait…
+          </div>
+        ) : src ? (
+          <img
+            src={src}
+            alt={avatar?.name || "Avatar portrait"}
+            onClick={onView}
+            style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "zoom-in", display: "block" }}
+          />
+        ) : (
+          <div style={{ color: "rgba(255,255,255,0.3)", fontFamily: SANS, fontSize: 11, letterSpacing: "0.08em" }}>
+            No portrait yet
+          </div>
+        )}
+      </div>
+      <div style={{ display: "flex", gap: 6 }}>
+        <button
+          type="button"
+          onClick={onGenerate}
+          disabled={busy}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            fontFamily: SANS,
+            fontSize: 11,
+            fontWeight: 500,
+            color: "var(--cth-command-crimson)",
+            background: "transparent",
+            border: "0.5px solid var(--cth-command-crimson)",
+            borderRadius: 7,
+            padding: "5px 11px",
+            cursor: busy ? "default" : "pointer",
+            opacity: busy ? 0.6 : 1,
+          }}
+        >
+          <Wand2 size={12} />
+          Generate with Zuri
+        </button>
+        <button
+          type="button"
+          onClick={onUploadClick}
+          disabled={busy}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            fontFamily: SANS,
+            fontSize: 11,
+            fontWeight: 500,
+            color: "var(--cth-command-muted)",
+            background: "transparent",
+            border: "0.5px solid var(--cth-command-border)",
+            borderRadius: 7,
+            padding: "5px 11px",
+            cursor: busy ? "default" : "pointer",
+            opacity: busy ? 0.6 : 1,
+          }}
+        >
+          <Upload size={12} />
+          Upload photo
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
@@ -425,6 +520,17 @@ export default function AvatarEditor({
   const draftRestoredRef = useRef(false);
   const originalCoreFearWasEmptyRef = useRef(false);
 
+  // --- Portrait state ---
+  const [avatarData, setAvatarData] = useState(null);
+  const [portraitBusy, setPortraitBusy] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const editorFileRef = useRef(null);
+  const [models, setModels] = useState([]);
+  const [showGenModal, setShowGenModal] = useState(false);
+  const [genPrompt, setGenPrompt] = useState("");
+  const [genModelId, setGenModelId] = useState("");
+  const [genLoading, setGenLoading] = useState(false);
+
   // Load existing avatar in edit mode
   useEffect(() => {
     if (isNew) {
@@ -454,6 +560,7 @@ export default function AvatarEditor({
           transformation_desired: a.transformation_desired || "",
         });
         setIsPrimary(!!a.is_primary);
+        setAvatarData(a);
         originalCoreFearWasEmptyRef.current = !(a.core_fear || "").trim();
       } catch (err) {
         if (cancelled) return;
@@ -620,6 +727,99 @@ export default function AvatarEditor({
   // Zuri avatar drafting has no backend endpoint yet — graceful placeholder.
   const handleZuriAssist = () => {
     toast.message("Zuri avatar drafting is coming soon.");
+  };
+
+  // ---- Portrait: generate (same draft + generate endpoints as the card) ----
+  const openPortraitGen = useCallback(async () => {
+    if (!avatarData?.id) return;
+    setShowGenModal(true);
+    setGenLoading(true);
+    setGenPrompt(avatarData.portrait_prompt || "");
+    setGenModelId("");
+    try {
+      let list = models;
+      if (!list.length) {
+        const res = await apiClient.get(API_PATHS.audience.portraitModels);
+        list = Array.isArray(res?.models) ? res.models : [];
+        setModels(list);
+      }
+      setGenModelId(
+        avatarData.portrait_model && list.some((m) => m.id === avatarData.portrait_model)
+          ? avatarData.portrait_model
+          : list[0]?.id || "",
+      );
+      if (avatarData.portrait_prompt) {
+        setGenPrompt(avatarData.portrait_prompt);
+      } else {
+        const draft = await apiClient.post(
+          API_PATHS.audience.draftPortraitPrompt(avatarData.id),
+          {},
+        );
+        setGenPrompt((draft?.prompt || "").trim());
+      }
+    } catch (err) {
+      toast.error("Couldn't start portrait generation. Try again.");
+    } finally {
+      setGenLoading(false);
+    }
+  }, [avatarData, models]);
+
+  const handleGeneratePortrait = useCallback(
+    async (prompt, modelId) => {
+      if (!avatarData?.id) return;
+      setShowGenModal(false);
+      setPortraitBusy(true);
+      try {
+        const res = await apiClient.post(
+          API_PATHS.audience.generatePortrait(avatarData.id),
+          { prompt, model_id: modelId },
+        );
+        if (res?.avatar) setAvatarData(res.avatar);
+      } catch (err) {
+        toast.error("Portrait generation failed. Try again.");
+      } finally {
+        setPortraitBusy(false);
+      }
+    },
+    [avatarData],
+  );
+
+  // ---- Portrait: upload (new upload-portrait endpoint) ----
+  const uploadPortrait = useCallback(
+    async (file) => {
+      if (!avatarData?.id || !file) return;
+      setPortraitBusy(true);
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await apiClient.post(
+          API_PATHS.audience.uploadPortrait(avatarData.id),
+          fd,
+        );
+        if (res?.avatar) setAvatarData(res.avatar);
+        toast.success("Portrait updated.");
+      } catch (err) {
+        toast.error("Photo upload failed. Try again.");
+      } finally {
+        setPortraitBusy(false);
+      }
+    },
+    [avatarData],
+  );
+
+  const handleEditorFilePicked = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("That image is larger than 5MB.");
+      return;
+    }
+    uploadPortrait(file);
   };
 
   const primaryOn = isNew ? pendingPrimary : isPrimary;
@@ -850,6 +1050,25 @@ export default function AvatarEditor({
               </div>
             ) : (
               <>
+                {!isNew ? (
+                  <>
+                    <input
+                      ref={editorFileRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={handleEditorFilePicked}
+                    />
+                    <EditorPortrait
+                      avatar={avatarData}
+                      busy={portraitBusy}
+                      onGenerate={openPortraitGen}
+                      onUploadClick={() => editorFileRef.current?.click()}
+                      onView={() => setLightboxOpen(true)}
+                    />
+                    <div style={{ height: "0.5px", background: C.border }} />
+                  </>
+                ) : null}
                 <div>
                   <div
                     style={{
@@ -1180,6 +1399,44 @@ export default function AvatarEditor({
           onCancel={() => setShowDeleteModal(false)}
           onDeleted={handleDeleted}
         />
+      )}
+
+      {showGenModal && avatarData && (
+        <PortraitGenModal
+          avatar={avatarData}
+          models={models}
+          prompt={genPrompt}
+          onPromptChange={setGenPrompt}
+          modelId={genModelId}
+          onModelChange={setGenModelId}
+          loading={genLoading}
+          onGenerate={handleGeneratePortrait}
+          onClose={() => setShowGenModal(false)}
+        />
+      )}
+
+      {lightboxOpen && avatarData?.portrait_image_url && (
+        <div
+          onClick={() => setLightboxOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1300,
+            background: "rgba(13,0,16,0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+            cursor: "zoom-out",
+          }}
+        >
+          <img
+            src={apiClient.buildApiUrl(avatarData.portrait_image_url)}
+            alt={avatarData.name || "Avatar portrait"}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxHeight: "85vh", maxWidth: "90vw", objectFit: "contain", cursor: "default" }}
+          />
+        </div>
       )}
     </div>
   );

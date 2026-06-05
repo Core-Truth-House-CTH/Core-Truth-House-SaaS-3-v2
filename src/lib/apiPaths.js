@@ -149,6 +149,8 @@ export const API_PATHS = {
     portraitModels: "/api/audience/portrait-models",
     generatePortrait: (avatarId) =>
       `/api/audience/avatars/${encode(avatarId)}/generate-portrait`,
+    uploadPortrait: (avatarId) =>
+      `/api/audience/avatars/${encode(avatarId)}/upload-portrait`,
   },
 
   campaigns: {
