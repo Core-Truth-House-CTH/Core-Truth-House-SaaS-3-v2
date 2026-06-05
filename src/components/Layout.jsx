@@ -260,6 +260,7 @@ export function Sidebar() {
         id: "house",
         label: "HOUSE",
         items: [
+          { path: "/studios", label: "Studios", icon: Sparkles },
           { path: "/crm", label: "CRM", icon: PhoneCall },
         ],
       },
