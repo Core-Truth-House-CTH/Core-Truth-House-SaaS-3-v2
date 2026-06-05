@@ -23,8 +23,6 @@ const PATH_TO_SURFACE = {
   "/campaign-setup": "campaign_builder",
   "/first-campaign": "campaign_builder",
   "/content-studio": "content_studio",
-  "/brand-studio": "content_studio",
-  "/media-studio": "content_studio",
   "/prompt-generator": "content_studio",
   "/customer-journey": "customer_journey",
 };

@@ -18,7 +18,6 @@ const SystemsBuilder = lazy(() => import("../pages/SystemsBuilder"));
 const SignalInbox = lazy(() => import("../pages/SignalInbox"));
 const CustomerJourney = lazy(() => import("../pages/CustomerJourney"));
 const Analytics = lazy(() => import("../pages/Analytics"));
-const BlogCMS = lazy(() => import("../pages/BlogCMS"));
 const Settings = lazy(() => import("../pages/Settings"));
 const CRMSuite = lazy(() => import("../pages/CRMSuite"));
 const MailSuite = lazy(() => import("../pages/MailSuite"));
@@ -26,7 +25,6 @@ const TenantDataDashboardV2 = lazy(() => import("../pages/TenantDataDashboardV2"
 const ContentStudio = lazy(() => import("../pages/ContentStudio"));
 const CampaignBuilder = lazy(() => import("../pages/CampaignBuilder"));
 const CampaignSetup = lazy(() => import("../pages/CampaignSetup"));
-const MediaStudio = lazy(() => import("../pages/MediaStudio"));
 const IdentityStudio = lazy(() => import("../pages/IdentityStudio"));
 const OfferBuilder = lazy(() => import("../pages/OfferBuilder"));
 const LaunchPlanner = lazy(() => import("../pages/LaunchPlanner"));
@@ -38,7 +36,6 @@ const JoinWorkspace = lazy(() => import("../pages/JoinWorkspace"));
 const CohortManager = lazy(() => import("../pages/CohortManager"));
 const VideoTutorialsPage = lazy(() => import("../pages/VideoTutorialsPage"));
 const OnboardingWorkflow = lazy(() => import("../pages/OnboardingWorkflow"));
-const BrandStudio = lazy(() => import("../pages/BrandStudio"));
 const Automations = lazy(() => import("../pages/Automations"));
 const Members = lazy(() => import("../pages/Members"));
 
@@ -66,11 +63,9 @@ const pageRegistry = {
   "/customer-journey": CustomerJourney,
 
   "/content-studio": ContentStudio,
-  "/brand-studio": BrandStudio,
   "/campaign-builder": CampaignBuilder,
   "/campaign-setup": CampaignSetup,
   "/first-campaign": FirstCampaign,
-  "/media-studio": MediaStudio,
   "/identity-studio": IdentityStudio,
 
   "/offer-builder": OfferBuilder,
@@ -84,7 +79,6 @@ const pageRegistry = {
   "/crm": CRMSuite,
   "/mail": MailSuite,
   "/analytics": Analytics,
-  "/blog-cms": BlogCMS,
 
   "/tutorials": VideoTutorialsPage,
   "/documents": TenantDataDashboardV2,

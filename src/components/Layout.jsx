@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef} from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useColors, useTheme } from "../context/ThemeContext";
+import { useColors } from "../context/ThemeContext";
 import { usePlan } from "../context/PlanContext";
 import { useUser, useClerk } from "../hooks/useAuth";
 import { useWorkspace } from "../context/WorkspaceContext";
@@ -13,7 +13,6 @@ import {
   Key,
   Video,
   ShieldAlert,
-  Bot,
   LayoutDashboard,
   Layers,
   BookOpen,
@@ -28,7 +27,6 @@ import {
   Share2,
   DollarSign,
   PenTool,
-  Image,
   Sparkles,
   Hash,
   Package,
@@ -53,8 +51,6 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
-  Sun,
-  Moon,
   LogOut,
   Download,
   Lock,
@@ -128,7 +124,6 @@ function mapUsagePayload(data) {
 
 export function Sidebar() {
   const colors = useColors();
-  const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -301,10 +296,8 @@ export function Sidebar() {
         id: "house",
         label: "HOUSE",
         items: [
-          { path: "/brand-studio", label: "Brand Studio", icon: Bot },
-          { path: "/media-studio", label: "Media Studio", icon: Image },
+          { path: "/mail", label: "Email", icon: Mail },
           { path: "/crm", label: "CRM", icon: PhoneCall },
-          { path: "/blog-cms", label: "Blog", icon: FileText },
         ],
       },
       {
@@ -321,12 +314,9 @@ export function Sidebar() {
       },
       {
         id: "systems",
-        label: "SYSTEMS",
+        label: "INTELLIGENCE",
         items: [
           { path: "/signal-inbox", label: "Signal Inbox", icon: Radar },
-          ...(isAdmin
-            ? [{ path: "/automations", label: "Automations", icon: Workflow }]
-            : []),
           { path: "/analytics", label: "Analytics", icon: BarChart2 },
         ],
       },
@@ -356,7 +346,7 @@ export function Sidebar() {
               id: "admin",
               label: "ADMIN",
               items: [
-                { path: "/mail", label: "Mail", icon: Mail },
+                { path: "/automations", label: "Automations", icon: Workflow },
                 { path: "/platform-store", label: "Store", icon: Package },
                 { path: "/ai-keys", label: "AI API Keys", icon: Key },
               ],
@@ -676,11 +666,6 @@ export function Sidebar() {
                     <span>Keyboard shortcuts</span>
                   </button>
                 )}
-
-                <button data-testid="theme-toggle" onClick={toggleTheme} className="cth-sidebar-utility w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors">
-                  {isDark ? <Sun size={13} /> : <Moon size={13} />}
-                  {showLabels && <span>{isDark ? "Light Mode" : "Dark Mode"}</span>}
-                </button>
 
                 {isSuperAdminRole && (
                   <button data-testid="sidebar-switch-to-admin-btn" onClick={() => navigate("/admin/dashboard")} className="cth-sidebar-utility w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors">
