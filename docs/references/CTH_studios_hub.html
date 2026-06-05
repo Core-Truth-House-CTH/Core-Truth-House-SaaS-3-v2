@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTH Studios Hub — Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cth-command-blush,#f8f4f2);padding:24px;}
+.wrap{max-width:1060px;margin:0 auto;}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+.pt{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.ps{font-size:11px;color:var(--cth-command-muted,#7c6576);margin-top:3px;}
+.hub-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.tool-card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:14px;overflow:hidden;cursor:pointer;}
+.tool-card.coming{opacity:.65;cursor:default;}
+.tool-banner{height:110px;display:flex;align-items:center;justify-content:center;position:relative;}
+.tool-icon{font-size:32px;color:rgba(255,255,255,0.85);}
+.tool-badge{position:absolute;top:10px;right:10px;font-size:9px;font-weight:500;padding:3px 9px;border-radius:20px;letter-spacing:.08em;text-transform:uppercase;}
+.badge-available{background:#2d6a4f;color:#fff;}
+.badge-soon{background:rgba(255,255,255,.2);color:#fff;border:.5px solid rgba(255,255,255,.3);}
+.tool-body{padding:14px 16px;}
+.tool-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;font-weight:500;color:var(--cth-command-ink,#1a0828);margin-bottom:4px;}
+.tool-desc{font-size:11px;color:var(--cth-command-muted,#7c6576);line-height:1.5;margin-bottom:10px;}
+.tool-meta{display:flex;align-items:center;justify-content:space-between;}
+.tool-tier{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;}
+.tool-cta{font-size:11px;font-weight:500;color:var(--cth-command-crimson,#5d0012);display:flex;align-items:center;gap:4px;}
+.tool-cta.muted{color:var(--cth-command-muted,#7c6576);}
+/* Headshot generator page */
+.gen-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.back-btn{font-size:11px;color:var(--cth-command-muted,#7c6576);background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:7px;padding:6px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;}
+.gen-grid{display:grid;grid-template-columns:340px 1fr;gap:14px;}
+.card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.card-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;margin-bottom:12px;}
+.usage-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;margin-bottom:10px;}
+.usage-lbl{font-size:11px;color:var(--cth-command-muted,#7c6576);}
+.usage-val{font-size:11px;font-weight:500;color:var(--cth-command-crimson,#5d0012);}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.fl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;}
+.fi{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.fsel{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.opt{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:2px;}
+.upload-zone{border:1px dashed var(--cth-command-border,#d8c5c3);border-radius:10px;padding:22px;text-align:center;cursor:pointer;background:var(--cth-command-blush,#f8f4f2);margin-bottom:0;}
+.upload-icon{font-size:22px;color:#c7a09d;margin-bottom:7px;}
+.upload-text{font-size:12px;color:var(--cth-command-muted,#7c6576);line-height:1.5;}
+.upload-hint{font-size:10px;color:#b0a0b8;margin-top:3px;}
+.brand-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:9px;margin-bottom:10px;}
+.bt-label{font-size:12px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.bt-sub{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:1px;}
+.toggle{width:34px;height:18px;background:var(--cth-command-crimson,#5d0012);border-radius:20px;position:relative;flex-shrink:0;}
+.toggle-dot{width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;}
+.div{height:.5px;background:var(--cth-command-border,#e8d5d0);margin:12px 0;}
+.zuri-card{background:#1a0828;border-radius:10px;padding:13px 15px;}
+.zh{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.zav{width:18px;height:18px;border-radius:50%;background:#e04e35;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.zlbl{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#7a6090;}
+.zt{font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;color:#e8dff0;font-style:italic;line-height:1.5;}
+.gen-btn{width:100%;padding:11px;background:var(--cth-command-crimson,#5d0012);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;}
+.output-card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.abtn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.a-dl{background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);border:.5px solid var(--cth-command-border,#e8d5d0);}
+.a-save{background:#2d6a4f;color:#fff;border:none;}
+.img-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.img-card{border-radius:10px;overflow:hidden;border:.5px solid var(--cth-command-border,#e8d5d0);aspect-ratio:4/5;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ph">
+    <div><div class="pt">Studios</div><div class="ps">Standalone creative tools that turn your brand infrastructure into market-ready visuals.</div></div>
+  </div>
+  <div class="hub-grid">
+    <div class="tool-card">
+      <div class="tool-banner" style="background:linear-gradient(135deg,#2b1040,#5d0012);"><i class="ti ti-user-circle tool-icon"></i><span class="tool-badge badge-available">Available</span></div>
+      <div class="tool-body"><div class="tool-name">AI Headshot Generator</div><div class="tool-desc">Generate professional headshots and brand portraits using your identity style. Upload a photo and let your brand context do the rest.</div><div class="tool-meta"><span class="tool-tier">Foundation+</span><span class="tool-cta">Open <i class="ti ti-arrow-right" style="font-size:10px;"></i></span></div></div>
+    </div>
+    <div class="tool-card coming">
+      <div class="tool-banner" style="background:linear-gradient(135deg,#1a3a2a,#2d6a4f);"><i class="ti ti-layout-grid tool-icon"></i><span class="tool-badge badge-soon">Coming Soon</span></div>
+      <div class="tool-body"><div class="tool-name">Presence Studio</div><div class="tool-desc">Generate on-brand social graphics, cover images, and brand visuals using your stored colors, fonts, and logos.</div><div class="tool-meta"><span class="tool-tier">House+</span><span class="tool-cta muted">Coming soon</span></div></div>
+    </div>
+    <div class="tool-card coming">
+      <div class="tool-banner" style="background:linear-gradient(135deg,#1a2838,#0f3460);"><i class="ti ti-file-export tool-icon"></i><span class="tool-badge badge-soon">Coming Soon</span></div>
+      <div class="tool-body"><div class="tool-name">Brand Kit Studio</div><div class="tool-desc">Export a polished brand kit PDF using your Identity Studio data — colors, fonts, logo, and usage rules in one shareable document.</div><div class="tool-meta"><span class="tool-tier">House+</span><span class="tool-cta muted">Coming soon</span></div></div>
+    </div>
+    <div class="tool-card coming">
+      <div class="tool-banner" style="background:linear-gradient(135deg,#2a1a10,#8a3a10);"><i class="ti ti-message-circle tool-icon"></i><span class="tool-badge badge-soon">Coming Soon</span></div>
+      <div class="tool-body"><div class="tool-name">Bio Generator Studio</div><div class="tool-desc">Generate your professional brand bio in multiple formats — LinkedIn, speaker intro, website about page — from your Foundation data.</div><div class="tool-meta"><span class="tool-tier">Foundation+</span><span class="tool-cta muted">Coming soon</span></div></div>
+    </div>
+    <div class="tool-card coming">
+      <div class="tool-banner" style="background:linear-gradient(135deg,#1a1a2e,#16213e);"><i class="ti ti-package tool-icon"></i><span class="tool-badge badge-soon">Coming Soon</span></div>
+      <div class="tool-body"><div class="tool-name">Offer Page Studio</div><div class="tool-desc">Generate a polished one-page offer overview from your Offer Builder data. Ready to use as a sales page draft or leave-behind.</div><div class="tool-meta"><span class="tool-tier">Structure+</span><span class="tool-cta muted">Coming soon</span></div></div>
+    </div>
+    <div class="tool-card coming">
+      <div class="tool-banner" style="background:linear-gradient(135deg,#1a0828,#3d0a4f);"><i class="ti ti-microphone tool-icon"></i><span class="tool-badge badge-soon">Coming Soon</span></div>
+      <div class="tool-body"><div class="tool-name">Brand Voice Studio</div><div class="tool-desc">Generate a brand voice guide document using your Messaging Structure data. Rules, tone examples, and what to avoid.</div><div class="tool-meta"><span class="tool-tier">Structure+</span><span class="tool-cta muted">Coming soon</span></div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

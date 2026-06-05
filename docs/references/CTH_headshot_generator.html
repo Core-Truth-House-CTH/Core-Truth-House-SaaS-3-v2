@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTH AI Headshot Generator — Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cth-command-blush,#f8f4f2);padding:24px;}
+.wrap{max-width:1060px;margin:0 auto;}
+.gen-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.back-btn{font-size:11px;color:var(--cth-command-muted,#7c6576);background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:7px;padding:6px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;}
+.gen-grid{display:grid;grid-template-columns:340px 1fr;gap:14px;}
+.card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.card-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;margin-bottom:12px;}
+.usage-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;margin-bottom:10px;}
+.usage-lbl{font-size:11px;color:var(--cth-command-muted,#7c6576);}
+.usage-val{font-size:11px;font-weight:500;color:var(--cth-command-crimson,#5d0012);}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.fl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;}
+.fi{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.fsel{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.opt{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:2px;}
+.upload-zone{border:1px dashed var(--cth-command-border,#d8c5c3);border-radius:10px;padding:22px;text-align:center;cursor:pointer;background:var(--cth-command-blush,#f8f4f2);}
+.upload-icon{font-size:22px;color:#c7a09d;margin-bottom:7px;}
+.upload-text{font-size:12px;color:var(--cth-command-muted,#7c6576);line-height:1.5;}
+.upload-hint{font-size:10px;color:#b0a0b8;margin-top:3px;}
+.brand-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:9px;margin-bottom:10px;}
+.bt-label{font-size:12px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.bt-sub{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:1px;}
+.toggle{width:34px;height:18px;background:var(--cth-command-crimson,#5d0012);border-radius:20px;position:relative;flex-shrink:0;}
+.toggle-dot{width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;}
+.div{height:.5px;background:var(--cth-command-border,#e8d5d0);margin:12px 0;}
+.zuri-card{background:#1a0828;border-radius:10px;padding:13px 15px;}
+.zh{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.zav{width:18px;height:18px;border-radius:50%;background:#e04e35;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.zlbl{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#7a6090;}
+.zt{font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;color:#e8dff0;font-style:italic;line-height:1.5;}
+.gen-btn{width:100%;padding:11px;background:var(--cth-command-crimson,#5d0012);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;}
+.output-card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.abtn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.a-dl{background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);border:.5px solid var(--cth-command-border,#e8d5d0);}
+.a-save{background:#2d6a4f;color:#fff;border:none;}
+.img-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.img-card{border-radius:10px;border:.5px solid var(--cth-command-border,#e8d5d0);aspect-ratio:4/5;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.img-overlay{position:absolute;inset:0;background:rgba(26,8,40,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;}
+.img-card:hover .img-overlay{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gen-header">
+    <button class="back-btn"><i class="ti ti-arrow-left" style="font-size:11px;"></i> Studios</button>
+    <div>
+      <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:500;color:#1a0828;">AI Headshot Generator</div>
+      <div style="font-size:11px;color:#7c6576;margin-top:2px;">Generate professional portraits using your brand identity style.</div>
+    </div>
+  </div>
+  <div class="gen-grid">
+    <div class="card">
+      <div class="card-lbl">Generation settings</div>
+      <div class="usage-row"><span class="usage-lbl">Generations this month</span><span class="usage-val">3 / 10 used</span></div>
+      <div class="fg">
+        <div class="fl">Upload a photo <span style="color:#e04e35;">*</span></div>
+        <div class="upload-zone">
+          <div class="upload-icon"><i class="ti ti-upload"></i></div>
+          <div class="upload-text">Drop a photo here or click to browse</div>
+          <div class="upload-hint">JPG, PNG, WEBP up to 10MB — clear face, good lighting works best</div>
+        </div>
+      </div>
+      <div class="brand-toggle">
+        <div><div class="bt-label">Use my brand identity</div><div class="bt-sub">Applies your colors, style, and portrait preferences from Identity Studio</div></div>
+        <div class="toggle"><div class="toggle-dot"></div></div>
+      </div>
+      <div class="div"></div>
+      <div class="fg"><div class="fl">Portrait style</div><select class="fsel"><option>Professional editorial</option><option>Cinematic authority</option><option>Warm approachable</option><option>Bold minimal</option></select></div>
+      <div class="fg"><div class="fl">Background</div><select class="fsel"><option>Luxury office</option><option>Clean studio</option><option>Outdoor urban</option><option>Abstract brand color</option></select></div>
+      <div class="fg"><div class="fl">Number of variations</div><select class="fsel"><option>1</option><option>2</option><option selected>4</option></select></div>
+      <div class="fg"><div class="fl">Custom instruction</div><input class="fi" placeholder="Optional — any specific direction..." /><div class="opt">Optional</div></div>
+      <div class="div"></div>
+      <div class="zuri-card">
+        <div class="zh"><div class="zav"><span style="font-size:8px;font-weight:500;color:#fff;">Z</span></div><span class="zlbl">Zuri · portrait direction</span></div>
+        <div class="zt">"Your headshot is the first thing a potential client sees before they read a word. It should communicate your authority before you explain it."</div>
+      </div>
+      <button class="gen-btn">Generate Headshots</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="output-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:500;color:#1a0828;">Generated portraits</div>
+          <div style="display:flex;gap:6px;"><button class="abtn a-dl">Download all</button><button class="abtn a-save">Save to library</button></div>
+        </div>
+        <div class="img-grid">
+          <div class="img-card" style="background:linear-gradient(135deg,#2b1040,#5d0012);"><i class="ti ti-user-circle" style="font-size:40px;color:rgba(255,255,255,.25);"></i><div class="img-overlay"><i class="ti ti-download" style="font-size:20px;color:#fff;"></i></div></div>
+          <div class="img-card" style="background:linear-gradient(135deg,#763b5b,#1a0828);"><i class="ti ti-user-circle" style="font-size:40px;color:rgba(255,255,255,.25);"></i><div class="img-overlay"><i class="ti ti-download" style="font-size:20px;color:#fff;"></i></div></div>
+          <div class="img-card" style="background:linear-gradient(135deg,#5d0012,#2b1040);"><i class="ti ti-user-circle" style="font-size:40px;color:rgba(255,255,255,.25);"></i><div class="img-overlay"><i class="ti ti-download" style="font-size:20px;color:#fff;"></i></div></div>
+          <div class="img-card" style="background:linear-gradient(135deg,#1a0828,#763b5b);"><i class="ti ti-user-circle" style="font-size:40px;color:rgba(255,255,255,.25);"></i><div class="img-overlay"><i class="ti ti-download" style="font-size:20px;color:#fff;"></i></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-lbl">Saved headshots</div>
+        <div style="padding:28px;text-align:center;color:#7c6576;font-size:11px;"><i class="ti ti-camera" style="font-size:20px;color:#d8c5c3;display:block;margin-bottom:6px;"></i>Your saved headshots will appear here</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
