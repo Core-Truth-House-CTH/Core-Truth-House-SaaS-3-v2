@@ -666,11 +666,11 @@ export function DashboardLayout({ children }) {
           </button>
           <NotificationBell />
         </div>
-        <div className="cth-app-stage">
+        <main className="cth-app-stage">
           <div className="cth-app-body">
             {children}
           </div>
-        </div>
+        </main>
       </div>
       <AskTheHouseDrawer
         open={isOpen}
