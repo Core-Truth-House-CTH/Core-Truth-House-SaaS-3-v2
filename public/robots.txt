@@ -11,5 +11,46 @@ Disallow: /sign-up
 Disallow: /sign-up/
 Disallow: /lock-screen
 
+# AI agents — allowed to crawl public content, blocked from app/private areas.
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /workspace-controls
+Disallow: /members
+Disallow: /settings
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /workspace-controls
+Disallow: /members
+Disallow: /settings
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /workspace-controls
+Disallow: /members
+Disallow: /settings
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /workspace-controls
+Disallow: /members
+Disallow: /settings
+
+User-agent: Bytespider
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /workspace-controls
+Disallow: /members
+Disallow: /settings
+
 Sitemap: https://coretruthhouse.com/sitemap.xml
 Host: https://coretruthhouse.com

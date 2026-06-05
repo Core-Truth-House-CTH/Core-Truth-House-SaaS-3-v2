@@ -1,0 +1,41 @@
+# Core Truth House
+
+> Core Truth House is a Brand Operating System for service-based founders. It gives a founder one connected place to build their brand infrastructure, generate on-brand content, track buyer signals, and run AI-powered brand tools, so strategy and execution stay aligned instead of scattered across disconnected apps.
+
+## What it is
+
+Core Truth House (CTH) is a Brand Operating System (Brand OS). It holds the thinking behind a brand and the tools to act on it in one workspace, so a founder's positioning, messaging, audience, offers, and output all read from a single source of truth.
+
+## What the platform does
+
+- Brand infrastructure: define and store a brand foundation, positioning, messaging structure, audience avatars, and visual identity that every other tool reads from.
+- Content generation: produce on-brand written content, social graphics, and brand visuals that stay consistent with the saved brand work.
+- Buyer signal tracking: capture tracking links, source activity, signal levels, and conversion events, then surface the next best action.
+- AI-powered brand tools: an in-app brand assistant (Ask the House), an AI Headshot Generator, and a Visual Studio for on-brand imagery.
+
+## Who it serves
+
+Solo, service-based founders, typically in years three through ten of their business. These are founders who have proven their offer and now need brand infrastructure and consistent execution rather than another disconnected point tool.
+
+## Main sections of the platform
+
+- Command Center: a single view of brand health and the next useful step.
+- Foundation: Brand Audit, Brand Foundation, Brand Positioning, Messaging Structure, Audience, Identity Studio, Strategic OS.
+- Structure: Systems Builder, Customer Journey, Offers, Campaign Builder, Content Studio.
+- Studios: standalone creative tools, including the AI Headshot Generator and Visual Studio.
+- House: Email, CRM.
+- Estate: Calendar, Social Planner, Cohort Community.
+- Intelligence: Signal Inbox (tracking links and buyer signals), Analytics.
+- Workspace and Support: Workspace Library, Members, Settings, Knowledge Base, Help Desk.
+
+## Public entry points
+
+- Brand Diagnostic: a free assessment that returns a Brand Score and shows where a brand is strong and where it needs work. https://coretruthhouse.com/brand-diagnostic/
+- Studios: standalone creative tools, including the AI Headshot Generator. https://coretruthhouse.com/studios
+
+## Links
+
+- Home: https://coretruthhouse.com/
+- Methodology: https://coretruthhouse.com/methodology
+- About: https://coretruthhouse.com/about
+- Contact: https://coretruthhouse.com/contact
