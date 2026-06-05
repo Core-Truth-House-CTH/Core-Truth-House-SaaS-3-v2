@@ -16,7 +16,7 @@ const footerGroups = [
  {
  heading: "Studios",
  links: [
- { label: "The Presence Studio", to: "/store" },
+ { label: "AI Headshot Generator", to: "/store" },
  { label: "Studio 2", to: "/store", muted: true },
  { label: "Studio 3", to: "/store", muted: true },
  { label: "All Studios", to: "/store" },
