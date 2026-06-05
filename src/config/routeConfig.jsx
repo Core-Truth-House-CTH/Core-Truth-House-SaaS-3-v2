@@ -9,8 +9,8 @@ export const PLAN_LABELS = {
   audit: "Brand Audit",
   foundation: "The Foundation - $47/mo",
   structure: "The Structure - $97/mo",
-  house: "The House - $197/mo",
-  estate: "The Estate - $397/mo",
+  house: "The House - $297/mo",
+  estate: "The Estate - $697/mo",
   legacy: "Legacy",
 };
 

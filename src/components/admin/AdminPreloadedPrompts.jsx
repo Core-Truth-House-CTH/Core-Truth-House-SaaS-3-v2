@@ -60,8 +60,8 @@ export function AdminPreloadedPrompts({ preloadedPrompts, fetchPreloadedPrompts,
               <select value={form.min_plan} onChange={e => setForm({...form, min_plan: e.target.value})}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: 8, background: colors.darkest, border: `1px solid ${colors.border}`, color: colors.textPrimary, fontSize: 14, colorScheme: 'dark' }}>
                 <option value="STRUCTURE">Structure ($97+)</option>
-                <option value="HOUSE">House ($197+)</option>
-                <option value="ESTATE">Estate ($497+)</option>
+                <option value="HOUSE">House ($297+)</option>
+                <option value="ESTATE">Estate ($697+)</option>
               </select>
             </div>
           </div>

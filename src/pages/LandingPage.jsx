@@ -69,7 +69,7 @@ const pricingPlans = [
  },
  {
  name: "House",
- price: "$197/month",
+ price: "$297/month",
  description: "Package the brand identity, plan launches, and export stronger brand assets.",
  features: [
  "Identity Studio Guide",
@@ -81,7 +81,7 @@ const pricingPlans = [
  },
  {
  name: "Estate",
- price: "$397/month",
+ price: "$697/month",
  description: "Build a larger brand ecosystem with team access, client vaults, and white-label delivery.",
  features: [
  "Team Seats Setup",

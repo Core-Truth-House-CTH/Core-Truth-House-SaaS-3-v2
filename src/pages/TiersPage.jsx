@@ -48,7 +48,7 @@ const tiers = [
   },
   {
     name: "House",
-    price: "$197",
+    price: "$297",
     period: "/month",
     label: "Build the system",
     icon: "/tiers-assets/cth-tier-card-house-building.png",
@@ -69,7 +69,7 @@ const tiers = [
   },
   {
     name: "Estate",
-    price: "$397",
+    price: "$697",
     period: "/month",
     label: "Scale the house",
     icon: "/tiers-assets/cth-tier-card-estate-mansion.png",
@@ -293,8 +293,8 @@ export default function TiersPage() {
                 <th>Core Capabilities</th>
                 <th>Foundation<br /><small>$47/mo</small></th>
                 <th className="is-featured-col">Structure<br /><small>$97/mo</small></th>
-                <th>House<br /><small>$197/mo</small></th>
-                <th>Estate<br /><small>$397/mo</small></th>
+                <th>House<br /><small>$297/mo</small></th>
+                <th>Estate<br /><small>$697/mo</small></th>
               </tr>
             </thead>
             <tbody>
