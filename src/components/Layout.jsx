@@ -445,6 +445,7 @@ export function Sidebar() {
                               to={item.path}
                               data-testid={`nav-${item.path.replace("/", "")}`}
                               title={item.label}
+                              aria-label={item.label}
                               className={`flex items-center justify-center p-3 rounded-2xl transition-all ${
                                 active
                                   ? "cth-sidebar-active border"

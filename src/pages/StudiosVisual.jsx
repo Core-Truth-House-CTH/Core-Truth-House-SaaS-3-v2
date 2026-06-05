@@ -597,6 +597,7 @@ export default function StudiosVisual() {
               onClick={handleGenerate}
               disabled={generateDisabled}
               data-testid="visual-generate-btn"
+              aria-label="Generate visuals"
               style={{ width: "100%", padding: 11, background: "var(--cth-command-crimson)", color: "var(--cth-command-ivory)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: generateDisabled ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif", marginTop: 6, opacity: generateDisabled ? 0.55 : 1 }}
             >
               {generating ? "Generating…" : atLimit ? "Monthly limit reached" : "Generate Visuals"}

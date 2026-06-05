@@ -591,6 +591,7 @@ export default function StudiosHeadshot() {
               onClick={handleGenerate}
               disabled={generateDisabled}
               data-testid="headshot-generate-btn"
+              aria-label="Generate headshots"
               style={{
                 width: "100%",
                 padding: 11,

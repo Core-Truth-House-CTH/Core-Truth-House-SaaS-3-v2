@@ -1240,13 +1240,13 @@ function TrackingLinksTab({
                   </div>
 
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button type="button" onClick={() => onCopy(link)} title="Copy trackable URL" style={iconBtn}>
+                    <button type="button" onClick={() => onCopy(link)} title="Copy trackable URL" aria-label="Copy trackable URL" style={iconBtn}>
                       <Copy size={15} />
                     </button>
-                    <button type="button" onClick={() => onEdit(link)} title="Edit" style={iconBtn}>
+                    <button type="button" onClick={() => onEdit(link)} title="Edit" aria-label="Edit tracking link" style={iconBtn}>
                       <Pencil size={15} />
                     </button>
-                    <button type="button" onClick={() => onDelete(link)} title="Delete" style={{ ...iconBtn, color: "var(--cth-command-error)" }}>
+                    <button type="button" onClick={() => onDelete(link)} title="Delete" aria-label="Delete tracking link" style={{ ...iconBtn, color: "var(--cth-command-error)" }}>
                       <Trash2 size={15} />
                     </button>
                   </div>
@@ -1484,7 +1484,7 @@ function LinkEditorModal({ form, fld, editingId, isSaving, campaigns, offers, on
           <h2 style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}>
             {editingId ? "Edit tracking link" : "New tracking link"}
           </h2>
-          <button type="button" onClick={onClose} style={iconBtn}><X size={18} /></button>
+          <button type="button" onClick={onClose} aria-label="Close" style={iconBtn}><X size={18} /></button>
         </div>
 
         <div data-mcp-action="signal-log" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
