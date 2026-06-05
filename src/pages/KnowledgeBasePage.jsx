@@ -14,26 +14,32 @@ import { DashboardLayout } from "../components/Layout";
 import apiClient from "../lib/apiClient";
 
 const SECTION_META = {
-  quickStart: { title: "Start Here", icon: Compass },
-  foundation: { title: "Foundation", icon: Layers3 },
-  structure: { title: "Structure", icon: Building2 },
-  house: { title: "House", icon: BookOpen },
-  estate: { title: "Estate", icon: Crown },
+  getting_started: { title: "Getting Started", tier: "All", icon: Compass },
+  foundation: { title: "Foundation", tier: "Foundation", icon: Layers3 },
+  structure: { title: "Structure", tier: "Structure", icon: Building2 },
+  systems_workspace: { title: "Systems + Workspace", tier: "Structure", icon: Crown },
 };
 
 const SECTION_KEY_ALIASES = {
-  "start-here": "quickStart",
-  "quick-start": "quickStart",
-  quickstart: "quickStart",
-  quickStart: "quickStart",
-  "foundation-tier": "foundation",
+  // New canonical keys
+  getting_started: "getting_started",
+  "getting-started": "getting_started",
   foundation: "foundation",
-  "structure-tier": "structure",
   structure: "structure",
-  "house-tier": "house",
-  house: "house",
-  "estate-tier": "estate",
-  estate: "estate",
+  systems_workspace: "systems_workspace",
+  "systems-workspace": "systems_workspace",
+  "systems-and-workspace": "systems_workspace",
+  // Legacy keys mapped forward
+  "start-here": "getting_started",
+  "quick-start": "getting_started",
+  quickstart: "getting_started",
+  quickStart: "getting_started",
+  "foundation-tier": "foundation",
+  "structure-tier": "structure",
+  "house-tier": "systems_workspace",
+  house: "systems_workspace",
+  "estate-tier": "systems_workspace",
+  estate: "systems_workspace",
 };
 
 const TIER_STYLES = {
@@ -56,7 +62,7 @@ function buildSectionsFromArticles(articles = []) {
   });
 
   articles.forEach((article) => {
-    const rawSectionKey = article.section_key || article.sectionKey || "quickStart";
+    const rawSectionKey = article.section_key || article.sectionKey || "getting_started";
     const sectionKey = normalizeSectionKey(rawSectionKey);
     if (!next[sectionKey]) return;
 
@@ -200,7 +206,7 @@ export default function KnowledgeBasePage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [query, setQuery] = useState("");
-  const [activeSection, setActiveSection] = useState("quickStart");
+  const [activeSection, setActiveSection] = useState("getting_started");
   const [selectedArticleId, setSelectedArticleId] = useState(null);
 
   useEffect(() => {
