@@ -222,7 +222,7 @@ const CONTENT_CARD_STYLE = {
 const MODULE_META = {
   brand_foundation: { label: 'Brand Foundation', accent: '#763b5b', path: '/brand-foundation', linkLabel: 'Go to Foundation' },
   visual_identity: { label: 'Visual Identity', accent: '#5d0012', path: '/identity-studio', linkLabel: 'Go to Identity Studio' },
-  offer_suite: { label: 'Offer Suite', accent: '#e04e35', path: '/systems-builder', linkLabel: 'Go to Systems Builder' },
+  offer_suite: { label: 'Offer Suite', accent: '#e04e35', path: '/offer-builder', linkLabel: 'Go to Offers' },
   systems_and_sops: { label: 'Systems & SOPs', accent: '#8a6900', path: '/systems-builder', linkLabel: 'Go to Systems Builder' },
   content_library: { label: 'Content Library', accent: '#2b6cb0', path: '/content-studio', linkLabel: 'Go to Content Studio' },
   launch_readiness: { label: 'Launch Readiness', accent: '#2d6a4f', path: '/strategic-os', linkLabel: 'Go to Strategic OS' },
