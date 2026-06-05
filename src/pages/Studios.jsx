@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   UserCircle,
   LayoutGrid,
+  Video,
   FileOutput,
   MessageCircle,
   Package,
@@ -28,9 +29,18 @@ const TOOLS = [
     name: "Visual Studio",
     desc: "Generate on-brand social graphics, cover images, and brand visuals using your stored colors, fonts, and logos.",
     tier: "House+",
-    available: false,
+    available: true,
+    to: "/studios/visual",
     icon: LayoutGrid,
     banner: "linear-gradient(135deg, var(--cth-command-night), var(--cth-command-purple))",
+  },
+  {
+    name: "Video Studio",
+    desc: "Generate branded short-form videos from a script, prompt, and reference image. Your face, your brand, your message — as video.",
+    tier: "House+",
+    available: false,
+    icon: Video,
+    banner: "linear-gradient(135deg, var(--cth-command-cinnabar), var(--cth-command-ink))",
   },
   {
     name: "Brand Kit Studio",

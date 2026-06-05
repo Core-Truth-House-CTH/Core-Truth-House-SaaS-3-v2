@@ -39,6 +39,7 @@ const OnboardingWorkflow = lazy(() => import("../pages/OnboardingWorkflow"));
 const Automations = lazy(() => import("../pages/Automations"));
 const Studios = lazy(() => import("../pages/Studios"));
 const StudiosHeadshot = lazy(() => import("../pages/StudiosHeadshot"));
+const StudiosVisual = lazy(() => import("../pages/StudiosVisual"));
 const Members = lazy(() => import("../pages/Members"));
 
 const FirstCampaign = CampaignBuilder;
@@ -67,6 +68,7 @@ const pageRegistry = {
   "/content-studio": ContentStudio,
   "/studios": Studios,
   "/studios/headshot": StudiosHeadshot,
+  "/studios/visual": StudiosVisual,
   "/campaign-builder": CampaignBuilder,
   "/campaign-setup": CampaignSetup,
   "/first-campaign": FirstCampaign,

@@ -7,7 +7,7 @@ import { BrandGuidelinesExportButton } from '../components/shared/BrandGuideline
 import IdentityStudioAssets from '../components/shared/IdentityStudioAssets';
 import apiClient from "../lib/apiClient";
 import { toast } from 'sonner';
-import { Check, Pencil, Circle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, Pencil, Circle, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 function isValidHex(value) {
   return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value.trim());
@@ -289,6 +289,7 @@ function IdentityStudioContent() {
   const [saveToastVisible, setSaveToastVisible] = useState(false);
   const [draftRecovery, setDraftRecovery] = useState(null);
   const [hexErrors, setHexErrors] = useState({});
+  const [confirmDeleteIndex, setConfirmDeleteIndex] = useState(null);
   const [uploadedFonts, setUploadedFonts] = useState([]);
   const [fontUploading, setFontUploading] = useState(false);
 
@@ -560,6 +561,53 @@ function IdentityStudioContent() {
     ]);
     setHasUnsaved(true);
   }, []);
+
+  // Optimistically remove a color and persist the new colors array immediately.
+  // The identity save endpoint replaces the whole colors array (partial update),
+  // so deleting == saving the array without the removed item.
+  const performDeleteColor = useCallback(
+    async (index) => {
+      const prevColors = colors;
+      const nextColors = colors.filter((_, i) => i !== index);
+      setConfirmDeleteIndex(null);
+      setColors(nextColors);
+
+      // Keep the position-indexed refs aligned after the removal.
+      if (Array.isArray(originalColorsRef.current)) {
+        originalColorsRef.current = originalColorsRef.current.filter((_, i) => i !== index);
+      }
+      const rebuiltHex = {};
+      nextColors.forEach((c, i) => {
+        if (typeof c?.hex === 'string' && c.hex.length > 0) rebuiltHex[i] = c.hex;
+      });
+      lastValidHexRef.current = rebuiltHex;
+      setHexErrors({});
+
+      try {
+        await apiClient.post('/api/identity/save', {
+          workspace_id: activeWorkspace?.id || activeWorkspace?.workspace_id || '',
+          colors: nextColors,
+        });
+        refreshBrandHealth();
+      } catch (err) {
+        console.error('Delete color failed:', err);
+        setColors(prevColors);
+        toast.error('Could not delete color. Please try again.');
+      }
+    },
+    [colors, activeWorkspace, refreshBrandHealth]
+  );
+
+  const requestDeleteColor = useCallback(
+    (index) => {
+      if (colors.length <= 1) {
+        setConfirmDeleteIndex(index);
+      } else {
+        performDeleteColor(index);
+      }
+    },
+    [colors, performDeleteColor]
+  );
 
   const handleDeleteAsset = useCallback(
     async (assetId) => {
@@ -1148,9 +1196,101 @@ function IdentityStudioContent() {
                         >
                           Click to change
                         </div>
+
+                        <button
+                          type="button"
+                          data-testid={`color-delete-${index}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            requestDeleteColor(index);
+                          }}
+                          aria-label={`Delete ${color.label || color.role || 'color'}`}
+                          title="Delete color"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                            zIndex: 3,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 24,
+                            height: 24,
+                            borderRadius: 8,
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: 'var(--cth-command-ivory)',
+                            background: 'rgba(13, 0, 16, 0.45)',
+                          }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
 
                       <div style={{ padding: 16 }}>
+                        {confirmDeleteIndex === index ? (
+                          <div
+                            data-testid={`color-delete-confirm-${index}`}
+                            style={{
+                              marginBottom: 14,
+                              padding: '10px 12px',
+                              borderRadius: 10,
+                              background: 'var(--cth-command-panel-soft)',
+                              border: '1px solid var(--cth-command-warning)',
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontFamily: SANS,
+                                fontSize: 12,
+                                fontWeight: 500,
+                                color: 'var(--cth-command-ink)',
+                                margin: '0 0 8px',
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              This is your only brand color. Are you sure?
+                            </p>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button
+                                type="button"
+                                data-testid={`color-delete-confirm-yes-${index}`}
+                                onClick={() => performDeleteColor(index)}
+                                style={{
+                                  background: 'var(--cth-command-crimson)',
+                                  color: 'var(--cth-command-ivory)',
+                                  border: 'none',
+                                  borderRadius: 8,
+                                  padding: '5px 12px',
+                                  fontFamily: SANS,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Delete
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteIndex(null)}
+                                style={{
+                                  background: 'transparent',
+                                  color: 'var(--cth-command-muted)',
+                                  border: '1px solid var(--cth-command-border)',
+                                  borderRadius: 8,
+                                  padding: '5px 12px',
+                                  fontFamily: SANS,
+                                  fontSize: 11,
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : null}
                         <div className="flex items-start justify-between gap-3 mb-3">
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <p style={SECTION_LABEL_STYLE}>{color.role || 'color'}</p>

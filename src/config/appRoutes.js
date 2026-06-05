@@ -283,6 +283,15 @@ export const APP_ROUTES = [
     tooltip: "Generate professional portraits using your brand identity style.",
   },
     {
+    path: "/studios/visual",
+    label: "Visual Studio",
+    icon: Sparkles,
+    group: "execution",
+    requiredPlan: null,
+    gateType: null,
+    tooltip: "Generate on-brand social graphics, cover images, and brand visuals.",
+  },
+    {
     path: "/launch-planner",
     label: "Launch Planner",
     icon: Rocket,
