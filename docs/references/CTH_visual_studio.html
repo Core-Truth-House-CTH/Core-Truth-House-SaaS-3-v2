@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTH Visual Studio — Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+/* Use only --cth-command-* CSS variables. Only permitted literal hex: #1a0828 for Zuri card */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cth-command-blush,#f8f4f2);padding:24px;}
+.wrap{max-width:1060px;margin:0 auto;}
+.gen-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.back-btn{font-size:11px;color:var(--cth-command-muted,#7c6576);background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:7px;padding:6px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;}
+.gen-grid{display:grid;grid-template-columns:340px 1fr;gap:14px;}
+.card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.card-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;margin-bottom:12px;}
+.usage-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;margin-bottom:10px;}
+.usage-lbl{font-size:11px;color:var(--cth-command-muted,#7c6576);}
+.usage-val{font-size:11px;font-weight:500;color:var(--cth-command-crimson,#5d0012);}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.fl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;}
+.fi{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.fta{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:none;line-height:1.6;min-height:64px;}
+.fsel{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.opt{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:2px;}
+.div{height:.5px;background:var(--cth-command-border,#e8d5d0);margin:12px 0;}
+/* Format pills */
+.fmt-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:0;}
+.fmt-pill{padding:7px 6px;border-radius:7px;font-size:10px;font-weight:500;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;}
+.fmt-pill.on{background:var(--cth-command-crimson,#5d0012);color:#fff;border-color:var(--cth-command-crimson,#5d0012);}
+.fmt-size{font-size:8px;color:var(--cth-command-muted,#7c6576);display:block;margin-top:1px;}
+.fmt-pill.on .fmt-size{color:rgba(255,255,255,.6);}
+/* Upload zone */
+.upload-zone{border:1px dashed var(--cth-command-border,#d8c5c3);border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:var(--cth-command-blush,#f8f4f2);}
+.upload-icon{font-size:20px;color:#c7a09d;margin-bottom:6px;}
+.upload-text{font-size:11px;color:var(--cth-command-muted,#7c6576);line-height:1.5;}
+.upload-hint{font-size:10px;color:#b0a0b8;margin-top:3px;}
+/* Background tabs */
+.bg-tabs{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;}
+.bg-tab{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:500;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.bg-tab.on{background:var(--cth-command-crimson,#5d0012);color:#fff;border-color:var(--cth-command-crimson,#5d0012);}
+/* Brand identity bar — colors pulled live from GET /api/identity */
+.brand-bar{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:9px;margin-bottom:10px;}
+.brand-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+/* NOTE: brand-dot background colors are set inline via JS from GET /api/identity response — not hardcoded */
+.brand-font{font-size:10px;color:var(--cth-command-muted,#7c6576);}
+.brand-check{margin-left:auto;font-size:10px;color:#2d6a4f;font-weight:500;display:flex;align-items:center;gap:3px;}
+.brand-missing{margin-left:auto;font-size:10px;color:var(--cth-command-muted,#7c6576);font-weight:500;}
+/* Prompt helper */
+.prompt-helper{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.ph-tag{font-size:10px;color:var(--cth-command-crimson,#5d0012);font-weight:500;background:var(--cth-command-blush,#f8f4f2);border:.5px solid rgba(93,0,18,.2);border-radius:5px;padding:2px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+/* Zuri card — #1a0828 is the only permitted literal hex */
+.zuri-card{background:#1a0828;border-radius:10px;padding:13px 15px;}
+.zh{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.zav{width:18px;height:18px;border-radius:50%;background:#e04e35;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.zlbl{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#7a6090;}
+.zt{font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;color:#e8dff0;font-style:italic;line-height:1.5;}
+.gen-btn{width:100%;padding:11px;background:var(--cth-command-crimson,#5d0012);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;}
+/* Output */
+.output-card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.abtn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.a-dl{background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);border:.5px solid var(--cth-command-border,#e8d5d0);}
+.a-save{background:#2d6a4f;color:#fff;border:none;}
+/* Image output grid — aspect ratio changes based on selected format */
+.img-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.img-card{border-radius:10px;border:.5px solid var(--cth-command-border,#e8d5d0);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:var(--cth-command-blush,#f8f4f2);}
+/* aspect-ratio is set dynamically via JS based on selected format */
+.img-card:hover .img-overlay{opacity:1;}
+.img-overlay{position:absolute;inset:0;background:rgba(26,8,40,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gen-header">
+    <button class="back-btn"><i class="ti ti-arrow-left" style="font-size:11px;"></i> Studios</button>
+    <div>
+      <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:500;color:#1a0828;">Visual Studio</div>
+      <div style="font-size:11px;color:#7c6576;margin-top:2px;">Generate on-brand social graphics, cover images, and brand visuals.</div>
+    </div>
+  </div>
+
+  <div class="gen-grid">
+    <div class="card">
+      <div class="card-lbl">Generation settings</div>
+      <div class="usage-row"><span class="usage-lbl">Generations this month</span><span class="usage-val">2 / 10 used</span></div>
+
+      <div class="fg">
+        <div class="fl">Output format <span style="color:#e04e35;">*</span></div>
+        <div class="fmt-grid">
+          <button class="fmt-pill on">Instagram Post<span class="fmt-size">1080 × 1080</span></button>
+          <button class="fmt-pill">Story<span class="fmt-size">1080 × 1920</span></button>
+          <button class="fmt-pill">LinkedIn<span class="fmt-size">1200 × 628</span></button>
+          <button class="fmt-pill">Facebook Cover<span class="fmt-size">820 × 312</span></button>
+          <button class="fmt-pill">YouTube<span class="fmt-size">1280 × 720</span></button>
+          <button class="fmt-pill">Twitter/X<span class="fmt-size">1500 × 500</span></button>
+        </div>
+      </div>
+
+      <div class="div"></div>
+
+      <div class="fg">
+        <div class="fl">Reference image</div>
+        <div class="upload-zone">
+          <div class="upload-icon"><i class="ti ti-photo-up"></i></div>
+          <div class="upload-text">Upload your headshot, product photo, or any reference image</div>
+          <div class="upload-hint">JPG, PNG, WEBP up to 10MB — optional but recommended</div>
+        </div>
+        <div class="opt">Anchors the visual to your face or product</div>
+      </div>
+
+      <div class="fg"><div class="fl">Headline</div><input class="fi" placeholder="e.g. Your brand is the structure" /></div>
+      <div class="fg"><div class="fl">Subheading</div><input class="fi" placeholder="Optional" /><div class="opt">Optional</div></div>
+      <div class="fg"><div class="fl">Call to action</div><input class="fi" placeholder="Optional — e.g. Start the diagnostic" /><div class="opt">Optional</div></div>
+
+      <div class="div"></div>
+
+      <div class="fg">
+        <div class="fl">Prompt</div>
+        <textarea class="fta" placeholder="Paste a prompt from Content Studio or write your own visual direction..."></textarea>
+        <div class="prompt-helper">
+          <span style="font-size:10px;color:#7c6576;">From Content Studio:</span>
+          <span class="ph-tag">Visual Prompts</span>
+        </div>
+      </div>
+
+      <div class="div"></div>
+
+      <div class="fg">
+        <div class="fl">Visual style</div>
+        <select class="fsel"><option>Luxury editorial</option><option>Minimal clean</option><option>Bold typographic</option><option>Cinematic dark</option></select>
+      </div>
+
+      <div class="fg">
+        <div class="fl">Background</div>
+        <div class="bg-tabs">
+          <button class="bg-tab on">AI scene</button>
+          <button class="bg-tab">Brand color</button>
+          <button class="bg-tab">Gradient</button>
+          <button class="bg-tab">Upload image</button>
+          <button class="bg-tab">Texture</button>
+        </div>
+        <!-- AI scene: show scene select -->
+        <select class="fsel" id="bg-scene-select">
+          <option>Luxury marble office</option>
+          <option>Abstract brand colors</option>
+          <option>Cinematic skyline</option>
+          <option>Soft editorial studio</option>
+        </select>
+        <!-- Brand color: auto-applied from identity, no select needed -->
+        <!-- Gradient: auto-applied from identity colors, no select needed -->
+        <!-- Upload image: secondary upload zone -->
+        <!-- Texture: texture select -->
+      </div>
+
+      <div class="fg"><div class="fl">Variations</div><select class="fsel"><option>1</option><option>2</option><option selected>4</option></select></div>
+
+      <!--
+        BRAND IDENTITY BAR
+        On mount: call GET /api/identity
+        - If identity loaded: render tenant's actual brand color hex values as inline background on each .brand-dot
+        - Show display font name from identity.fonts
+        - Show green checkmark "Brand identity applied"
+        - Inject colors, fonts, logo_url into generation prompt
+        - If no identity: show "No brand identity set" with link to /identity-studio
+      -->
+      <div class="brand-bar">
+        <div class="brand-dot" style="background:#5d0012;"></div>
+        <div class="brand-dot" style="background:#e04e35;"></div>
+        <div class="brand-dot" style="background:#763b5b;"></div>
+        <span class="brand-font">Fraunces · Manrope</span>
+        <span class="brand-check"><i class="ti ti-check" style="font-size:10px;"></i> Brand identity applied</span>
+      </div>
+
+      <div class="div"></div>
+
+      <div class="zuri-card">
+        <div class="zh"><div class="zav"><span style="font-size:8px;font-weight:500;color:#fff;">Z</span></div><span class="zlbl">Zuri · visual direction</span></div>
+        <div class="zt">"A graphic that converts leads with the eye before the mind. Your brand colors and typography should do the heavy lifting — the words just confirm what the design already said."</div>
+      </div>
+      <button class="gen-btn">Generate Visuals</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="output-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:500;color:#1a0828;">Generated visuals</div>
+          <div style="display:flex;gap:6px;"><button class="abtn a-dl">Download all</button><button class="abtn a-save">Save to library</button></div>
+        </div>
+        <!--
+          IMAGE GRID: aspect-ratio of each .img-card changes dynamically based on selected format:
+          Instagram Post → 1/1
+          Story → 9/16
+          LinkedIn / Facebook Cover / YouTube / Twitter → 16/9
+        -->
+        <div class="img-grid">
+          <div class="img-card" style="background:linear-gradient(135deg,#2b1040,#5d0012);"><i class="ti ti-photo" style="font-size:36px;color:rgba(255,255,255,.2);"></i><div class="img-overlay"><i class="ti ti-download" style="font-size:20px;color:#fff;"></i></div></div>
+          <div class="img-card" style="background:linear-gradient(135deg,#763b5b,#1a0828);"><i class="ti ti-photo" style="font-size:36px;color:rgba(255,255,255,.2);"></i><div class="img-overlay"><i class="ti ti-download" style="font-size:20px;color:#fff;"></i></div></div>
+          <div class="img-card" style="background:linear-gradient(135deg,#5d0012,#763b5b);"><i class="ti ti-photo" style="font-size:36px;color:rgba(255,255,255,.2);"></i><div class="img-overlay"><i class="ti ti-download" style="font-size:20px;color:#fff;"></i></div></div>
+          <div class="img-card" style="background:linear-gradient(135deg,#1a0828,#e04e35 150%);"><i class="ti ti-photo" style="font-size:36px;color:rgba(255,255,255,.2);"></i><div class="img-overlay"><i class="ti ti-download" style="font-size:20px;color:#fff;"></i></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-lbl">Saved visuals</div>
+        <div style="padding:28px;text-align:center;color:#7c6576;font-size:11px;"><i class="ti ti-layout-grid" style="font-size:20px;color:#d8c5c3;display:block;margin-bottom:6px;"></i>Your saved visuals will appear here</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
