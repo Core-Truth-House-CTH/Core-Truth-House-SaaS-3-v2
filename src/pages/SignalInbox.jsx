@@ -1487,7 +1487,7 @@ function LinkEditorModal({ form, fld, editingId, isSaving, campaigns, offers, on
           <button type="button" onClick={onClose} style={iconBtn}><X size={18} /></button>
         </div>
 
-        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div data-mcp-action="signal-log" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
             <label style={labelStyleObj}>Link name</label>
             <input style={inputStyleObj} value={form.link_name} onChange={(e) => fld("link_name", e.target.value)} placeholder="e.g. IG bio → diagnostic" />

@@ -404,7 +404,7 @@ function ModalDiagnostic({ open, onClose, onComplete }) {
  </button>
 
  {step === "lead" ? (
- <form onSubmit={startQuiz}>
+ <form onSubmit={startQuiz} data-mcp-action="brand-diagnostic-intake">
  <p className="bdx-kicker">Core Truth Brand Diagnostic</p>
  <h2>Where should we send your result?</h2>
  <p className="bdx-modal-copy">
@@ -412,10 +412,10 @@ function ModalDiagnostic({ open, onClose, onComplete }) {
  </p>
 
  <div className="bdx-lead-grid">
- <label>First name *<input value={leadInfo.first_name} onChange={(e) => updateLead("first_name", e.target.value)} required /></label>
- <label>Last name<input value={leadInfo.last_name} onChange={(e) => updateLead("last_name", e.target.value)} /></label>
- <label>Email *<input type="email" value={leadInfo.email} onChange={(e) => updateLead("email", e.target.value)} required /></label>
- <label>Business name<input value={leadInfo.business_name} onChange={(e) => updateLead("business_name", e.target.value)} /></label>
+ <label>First name *<input autoComplete="given-name" value={leadInfo.first_name} onChange={(e) => updateLead("first_name", e.target.value)} required /></label>
+ <label>Last name<input autoComplete="family-name" value={leadInfo.last_name} onChange={(e) => updateLead("last_name", e.target.value)} /></label>
+ <label>Email *<input type="email" autoComplete="email" value={leadInfo.email} onChange={(e) => updateLead("email", e.target.value)} required /></label>
+ <label>Business name<input autoComplete="organization" value={leadInfo.business_name} onChange={(e) => updateLead("business_name", e.target.value)} /></label>
  <label>Years in business *
  <select value={leadInfo.years_in_business} onChange={(e) => updateLead("years_in_business", e.target.value)} required>
  <option value="">Choose one</option>

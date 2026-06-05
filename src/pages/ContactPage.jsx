@@ -156,10 +156,10 @@ function ContactForm() {
  <p>We’ll get back to you within 1-2 business days.</p>
 
  <div className="cth-contact-field-grid">
- <input type="text" placeholder="First Name *" aria-label="First Name" />
- <input type="text" placeholder="Last Name *" aria-label="Last Name" />
- <input type="email" placeholder="Email Address *" aria-label="Email Address" />
- <input type="text" placeholder="Company" aria-label="Company" />
+ <input type="text" placeholder="First Name *" aria-label="First Name" autoComplete="given-name" />
+ <input type="text" placeholder="Last Name *" aria-label="Last Name" autoComplete="family-name" />
+ <input type="email" placeholder="Email Address *" aria-label="Email Address" autoComplete="email" />
+ <input type="text" placeholder="Company" aria-label="Company" autoComplete="organization" />
  </div>
 
  <select aria-label="Reason for Inquiry" defaultValue="">
