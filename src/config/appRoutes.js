@@ -250,10 +250,10 @@ export const APP_ROUTES = [
     label: "Cohort Manager",
     icon: Users,
     group: "execution",
-    requiredPlan: "estate",
-    gateType: "page",
+    requiredPlan: null,
+    gateType: null,
+    superAdminOnly: true,
     tooltip: "Manage your cohort members, schedule weekly calls, and track Brand OS progress.",
-    lockedTooltip: "Upgrade to Estate to access Cohort Manager.",
   },
     {
     path: "/content-studio",
