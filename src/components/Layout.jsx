@@ -76,16 +76,6 @@ const ADMIN_ROLES = [
 
 const SUPER_ADMIN_ROLES = ["SUPER_ADMIN", "OPS_ADMIN"];
 
-const KEYBOARD_SHORTCUTS = {
-  "1": "/command-center",
-  "3": "/strategic-os",
-  "4": "/content-studio",
-  "5": "/media-studio",
-  "6": "/crm",
-  "7": "/calendar",
-  "8": "/settings",
-};
-
 function mapUsagePayload(data) {
   const used =
     Number(
@@ -129,13 +119,11 @@ export function Sidebar() {
 
   const [usage, setUsage] = useState(null);
   const [collapsedGroups, setCollapsedGroups] = useState({});
-  const [showShortcuts, setShowShortcuts] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const enterTimerRef = useRef(null);
   const leaveTimerRef = useRef(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [utilityDrawerOpen, setUtilityDrawerOpen] = useState(false);
 
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -194,24 +182,6 @@ export function Sidebar() {
     };
   }, [activeWorkspaceId, userId]);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
-        if (KEYBOARD_SHORTCUTS[e.key]) {
-          e.preventDefault();
-          navigate(KEYBOARD_SHORTCUTS[e.key]);
-        }
-        if (e.key === "k") {
-          e.preventDefault();
-          setShowShortcuts((prev) => !prev);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [navigate]);
-
   const handleSidebarMouseEnter = () => {
     if (!sidebarCollapsed || mobileOpen) return;
     if (leaveTimerRef.current) {
@@ -254,12 +224,6 @@ export function Sidebar() {
   const isHoverOverlay = sidebarCollapsed && hoverExpanded && !mobileOpen;
 
   const routeGroups = useMemo(() => {
-    const role = String(userRole || "").toUpperCase();
-    const canSeeCohortManager =
-      role === "MANAGER" ||
-      role === "WORKSPACE_MANAGER" ||
-      isSuperAdmin === true;
-
     const structure = [
       {
         id: "dashboard",
@@ -296,7 +260,6 @@ export function Sidebar() {
         id: "house",
         label: "HOUSE",
         items: [
-          { path: "/mail", label: "Email", icon: Mail },
           { path: "/crm", label: "CRM", icon: PhoneCall },
         ],
       },
@@ -307,9 +270,6 @@ export function Sidebar() {
           { path: "/calendar", label: "Calendar", icon: Calendar },
           { path: "/social-media-manager", label: "Social Planner", icon: Share2 },
           { path: "/community", label: "Cohort Community", icon: MessageCircle },
-          ...(canSeeCohortManager
-            ? [{ path: "/cohort-manager", label: "Cohort Manager", icon: Users }]
-            : []),
         ],
       },
       {
@@ -346,6 +306,8 @@ export function Sidebar() {
               id: "admin",
               label: "ADMIN",
               items: [
+                { path: "/mail", label: "Mail", icon: Mail },
+                { path: "/cohort-manager", label: "Cohort Manager", icon: Users },
                 { path: "/automations", label: "Automations", icon: Workflow },
                 { path: "/platform-store", label: "Store", icon: Package },
                 { path: "/ai-keys", label: "AI API Keys", icon: Key },
@@ -585,177 +547,76 @@ export function Sidebar() {
             className={`cth-sidebar-footer ${sidebarCollapsed && !mobileOpen ? "px-2 py-2" : "px-3 pt-3 pb-3"}`}
             style={{ borderTop: "1px solid rgba(199, 160, 157, 0.15)" }}
           >
-            <button
-              type="button"
-              data-testid="sidebar-utility-toggle"
-              onClick={() => setUtilityDrawerOpen((open) => !open)}
-              className={`cth-sidebar-utility-toggle w-full flex items-center shadow-[0_10px_30px_rgba(0,0,0,0.12)] ${
-                sidebarCollapsed && !mobileOpen
-                  ? "justify-center p-2.5"
-                  : "justify-between gap-2 px-3 py-2.5"
-              } rounded-xl text-xs transition-colors`}
-              title="Workspace Controls"
-            >
-              <span className="flex items-center gap-2 min-w-0">
-                <Settings size={sidebarCollapsed && !mobileOpen ? 18 : 14} />
-                {showLabels && (
-                  <span className="flex min-w-0 flex-col text-left leading-tight">
-                    <span className="truncate">Workspace Controls</span>
-                    <span className="truncate text-[10px] font-medium opacity-[0.85]">
-                      {plan ? `${plan.charAt(0).toUpperCase()}${plan.slice(1)} Plan` : "Current Plan"}
-                    </span>
-                  </span>
-                )}
-              </span>
-              {showLabels && (
-                <ChevronDown
-                  size={14}
-                  className={`transition-transform ${utilityDrawerOpen ? "rotate-180" : ""}`}
-                />
-              )}
-            </button>
-
-            {utilityDrawerOpen && (
-              <div className="cth-sidebar-utility-drawer" data-testid="sidebar-utility-drawer">
-
-                {usage &&
-                  (sidebarCollapsed && !mobileOpen ? (
-                    <button
-                      onClick={() => navigate("/billing")}
-                      title={`AI Credits: ${usage.used}/${usage.limit === 999999 ? "∞" : usage.limit}`}
-                      className="cth-sidebar-utility w-full flex items-center justify-center p-2.5 rounded-xl transition-colors"
-                    >
-                      <Zap
-                        size={18}
-                        className={usage.percentage >= 90 ? "text-red-500" : "text-[var(--cth-app-accent)]"}
-                      />
-                    </button>
-                  ) : (
-                    <div
-                      data-testid="credit-usage-meter"
-                      className="cth-sidebar-utility px-3 py-2.5 rounded-xl"
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1.5">
-                          <Zap size={11} className="text-[var(--cth-app-accent)]" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-[rgba(248,244,242,0.92)]">
-                            AI Credits
-                          </span>
-                        </div>
-                        <span
-                          className={`text-xs font-bold ${
-                            usage.percentage >= 90 ? "text-red-500" : "text-[rgba(248,244,242,0.95)]"
-                          }`}
-                        >
-                          {usage.used}/{usage.limit === 999999 ? "∞" : usage.limit}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-
-                <button data-testid="sidebar-knowledge-base-btn" onClick={() => navigate("/knowledge-base")} className="cth-sidebar-utility w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors">
-                  <HelpCircle size={14} />
-                  {showLabels && <span>Knowledge Base</span>}
-                </button>
-
-                {showLabels && (
-                  <button data-testid="keyboard-shortcuts-btn" onClick={() => setShowShortcuts(true)} className="cth-sidebar-utility w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-[10px] transition-colors">
-                    <span className="px-1.5 py-0.5 rounded font-mono text-white" style={{ background: "rgba(199, 160, 157, 0.15)" }}>
-                      &#8984;K
-                    </span>
-                    <span>Keyboard shortcuts</span>
-                  </button>
-                )}
-
-                {isSuperAdminRole && (
-                  <button data-testid="sidebar-switch-to-admin-btn" onClick={() => navigate("/admin/dashboard")} className="cth-sidebar-utility w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors">
-                    <ShieldAlert size={14} />
-                    {showLabels && <span>Switch to Admin</span>}
-                  </button>
-                )}
-
-                <button data-testid="sign-out-btn" onClick={() => signOut({ redirectUrl: "/" })} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-[var(--cth-app-accent)] hover:bg-[rgba(224,78,53,0.10)] text-xs font-semibold transition-colors">
-                  <LogOut size={13} />
-                  {showLabels && <span>Sign Out</span>}
-                </button>
-              </div>
-            )}
-          </div>
-        {showShortcuts && (
-          <div
-            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-            onClick={() => setShowShortcuts(false)}
-          >
-            <div
-              className="cth-shortcuts-modal rounded-2xl p-6 max-w-md w-full"
-              style={{
-                background: "var(--cth-app-panel)",
-                border: "1px solid var(--cth-app-border)",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-lg cth-heading">
-                  Keyboard Shortcuts
-                </h3>
+            {usage &&
+              (sidebarCollapsed && !mobileOpen ? (
                 <button
-                  onClick={() => setShowShortcuts(false)}
-                  className="p-1 cth-muted"
+                  data-testid="credit-usage-meter"
+                  onClick={() => navigate("/billing")}
+                  title={`AI Credits: ${usage.used}/${usage.limit === 999999 ? "∞" : usage.limit}`}
+                  className="w-full flex items-center justify-center p-2.5 rounded-xl transition-colors hover:bg-[rgba(248,244,242,0.06)]"
                 >
-                  &times;
+                  <Zap
+                    size={18}
+                    className={usage.percentage >= 90 ? "text-red-500" : "text-[var(--cth-app-accent)]"}
+                  />
                 </button>
-              </div>
-
-              <div className="space-y-2">
-                {Object.entries(KEYBOARD_SHORTCUTS).map(([key, path]) => {
-                  const labels = {
-                    "/command-center": "Command Center",
-                    "/strategic-os": "Strategic OS",
-                    "/content-studio": "Content Studio",
-                    "/media-studio": "Media Studio",
-                    "/crm": "CRM Suite",
-                    "/calendar": "Calendar",
-                    "/settings": "Settings",
-                  };
-
-                  return (
-                    <div
-                      key={key}
-                      className="flex items-center justify-between py-2"
-                      style={{ borderBottom: "1px solid var(--cth-border)" }}
-                    >
-                      <span className="text-sm cth-heading">{labels[path] || path}</span>
-                      <span
-                        className="px-2 py-1 rounded font-mono text-xs cth-heading"
-                        style={{ background: "var(--cth-app-panel)" }}
-                      >
-                        &#8984;{key}
+              ) : (
+                <button
+                  data-testid="credit-usage-meter"
+                  onClick={() => navigate("/billing")}
+                  title="View billing & usage"
+                  className="w-full text-left px-2 py-1.5 mb-2 rounded-lg transition-colors hover:bg-[rgba(248,244,242,0.06)]"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1.5">
+                      <Zap size={11} className="text-[var(--cth-app-accent)]" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[rgba(248,244,242,0.92)]">
+                        AI Credits
                       </span>
                     </div>
-                  );
-                })}
+                    <span
+                      className={`text-[11px] font-bold ${
+                        usage.percentage >= 90 ? "text-red-500" : "text-[rgba(248,244,242,0.95)]"
+                      }`}
+                    >
+                      {usage.used}/{usage.limit === 999999 ? "∞" : usage.limit}
+                    </span>
+                  </div>
+                  <div className="h-1 w-full rounded-full bg-[rgba(248,244,242,0.12)] overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${
+                        usage.percentage >= 90 ? "bg-red-500" : "bg-[var(--cth-app-accent)]"
+                      }`}
+                      style={{ width: `${usage.limit === 999999 ? 4 : usage.percentage}%` }}
+                    />
+                  </div>
+                </button>
+              ))}
 
-                <div
-                  className="flex items-center justify-between py-2"
-                  style={{ borderBottom: "1px solid var(--cth-border)" }}
-                >
-                  <span className="text-sm cth-heading">Toggle this menu</span>
-                  <span
-                    className="px-2 py-1 rounded text-[var(--cth-tuscany)] font-mono text-xs"
-                    style={{ background: "var(--cth-app-panel)" }}
-                  >
-                    &#8984;K
-                  </span>
-                </div>
-              </div>
+            <button
+              data-testid="sign-out-btn"
+              onClick={() => signOut({ redirectUrl: "/" })}
+              className={`w-full flex items-center gap-2 ${
+                sidebarCollapsed && !mobileOpen ? "justify-center" : "justify-start"
+              } px-2 py-1.5 text-[11px] font-semibold text-[var(--cth-app-accent)] hover:underline transition-colors`}
+            >
+              <LogOut size={13} />
+              {showLabels && <span>Sign Out</span>}
+            </button>
 
-              <p className="text-xs mt-4 text-center" style={{ color: "rgba(248, 244, 242, 0.68)" }}>
-                Use Cmd (Mac) or Ctrl (Windows) + number to navigate quickly
-              </p>
-            </div>
+            {isSuperAdminRole && (
+              <button
+                data-testid="sidebar-switch-to-admin-btn"
+                onClick={() => navigate("/admin/dashboard")}
+                className={`w-full flex items-center gap-2 ${
+                  sidebarCollapsed && !mobileOpen ? "justify-center" : "justify-start"
+                } px-2 py-1.5 text-[11px] font-medium text-[rgba(248,244,242,0.7)] hover:text-white hover:underline transition-colors`}
+              >
+                <ShieldAlert size={13} />
+                {showLabels && <span>Switch to Admin</span>}
+              </button>
+            )}
           </div>
-        )}
-
         {mobileOpen && (
           <button
             onClick={() => setMobileOpen(false)}

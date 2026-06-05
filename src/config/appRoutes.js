@@ -319,13 +319,11 @@ export const APP_ROUTES = [
   },
   {
     path: "/mail",
-    label: "Email",
+    label: "Mail",
     icon: Mail,
-    group: "execution",
-    requiredPlan: "house",
-    gateType: "page",
-    tooltip: "Read inbound mail, monitor click signals, and manage your inbox.",
-    lockedTooltip: "Upgrade to The House to unlock Email.",
+    group: "platformAdmin",
+    superAdminOnly: true,
+    tooltip: "Read inbound mail, monitor click signals, and manage automations.",
   },
     {
     path: "/analytics",
