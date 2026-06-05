@@ -305,7 +305,7 @@ function buildJourney(score, moduleScores) {
     {
       order: 1,
       label: 'Brand Foundation',
-      desc: 'Turn this audit into your mission, message, positioning, story, and core brand direction.',
+      desc: 'Build your mission, positioning, voice, and brand direction from the audit findings.',
       route: '/brand-foundation',
       cta: 'Open Brand Foundation',
       status: 'next',
@@ -381,7 +381,7 @@ export function AuditNextSteps({ moves = [], score = 0, moduleScores = {}, onNav
               maxWidth: 620,
             }}
           >
-            Move into Brand Foundation and turn the audit findings into your mission, message, positioning, voice, values, and story.
+            Move into Brand Foundation and build your mission, positioning, voice, values, and brand promise from the audit findings.
           </p>
         </div>
         <button

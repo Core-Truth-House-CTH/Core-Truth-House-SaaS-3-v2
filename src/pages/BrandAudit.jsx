@@ -154,7 +154,7 @@ function nextBestMovesFor(audit) {
   if (scores.offer_suite < 70) {
     moves.push({
       title: 'Clarify the offer path',
-      text: 'Your audit suggests the offer may need sharper packaging, pricing logic, or a clearer conversion path.',
+      text: 'The offer needs sharper packaging, clearer pricing logic, or a more defined conversion path.',
       path: '/strategic-os',
     });
   }
@@ -162,7 +162,7 @@ function nextBestMovesFor(audit) {
   if (scores.content_library < 70) {
     moves.push({
       title: 'Create content from the audit gaps',
-      text: 'Turn the audit findings into content pillars and focused messaging that speaks directly to your audience’s current friction.',
+      text: 'Turn the audit findings into content pillars and messaging that addresses your audience’s specific friction points.',
       path: '/content-studio',
     });
   }
@@ -178,7 +178,7 @@ function nextBestMovesFor(audit) {
   if (scores.launch_readiness < 70 || score < 60) {
     moves.push({
       title: 'Do not launch yet',
-      text: 'The audit indicates that foundational clarity should come before campaign execution. Fix the base layer first.',
+      text: 'The audit indicates that foundational clarity should come before campaign execution. Resolve the foundational gaps before moving to campaign execution.',
       path: '/brand-foundation',
     });
   }
@@ -237,7 +237,7 @@ const GAP_COPY = {
     refine: 'Strong foundation — tighten the brand voice and promise language for consistency.',
   },
   visual_identity: {
-    critical: 'No cohesive visual system yet — color, type, and logo usage are undefined or inconsistent.',
+    critical: 'No cohesive visual system defined. Color, type, and logo usage are undefined or inconsistent.',
     improve: 'Typography roles are incomplete — the display font is not confirmed.',
     refine: 'Identity is solid — document usage rules so it stays consistent at scale.',
   },
@@ -248,11 +248,11 @@ const GAP_COPY = {
   },
   systems_and_sops: {
     critical: 'No repeatable systems in place — delivery depends on you remembering each step.',
-    improve: 'Delivery SOP is missing — no repeatable client onboarding process.',
+    improve: 'No repeatable client onboarding or delivery process is documented.',
     refine: 'Systems are working — codify the edge cases so the team can run them without you.',
   },
   content_library: {
-    critical: "Little to no content engine — there's nothing consistent feeding awareness.",
+    critical: 'No consistent content engine in place. Nothing is reliably feeding awareness.',
     improve: "Content isn't mapped to buyer awareness stages.",
     refine: 'Content is consistent — sharpen the messaging to convert, not just reach.',
   },
