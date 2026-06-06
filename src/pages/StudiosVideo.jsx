@@ -41,6 +41,29 @@ const MODELS = [
   { id: "openai/sora-2-pro", label: "Sora 2 Pro", sub: "Highest fidelity" },
 ];
 
+// Supported duration range (seconds) per OpenRouter model. Used to filter the
+// duration select so a founder can't pick a length the model can't render.
+const MODEL_DURATION_LIMITS = {
+  "bytedance/seedance-2.0": { min: 4, max: 15 },
+  "bytedance/seedance-2.0-fast": { min: 4, max: 10 },
+  "google/veo-3.1": { min: 5, max: 180 },
+  "google/veo-3.1-fast": { min: 5, max: 120 },
+  "kwaivgi/kling-v3.0-pro": { min: 5, max: 180 },
+  "kwaivgi/kling-v3.0-std": { min: 5, max: 120 },
+  "minimax/hailuo-2.3": { min: 6, max: 120 },
+  "openai/sora-2-pro": { min: 5, max: 180 },
+};
+
+// The format's duration options intersected with the selected model's range.
+// If the format offers nothing in range (e.g. Seedance + Medium Form), fall back
+// to the model's max so the select always has a valid option.
+function durationsForModel(format, modelId) {
+  const limit = MODEL_DURATION_LIMITS[modelId] || { min: 0, max: Infinity };
+  const filtered = format.durations.filter((d) => d.val >= limit.min && d.val <= limit.max);
+  if (filtered.length) return filtered;
+  return [{ label: `${limit.max} seconds`, val: limit.max }];
+}
+
 const WM_POSITIONS = [
   { key: "bottom_right", label: "Bottom right" },
   { key: "bottom_left", label: "Bottom left" },
@@ -141,10 +164,19 @@ export default function StudiosVideo() {
   const [savedVideos, setSavedVideos] = useState([]);
   const [saving, setSaving] = useState(false);
 
-  // When format changes, reset the duration to that format's first option.
+  const modelLimit = MODEL_DURATION_LIMITS[modelId] || { min: 0, max: Infinity };
+  const availableDurations = durationsForModel(activeFormat, modelId);
+  const isSeedance = modelId.startsWith("bytedance/seedance");
+
+  // Keep the selected duration within the model's supported range. When the
+  // model or format changes and the current duration is out of range, reset to
+  // the maximum value the model actually supports for this format.
   useEffect(() => {
-    setDuration(activeFormat.durations[0].val);
-  }, [formatKey]); // eslint-disable-line react-hooks/exhaustive-deps
+    const allowed = durationsForModel(activeFormat, modelId).map((d) => d.val);
+    if (!allowed.includes(duration)) {
+      setDuration(Math.max(...allowed));
+    }
+  }, [modelId, formatKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadUsage = useCallback(async () => {
     try { setUsage((await apiClient.get("/api/studios/usage", { params: { type: "video" } })) || null); }
@@ -440,8 +472,13 @@ export default function StudiosVideo() {
             <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
               <div style={FIELD_LABEL}>Duration</div>
               <select value={duration} onChange={(e) => setDuration(Number(e.target.value))} style={FIELD_INPUT} data-testid="video-duration">
-                {activeFormat.durations.map((d) => <option key={d.val} value={d.val}>{d.label}</option>)}
+                {availableDurations.map((d) => <option key={d.val} value={d.val}>{d.label}</option>)}
               </select>
+              {isSeedance && (
+                <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 2 }} data-testid="video-duration-note">
+                  Seedance 2.0 supports up to 15 seconds — choose Veo 3.1 or Kling for longer videos.
+                </div>
+              )}
             </div>
 
             <div style={DIVIDER} />
