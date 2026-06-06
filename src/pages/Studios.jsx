@@ -44,6 +44,15 @@ const TOOLS = [
     banner: "linear-gradient(135deg, var(--cth-command-cinnabar), var(--cth-command-ink))",
   },
   {
+    name: "Voice Studio",
+    desc: "Generate professional AI voiceovers from your scripts. Choose from a library of voices and export studio-quality audio.",
+    tier: "Foundation+",
+    available: true,
+    to: "/studios/voice",
+    icon: Mic,
+    banner: "linear-gradient(135deg, var(--cth-command-crimson), var(--cth-command-ink))",
+  },
+  {
     name: "Brand Kit Studio",
     desc: "Export a polished brand kit PDF using your Identity Studio data — colors, fonts, logo, and usage rules in one shareable document.",
     tier: "House+",

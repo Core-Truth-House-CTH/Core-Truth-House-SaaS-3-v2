@@ -301,6 +301,15 @@ export const APP_ROUTES = [
     tooltip: "Generate branded videos from your script, prompt, and brand identity.",
   },
     {
+    path: "/studios/voice",
+    label: "Voice Studio",
+    icon: Sparkles,
+    group: "execution",
+    requiredPlan: "foundation",
+    gateType: "page",
+    tooltip: "Generate professional AI voiceovers from your scripts using AI voices.",
+  },
+    {
     path: "/launch-planner",
     label: "Launch Planner",
     icon: Rocket,
