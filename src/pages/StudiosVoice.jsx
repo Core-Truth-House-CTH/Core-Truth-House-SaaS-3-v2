@@ -9,6 +9,9 @@ import { DashboardLayout } from "../components/Layout";
 import { usePlan } from "../context/PlanContext";
 import apiClient from "../lib/apiClient";
 
+const API_BASE = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+const absUrl = (u) => (!u ? u : /^(https?:|data:|blob:)/.test(u) ? u : `${API_BASE}${u}`);
+
 const PLAN_RANK = { free: 0, audit: 1, foundation: 2, structure: 3, house: 4, estate: 5, legacy: 6 };
 
 const WARN_CHARS = 2500;
@@ -101,6 +104,7 @@ export default function StudiosVoice() {
   const pageLocked = (PLAN_RANK[normalizedPlan] ?? 0) < PLAN_RANK.foundation && !isSuperAdmin;
 
   const blobUrlRef = useRef(null);       // current generated object URL
+  const lastBlobRef = useRef(null);      // current generated Blob (re-uploaded on save)
   const createdUrlsRef = useRef([]);     // every object URL created this session (revoked on unmount)
   const previewAudioRef = useRef(null);  // voice-preview <audio>
   const savedAudioRef = useRef(null);    // saved-row playback <audio>
@@ -225,6 +229,7 @@ export default function StudiosVoice() {
       });
       const objectUrl = trackUrl(URL.createObjectURL(blob));
       blobUrlRef.current = objectUrl;
+      lastBlobRef.current = blob;
       setAudioUrl(objectUrl);
       const v = voices.find((x) => x.voice_id === selectedVoiceId);
       const m = MODELS.find((x) => x.id === modelId);
@@ -248,15 +253,20 @@ export default function StudiosVoice() {
     if (!audioUrl || !generatedMeta) return;
     setSaving(true);
     try {
-      const res = await apiClient.post("/api/studios/voice/save", {
-        script: generatedMeta.script,
-        voice_id: selectedVoiceId,
-        voice_name: generatedMeta.voiceName,
-        model_id: modelId,
-        duration_estimate: estimateDuration(generatedMeta.script),
-      });
+      // Re-upload the generated MP3 so it's persisted server-side and replay is
+      // free (no re-synthesis). Multipart form: metadata + the audio blob.
+      const fd = new FormData();
+      fd.append("script", generatedMeta.script);
+      fd.append("voice_id", selectedVoiceId);
+      fd.append("voice_name", generatedMeta.voiceName);
+      fd.append("model_id", modelId);
+      fd.append("duration_estimate", String(estimateDuration(generatedMeta.script)));
+      if (lastBlobRef.current) fd.append("audio", lastBlobRef.current, "voiceover.mp3");
+
+      const res = await apiClient.post("/api/studios/voice/save", fd);
       const savedRec = res?.voiceover;
-      // Map the just-generated blob to the new saved id for instant in-session replay.
+      // Keep the in-session blob mapped for instant local replay (avoids an
+      // immediate round-trip to fetch the file we already have in memory).
       if (savedRec?.id && blobUrlRef.current) {
         const url = blobUrlRef.current;
         setSavedBlobs((prev) => ({ ...prev, [savedRec.id]: url }));
@@ -270,10 +280,14 @@ export default function StudiosVoice() {
     }
   };
 
-  // Resolve a playable URL for a saved row: the in-session blob if present,
-  // otherwise re-synthesize from the stored full script.
+  // Resolve a playable URL for a saved row, cheapest source first:
+  //   1. in-session blob (just generated) — instant, no network
+  //   2. persisted file URL (audio_url) — free, fetched from disk
+  //   3. fallback: re-synthesize from the stored full script (legacy saves
+  //      with no persisted audio) — this DOES count a generation
   const ensureSavedUrl = async (item) => {
     if (savedBlobs[item.id]) return savedBlobs[item.id];
+    if (item.audio_url) return absUrl(item.audio_url);
     setSavedBusyId(item.id);
     try {
       const blob = await generateBlob({
@@ -315,9 +329,20 @@ export default function StudiosVoice() {
   };
 
   const downloadSaved = async (item) => {
+    const name = `${(item.name || "voiceover").replace(/[^\w-]+/g, "_")}.mp3`;
     try {
       const url = await ensureSavedUrl(item);
-      triggerDownload(url, `${(item.name || "voiceover").replace(/[^\w-]+/g, "_")}.mp3`);
+      if (url.startsWith("blob:")) {
+        triggerDownload(url, name);
+        return;
+      }
+      // Persisted file URL: fetch to a blob so the download attribute is honored
+      // cross-origin (mirrors the Visual Studio download pattern).
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      triggerDownload(objectUrl, name);
+      URL.revokeObjectURL(objectUrl);
     } catch (err) {
       toast.error(err?.message || "Could not download this voiceover.");
     }
