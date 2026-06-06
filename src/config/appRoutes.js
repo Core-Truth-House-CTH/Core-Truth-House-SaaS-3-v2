@@ -292,6 +292,15 @@ export const APP_ROUTES = [
     tooltip: "Generate on-brand social graphics, cover images, and brand visuals.",
   },
     {
+    path: "/studios/video",
+    label: "Video Studio",
+    icon: Sparkles,
+    group: "execution",
+    requiredPlan: null,
+    gateType: null,
+    tooltip: "Generate branded videos from your script, prompt, and brand identity.",
+  },
+    {
     path: "/launch-planner",
     label: "Launch Planner",
     icon: Rocket,
