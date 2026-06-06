@@ -64,6 +64,27 @@ function durationsForModel(format, modelId) {
   return [{ label: `${limit.max} seconds`, val: limit.max }];
 }
 
+// Realistic generation time per model, expressed as seconds of wall-clock wait
+// per second of finished video. Used to drive the in-page progress estimate.
+const MODEL_TIME_ESTIMATES = {
+  "bytedance/seedance-2.0-fast": 8,
+  "bytedance/seedance-2.0": 15,
+  "google/veo-3.1": 20,
+  "google/veo-3.1-fast": 12,
+  "kwaivgi/kling-v3.0-pro": 18,
+  "kwaivgi/kling-v3.0-std": 12,
+  "minimax/hailuo-2.3": 15,
+  "openai/sora-2-pro": 25,
+};
+
+// Estimated total wall-clock seconds for a generation, from the model's
+// per-second ratio and the requested video duration. Floored at 15s so very
+// short clips still show a sensible countdown.
+function estimatedTotalSeconds(modelId, duration) {
+  const ratio = MODEL_TIME_ESTIMATES[modelId] ?? 15;
+  return Math.max(15, Math.round(ratio * duration));
+}
+
 const WM_POSITIONS = [
   { key: "bottom_right", label: "Bottom right" },
   { key: "bottom_left", label: "Bottom left" },
@@ -181,6 +202,7 @@ export default function StudiosVideo() {
   const [generating, setGenerating] = useState(false);
   const [job, setJob] = useState(null);           // active short-form job
   const [progress, setProgress] = useState(0);
+  const [estTotal, setEstTotal] = useState(0); // estimated total seconds for the active job
   const [videoUrl, setVideoUrl] = useState("");    // object URL for in-page playback
   const [bgNote, setBgNote] = useState(false);     // medium-form note shown
   const [queue, setQueue] = useState([]);
@@ -399,7 +421,9 @@ export default function StudiosVideo() {
         loadQueue();
       } else {
         // Estimate: ~3s of wait per second of video, floored at 30s.
-        startProgress(Math.max(30, duration * 3));
+        const est = estimatedTotalSeconds(modelId, duration);
+        setEstTotal(est);
+        startProgress(est);
         pollShort(jobId, name);
       }
     } catch (err) {
@@ -726,13 +750,13 @@ export default function StudiosVideo() {
               {generating && job?.form === "short" && (
                 <div style={{ marginTop: 10 }} data-testid="video-progress">
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--cth-command-muted)", marginBottom: 5 }}>
-                    <span>Generating your video</span><span>{progress}%</span>
+                    <span>Generating your video — estimated {Math.max(0, Math.round(estTotal * (1 - progress / 100)))} seconds remaining</span><span>{progress}%</span>
                   </div>
                   <div style={{ height: 4, background: "var(--cth-command-blush)", borderRadius: 999, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${progress}%`, background: "var(--cth-command-crimson)", borderRadius: 999, transition: "width 0.6s" }} />
+                    <div style={{ height: "100%", width: `${progress}%`, background: "var(--cth-command-crimson)", borderRadius: 999, transition: "width 1s linear" }} />
                   </div>
                   <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 4 }}>
-                    {(MODELS.find((m) => m.id === modelId) || {}).label} · {duration}s · {activeFormat.ratio} · estimated {Math.max(0, Math.round(((100 - progress) / 100) * Math.max(30, duration * 3)))}s remaining
+                    {(MODELS.find((m) => m.id === modelId) || {}).label} · {duration}s · {activeFormat.ratio}
                   </div>
                 </div>
               )}
