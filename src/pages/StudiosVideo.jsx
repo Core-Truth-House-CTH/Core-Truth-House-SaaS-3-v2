@@ -208,8 +208,10 @@ export default function StudiosVideo() {
   const [queue, setQueue] = useState([]);
   const [savedVideos, setSavedVideos] = useState([]);
   const [saving, setSaving] = useState(false);
-  const [hoverVideoId, setHoverVideoId] = useState(null);   // card under cursor
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // inline confirm open
+  const [hoverVideoId, setHoverVideoId] = useState(null);   // saved card under cursor
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // saved inline confirm open
+  const [hoverQueueId, setHoverQueueId] = useState(null);   // queue card under cursor
+  const [confirmQueueId, setConfirmQueueId] = useState(null); // queue inline confirm open
 
   const modelLimit = MODEL_DURATION_LIMITS[modelId] || { min: 0, max: Infinity };
   const availableDurations = durationsForModel(activeFormat, modelId);
@@ -457,6 +459,39 @@ export default function StudiosVideo() {
       setSavedVideos(prev);
       toast.error(err?.message || "Could not delete the video.");
     }
+  };
+
+  const handleDeleteQueue = async (jobId) => {
+    const prev = queue;
+    // Optimistic: drop the card immediately, restore it if the delete fails.
+    setQueue((list) => list.filter((j) => j.job_id !== jobId));
+    setConfirmQueueId(null);
+    setHoverQueueId(null);
+    try {
+      await apiClient.delete(`/api/studios/videos/queue/${jobId}`);
+      toast.success("Removed from queue.");
+    } catch (err) {
+      setQueue(prev);
+      toast.error(err?.message || "Could not remove from queue.");
+    }
+  };
+
+  // Stop an in-page short-form generation. We can't cancel the upstream
+  // OpenRouter job (already running, credit already spent), so we just stop
+  // watching it and delete our DB record so it doesn't linger in the queue.
+  const handleStopGeneration = async () => {
+    const jobId = job?.job_id;
+    clearInterval(shortPollRef.current);
+    clearInterval(progressRef.current);
+    setGenerating(false);
+    setProgress(0);
+    setJob(null);
+    toast.success("Generation stopped.");
+    if (jobId) {
+      try { await apiClient.delete(`/api/studios/videos/queue/${jobId}`); }
+      catch { /* best effort — the OpenRouter job can't be cancelled anyway */ }
+    }
+    loadQueue();
   };
 
   const downloadJob = async (jobId, name) => {
@@ -758,6 +793,15 @@ export default function StudiosVideo() {
                   <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 4 }}>
                     {(MODELS.find((m) => m.id === modelId) || {}).label} · {duration}s · {activeFormat.ratio}
                   </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+                    <button
+                      onClick={handleStopGeneration} data-testid="video-stop-btn"
+                      style={{ fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 7, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", background: "transparent", color: "var(--cth-command-muted)", border: "0.5px solid var(--cth-command-border)" }}
+                    >
+                      Stop generation
+                    </button>
+                    <span style={{ fontSize: 10, color: "var(--cth-command-muted)" }}>Credits already used for this generation.</span>
+                  </div>
                 </div>
               )}
 
@@ -795,19 +839,51 @@ export default function StudiosVideo() {
                 <div style={{ padding: 20, textAlign: "center", color: "var(--cth-command-muted)", fontSize: 11 }}>No background generations yet.</div>
               ) : queue.map((j) => {
                 const ready = j.status === "completed" || j.content_url;
+                const confirming = confirmQueueId === j.job_id;
+                const showTrash = hoverQueueId === j.job_id || confirming;
                 return (
-                  <div key={j.job_id} style={{ background: "var(--cth-command-blush)", border: "0.5px solid var(--cth-command-border)", borderRadius: 10, padding: "10px 12px", marginBottom: 7, display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    key={j.job_id}
+                    onMouseEnter={() => setHoverQueueId(j.job_id)}
+                    onMouseLeave={() => { setHoverQueueId(null); if (confirming) setConfirmQueueId(null); }}
+                    data-testid={`video-queue-card-${j.job_id}`}
+                    style={{ position: "relative", background: "var(--cth-command-blush)", border: "0.5px solid var(--cth-command-border)", borderRadius: 10, padding: "10px 12px", marginBottom: 7, display: "flex", alignItems: "center", gap: 10 }}
+                  >
                     <div style={{ width: 30, height: 30, borderRadius: 6, background: "var(--cth-command-night)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <VideoIcon size={13} style={{ color: "var(--cth-command-ivory)", opacity: 0.7 }} />
                     </div>
-                    <div style={{ minWidth: 0 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontSize: 11, fontWeight: 500, color: "var(--cth-command-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.name || "Untitled video"}</div>
                       <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 1 }}>{j.model_label || j.model_id} · {j.aspect_ratio} · {j.duration}s</div>
                     </div>
                     {ready ? (
-                      <button onClick={() => downloadJob(j.job_id, j.name)} style={{ marginLeft: "auto", color: "var(--cth-command-success)", fontSize: 10, fontWeight: 500, background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Ready to download</button>
+                      <button onClick={() => downloadJob(j.job_id, j.name)} data-testid={`video-queue-download-${j.job_id}`} style={{ flexShrink: 0, fontSize: 10, fontWeight: 500, padding: "5px 10px", borderRadius: 7, background: "var(--cth-command-blush)", color: "var(--cth-command-ink)", border: "0.5px solid var(--cth-command-border)", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Download</button>
                     ) : (
-                      <span style={{ marginLeft: "auto", color: "var(--cth-command-cinnabar)", fontSize: 10, fontWeight: 500 }}>Processing…</span>
+                      <span style={{ flexShrink: 0, color: "var(--cth-command-cinnabar)", fontSize: 10, fontWeight: 500 }}>Still processing...</span>
+                    )}
+
+                    {/* Trash icon — on hover */}
+                    {showTrash && !confirming && (
+                      <button
+                        onClick={() => setConfirmQueueId(j.job_id)}
+                        data-testid={`video-queue-delete-${j.job_id}`}
+                        title="Remove from queue"
+                        style={{ flexShrink: 0, width: 24, height: 24, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--cth-command-panel)", border: "0.5px solid var(--cth-command-border)", cursor: "pointer", padding: 0 }}
+                      >
+                        <Trash2 size={12} style={{ color: "var(--cth-command-crimson)" }} />
+                      </button>
+                    )}
+
+                    {/* Inline confirmation */}
+                    {confirming && (
+                      <div
+                        data-testid={`video-queue-confirm-${j.job_id}`}
+                        style={{ position: "absolute", inset: 0, background: "rgba(20,8,12,0.9)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 12px" }}
+                      >
+                        <span style={{ fontSize: 11, fontWeight: 500, color: "var(--cth-command-ivory)" }}>Remove from queue?</span>
+                        <button onClick={() => handleDeleteQueue(j.job_id)} data-testid={`video-queue-confirm-yes-${j.job_id}`} style={{ fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 6, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", background: "var(--cth-command-crimson)", color: "var(--cth-command-ivory)", border: "none" }}>Remove</button>
+                        <button onClick={() => setConfirmQueueId(null)} data-testid={`video-queue-confirm-no-${j.job_id}`} style={{ fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 6, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", background: "var(--cth-command-blush)", color: "var(--cth-command-ink)", border: "0.5px solid var(--cth-command-border)" }}>Cancel</button>
+                      </div>
                     )}
                   </div>
                 );
