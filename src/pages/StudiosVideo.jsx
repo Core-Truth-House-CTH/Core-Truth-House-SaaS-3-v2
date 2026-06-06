@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft, Video as VideoIcon, Lock, Check, Image as ImageIcon, Play, Loader2,
+  ArrowLeft, Video as VideoIcon, Lock, Check, Image as ImageIcon, Play, Loader2, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -97,6 +97,29 @@ function Toggle({ on, onClick }) {
   );
 }
 
+// Textarea that grows to fit its content so the founder never has to scroll a
+// small box while writing. Height resets to `auto` then snaps to scrollHeight on
+// every value change — including programmatic ones (e.g. pasted-in scripts).
+function AutoTextarea({ value, onChange, minHeight = 52, style, ...rest }) {
+  const ref = useRef(null);
+  const resize = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.max(minHeight, el.scrollHeight)}px`;
+  }, [minHeight]);
+  useEffect(() => { resize(); }, [value, resize]);
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => { onChange(e); resize(); }}
+      style={{ ...style, minHeight, overflow: "hidden" }}
+      {...rest}
+    />
+  );
+}
+
 function LockedView() {
   const navigate = useNavigate();
   return (
@@ -163,6 +186,8 @@ export default function StudiosVideo() {
   const [queue, setQueue] = useState([]);
   const [savedVideos, setSavedVideos] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [hoverVideoId, setHoverVideoId] = useState(null);   // card under cursor
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // inline confirm open
 
   const modelLimit = MODEL_DURATION_LIMITS[modelId] || { min: 0, max: Infinity };
   const availableDurations = durationsForModel(activeFormat, modelId);
@@ -395,6 +420,21 @@ export default function StudiosVideo() {
     } finally { setSaving(false); }
   };
 
+  const handleDeleteSaved = async (videoId) => {
+    const prev = savedVideos;
+    // Optimistic: drop the card immediately, restore it if the delete fails.
+    setSavedVideos((list) => list.filter((x) => x.id !== videoId));
+    setConfirmDeleteId(null);
+    setHoverVideoId(null);
+    try {
+      await apiClient.delete(`/api/studios/videos/${videoId}`);
+      toast.success("Video deleted.");
+    } catch (err) {
+      setSavedVideos(prev);
+      toast.error(err?.message || "Could not delete the video.");
+    }
+  };
+
   const downloadJob = async (jobId, name) => {
     try {
       const blob = await authedDownloadBlob(jobId);
@@ -565,7 +605,7 @@ export default function StudiosVideo() {
             {/* Script */}
             <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
               <div style={FIELD_LABEL}>Script</div>
-              <textarea value={script} onChange={(e) => setScript(e.target.value)} placeholder="Paste your script from Content Studio or write one here." style={{ ...FIELD_INPUT, resize: "none", lineHeight: 1.6, minHeight: 72 }} data-testid="video-script" />
+              <AutoTextarea value={script} onChange={(e) => setScript(e.target.value)} minHeight={72} placeholder="Paste your script from Content Studio or write one here." style={{ ...FIELD_INPUT, resize: "none", lineHeight: 1.6 }} data-testid="video-script" />
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
                 <span style={{ fontSize: 10, color: "var(--cth-command-muted)" }}>From Content Studio:</span>
                 <button onClick={() => navigate("/content-studio")} style={{ fontSize: 10, color: "var(--cth-command-crimson)", fontWeight: 500, background: "var(--cth-command-blush)", border: "0.5px solid var(--cth-command-border)", borderRadius: 5, padding: "2px 8px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Video Scripts</button>
@@ -575,7 +615,7 @@ export default function StudiosVideo() {
             {/* Visual prompt */}
             <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
               <div style={FIELD_LABEL}>Visual prompt</div>
-              <textarea value={visualPrompt} onChange={(e) => setVisualPrompt(e.target.value)} placeholder="Describe the visual style, setting, movement, or mood." style={{ ...FIELD_INPUT, resize: "none", lineHeight: 1.6, minHeight: 52 }} data-testid="video-visual-prompt" />
+              <AutoTextarea value={visualPrompt} onChange={(e) => setVisualPrompt(e.target.value)} minHeight={52} placeholder="Describe the visual style, setting, movement, or mood." style={{ ...FIELD_INPUT, resize: "none", lineHeight: 1.6 }} data-testid="video-visual-prompt" />
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
                 <span style={{ fontSize: 10, color: "var(--cth-command-muted)" }}>From Content Studio:</span>
                 <button onClick={() => navigate("/content-studio")} style={{ fontSize: 10, color: "var(--cth-command-crimson)", fontWeight: 500, background: "var(--cth-command-blush)", border: "0.5px solid var(--cth-command-border)", borderRadius: 5, padding: "2px 8px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Visual Prompts</button>
@@ -760,17 +800,68 @@ export default function StudiosVideo() {
                 </div>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                  {savedVideos.map((v) => (
-                    <div key={v.id} onClick={() => downloadJob(v.job_id, v.name)} style={{ borderRadius: 9, border: "0.5px solid var(--cth-command-border)", overflow: "hidden", cursor: "pointer" }}>
-                      <div style={{ aspectRatio: "16 / 9", background: "var(--cth-command-night)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Play size={18} style={{ color: "var(--cth-command-ivory)", opacity: 0.4 }} />
+                  {savedVideos.map((v) => {
+                    const confirming = confirmDeleteId === v.id;
+                    const showTrash = hoverVideoId === v.id || confirming;
+                    return (
+                      <div
+                        key={v.id}
+                        onMouseEnter={() => setHoverVideoId(v.id)}
+                        onMouseLeave={() => { setHoverVideoId(null); if (confirming) setConfirmDeleteId(null); }}
+                        onClick={() => { if (!confirming) downloadJob(v.job_id, v.name); }}
+                        data-testid={`video-saved-card-${v.id}`}
+                        style={{ borderRadius: 9, border: "0.5px solid var(--cth-command-border)", overflow: "hidden", cursor: "pointer", position: "relative" }}
+                      >
+                        <div style={{ aspectRatio: "16 / 9", background: "var(--cth-command-night)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Play size={18} style={{ color: "var(--cth-command-ivory)", opacity: 0.4 }} />
+                        </div>
+
+                        {/* Trash icon — top right, on hover */}
+                        {showTrash && !confirming && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(v.id); }}
+                            data-testid={`video-saved-delete-${v.id}`}
+                            title="Delete this video"
+                            style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(20,8,12,0.72)", border: "0.5px solid var(--cth-command-border)", cursor: "pointer", padding: 0 }}
+                          >
+                            <Trash2 size={13} style={{ color: "var(--cth-command-ivory)" }} />
+                          </button>
+                        )}
+
+                        {/* Inline delete confirmation */}
+                        {confirming && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            data-testid={`video-saved-confirm-${v.id}`}
+                            style={{ position: "absolute", inset: 0, background: "rgba(20,8,12,0.86)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: 8, textAlign: "center" }}
+                          >
+                            <div style={{ fontSize: 11, fontWeight: 500, color: "var(--cth-command-ivory)" }}>Delete this video?</div>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteSaved(v.id); }}
+                                data-testid={`video-saved-confirm-yes-${v.id}`}
+                                style={{ fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 6, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", background: "var(--cth-command-crimson)", color: "var(--cth-command-ivory)", border: "none" }}
+                              >
+                                Delete
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                                data-testid={`video-saved-confirm-no-${v.id}`}
+                                style={{ fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 6, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", background: "var(--cth-command-blush)", color: "var(--cth-command-ink)", border: "0.5px solid var(--cth-command-border)" }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        <div style={{ padding: "7px 9px", background: "var(--cth-command-panel)" }}>
+                          <div style={{ fontSize: 10, fontWeight: 500, color: "var(--cth-command-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.name}</div>
+                          <div style={{ fontSize: 9, color: "var(--cth-command-muted)", marginTop: 1 }}>{v.model} · {v.duration}s · {v.aspect_ratio}</div>
+                        </div>
                       </div>
-                      <div style={{ padding: "7px 9px", background: "var(--cth-command-panel)" }}>
-                        <div style={{ fontSize: 10, fontWeight: 500, color: "var(--cth-command-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.name}</div>
-                        <div style={{ fontSize: 9, color: "var(--cth-command-muted)", marginTop: 1 }}>{v.model} · {v.duration}s · {v.aspect_ratio}</div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
