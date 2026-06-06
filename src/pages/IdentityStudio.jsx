@@ -295,6 +295,9 @@ function IdentityStudioContent() {
 
   const originalColorsRef = useRef(null);
   const lastValidHexRef = useRef({});
+  // Value of a color-name input when it gained focus, so blur can detect a real
+  // rename and auto-save only when the name actually changed.
+  const colorLabelFocusRef = useRef('');
   const errorTimersRef = useRef({});
   const fontInputRef = useRef(null);
   const fontUploadRoleRef = useRef(null);
@@ -1298,9 +1301,19 @@ function IdentityStudioContent() {
                               value={color.label || ''}
                               onChange={(e) => {
                                 const next = [...colors];
-                                next[index] = { ...next[index], label: e.target.value };
+                                // Keep role in sync with the label so the bold
+                                // caption above reflects the renamed color.
+                                next[index] = { ...next[index], label: e.target.value, role: e.target.value };
                                 setColors(next);
                                 setHasUnsaved(true);
+                              }}
+                              onFocus={(e) => { colorLabelFocusRef.current = e.target.value; }}
+                              onBlur={(e) => {
+                                // Auto-save the rename when the founder tabs out
+                                // or clicks away, only if the name actually changed.
+                                if (e.target.value !== colorLabelFocusRef.current) {
+                                  handleSave();
+                                }
                               }}
                               className="w-full bg-transparent border-0 p-0 focus:outline-none"
                               style={{
