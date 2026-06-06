@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTH Video Studio — Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+/* Use only --cth-command-* CSS variables. Only permitted literal hex: #1a0828 for Zuri card */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cth-command-blush,#f8f4f2);padding:24px;}
+.wrap{max-width:1060px;margin:0 auto;}
+.gen-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.back-btn{font-size:11px;color:var(--cth-command-muted,#7c6576);background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:7px;padding:6px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;}
+.gen-grid{display:grid;grid-template-columns:340px 1fr;gap:14px;}
+.card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.card-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;margin-bottom:12px;}
+.usage-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;margin-bottom:10px;}
+.usage-lbl{font-size:11px;color:var(--cth-command-muted,#7c6576);}
+.usage-val{font-size:11px;font-weight:500;color:var(--cth-command-crimson,#5d0012);}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.fl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--cth-command-muted,#7c6576);font-weight:500;}
+.fi{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.fta{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:none;line-height:1.6;min-height:72px;}
+.fsel{padding:8px 11px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:8px;font-size:12px;color:var(--cth-command-ink,#1a0828);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.opt{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:2px;}
+.div{height:.5px;background:var(--cth-command-border,#e8d5d0);margin:12px 0;}
+/* Format pills */
+.fmt-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:0;}
+.fmt-pill{padding:8px 6px;border-radius:7px;font-size:10px;font-weight:500;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;}
+.fmt-pill.on{background:var(--cth-command-crimson,#5d0012);color:#fff;border-color:var(--cth-command-crimson,#5d0012);}
+.fmt-sub{font-size:8px;color:var(--cth-command-muted,#7c6576);display:block;margin-top:2px;}
+.fmt-pill.on .fmt-sub{color:rgba(255,255,255,.6);}
+.fmt-badge{font-size:8px;display:inline-block;margin-top:2px;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);}
+/* Reference image tabs — three sources */
+.ref-tabs{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;}
+.ref-tab{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:500;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.ref-tab.on{background:var(--cth-command-crimson,#5d0012);color:#fff;border-color:var(--cth-command-crimson,#5d0012);}
+/* Upload zone */
+.upload-zone{border:1px dashed var(--cth-command-border,#d8c5c3);border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:var(--cth-command-blush,#f8f4f2);}
+.upload-icon{font-size:20px;color:#c7a09d;margin-bottom:6px;}
+.upload-text{font-size:11px;color:var(--cth-command-muted,#7c6576);line-height:1.5;}
+.upload-hint{font-size:10px;color:#b0a0b8;margin-top:3px;}
+/* Saved headshots / media grid */
+.asset-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.asset-card{border-radius:8px;aspect-ratio:4/5;border:.5px solid var(--cth-command-border,#e8d5d0);overflow:hidden;cursor:pointer;position:relative;background:var(--cth-command-blush,#f8f4f2);}
+.asset-card.wide{aspect-ratio:16/9;}
+.asset-card.selected{border:2px solid var(--cth-command-crimson,#5d0012);}
+.sel-check{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;background:var(--cth-command-crimson,#5d0012);display:none;align-items:center;justify-content:center;}
+.asset-card.selected .sel-check{display:flex;}
+/* Model selector */
+.model-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:0;}
+.model-pill{padding:7px 8px;border-radius:7px;font-size:10px;font-weight:500;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.model-pill.on{background:var(--cth-command-crimson,#5d0012);color:#fff;border-color:var(--cth-command-crimson,#5d0012);}
+.model-sub{font-size:8px;color:var(--cth-command-muted,#7c6576);display:block;margin-top:1px;}
+.model-pill.on .model-sub{color:rgba(255,255,255,.6);}
+/* Prompt helper */
+.prompt-helper{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.ph-tag{font-size:10px;color:var(--cth-command-crimson,#5d0012);font-weight:500;background:var(--cth-command-blush,#f8f4f2);border:.5px solid rgba(93,0,18,.2);border-radius:5px;padding:2px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:9px;margin-bottom:8px;}
+.toggle-label{font-size:12px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.toggle-sub{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:1px;}
+.toggle{width:34px;height:18px;background:var(--cth-command-crimson,#5d0012);border-radius:20px;position:relative;flex-shrink:0;}
+.toggle.off{background:var(--cth-command-border,#e8d5d0);}
+.toggle-dot{width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;}
+.toggle.off .toggle-dot{right:auto;left:2px;}
+/* Watermark section */
+.watermark-section{background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:9px;padding:10px 12px;margin-bottom:10px;}
+.wm-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.wm-options{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px;}
+.wm-opt{padding:5px 8px;border-radius:6px;font-size:10px;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-panel,#fff);color:var(--cth-command-ink,#1a0828);cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;}
+.wm-opt.on{background:var(--cth-command-crimson,#5d0012);color:#fff;border-color:var(--cth-command-crimson,#5d0012);}
+/* Zuri card */
+.zuri-card{background:#1a0828;border-radius:10px;padding:13px 15px;}
+.zh{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.zav{width:18px;height:18px;border-radius:50%;background:#e04e35;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.zlbl{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#7a6090;}
+.zt{font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;color:#e8dff0;font-style:italic;line-height:1.5;}
+.gen-btn{width:100%;padding:11px;background:var(--cth-command-crimson,#5d0012);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;}
+/* Output */
+.output-card{background:var(--cth-command-panel,#fff);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:12px;padding:18px;}
+.abtn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.a-dl{background:var(--cth-command-blush,#f8f4f2);color:var(--cth-command-ink,#1a0828);border:.5px solid var(--cth-command-border,#e8d5d0);}
+.a-save{background:#2d6a4f;color:#fff;border:none;}
+/* Video output */
+.video-output{border-radius:10px;border:.5px solid var(--cth-command-border,#e8d5d0);background:var(--cth-command-blush,#f8f4f2);aspect-ratio:9/16;max-width:200px;margin:12px auto 0;display:flex;align-items:center;justify-content:center;}
+/* Progress */
+.progress-wrap{margin-top:10px;}
+.progress-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--cth-command-muted,#7c6576);margin-bottom:5px;}
+.progress-bar{height:4px;background:var(--cth-command-blush,#f8f4f2);border-radius:999px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--cth-command-crimson,#5d0012);border-radius:999px;width:65%;}
+/* Queue */
+.queue-card{background:var(--cth-command-blush,#f8f4f2);border:.5px solid var(--cth-command-border,#e8d5d0);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
+.queue-icon{width:30px;height:30px;border-radius:6px;background:#2b1040;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.queue-name{font-size:11px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.queue-meta{font-size:10px;color:var(--cth-command-muted,#7c6576);margin-top:1px;}
+.qs-processing{color:#e04e35;font-size:10px;font-weight:500;margin-left:auto;}
+.qs-done{color:#2d6a4f;font-size:10px;font-weight:500;margin-left:auto;}
+/* Saved videos */
+.saved-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
+.saved-card{border-radius:9px;border:.5px solid var(--cth-command-border,#e8d5d0);overflow:hidden;cursor:pointer;}
+.saved-thumb{aspect-ratio:16/9;background:#2b1040;display:flex;align-items:center;justify-content:center;}
+.saved-meta{padding:7px 9px;background:var(--cth-command-panel,#fff);}
+.saved-name{font-size:10px;font-weight:500;color:var(--cth-command-ink,#1a0828);}
+.saved-info{font-size:9px;color:var(--cth-command-muted,#7c6576);margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gen-header">
+    <button class="back-btn"><i class="ti ti-arrow-left" style="font-size:11px;"></i> Studios</button>
+    <div>
+      <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:500;color:#1a0828;">Video Studio</div>
+      <div style="font-size:11px;color:#7c6576;margin-top:2px;">Generate branded videos from your script, prompt, and brand identity.</div>
+    </div>
+  </div>
+
+  <div class="gen-grid">
+    <div class="card">
+      <div class="card-lbl">Generation settings</div>
+      <div class="usage-row"><span class="usage-lbl">Generations this month</span><span class="usage-val">1 / 5 used</span></div>
+
+      <!-- Format -->
+      <div class="fg">
+        <div class="fl">Format <span style="color:#e04e35;">*</span></div>
+        <div class="fmt-grid">
+          <button class="fmt-pill on">Short Form<span class="fmt-sub">9:16 · 15–60s</span><span class="fmt-badge">In-page</span></button>
+          <button class="fmt-pill">Short Form<span class="fmt-sub">16:9 · 15–60s</span><span class="fmt-badge">In-page</span></button>
+          <button class="fmt-pill">Medium Form<span class="fmt-sub">9:16 · 2–3 min</span><span class="fmt-badge">Background</span></button>
+          <button class="fmt-pill">Medium Form<span class="fmt-sub">16:9 · 2–3 min</span><span class="fmt-badge">Background</span></button>
+        </div>
+        <div class="opt">Background generations notify you when ready — you can navigate away</div>
+      </div>
+
+      <!-- Duration -->
+      <div class="fg"><div class="fl">Duration</div><select class="fsel"><option>15 seconds</option><option>30 seconds</option><option selected>60 seconds</option></select></div>
+
+      <div class="div"></div>
+
+      <!-- Reference image — three sources -->
+      <div class="fg">
+        <div class="fl">Reference image</div>
+        <div class="ref-tabs">
+          <button class="ref-tab on">Upload photo</button>
+          <button class="ref-tab">Saved headshots</button>
+          <button class="ref-tab">Media library</button>
+        </div>
+        <!-- Upload tab -->
+        <div class="upload-zone">
+          <div class="upload-icon"><i class="ti ti-photo-up"></i></div>
+          <div class="upload-text">Upload a reference photo for identity anchoring</div>
+          <div class="upload-hint">JPG, PNG, WEBP up to 10MB — recommended for brand consistency</div>
+        </div>
+        <!--
+          Saved headshots tab: 4-col grid of portrait-aspect cards from GET /api/studios/headshots
+          Media library tab: 4-col grid of wide-aspect cards from GET /api/workspace/media
+          Both: clicking a card selects it (single select), shows checkmark, passes URL to input_references
+        -->
+        <div class="opt">Used as identity anchor in the generated video</div>
+      </div>
+
+      <!-- Script -->
+      <div class="fg">
+        <div class="fl">Script</div>
+        <textarea class="fta" placeholder="Paste your script from Content Studio or write one here..."></textarea>
+        <div class="prompt-helper">
+          <span style="font-size:10px;color:#7c6576;">From Content Studio:</span>
+          <span class="ph-tag">Video Scripts</span>
+        </div>
+      </div>
+
+      <!-- Visual prompt -->
+      <div class="fg">
+        <div class="fl">Visual prompt</div>
+        <textarea class="fta" style="min-height:52px;" placeholder="Describe the visual style, setting, movement, or mood..."></textarea>
+        <div class="prompt-helper">
+          <span style="font-size:10px;color:#7c6576;">From Content Studio:</span>
+          <span class="ph-tag">Visual Prompts</span>
+        </div>
+      </div>
+
+      <div class="div"></div>
+
+      <!-- Model selector — 8 models -->
+      <div class="fg">
+        <div class="fl">Generation model</div>
+        <div class="model-grid">
+          <button class="model-pill on">Seedance 2.0<span class="model-sub">Identity · 1080p · Recommended</span></button>
+          <button class="model-pill">Seedance 2.0 Fast<span class="model-sub">Quick draft · 720p</span></button>
+          <button class="model-pill">Veo 3.1<span class="model-sub">Cinematic · 1080p</span></button>
+          <button class="model-pill">Kling v3.0 Pro<span class="model-sub">Narrative · 1080p</span></button>
+          <button class="model-pill">Veo 3.1 Fast<span class="model-sub">Cinematic fast · 720p</span></button>
+          <button class="model-pill">Hailuo 2.3<span class="model-sub">Stylized · creative</span></button>
+          <button class="model-pill">Kling v3.0 Std<span class="model-sub">Budget cinematic</span></button>
+          <button class="model-pill">Sora 2 Pro<span class="model-sub">Highest fidelity</span></button>
+        </div>
+      </div>
+
+      <!-- Audio toggle -->
+      <div class="toggle-row">
+        <div><div class="toggle-label">Generate audio</div><div class="toggle-sub">AI-generated ambient sound or music</div></div>
+        <div class="toggle"><div class="toggle-dot"></div></div>
+      </div>
+
+      <!-- Watermark -->
+      <!--
+        WATERMARK SECTION
+        Toggle on/off. When on, show position options (top-left, top-right, bottom-left, bottom-right).
+        Watermark image: pulls logo_url from GET /api/identity. If no logo set, show "Add a logo in Identity Studio" link.
+        Watermark is applied client-side as an overlay on the video player, and server-side on download.
+        Pass watermark: true + position + logo_url to the generate endpoint.
+      -->
+      <div class="watermark-section">
+        <div class="wm-row">
+          <div><div class="toggle-label">Brand watermark</div><div class="toggle-sub">Add your logo to the generated video</div></div>
+          <div class="toggle"><div class="toggle-dot"></div></div>
+        </div>
+        <div class="wm-options">
+          <button class="wm-opt on">Bottom right</button>
+          <button class="wm-opt">Bottom left</button>
+          <button class="wm-opt">Top right</button>
+          <button class="wm-opt">Top left</button>
+        </div>
+        <div class="opt" style="margin-top:6px;">Pulls your logo from Identity Studio</div>
+      </div>
+
+      <div class="div"></div>
+
+      <div class="zuri-card">
+        <div class="zh"><div class="zav"><span style="font-size:8px;font-weight:500;color:#fff;">Z</span></div><span class="zlbl">Zuri · video direction</span></div>
+        <div class="zt">"The strongest branded videos are not productions — they are moments of clarity. One idea, one face, one message. Keep the script to a single point and let the visual do the rest."</div>
+      </div>
+      <button class="gen-btn">Generate Video</button>
+    </div>
+
+    <!-- RIGHT OUTPUT -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <!-- In-page output (short form) -->
+      <div class="output-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:500;color:#1a0828;">Generated video</div>
+          <div style="display:flex;gap:6px;"><button class="abtn a-dl">Download</button><button class="abtn a-save">Save to library</button></div>
+        </div>
+        <!-- Progress state during generation -->
+        <div class="progress-wrap">
+          <div class="progress-lbl"><span>Generating your video</span><span>65%</span></div>
+          <div class="progress-bar"><div class="progress-fill"></div></div>
+          <div style="font-size:10px;color:#7c6576;margin-top:4px;">Seedance 2.0 · 60s · 9:16 · estimated 45s remaining</div>
+        </div>
+        <!-- Video output when complete: <video> element with controls, src from unsigned_urls[0] -->
+        <div class="video-output">
+          <div style="text-align:center;color:#7c6576;">
+            <i class="ti ti-video" style="font-size:28px;color:#d8c5c3;display:block;margin-bottom:6px;"></i>
+            <div style="font-size:11px;">Video will appear here</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Background queue (medium form) -->
+      <div class="output-card">
+        <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:500;color:#1a0828;margin-bottom:10px;">Background queue</div>
+        <div class="queue-card">
+          <div class="queue-icon"><i class="ti ti-video" style="font-size:13px;color:rgba(255,255,255,.7);"></i></div>
+          <div><div class="queue-name">Brand Foundation Explainer</div><div class="queue-meta">Veo 3.1 · 16:9 · 2 min</div></div>
+          <span class="qs-processing">Processing...</span>
+        </div>
+        <div class="queue-card">
+          <div class="queue-icon" style="background:#1a3a2a;"><i class="ti ti-video" style="font-size:13px;color:rgba(255,255,255,.7);"></i></div>
+          <div><div class="queue-name">Offer Walkthrough</div><div class="queue-meta">Seedance 2.0 · 9:16 · 3 min</div></div>
+          <span class="qs-done">Ready to download</span>
+        </div>
+      </div>
+
+      <!-- Saved videos -->
+      <div class="output-card">
+        <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:500;color:#1a0828;margin-bottom:10px;">Saved videos</div>
+        <div class="saved-grid">
+          <div class="saved-card"><div class="saved-thumb"><i class="ti ti-player-play" style="font-size:18px;color:rgba(255,255,255,.4);"></i></div><div class="saved-meta"><div class="saved-name">Signal Inbox Intro</div><div class="saved-info">Seedance 2.0 · 30s · 9:16</div></div></div>
+          <div class="saved-card"><div class="saved-thumb" style="background:#3d1a28;"><i class="ti ti-player-play" style="font-size:18px;color:rgba(255,255,255,.4);"></i></div><div class="saved-meta"><div class="saved-name">Brand Story</div><div class="saved-info">Veo 3.1 · 60s · 16:9</div></div></div>
+          <div class="saved-card"><div class="saved-thumb" style="background:#3d0a1a;"><i class="ti ti-player-play" style="font-size:18px;color:rgba(255,255,255,.4);"></i></div><div class="saved-meta"><div class="saved-name">Offer Walkthrough</div><div class="saved-info">Kling v3.0 Pro · 2m · 16:9</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
