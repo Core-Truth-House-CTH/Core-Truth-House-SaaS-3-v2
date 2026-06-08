@@ -101,7 +101,7 @@ const SECTION_LABEL_STYLE = {
 const SECTION_HEADING_STYLE = {
   fontFamily: SERIF,
   fontSize: 22,
-  fontWeight: 600,
+  fontWeight: 500,
   color: 'var(--cth-command-ink)',
   margin: 0,
   letterSpacing: '-0.005em',
