@@ -20,7 +20,7 @@ import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 const EMPTY_SUMMARY = {
  contacts: 0,
@@ -44,20 +44,20 @@ const PAGE_STYLE = {
 const PANEL_STYLE = {
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 0,
+ borderRadius: 12,
 };
 
 const SOFT_PANEL_STYLE = {
  background: "var(--cth-command-panel-soft)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 0,
+ borderRadius: 10,
 };
 
 const INPUT_STYLE = {
  width: "100%",
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 0,
+ borderRadius: 7,
  padding: "10px 12px",
  color: "var(--cth-command-ink)",
  fontFamily: SANS,
@@ -77,7 +77,7 @@ const PRIMARY_BUTTON_STYLE = {
  justifyContent: "center",
  gap: 8,
  padding: "10px 16px",
- borderRadius: 0,
+ borderRadius: 7,
  background: "var(--cth-command-purple)",
  color: "var(--cth-command-gold)",
  fontFamily: SANS,
@@ -93,7 +93,7 @@ const SECONDARY_BUTTON_STYLE = {
  justifyContent: "center",
  gap: 8,
  padding: "8px 14px",
- borderRadius: 0,
+ borderRadius: 7,
  background: "transparent",
  border: "1px solid var(--cth-command-border)",
  color: "var(--cth-command-ink)",
@@ -109,7 +109,7 @@ const DESTRUCTIVE_BUTTON_STYLE = {
  justifyContent: "center",
  gap: 8,
  padding: "10px 16px",
- borderRadius: 0,
+ borderRadius: 7,
  background: "var(--cth-command-crimson)",
  color: "var(--cth-command-ivory)",
  fontFamily: SANS,
@@ -187,6 +187,7 @@ function MetricTile({ icon: Icon, label, value, accent }) {
  <div
  style={{
  ...PANEL_STYLE,
+ borderRadius: 10,
  padding: "20px 22px",
  display: "flex",
  flexDirection: "column",
@@ -243,7 +244,7 @@ function Panel({ eyebrow, title, subtitle, action, children, padding = 24 }) {
  style={{
  fontFamily: SERIF,
  fontSize: 22,
- fontWeight: 600,
+ fontWeight: 500,
  color: "var(--cth-command-ink)",
  margin: eyebrow ? "6px 0 0" : 0,
  letterSpacing: "-0.005em",
@@ -279,7 +280,7 @@ function EmptyState({ text }) {
  style={{
  background: "var(--cth-command-panel-soft)",
  border: "1px dashed var(--cth-command-border)",
- borderRadius: 0,
+ borderRadius: 10,
  padding: "18px 16px",
  fontFamily: SANS,
  fontSize: 14,
@@ -390,7 +391,7 @@ function IconButton({ onClick, label, tone = "muted", children }) {
  justifyContent: "center",
  width: 32,
  height: 32,
- borderRadius: 0,
+ borderRadius: 7,
  background: "transparent",
  border: `1px solid ${hover ? "var(--cth-command-border)" : "transparent"}`,
  color: hover ? hoverColor : baseColor,
@@ -423,7 +424,7 @@ function DealCard({ deal, onOpen, onDelete }) {
  background: "var(--cth-command-panel)",
  border: `1px solid ${hover ? "var(--cth-command-crimson)" : "var(--cth-command-border)"}`,
  borderLeft: `3px solid ${accent}`,
- borderRadius: 0,
+ borderRadius: 8,
  padding: "14px 16px",
  cursor: "pointer",
  transition: "border-color 150ms ease",
@@ -505,7 +506,7 @@ function QuickAddCard({ title, icon: Icon, eyebrow, children }) {
  justifyContent: "center",
  background: "var(--cth-command-panel-soft)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 0,
+ borderRadius: 8,
  color: "var(--cth-command-crimson)",
  }}
  >
@@ -559,7 +560,7 @@ function ConfirmDeleteModal({ confirm, busy, onCancel, onConfirm }) {
  maxWidth: 480,
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 0,
+ borderRadius: 12,
  padding: 28,
  boxShadow: "0 30px 60px rgba(13,0,16,0.25)",
  }}
@@ -777,7 +778,7 @@ function Toast({ toast }) {
  zIndex: 70,
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-gold)",
- borderRadius: 0,
+ borderRadius: 10,
  padding: "12px 18px",
  boxShadow: "0 20px 40px rgba(13,0,16,0.18)",
  fontFamily: SANS,
@@ -1179,7 +1180,7 @@ export default function CRMSuite() {
  <div
  style={{
  padding: "12px 16px",
- borderRadius: 0,
+ borderRadius: 8,
  background: "color-mix(in srgb, var(--cth-command-crimson) 10%, var(--cth-command-panel))",
  border: "1px solid var(--cth-command-crimson)",
  color: "var(--cth-command-crimson)",
@@ -1292,7 +1293,7 @@ export default function CRMSuite() {
  padding: "10px 12px",
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-border)",
- borderRadius: 0,
+ borderRadius: 8,
  }}
  >
  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
