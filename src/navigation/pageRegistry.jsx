@@ -21,6 +21,7 @@ const Analytics = lazy(() => import("../pages/Analytics"));
 const Settings = lazy(() => import("../pages/Settings"));
 const CRMSuite = lazy(() => import("../pages/CRMSuite"));
 const MailSuite = lazy(() => import("../pages/MailSuite"));
+const EmailSettings = lazy(() => import("../pages/EmailSettings"));
 const TenantDataDashboardV2 = lazy(() => import("../pages/TenantDataDashboardV2"));
 const ContentStudio = lazy(() => import("../pages/ContentStudio"));
 const CampaignBuilder = lazy(() => import("../pages/CampaignBuilder"));
@@ -87,6 +88,7 @@ const pageRegistry = {
   "/cohort-manager": CohortManager,
 
   "/crm": CRMSuite,
+  "/email-settings": EmailSettings,
   "/mail": MailSuite,
   "/analytics": Analytics,
 

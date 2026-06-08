@@ -363,6 +363,16 @@ export const APP_ROUTES = [
     lockedTooltip: "Upgrade to The House to unlock CRM.",
   },
   {
+    path: "/email-settings",
+    label: "Email",
+    icon: Mail,
+    group: "insightsOps",
+    requiredPlan: "house",
+    gateType: "page",
+    tooltip: "Configure how the platform sends emails on your behalf.",
+    lockedTooltip: "Upgrade to The House to unlock Email Settings.",
+  },
+  {
     path: "/mail",
     label: "Mail",
     icon: Mail,

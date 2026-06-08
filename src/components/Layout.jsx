@@ -261,6 +261,7 @@ export function Sidebar() {
         label: "HOUSE",
         items: [
           { path: "/studios", label: "Studios", icon: Sparkles },
+          { path: "/email-settings", label: "Email", icon: Mail },
           { path: "/crm", label: "CRM", icon: PhoneCall },
         ],
       },
