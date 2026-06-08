@@ -23,6 +23,10 @@ import {
   Link2,
   Building2,
   Mail,
+  Palette,
+  Trash2,
+  Plus,
+  ExternalLink,
 } from 'lucide-react';
 import { usePlan } from '../context/PlanContext';
 import { NotificationPreferences } from '../components/NotificationPreferences';
@@ -33,8 +37,39 @@ import MailIntegrationsSettings from "../components/mail/MailIntegrationsSetting
 import SocialConnectionsSection from "../components/SocialConnectionsSection";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 const MONO = "'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace";
+
+// Brand Identity — font options per role (must match Identity Studio families).
+const BI_DISPLAY_FONTS = ['Cormorant Garamond', 'Fraunces', 'Playfair Display', 'Libre Baskerville'];
+const BI_BODY_FONTS = ['DM Sans', 'Manrope', 'Inter', 'Plus Jakarta Sans'];
+
+// Canonical two font roles, mirroring Identity Studio so saved data round-trips.
+const BI_DEFAULT_FONTS = [
+  { id: 'display', role: 'display', label: 'Display / Heading', family: 'Cormorant Garamond', source: 'system' },
+  { id: 'body', role: 'body', label: 'Body / UI', family: 'DM Sans', source: 'system' },
+];
+
+const BI_DEFAULT_COLORS = [
+  { id: 'primary', role: 'primary', label: 'Primary', hex: '#AF0024' },
+  { id: 'secondary', role: 'secondary', label: 'Secondary', hex: '#1A0828' },
+];
+
+function biIsValidHex(value) {
+  return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value.trim());
+}
+
+function biMergeFonts(saved) {
+  const list = Array.isArray(saved) ? saved : [];
+  return BI_DEFAULT_FONTS.map((def, i) => {
+    const match =
+      list.find((f) => f.id === def.id) ||
+      list.find((f) => f.role === def.role) ||
+      list[i];
+    if (!match) return { ...def };
+    return { ...def, family: match.family || def.family, source: match.source || 'system' };
+  });
+}
 
 const PAGE_STYLE = {
   background: 'var(--cth-command-blush)',
@@ -44,7 +79,13 @@ const PAGE_STYLE = {
 const CARD_STYLE = {
   background: 'var(--cth-command-panel)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 12,
+};
+
+const INNER_CARD_STYLE = {
+  background: 'var(--cth-command-panel)',
+  border: '1px solid var(--cth-command-border)',
+  borderRadius: 10,
 };
 
 const SECTION_LABEL_STYLE = {
@@ -109,7 +150,7 @@ const INPUT_STYLE = {
   background: 'var(--cth-command-panel)',
   color: 'var(--cth-command-ink)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 7,
   padding: '9px 12px',
   fontFamily: SANS,
   fontSize: 13,
@@ -127,7 +168,7 @@ const PRIMARY_CTA_STYLE = {
   background: 'var(--cth-command-purple)',
   color: 'var(--cth-command-gold)',
   border: 'none',
-  borderRadius: 4,
+  borderRadius: 7,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -150,7 +191,7 @@ const SECONDARY_BUTTON_STYLE = {
   background: 'transparent',
   color: 'var(--cth-command-ink)',
   border: '1px solid var(--cth-command-border)',
-  borderRadius: 4,
+  borderRadius: 7,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -162,7 +203,7 @@ const DESTRUCTIVE_BUTTON_STYLE = {
   background: 'var(--cth-command-crimson)',
   color: 'var(--cth-command-ivory)',
   border: 'none',
-  borderRadius: 4,
+  borderRadius: 7,
   padding: '10px 18px',
   fontFamily: SANS,
   fontSize: 13,
@@ -268,6 +309,16 @@ export default function Settings() {
   const [confirmRemoveDomainOpen, setConfirmRemoveDomainOpen] = useState(false);
 
   const canUseDomain = isSuperAdmin || ['house', 'estate'].includes(String(plan || '').toLowerCase());
+  const canUseBrandIdentity = isSuperAdmin || ['house', 'estate'].includes(String(plan || '').toLowerCase());
+
+  // Brand Identity (House+) — colors + fonts synced with Identity Studio.
+  const [biColors, setBiColors] = useState(BI_DEFAULT_COLORS);
+  const [biFonts, setBiFonts] = useState(BI_DEFAULT_FONTS);
+  const [biLoading, setBiLoading] = useState(false);
+  const [biSaving, setBiSaving] = useState(false);
+  const [biSaved, setBiSaved] = useState(false);
+  const [biConfirmDeleteIndex, setBiConfirmDeleteIndex] = useState(null);
+  const biColorLabelFocusRef = React.useRef('');
 
   useEffect(() => {
     loadSettings();
@@ -285,8 +336,24 @@ export default function Settings() {
 
   useEffect(() => {
     const nextTab = searchParams.get('tab') || 'profile';
+    // Foundation / Structure users may not reach Brand Identity — bounce to profile.
+    if (nextTab === 'brand-identity' && !canUseBrandIdentity) {
+      setActiveTab('profile');
+      return;
+    }
     setActiveTab(nextTab);
-  }, [searchParams]);
+  }, [searchParams, canUseBrandIdentity]);
+
+  // If the plan resolves after mount and the user is sitting on a gated tab, redirect.
+  useEffect(() => {
+    if (activeTab === 'brand-identity' && !canUseBrandIdentity) {
+      setActiveTab('profile');
+    }
+  }, [activeTab, canUseBrandIdentity]);
+
+  useEffect(() => {
+    if (activeTab === 'brand-identity' && canUseBrandIdentity) loadBrandIdentity();
+  }, [activeTab, canUseBrandIdentity, user?.id]);
 
   const loadDomain = async () => {
     if (!activeWorkspace?.id) return;
@@ -378,6 +445,109 @@ export default function Settings() {
     }
   };
 
+  const loadBrandIdentity = async () => {
+    if (!user?.id) return;
+    setBiLoading(true);
+    try {
+      const res = await apiClient.get('/api/identity', { params: { user_id: user.id } });
+      if (Array.isArray(res?.colors) && res.colors.length > 0) {
+        setBiColors(res.colors);
+      }
+      if (Array.isArray(res?.fonts) && res.fonts.length > 0) {
+        setBiFonts(biMergeFonts(res.fonts));
+      }
+    } catch (e) {
+      // No identity yet — keep defaults.
+    } finally {
+      setBiLoading(false);
+    }
+  };
+
+  const persistBrandIdentity = async (nextColors, nextFonts) => {
+    await apiClient.post('/api/identity/save', {
+      workspace_id: activeWorkspace?.id || activeWorkspace?.workspace_id || '',
+      colors: nextColors,
+      fonts: nextFonts,
+    });
+  };
+
+  const biFontFamily = (roleId) =>
+    biFonts.find((f) => f.id === roleId)?.family || (roleId === 'display' ? 'Cormorant Garamond' : 'DM Sans');
+
+  const handleBiFontChange = (roleId, family) => {
+    setBiFonts((prev) => prev.map((f) => (f.id === roleId ? { ...f, family, source: 'system' } : f)));
+  };
+
+  const handleBiColorHexChange = (index, hex) => {
+    setBiColors((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], hex };
+      return next;
+    });
+  };
+
+  const handleBiColorLabelChange = (index, label) => {
+    setBiColors((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], label, role: label };
+      return next;
+    });
+  };
+
+  // Auto-save a color rename on blur, only when the name actually changed —
+  // same interaction as Identity Studio.
+  const handleBiColorLabelBlur = async (value) => {
+    if (value === biColorLabelFocusRef.current) return;
+    try {
+      await persistBrandIdentity(biColors, biFonts);
+    } catch (e) {
+      toast.error('Could not save color name. Please try again.');
+    }
+  };
+
+  const handleBiAddColor = () => {
+    setBiColors((prev) => [
+      ...prev,
+      { id: `color-custom-${prev.length}`, role: 'custom', label: 'New Color', hex: '#000000' },
+    ]);
+  };
+
+  const performBiDeleteColor = async (index) => {
+    const prevColors = biColors;
+    const nextColors = biColors.filter((_, i) => i !== index);
+    setBiConfirmDeleteIndex(null);
+    setBiColors(nextColors);
+    try {
+      await persistBrandIdentity(nextColors, biFonts);
+    } catch (e) {
+      setBiColors(prevColors);
+      toast.error('Could not delete color. Please try again.');
+    }
+  };
+
+  const requestBiDeleteColor = (index) => {
+    if (biColors.length <= 1) {
+      setBiConfirmDeleteIndex(index);
+    } else {
+      performBiDeleteColor(index);
+    }
+  };
+
+  const handleSaveBrandIdentity = async () => {
+    setBiSaving(true);
+    try {
+      await persistBrandIdentity(biColors, biFonts);
+      setBiSaved(true);
+      setTimeout(() => setBiSaved(false), 2000);
+      toast.success('Brand identity updated.');
+    } catch (e) {
+      console.error('Save brand identity failed', e);
+      toast.error('Could not save brand identity. Please try again.');
+    } finally {
+      setBiSaving(false);
+    }
+  };
+
   const loadSettings = async () => {
     if (!user?.id) return;
 
@@ -443,6 +613,7 @@ export default function Settings() {
 
   const tabs = [
     { id: 'workspace', label: 'Workspace', icon: Building2 },
+    ...(canUseBrandIdentity ? [{ id: 'brand-identity', label: 'Brand Identity', icon: Palette }] : []),
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'socials', label: 'Social Media', icon: Instagram },
     { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -465,7 +636,7 @@ export default function Settings() {
       className="md:sticky md:top-4 md:self-start"
       style={{
         background: 'var(--cth-command-purple)',
-        borderRadius: 4,
+        borderRadius: 12,
         border: '1px solid var(--cth-command-border)',
         overflow: 'hidden',
         width: '100%',
@@ -584,7 +755,7 @@ export default function Settings() {
                     <p style={{ ...SECTION_LABEL_STYLE, marginBottom: 8 }}>Current Workspace ID</p>
                     <div
                       style={{
-                        ...CARD_STYLE,
+                        ...INNER_CARD_STYLE,
                         background: 'var(--cth-command-panel-soft)',
                         padding: 12,
                         fontFamily: MONO,
@@ -595,6 +766,247 @@ export default function Settings() {
                       {activeWorkspace?.id || ', '}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {activeTab === 'brand-identity' && canUseBrandIdentity && (
+                <div className="mb-5" style={{ ...CARD_STYLE, padding: 24 }}>
+                  <h2 style={SECTION_HEADING_STYLE}>Brand Identity</h2>
+                  <p style={{ ...MUTED_STYLE, marginTop: 8, marginBottom: 24 }}>
+                    Your core brand colors and fonts. These power your templates, exports, and AI-generated content.
+                  </p>
+
+                  {biLoading ? (
+                    <div className="flex justify-center p-8">
+                      <Loader2
+                        size={20}
+                        className="animate-spin"
+                        style={{ color: 'var(--cth-command-crimson)' }}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      {/* Brand colors */}
+                      <p style={{ ...SECTION_LABEL_STYLE, marginBottom: 14 }}>Brand colors</p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {biColors.map((color, index) => {
+                          const pickerValue = biIsValidHex(color.hex) ? color.hex : '#000000';
+                          const swatchBg = biIsValidHex(color.hex) ? color.hex : (color.hex || '#000000');
+                          return (
+                            <div
+                              key={color.id || index}
+                              className="group"
+                              style={{
+                                ...INNER_CARD_STYLE,
+                                background: 'var(--cth-command-panel-soft)',
+                                padding: 12,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 12,
+                              }}
+                            >
+                              {/* Color circle — click opens native picker */}
+                              <div
+                                className="relative shrink-0"
+                                style={{ width: 36, height: 36 }}
+                                title="Click to change color"
+                              >
+                                <div
+                                  style={{
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: '50%',
+                                    background: swatchBg,
+                                    border: '1px solid var(--cth-command-border)',
+                                  }}
+                                />
+                                <input
+                                  type="color"
+                                  value={pickerValue}
+                                  onChange={(e) => handleBiColorHexChange(index, (e.target.value || '').toUpperCase())}
+                                  aria-label={`Pick color for ${color.label || color.role || 'swatch'}`}
+                                  style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    opacity: 0,
+                                    cursor: 'pointer',
+                                    border: 'none',
+                                    padding: 0,
+                                    background: 'transparent',
+                                  }}
+                                />
+                              </div>
+
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                {biConfirmDeleteIndex === index ? (
+                                  <div data-testid={`bi-color-delete-confirm-${index}`}>
+                                    <p style={{ ...MUTED_STYLE, margin: '0 0 8px', color: 'var(--cth-command-ink)' }}>
+                                      This is your only brand color. Delete it?
+                                    </p>
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                      <button
+                                        type="button"
+                                        data-testid={`bi-color-delete-yes-${index}`}
+                                        onClick={() => performBiDeleteColor(index)}
+                                        style={{ ...DESTRUCTIVE_BUTTON_SMALL_STYLE }}
+                                      >
+                                        Delete
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setBiConfirmDeleteIndex(null)}
+                                        style={{ ...SECONDARY_BUTTON_STYLE, padding: '6px 12px', fontSize: 11 }}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <input
+                                      data-testid={`bi-color-name-${index}`}
+                                      value={color.label || ''}
+                                      onChange={(e) => handleBiColorLabelChange(index, e.target.value)}
+                                      onFocus={(e) => { biColorLabelFocusRef.current = e.target.value; }}
+                                      onBlur={(e) => handleBiColorLabelBlur(e.target.value)}
+                                      placeholder="Color name"
+                                      className="w-full bg-transparent border-0 p-0 focus:outline-none"
+                                      style={{
+                                        fontFamily: SANS,
+                                        fontSize: 13,
+                                        fontWeight: 600,
+                                        color: 'var(--cth-command-ink)',
+                                      }}
+                                    />
+                                    <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--cth-command-muted)', textTransform: 'uppercase' }}>
+                                      {color.hex}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+
+                              {biConfirmDeleteIndex !== index && (
+                                <button
+                                  type="button"
+                                  data-testid={`bi-color-delete-${index}`}
+                                  onClick={() => requestBiDeleteColor(index)}
+                                  aria-label={`Delete ${color.label || color.role || 'color'}`}
+                                  title="Delete color"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: 8,
+                                    border: '1px solid var(--cth-command-border)',
+                                    background: 'transparent',
+                                    color: 'var(--cth-command-crimson)',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        <button
+                          type="button"
+                          data-testid="bi-add-color-btn"
+                          onClick={handleBiAddColor}
+                          style={{
+                            minHeight: 60,
+                            border: '1px dashed var(--cth-command-border)',
+                            borderRadius: 10,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 6,
+                            cursor: 'pointer',
+                            background: 'var(--cth-command-panel-soft)',
+                            color: 'var(--cth-command-muted)',
+                            fontFamily: SANS,
+                            fontSize: 12,
+                            fontWeight: 500,
+                          }}
+                        >
+                          <Plus size={15} />
+                          Add color
+                        </button>
+                      </div>
+
+                      {/* Brand fonts */}
+                      <p style={{ ...SECTION_LABEL_STYLE, marginTop: 28, marginBottom: 14 }}>Brand fonts</p>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label style={FIELD_LABEL_STYLE}>Display font</label>
+                          <select
+                            data-testid="bi-font-display"
+                            value={biFontFamily('display')}
+                            onChange={(e) => handleBiFontChange('display', e.target.value)}
+                            style={INPUT_STYLE}
+                          >
+                            {BI_DISPLAY_FONTS.map((f) => (
+                              <option key={f} value={f}>{f}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={FIELD_LABEL_STYLE}>Body font</label>
+                          <select
+                            data-testid="bi-font-body"
+                            value={biFontFamily('body')}
+                            onChange={(e) => handleBiFontChange('body', e.target.value)}
+                            style={INPUT_STYLE}
+                          >
+                            {BI_BODY_FONTS.map((f) => (
+                              <option key={f} value={f}>{f}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <p style={{ ...MUTED_STYLE, marginTop: 20 }}>
+                        Changes here sync with your Identity Studio. For full brand configuration including logo and assets, visit{' '}
+                        <Link
+                          to="/identity-studio"
+                          style={{ color: 'var(--cth-command-crimson)', fontWeight: 600, textDecoration: 'none' }}
+                        >
+                          Identity Studio
+                        </Link>
+                        .
+                      </p>
+
+                      <div className="flex justify-end pt-6">
+                        <button
+                          data-testid="bi-save-btn"
+                          onClick={handleSaveBrandIdentity}
+                          disabled={biSaving}
+                          type="button"
+                          style={{
+                            ...PRIMARY_CTA_STYLE,
+                            background: biSaved ? 'var(--cth-command-success)' : 'var(--cth-command-purple)',
+                            color: biSaved ? 'var(--cth-command-ivory)' : 'var(--cth-command-gold)',
+                            cursor: biSaving ? 'wait' : 'pointer',
+                          }}
+                        >
+                          {biSaving ? (
+                            <Loader2 size={15} className="animate-spin" />
+                          ) : biSaved ? (
+                            <Check size={15} />
+                          ) : (
+                            <Save size={15} />
+                          )}
+                          {biSaving ? 'Saving...' : biSaved ? 'Saved!' : 'Save Brand Identity'}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -775,7 +1187,7 @@ export default function Settings() {
                         <div
                           className="mb-4"
                           style={{
-                            ...CARD_STYLE,
+                            ...INNER_CARD_STYLE,
                             background: 'var(--cth-command-panel-soft)',
                             padding: 16,
                           }}
@@ -886,7 +1298,7 @@ export default function Settings() {
                       <div
                         className="mt-4"
                         style={{
-                          ...CARD_STYLE,
+                          ...INNER_CARD_STYLE,
                           background: 'color-mix(in srgb, var(--cth-command-crimson) 6%, var(--cth-command-panel))',
                           borderColor: 'color-mix(in srgb, var(--cth-command-crimson) 25%, var(--cth-command-border))',
                           padding: 16,
@@ -909,7 +1321,7 @@ export default function Settings() {
                               marginTop: 6,
                               background: 'var(--cth-command-panel-soft)',
                               border: '1px solid var(--cth-command-border)',
-                              borderRadius: 4,
+                              borderRadius: 8,
                               padding: '4px 8px',
                               fontFamily: MONO,
                               fontSize: 11,
@@ -940,7 +1352,8 @@ export default function Settings() {
 
               {activeTab !== 'billing' &&
                 activeTab !== 'domain' &&
-                activeTab !== 'mail' && (
+                activeTab !== 'mail' &&
+                activeTab !== 'brand-identity' && (
                   <div className="flex justify-end pt-2">
                     <button
                       data-testid="settings-save-btn"

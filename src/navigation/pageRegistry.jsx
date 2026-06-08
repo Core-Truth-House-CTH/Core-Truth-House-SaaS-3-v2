@@ -100,7 +100,6 @@ const pageRegistry = {
 
   "/automations": Automations,
   "/join": JoinWorkspace,
-  "/workspace-controls": makePlaceholder("Workspace Controls"),
   "/members": Members,
   "/help-desk": makePlaceholder("Help Desk"),
   "/knowledge-base": KnowledgeBasePage,
