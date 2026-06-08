@@ -27,6 +27,9 @@ import {
   Trash2,
   Plus,
   ExternalLink,
+  Plug,
+  Zap,
+  Workflow,
 } from 'lucide-react';
 import { usePlan } from '../context/PlanContext';
 import { NotificationPreferences } from '../components/NotificationPreferences';
@@ -70,6 +73,13 @@ function biMergeFonts(saved) {
     return { ...def, family: match.family || def.family, source: match.source || 'system' };
   });
 }
+
+// Integrations tab — coming-soon providers (non-clickable cards).
+const INTEGRATIONS_COMING_SOON = [
+  { id: 'convertkit', name: 'ConvertKit', description: 'Sync subscribers and broadcasts with your ConvertKit account.', icon: Mail },
+  { id: 'zapier', name: 'Zapier', description: 'Trigger thousands of apps when things happen in your workspace.', icon: Zap },
+  { id: 'make', name: 'Make', description: 'Build visual automations across your tools with Make scenarios.', icon: Workflow },
+];
 
 const PAGE_STYLE = {
   background: 'var(--cth-command-blush)',
@@ -320,6 +330,14 @@ export default function Settings() {
   const [biConfirmDeleteIndex, setBiConfirmDeleteIndex] = useState(null);
   const biColorLabelFocusRef = React.useRef('');
 
+  // Integrations — Higgsfield connect state (no plan gating).
+  const [hfLoading, setHfLoading] = useState(false);
+  const [hfConnected, setHfConnected] = useState(false);
+  const [hfLast4, setHfLast4] = useState('');
+  const [hfApiKey, setHfApiKey] = useState('');
+  const [hfApiSecret, setHfApiSecret] = useState('');
+  const [hfSaving, setHfSaving] = useState(false);
+
   useEffect(() => {
     loadSettings();
   }, [user?.id]);
@@ -354,6 +372,10 @@ export default function Settings() {
   useEffect(() => {
     if (activeTab === 'brand-identity' && canUseBrandIdentity) loadBrandIdentity();
   }, [activeTab, canUseBrandIdentity, user?.id]);
+
+  useEffect(() => {
+    if (activeTab === 'integrations') loadHiggsfield();
+  }, [activeTab]);
 
   const loadDomain = async () => {
     if (!activeWorkspace?.id) return;
@@ -548,6 +570,58 @@ export default function Settings() {
     }
   };
 
+  const loadHiggsfield = async () => {
+    setHfLoading(true);
+    try {
+      const res = await apiClient.get('/api/integrations/higgsfield');
+      setHfConnected(!!res?.connected);
+      setHfLast4(res?.api_key_last4 || '');
+    } catch (e) {
+      // Not connected yet, or workspace not resolved.
+      setHfConnected(false);
+      setHfLast4('');
+    } finally {
+      setHfLoading(false);
+    }
+  };
+
+  const handleConnectHiggsfield = async () => {
+    if (!hfApiKey.trim() || !hfApiSecret.trim()) {
+      toast.error('Enter both your API key and API secret.');
+      return;
+    }
+    setHfSaving(true);
+    try {
+      const res = await apiClient.post('/api/integrations/higgsfield', {
+        api_key: hfApiKey.trim(),
+        api_secret: hfApiSecret.trim(),
+      });
+      setHfConnected(true);
+      setHfLast4(res?.api_key_last4 || hfApiKey.trim().slice(-4));
+      setHfApiKey('');
+      setHfApiSecret('');
+      toast.success('Higgsfield connected.');
+    } catch (e) {
+      toast.error(e.message || 'Failed to connect Higgsfield.');
+    } finally {
+      setHfSaving(false);
+    }
+  };
+
+  const handleDisconnectHiggsfield = async () => {
+    setHfSaving(true);
+    try {
+      await apiClient.delete('/api/integrations/higgsfield');
+      setHfConnected(false);
+      setHfLast4('');
+      toast.success('Higgsfield disconnected.');
+    } catch (e) {
+      toast.error(e.message || 'Failed to disconnect Higgsfield.');
+    } finally {
+      setHfSaving(false);
+    }
+  };
+
   const loadSettings = async () => {
     if (!user?.id) return;
 
@@ -618,6 +692,7 @@ export default function Settings() {
     { id: 'socials', label: 'Social Media', icon: Instagram },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'mail', label: 'Mail Integrations', icon: Mail },
+    { id: 'integrations', label: 'Integrations', icon: Plug },
     ...(canUseDomain ? [{ id: 'domain', label: 'Custom Domain', icon: Link2 }] : []),
     { id: 'billing', label: 'Billing & Plan', icon: CreditCard },
   ];
@@ -1166,6 +1241,208 @@ export default function Settings() {
                 </div>
               )}
 
+              {activeTab === 'integrations' && (
+                <>
+                  {/* Section 1 — Higgsfield */}
+                  <div className="mb-5" style={{ ...CARD_STYLE, padding: 24 }}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h2 style={SECTION_HEADING_STYLE}>Higgsfield</h2>
+                        <p style={{ ...MUTED_STYLE, marginTop: 8, maxWidth: 560 }}>
+                          Connect your own Higgsfield account to use your credits for AI image and video
+                          generation in Studios. Get your credentials at cloud.higgsfield.ai.
+                        </p>
+                      </div>
+                      {hfConnected && (
+                        <span
+                          data-testid="higgsfield-connected-badge"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            flexShrink: 0,
+                            background: 'color-mix(in srgb, var(--cth-command-success) 14%, var(--cth-command-panel))',
+                            color: 'var(--cth-command-success)',
+                            border: '1px solid color-mix(in srgb, var(--cth-command-success) 35%, var(--cth-command-border))',
+                            borderRadius: 20,
+                            padding: '4px 12px',
+                            fontFamily: SANS,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            letterSpacing: '0.04em',
+                          }}
+                        >
+                          <CheckCircle size={13} />
+                          Connected
+                        </span>
+                      )}
+                    </div>
+
+                    {hfLoading ? (
+                      <div className="flex justify-center p-8">
+                        <Loader2 size={20} className="animate-spin" style={{ color: 'var(--cth-command-crimson)' }} />
+                      </div>
+                    ) : hfConnected ? (
+                      <div className="mt-5">
+                        <label style={FIELD_LABEL_STYLE}>API key</label>
+                        <div
+                          style={{
+                            ...INNER_CARD_STYLE,
+                            background: 'var(--cth-command-panel-soft)',
+                            padding: 12,
+                            fontFamily: MONO,
+                            fontSize: 13,
+                            color: 'var(--cth-command-muted)',
+                            letterSpacing: '0.08em',
+                          }}
+                        >
+                          {`•••• •••• •••• ${hfLast4 || '••••'}`}
+                        </div>
+                        <div className="flex justify-end mt-5">
+                          <button
+                            data-testid="higgsfield-disconnect-btn"
+                            onClick={handleDisconnectHiggsfield}
+                            disabled={hfSaving}
+                            type="button"
+                            style={{
+                              ...DESTRUCTIVE_BUTTON_STYLE,
+                              opacity: hfSaving ? 0.65 : 1,
+                              cursor: hfSaving ? 'wait' : 'pointer',
+                            }}
+                          >
+                            {hfSaving ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                            {hfSaving ? 'Disconnecting...' : 'Disconnect'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-5">
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div>
+                            <label style={FIELD_LABEL_STYLE}>API key</label>
+                            <input
+                              data-testid="higgsfield-api-key"
+                              type="password"
+                              value={hfApiKey}
+                              onChange={(e) => setHfApiKey(e.target.value)}
+                              placeholder="Your Higgsfield API key"
+                              autoComplete="off"
+                              style={INPUT_STYLE}
+                            />
+                          </div>
+                          <div>
+                            <label style={FIELD_LABEL_STYLE}>API secret</label>
+                            <input
+                              data-testid="higgsfield-api-secret"
+                              type="password"
+                              value={hfApiSecret}
+                              onChange={(e) => setHfApiSecret(e.target.value)}
+                              placeholder="Your Higgsfield API secret"
+                              autoComplete="off"
+                              style={INPUT_STYLE}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4 mt-5 flex-wrap">
+                          <a
+                            href="https://cloud.higgsfield.ai"
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              fontFamily: SANS,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: 'var(--cth-command-crimson)',
+                              textDecoration: 'none',
+                            }}
+                          >
+                            Get your credentials at cloud.higgsfield.ai
+                            <ExternalLink size={13} />
+                          </a>
+
+                          <button
+                            data-testid="higgsfield-connect-btn"
+                            onClick={handleConnectHiggsfield}
+                            disabled={hfSaving || !hfApiKey.trim() || !hfApiSecret.trim()}
+                            type="button"
+                            style={{
+                              ...PRIMARY_CTA_STYLE,
+                              opacity: hfSaving || !hfApiKey.trim() || !hfApiSecret.trim() ? 0.65 : 1,
+                              cursor: hfSaving || !hfApiKey.trim() || !hfApiSecret.trim() ? 'not-allowed' : 'pointer',
+                            }}
+                          >
+                            {hfSaving ? <Loader2 size={14} className="animate-spin" /> : <Plug size={14} />}
+                            {hfSaving ? 'Connecting...' : 'Connect'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section 2 — Coming soon */}
+                  <div className="mb-5">
+                    <p style={{ ...SECTION_LABEL_STYLE, marginBottom: 12 }}>More integrations coming soon</p>
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {INTEGRATIONS_COMING_SOON.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <article
+                            key={item.id}
+                            style={{ ...INNER_CARD_STYLE, padding: 16, opacity: 0.7 }}
+                          >
+                            <div className="mb-3 flex items-start justify-between gap-2">
+                              <div
+                                className="flex h-9 w-9 shrink-0 items-center justify-center"
+                                style={{
+                                  borderRadius: 8,
+                                  background: 'color-mix(in srgb, var(--cth-command-gold) 12%, transparent)',
+                                  border: '1px solid color-mix(in srgb, var(--cth-command-gold) 32%, transparent)',
+                                  color: 'var(--cth-command-crimson)',
+                                }}
+                              >
+                                <Icon size={17} />
+                              </div>
+                              <span
+                                style={{
+                                  background: 'var(--cth-command-panel-soft)',
+                                  color: 'var(--cth-command-muted)',
+                                  border: '1px solid var(--cth-command-border)',
+                                  borderRadius: 20,
+                                  padding: '3px 8px',
+                                  fontFamily: SANS,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  letterSpacing: '0.12em',
+                                  textTransform: 'uppercase',
+                                }}
+                              >
+                                Coming soon
+                              </span>
+                            </div>
+                            <h3
+                              style={{
+                                fontFamily: SERIF,
+                                fontSize: 18,
+                                fontWeight: 500,
+                                color: 'var(--cth-command-ink)',
+                                margin: 0,
+                              }}
+                            >
+                              {item.name}
+                            </h3>
+                            <p style={{ ...MUTED_STYLE, fontSize: 12, marginTop: 4 }}>{item.description}</p>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+
               {activeTab === 'domain' && canUseDomain && (
                 <div className="mb-5" style={{ ...CARD_STYLE, padding: 24 }}>
                   <h2 style={SECTION_HEADING_STYLE}>Custom Domain</h2>
@@ -1353,7 +1630,8 @@ export default function Settings() {
               {activeTab !== 'billing' &&
                 activeTab !== 'domain' &&
                 activeTab !== 'mail' &&
-                activeTab !== 'brand-identity' && (
+                activeTab !== 'brand-identity' &&
+                activeTab !== 'integrations' && (
                   <div className="flex justify-end pt-2">
                     <button
                       data-testid="settings-save-btn"
