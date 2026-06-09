@@ -91,6 +91,18 @@ const DEFAULT_SETTINGS = {
 
 const unwrap = (res) => res?.data ?? res;
 
+const DEFAULT_VISUAL_MODEL = "gpt-image-1";
+const VISUAL_MODELS = [
+  { value: "gpt-image-1", label: "GPT Image (best text)" },
+  { value: "google/gemini-2.5-flash-image", label: "Gemini 2.5 Flash (fast)" },
+  { value: "higgsfield-ai/soul/standard", label: "Higgsfield Soul", higgsfield: true },
+  {
+    value: "higgsfield-ai/nano-banana/pro",
+    label: "Higgsfield Nano Banana",
+    higgsfield: true,
+  },
+];
+
 function formatRunDate(iso) {
   if (!iso) return "Unknown date";
   try {
@@ -215,7 +227,16 @@ function RationaleCell({ title, value }) {
   );
 }
 
-function QueueItemCard({ item, onPatch, onPush, onGenerateVisual, busy }) {
+function QueueItemCard({
+  item,
+  onPatch,
+  onPush,
+  onGenerateVisual,
+  busy,
+  higgsfieldConnected,
+  selectedModel,
+  onSelectModel,
+}) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.generated_text || "");
@@ -411,18 +432,42 @@ function QueueItemCard({ item, onPatch, onPush, onGenerateVisual, busy }) {
             <ActionButton onClick={() => setEditing(true)} variant="ghost">
               <Pencil size={14} /> Edit
             </ActionButton>
-            <ActionButton
-              onClick={() => onGenerateVisual(item)}
-              variant="ghost"
-              disabled={itemBusy}
-            >
-              {itemBusy ? (
-                <Loader2 size={14} className="cth-spin" />
-              ) : (
-                <ImageIcon size={14} />
-              )}{" "}
-              Generate Visual
-            </ActionButton>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <ActionButton
+                onClick={() => onGenerateVisual(item, selectedModel)}
+                variant="ghost"
+                disabled={itemBusy}
+              >
+                {itemBusy ? (
+                  <Loader2 size={14} className="cth-spin" />
+                ) : (
+                  <ImageIcon size={14} />
+                )}{" "}
+                Generate Visual
+              </ActionButton>
+              <select
+                value={selectedModel}
+                onChange={(e) => onSelectModel(item.item_id, e.target.value)}
+                title="Image model"
+                style={{
+                  fontSize: 11,
+                  padding: "6px 8px",
+                  borderRadius: 8,
+                  border: "1px solid var(--cth-command-border)",
+                  background: "var(--cth-command-panel-soft)",
+                  color: "var(--cth-command-ink)",
+                  cursor: "pointer",
+                }}
+              >
+                {VISUAL_MODELS.filter(
+                  (m) => !m.higgsfield || higgsfieldConnected
+                ).map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </span>
             {status === "approved" ? (
               <ActionButton onClick={() => onPush(item)} variant="solid">
                 <Send size={14} /> Push to Social Planner
@@ -823,6 +868,8 @@ export default function ContentQueue() {
   const [busyItem, setBusyItem] = useState(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState(null); // { type: "success" | "info", text }
+  const [higgsfieldConnected, setHiggsfieldConnected] = useState(false);
+  const [modelByItem, setModelByItem] = useState({}); // item_id -> model_id
 
   const [platformFilter, setPlatformFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -855,10 +902,20 @@ export default function ContentQueue() {
     }
   }, []);
 
+  const loadHiggsfield = useCallback(async () => {
+    try {
+      const r = unwrap(await apiClient.get("/api/integrations/higgsfield"));
+      setHiggsfieldConnected(!!r?.connected);
+    } catch {
+      setHiggsfieldConnected(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadQueue();
     loadSettings();
-  }, [loadQueue, loadSettings]);
+    loadHiggsfield();
+  }, [loadQueue, loadSettings, loadHiggsfield]);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -923,13 +980,18 @@ export default function ContentQueue() {
     }
   };
 
-  const generateVisual = async (item) => {
+  const selectModel = useCallback((itemId, model) => {
+    setModelByItem((m) => ({ ...m, [itemId]: model }));
+  }, []);
+
+  const generateVisual = async (item, modelId) => {
     setBusyItem(item.item_id);
+    setError("");
     try {
       const res = unwrap(
         await apiClient.post(
           `/api/content-automation/queue/${item.item_id}/generate-visual`,
-          {}
+          { model_id: modelId || DEFAULT_VISUAL_MODEL }
         )
       );
       if (res?.visual_url) {
@@ -1300,6 +1362,9 @@ export default function ContentQueue() {
                   onPush={pushItem}
                   onGenerateVisual={generateVisual}
                   busy={busyItem}
+                  higgsfieldConnected={higgsfieldConnected}
+                  selectedModel={modelByItem[it.item_id] || DEFAULT_VISUAL_MODEL}
+                  onSelectModel={selectModel}
                 />
               ))}
             </div>
