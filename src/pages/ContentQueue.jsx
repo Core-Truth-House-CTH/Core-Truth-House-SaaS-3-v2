@@ -758,6 +758,7 @@ export default function ContentQueue() {
   const [generating, setGenerating] = useState(false);
   const [busyItem, setBusyItem] = useState(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState(null); // { type: "success" | "info", text }
 
   const [platformFilter, setPlatformFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -798,9 +799,24 @@ export default function ContentQueue() {
   const handleGenerate = async () => {
     setGenerating(true);
     setError("");
+    setNotice(null);
     try {
-      await apiClient.post("/api/content-automation/generate", {});
+      const res = unwrap(
+        await apiClient.post("/api/content-automation/generate", {})
+      );
       await loadQueue();
+      const count = Number(res?.item_count ?? 0);
+      if (count === 0) {
+        setNotice({
+          type: "info",
+          text: "No content generated — add an active campaign, content pillars in Brand Foundation, or confirm a buyer signal first.",
+        });
+      } else {
+        setNotice({
+          type: "success",
+          text: `Generated ${count} posts ready for review.`,
+        });
+      }
     } catch (e) {
       setError(e?.payload?.detail || e?.message || "Generation failed.");
     } finally {
@@ -1005,6 +1021,50 @@ export default function ContentQueue() {
             }}
           >
             {error}
+          </div>
+        ) : null}
+
+        {notice ? (
+          <div
+            style={{
+              marginBottom: 16,
+              padding: "10px 14px",
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              background:
+                notice.type === "success"
+                  ? "rgba(45,106,79,0.12)"
+                  : "var(--cth-command-panel-soft)",
+              border: `1px solid ${
+                notice.type === "success"
+                  ? "var(--cth-command-success)"
+                  : "var(--cth-command-border)"
+              }`,
+              color:
+                notice.type === "success"
+                  ? "var(--cth-command-success)"
+                  : "var(--cth-command-ink)",
+              fontSize: 14,
+            }}
+          >
+            <span>{notice.text}</span>
+            <button
+              onClick={() => setNotice(null)}
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: "inherit",
+                flexShrink: 0,
+                display: "inline-flex",
+              }}
+              aria-label="Dismiss"
+            >
+              <XIcon size={16} />
+            </button>
           </div>
         ) : null}
 
