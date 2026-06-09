@@ -41,6 +41,15 @@ const MODELS = [
   { id: "openai/sora-2-pro", label: "Sora 2 Pro", sub: "Highest fidelity" },
 ];
 
+// Higgsfield video models, shown only when the workspace has Higgsfield connected
+// and the Higgsfield provider is selected. Ids must match the backend
+// HIGGSFIELD_VIDEO_MODEL_IDS allowlist exactly.
+const HIGGSFIELD_VIDEO_MODELS = [
+  { id: "higgsfield-ai/dop/standard", label: "DOP Standard", sub: "Higgsfield · cinematic" },
+  { id: "bytedance/seedance/v1/pro/image-to-video", label: "Seedance v1 Pro", sub: "Higgsfield · image-to-video" },
+  { id: "kling-video/v2.1/pro/image-to-video", label: "Kling v2.1 Pro", sub: "Higgsfield · image-to-video" },
+];
+
 // Supported duration range (seconds) per OpenRouter model. Used to filter the
 // duration select so a founder can't pick a length the model can't render.
 const MODEL_DURATION_LIMITS = {
@@ -191,6 +200,8 @@ export default function StudiosVideo() {
   const [visualPrompt, setVisualPrompt] = useState("");
   const [modelId, setModelId] = useState(MODELS[0].id);
   const [generateAudio, setGenerateAudio] = useState(true);
+  const [higgsfieldConnected, setHiggsfieldConnected] = useState(false);
+  const [provider, setProvider] = useState("openrouter");
 
   const [watermark, setWatermark] = useState(false);
   const [wmPosition, setWmPosition] = useState("bottom_right");
@@ -213,9 +224,10 @@ export default function StudiosVideo() {
   const [hoverQueueId, setHoverQueueId] = useState(null);   // queue card under cursor
   const [confirmQueueId, setConfirmQueueId] = useState(null); // queue inline confirm open
 
+  const activeModels = provider === "higgsfield" ? HIGGSFIELD_VIDEO_MODELS : MODELS;
   const modelLimit = MODEL_DURATION_LIMITS[modelId] || { min: 0, max: Infinity };
   const availableDurations = durationsForModel(activeFormat, modelId);
-  const isSeedance = modelId.startsWith("bytedance/seedance");
+  const isSeedance = provider === "openrouter" && modelId.startsWith("bytedance/seedance");
 
   // Keep the selected duration within the model's supported range. When the
   // model or format changes and the current duration is out of range, reset to
@@ -283,10 +295,22 @@ export default function StudiosVideo() {
     setIdentityLoaded(true);
   }, []);
 
+  const loadHiggsfield = useCallback(async () => {
+    try { const r = await apiClient.get("/api/integrations/higgsfield"); setHiggsfieldConnected(!!r?.connected); }
+    catch { setHiggsfieldConnected(false); }
+  }, []);
+
   useEffect(() => {
     if (pageLocked) return;
-    loadUsage(); loadHeadshots(); loadMedia(); loadQueue(); loadSaved(); loadIdentityAndLogo();
-  }, [pageLocked, loadUsage, loadHeadshots, loadMedia, loadQueue, loadSaved, loadIdentityAndLogo]);
+    loadUsage(); loadHeadshots(); loadMedia(); loadQueue(); loadSaved(); loadIdentityAndLogo(); loadHiggsfield();
+  }, [pageLocked, loadUsage, loadHeadshots, loadMedia, loadQueue, loadSaved, loadIdentityAndLogo, loadHiggsfield]);
+
+  // When the provider changes, snap the model to the first one that provider
+  // offers (the previously selected id won't exist in the other provider's list).
+  useEffect(() => {
+    const models = provider === "higgsfield" ? HIGGSFIELD_VIDEO_MODELS : MODELS;
+    if (!models.some((m) => m.id === modelId)) setModelId(models[0].id);
+  }, [provider]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Background queue poll, every 30s.
   useEffect(() => {
@@ -390,9 +414,10 @@ export default function StudiosVideo() {
     setVideoUrl(""); setBgNote(false); setProgress(0);
     if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
     try {
-      const model = MODELS.find((m) => m.id === modelId) || MODELS[0];
+      const model = activeModels.find((m) => m.id === modelId) || activeModels[0];
       const brandContext = hasIdentity ? JSON.stringify({ colors: brandColors, fonts: brandFonts }) : "";
       const body = {
+        provider,
         model_id: modelId,
         model_label: model.label,
         format: `${activeFormat.label} ${activeFormat.ratio}`,
@@ -687,7 +712,7 @@ export default function StudiosVideo() {
             <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
               <div style={FIELD_LABEL}>Generation model</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
-                {MODELS.map((m) => {
+                {activeModels.map((m) => {
                   const on = m.id === modelId;
                   return (
                     <button key={m.id} onClick={() => setModelId(m.id)} data-testid={`video-model-${m.id.replace(/[^a-z0-9]+/gi, "-")}`}
@@ -698,6 +723,21 @@ export default function StudiosVideo() {
                   );
                 })}
               </div>
+
+              {/* Provider toggle — only when Higgsfield is connected */}
+              {higgsfieldConnected && (
+                <div style={{ display: "flex", gap: 5, marginTop: 8 }} data-testid="video-provider-toggle">
+                  {[{ key: "openrouter", label: "OpenRouter" }, { key: "higgsfield", label: "Higgsfield" }].map((p) => {
+                    const on = p.key === provider;
+                    return (
+                      <button key={p.key} onClick={() => setProvider(p.key)} data-testid={`video-provider-${p.key}`}
+                        style={{ ...pill(on), flex: 1, padding: "6px 8px", borderRadius: 7, fontSize: 10, fontWeight: 500, textAlign: "center" }}>
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Audio toggle */}
@@ -791,7 +831,7 @@ export default function StudiosVideo() {
                     <div style={{ height: "100%", width: `${progress}%`, background: "var(--cth-command-crimson)", borderRadius: 999, transition: "width 1s linear" }} />
                   </div>
                   <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 4 }}>
-                    {(MODELS.find((m) => m.id === modelId) || {}).label} · {duration}s · {activeFormat.ratio}
+                    {(activeModels.find((m) => m.id === modelId) || {}).label} · {duration}s · {activeFormat.ratio}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
                     <button

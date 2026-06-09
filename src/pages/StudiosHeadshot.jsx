@@ -26,6 +26,14 @@ const BACKGROUND_OPTIONS = [
 ];
 const VARIATION_OPTIONS = [1, 2, 4];
 
+// Higgsfield image models for the Headshot Generator, shown only when Higgsfield
+// is connected and selected. Ids must match the backend HIGGSFIELD_IMAGE_MODEL_IDS.
+const HIGGSFIELD_IMAGE_MODELS = [
+  { id: "higgsfield-ai/soul/standard", label: "Soul Portrait" },
+  { id: "higgsfield-ai/nano-banana/pro", label: "Nano Banana Pro" },
+  { id: "higgsfield-ai/cinema-studio/2.5", label: "Cinema Studio" },
+];
+
 const FIELD_LABEL = {
   fontSize: 10,
   letterSpacing: "0.08em",
@@ -148,6 +156,9 @@ export default function StudiosHeadshot() {
   const [saved, setSaved] = useState([]);
   const [usage, setUsage] = useState(null);
   const [hoveredImg, setHoveredImg] = useState(-1);
+  const [higgsfieldConnected, setHiggsfieldConnected] = useState(false);
+  const [provider, setProvider] = useState("openrouter");
+  const [higgsfieldModel, setHiggsfieldModel] = useState(HIGGSFIELD_IMAGE_MODELS[0].id);
 
   const loadUsage = useCallback(async () => {
     try {
@@ -167,11 +178,21 @@ export default function StudiosHeadshot() {
     }
   }, []);
 
+  const loadHiggsfield = useCallback(async () => {
+    try {
+      const r = await apiClient.get("/api/integrations/higgsfield");
+      setHiggsfieldConnected(!!r?.connected);
+    } catch {
+      setHiggsfieldConnected(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (pageLocked) return;
     loadUsage();
     loadSaved();
-  }, [pageLocked, loadUsage, loadSaved]);
+    loadHiggsfield();
+  }, [pageLocked, loadUsage, loadSaved, loadHiggsfield]);
 
   const acceptFile = useCallback((f) => {
     if (!f) return;
@@ -224,6 +245,8 @@ export default function StudiosHeadshot() {
       fd.append("custom_instruction", customInstruction);
       fd.append("use_brand_identity", String(useBrandIdentity));
       fd.append("brand_context", brandContext);
+      fd.append("provider", provider);
+      if (provider === "higgsfield") fd.append("model_id", higgsfieldModel);
 
       const res = await apiClient.post("/api/studios/headshots/generate", fd);
       const urls = Array.isArray(res?.image_urls) ? res.image_urls : [];
@@ -586,6 +609,49 @@ export default function StudiosHeadshot() {
                 should communicate your authority before you explain it."
               </div>
             </div>
+
+            {/* Provider toggle — only when Higgsfield is connected */}
+            {higgsfieldConnected && (
+              <div style={{ marginTop: 12 }} data-testid="headshot-provider">
+                <div style={FIELD_LABEL}>Generation provider</div>
+                <div style={{ display: "flex", gap: 5, marginTop: 4 }}>
+                  {[{ key: "openrouter", label: "OpenRouter" }, { key: "higgsfield", label: "Higgsfield" }].map((p) => {
+                    const on = p.key === provider;
+                    return (
+                      <button
+                        key={p.key}
+                        onClick={() => setProvider(p.key)}
+                        data-testid={`headshot-provider-${p.key}`}
+                        style={{
+                          flex: 1, padding: "6px 8px", borderRadius: 7, fontSize: 10, fontWeight: 500, textAlign: "center",
+                          border: `0.5px solid ${on ? "var(--cth-command-crimson)" : "var(--cth-command-border)"}`,
+                          background: on ? "var(--cth-command-crimson)" : "var(--cth-command-blush)",
+                          color: on ? "var(--cth-command-ivory)" : "var(--cth-command-ink)",
+                          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {provider === "higgsfield" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
+                    <div style={FIELD_LABEL}>Higgsfield model</div>
+                    <select
+                      value={higgsfieldModel}
+                      onChange={(e) => setHiggsfieldModel(e.target.value)}
+                      style={FIELD_INPUT}
+                      data-testid="headshot-higgsfield-model"
+                    >
+                      {HIGGSFIELD_IMAGE_MODELS.map((m) => (
+                        <option key={m.id} value={m.id}>{m.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
 
             <button
               onClick={handleGenerate}
