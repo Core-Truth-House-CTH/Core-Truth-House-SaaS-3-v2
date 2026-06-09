@@ -66,7 +66,6 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
-import { BrandAlertBell } from "./BrandAlertBell";
 
 const ADMIN_ROLES = [
   "SUPER_ADMIN",
@@ -669,7 +668,6 @@ export function DashboardLayout({ children }) {
           >
             Ask the House
           </button>
-          <BrandAlertBell />
           <NotificationBell />
         </div>
         <main className="cth-app-stage">

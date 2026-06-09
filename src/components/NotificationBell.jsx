@@ -7,8 +7,22 @@ import {
   Download, BookOpen, Filter, Trash2, ChevronDown
 } from 'lucide-react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../hooks/useAuth';
 import apiClient from "../lib/apiClient";
+
+// Brand alert priority dot colors (red high / amber medium / muted low).
+const ALERT_PRIORITY_DOT = {
+  high: 'var(--cth-command-crimson)',
+  medium: 'var(--cth-command-gold)',
+  low: 'var(--cth-command-muted)',
+};
+
+const alertActionLabel = (url) =>
+  url === '/signal-inbox' ? 'Go to Signal Inbox'
+  : url === '/brand-audit' ? 'View Audit'
+  : url === '/alerts' ? 'View Alerts'
+  : 'Open';
 
 const API = `${import.meta.env.VITE_BACKEND_URL}/api`;
 const WS_URL = import.meta.env.VITE_BACKEND_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
@@ -116,6 +130,7 @@ const TYPE_COLORS = {
 
 const CATEGORY_LABELS = {
   all: 'All',
+  brand_alerts: 'Brand Alerts',
   general: 'General',
   crm: 'CRM & Sales',
   content: 'Content',
@@ -135,9 +150,13 @@ export function NotificationBell() {
   const [isConnected, setIsConnected] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [brandAlerts, setBrandAlerts] = useState([]);
+  const [brandUnread, setBrandUnread] = useState(0);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const pingIntervalRef = useRef(null);
+  const brandPollRef = useRef(null);
+  const navigate = useNavigate();
 
   // Load notifications from API
   const load = useCallback(async (append = false) => {
@@ -177,6 +196,27 @@ export function NotificationBell() {
       setLoading(false);
     }
   }, [user?.id, filter, notifications.length]);
+
+  // Load brand alerts (workspace-scoped, polled — no WebSocket).
+  const loadBrandAlerts = useCallback(async () => {
+    try {
+      const res = await apiClient.get("/api/brand-alerts", { params: { limit: 20 } });
+      const data = res?.data ?? res;
+      setBrandAlerts(data?.alerts || []);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const loadBrandCount = useCallback(async () => {
+    try {
+      const res = await apiClient.get("/api/brand-alerts/count");
+      const data = res?.data ?? res;
+      setBrandUnread(Number(data?.unread_count || 0));
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   // WebSocket connection
   const connectWebSocket = useCallback(() => {
@@ -274,6 +314,17 @@ export function NotificationBell() {
     };
   }, [user?.id]);
 
+  // Poll brand alerts on mount + every 60s (workspace-scoped, no WebSocket).
+  useEffect(() => {
+    loadBrandAlerts();
+    loadBrandCount();
+    brandPollRef.current = setInterval(() => {
+      loadBrandAlerts();
+      loadBrandCount();
+    }, 60000);
+    return () => clearInterval(brandPollRef.current);
+  }, [loadBrandAlerts, loadBrandCount]);
+
   // Reload when filter changes
   useEffect(() => {
     if (user?.id) {
@@ -297,11 +348,46 @@ export function NotificationBell() {
   };
 
   const markAllRead = async () => {
-    // Optimistic update
+    // Optimistic update — both streams.
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     setUnread(0);
-    
+    setBrandAlerts(prev => prev.map(a => ({ ...a, read: true })));
+    setBrandUnread(0);
+
     await axios.put(`${API}/notifications/mark-all-read?user_id=${user.id}`);
+    try {
+      await apiClient.patch("/api/brand-alerts/read-all");
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // Brand alert item actions.
+  const markAlertRead = async (alert) => {
+    if (alert.read) return;
+    setBrandAlerts(prev => prev.map(a => a.alert_id === alert.alert_id ? { ...a, read: true } : a));
+    setBrandUnread(prev => Math.max(0, prev - 1));
+    try {
+      await apiClient.patch(`/api/brand-alerts/${alert.alert_id}/read`);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const dismissAlert = async (alert) => {
+    setBrandAlerts(prev => prev.filter(a => a.alert_id !== alert.alert_id));
+    if (!alert.read) setBrandUnread(prev => Math.max(0, prev - 1));
+    try {
+      await apiClient.delete(`/api/brand-alerts/${alert.alert_id}`);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const openAlert = async (alert) => {
+    await markAlertRead(alert);
+    setOpen(false);
+    if (alert.action_url) navigate(alert.action_url);
   };
 
   const dismiss = async (id) => {
@@ -335,17 +421,29 @@ export function NotificationBell() {
     return date.toLocaleDateString();
   };
 
+  // Combined unread badge: notification stream (WS) + brand alerts (polling).
+  const totalUnread = unread + brandUnread;
+
+  // Merge both streams into one list, newest first. Brand alerts show when the
+  // filter is 'all' or 'brand_alerts'; notifications hide on 'brand_alerts'.
+  const showNotifs = filter !== 'brand_alerts';
+  const showAlerts = filter === 'all' || filter === 'brand_alerts';
+  const mergedItems = [
+    ...(showNotifs ? notifications.map(n => ({ kind: 'notif', ts: n.created_at, n })) : []),
+    ...(showAlerts ? brandAlerts.map(a => ({ kind: 'alert', ts: a.created_at, a })) : []),
+  ].sort((x, y) => new Date(y.ts).getTime() - new Date(x.ts).getTime());
+
   return (
     <div className="relative">
-      <button 
-        onClick={() => { setOpen(!open); if (!open) load(); }}
+      <button
+        onClick={() => { setOpen(!open); if (!open) { load(); loadBrandAlerts(); loadBrandCount(); } }}
         data-testid="notification-bell"
         className="relative p-2 rounded-lg cth-muted hover:opacity-80 hover:bg-[var(--cth-command-panel-soft)] transition-all"
       >
         <Bell size={18} />
-        {unread > 0 && (
+        {totalUnread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--cth-command-cinnabar)] cth-heading text-[10px] font-bold flex items-center justify-center animate-pulse">
-            {unread > 99 ? '99+' : unread}
+            {totalUnread > 99 ? '99+' : totalUnread}
           </span>
         )}
         {/* Connection indicator */}
@@ -374,7 +472,7 @@ export function NotificationBell() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {unread > 0 && (
+                {totalUnread > 0 && (
                   <button onClick={markAllRead} className="text-xs text-[var(--cth-command-cinnabar)] hover:underline">
                     Mark all read
                   </button>
@@ -425,19 +523,67 @@ export function NotificationBell() {
               )}
             </div>
 
-            {/* Notifications list */}
+            {/* Notifications + brand alerts list */}
             <div className="overflow-y-auto max-h-80">
-              {loading && notifications.length === 0 ? (
+              {loading && mergedItems.length === 0 ? (
                 <div className="text-center py-12 text-xs text-[var(--cth-command-muted)]">
                   <div className="w-5 h-5 border-2 border-[var(--cth-command-cinnabar)] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                   Loading...
                 </div>
-              ) : notifications.length > 0 ? (
+              ) : mergedItems.length > 0 ? (
                 <>
-                  {notifications.map(n => {
+                  {mergedItems.map((item) => {
+                    if (item.kind === 'alert') {
+                      const a = item.a;
+                      return (
+                        <div
+                          key={`alert-${a.alert_id}`}
+                          onClick={() => openAlert(a)}
+                          className={`flex items-start gap-3 px-4 py-3 border-b border-[var(--cth-command-border)] cursor-pointer transition-colors hover:cth-card-muted ${
+                            !a.read ? 'cth-card-muted' : ''
+                          }`}
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5"
+                            style={{ background: ALERT_PRIORITY_DOT[a.priority] || 'var(--cth-command-muted)' }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className={`text-xs font-semibold leading-tight ${!a.read ? 'cth-heading' : 'text-[var(--cth-command-muted)]'}`}>
+                                {a.title}
+                              </div>
+                              <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[var(--cth-command-gold)]/20 text-[var(--cth-command-gold)]">
+                                Brand Alert
+                              </span>
+                            </div>
+                            <div className="text-xs text-[var(--cth-command-muted)] mt-0.5 line-clamp-2">{a.body}</div>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <span className="text-[10px] text-[var(--cth-brand-primary-soft)]">{getTimeAgo(a.created_at)}</span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openAlert(a); }}
+                                className="text-[10px] text-[var(--cth-command-cinnabar)] hover:underline"
+                              >
+                                {alertActionLabel(a.action_url)} →
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); dismissAlert(a); }}
+                              className="p-1 text-[var(--cth-command-muted)] hover:text-red-400 transition-colors"
+                              title="Dismiss"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    const n = item.n;
                     const Icon = TYPE_ICONS[n.type] || Info;
                     const color = TYPE_COLORS[n.type] || 'var(--cth-command-purple)';
-                    
+
                     return (
                       <div 
                         key={n.id}
@@ -500,8 +646,8 @@ export function NotificationBell() {
                     );
                   })}
                   
-                  {/* Load more button */}
-                  {hasMore && (
+                  {/* Load more button (notifications only) */}
+                  {showNotifs && hasMore && (
                     <button
                       onClick={loadMore}
                       disabled={loading}
@@ -516,7 +662,7 @@ export function NotificationBell() {
                   <Bell size={24} className="mx-auto mb-2 text-[var(--cth-brand-primary-soft)]" />
                   <div className="text-xs text-[var(--cth-command-muted)]">No notifications</div>
                   <div className="text-[10px] text-[var(--cth-brand-primary-soft)] mt-1">
-                    {filter !== 'all' ? `No ${CATEGORY_LABELS[filter]} notifications` : "You're all caught up!"}
+                    {filter !== 'all' ? `No ${CATEGORY_LABELS[filter]} items` : "You're all caught up!"}
                   </div>
                 </div>
               )}
@@ -530,8 +676,8 @@ export function NotificationBell() {
               >
                 Notification Settings
               </a>
-              {unread > 0 && (
-                <span className="text-[10px] text-[var(--cth-command-cinnabar)]">{unread} unread</span>
+              {totalUnread > 0 && (
+                <span className="text-[10px] text-[var(--cth-command-cinnabar)]">{totalUnread} unread</span>
               )}
             </div>
           </div>
