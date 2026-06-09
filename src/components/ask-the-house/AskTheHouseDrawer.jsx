@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Send, Loader2, Lock, Plus, MessageSquare } from "lucide-react";
+import { X, Send, Loader2, Lock, Plus, MessageSquare, Brain, Pin, Trash2 } from "lucide-react";
 import apiClient from "../../lib/apiClient";
 import { useWorkspace } from "../../context/WorkspaceContext";
 
@@ -17,6 +17,14 @@ const MODES = [
   { id: "review", label: "Review" },
   { id: "generate", label: "Generate" },
 ];
+
+const MEMORY_TYPE_LABELS = {
+  decision: "Decision",
+  recommendation: "Recommendation",
+  action_item: "Action",
+  context: "Context",
+  insight: "Insight",
+};
 
 function sessionTitle(s) {
   return (
@@ -77,9 +85,13 @@ export default function AskTheHouseDrawer({
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [memoryOpen, setMemoryOpen] = useState(false);
+  const [memories, setMemories] = useState([]);
+  const [memoriesLoading, setMemoriesLoading] = useState(false);
+  const [resumedFrom, setResumedFrom] = useState(null);
   const avatarUrlRef = useRef("");
   const messagesEndRef = useRef(null);
-  const alertShownRef = useRef(false);
+  const resumeHandledRef = useRef(false);
 
   // Fetch Zuri's avatar as an authed blob once the drawer opens (cached after).
   useEffect(() => {
@@ -120,10 +132,10 @@ export default function AskTheHouseDrawer({
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
-  // Reset transient state when drawer opens
+  // Reset transient state when drawer opens (auto-resume runs in loadContext).
   useEffect(() => {
     if (!open) {
-      alertShownRef.current = false;
+      resumeHandledRef.current = false;
       return;
     }
     setSessionId(null);
@@ -131,40 +143,34 @@ export default function AskTheHouseDrawer({
     setInput("");
     setMode("guide");
     setSessionsOpen(false);
+    setResumedFrom(null);
+    resumeHandledRef.current = false;
   }, [open]);
 
-  // On open, if there's an unread high-priority brand alert, prepend a Zuri
-  // opening line to the conversation and mark the alert read.
-  useEffect(() => {
-    if (!open || !wsId || alertShownRef.current) return;
-    alertShownRef.current = true;
-    let cancelled = false;
-    (async () => {
+  // When there is no prior session, prepend a Zuri opening line from an unread
+  // high-priority brand alert (and mark it read). Called from loadContext.
+  const maybeShowAlertOpening = async () => {
+    try {
+      const res = await apiClient.get(
+        "/api/brand-alerts?priority=high&read=false&limit=1"
+      );
+      const data = res?.data ?? res;
+      const alert = (data?.alerts || [])[0];
+      if (!alert) return;
+      const opening = buildAlertOpening(alert);
+      if (!opening) return;
+      setMessages((prev) =>
+        prev.length === 0 ? [{ role: "assistant", content: opening }] : prev
+      );
       try {
-        const res = await apiClient.get(
-          "/api/brand-alerts?priority=high&read=false&limit=1"
-        );
-        const data = res?.data ?? res;
-        const alert = (data?.alerts || [])[0];
-        if (!alert || cancelled) return;
-        const opening = buildAlertOpening(alert);
-        if (!opening) return;
-        setMessages((prev) =>
-          prev.length === 0 ? [{ role: "assistant", content: opening }] : prev
-        );
-        try {
-          await apiClient.patch(`/api/brand-alerts/${alert.alert_id}/read`);
-        } catch {
-          /* ignore */
-        }
+        await apiClient.patch(`/api/brand-alerts/${alert.alert_id}/read`);
       } catch {
-        /* no alert / not available */
+        /* ignore */
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [open, wsId]);
+    } catch {
+      /* no alert / not available */
+    }
+  };
 
   // Load context + sessions. Extracted so the retry button can call it too.
   const loadContext = async () => {
@@ -181,6 +187,17 @@ export default function AskTheHouseDrawer({
       setNextRoom(ctxRes?.next_room || null);
       const list = Array.isArray(sessRes) ? sessRes : [];
       setSessions(list.filter((s) => s.surface === surface));
+      // Auto-resume the most recent session; otherwise show an alert opening.
+      if (!resumeHandledRef.current) {
+        resumeHandledRef.current = true;
+        const mostRecent = list[0];
+        if (mostRecent?.session_id) {
+          await loadSession(mostRecent.session_id);
+          setResumedFrom(relativeTime(mostRecent.updated_at));
+        } else {
+          await maybeShowAlertOpening();
+        }
+      }
     } catch {
       setCaps(null);
     } finally {
@@ -204,6 +221,7 @@ export default function AskTheHouseDrawer({
   const loadSession = async (sid) => {
     setSessionId(sid);
     setSessionsOpen(false);
+    setResumedFrom(null);
     try {
       const res = await apiClient.get(`/api/ask-the-house/sessions/${sid}`);
       const msgs = Array.isArray(res) ? res : [];
@@ -218,6 +236,52 @@ export default function AskTheHouseDrawer({
     setMessages([]);
     setInput("");
     setSessionsOpen(false);
+    setResumedFrom(null);
+    resumeHandledRef.current = true;
+  };
+
+  // ── Memory panel ──
+  const loadMemories = async () => {
+    setMemoriesLoading(true);
+    try {
+      const res = await apiClient.get("/api/ask-the-house/memories");
+      const data = res?.data ?? res;
+      setMemories(data?.memories || []);
+    } catch {
+      setMemories([]);
+    } finally {
+      setMemoriesLoading(false);
+    }
+  };
+
+  const toggleMemoryPanel = () => {
+    const next = !memoryOpen;
+    setMemoryOpen(next);
+    if (next) loadMemories();
+  };
+
+  const togglePin = async (mem) => {
+    const newPinned = !mem.pinned;
+    setMemories((prev) =>
+      prev.map((x) => (x.memory_id === mem.memory_id ? { ...x, pinned: newPinned } : x))
+    );
+    try {
+      await apiClient.patch(`/api/ask-the-house/memories/${mem.memory_id}/pin`, {
+        pinned: newPinned,
+      });
+      loadMemories();
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const removeMemory = async (mem) => {
+    setMemories((prev) => prev.filter((x) => x.memory_id !== mem.memory_id));
+    try {
+      await apiClient.delete(`/api/ask-the-house/memories/${mem.memory_id}`);
+    } catch {
+      /* ignore */
+    }
   };
 
   const modeCaps = (chosen) => {
@@ -255,6 +319,11 @@ export default function AskTheHouseDrawer({
       } else {
         setMessages((prev) => [...prev, { role: "assistant", content: data.message || "" }]);
         if (data.next_room) setNextRoom(data.next_room);
+        if (data.pinned_memory) {
+          setToast("Pinned to memory.");
+          setTimeout(() => setToast(null), 3000);
+        }
+        if (memoryOpen) loadMemories();
       }
     } catch {
       setToast("Something went wrong. Try again.");
@@ -329,12 +398,29 @@ export default function AskTheHouseDrawer({
               </p>
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close" style={{
-            background: "none", border: "none", cursor: "pointer",
-            color: "var(--cth-command-muted)", padding: 4,
-          }}>
-            <X size={20} />
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            <button
+              onClick={toggleMemoryPanel}
+              aria-label="Memory"
+              title="What Zuri remembers"
+              style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: memoryOpen ? "var(--cth-command-purple)" : "none",
+                border: "1px solid var(--cth-command-border)",
+                color: memoryOpen ? "var(--cth-command-gold)" : "var(--cth-command-muted)",
+                cursor: "pointer", padding: "5px 10px", borderRadius: 4,
+                fontSize: 12, fontFamily: SANS,
+              }}
+            >
+              <Brain size={14} /> Memory
+            </button>
+            <button onClick={onClose} aria-label="Close" style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "var(--cth-command-muted)", padding: 4,
+            }}>
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <div style={{
@@ -378,6 +464,30 @@ export default function AskTheHouseDrawer({
             );
           })}
         </div>
+
+        {resumedFrom && (
+          <div style={{
+            padding: "6px 24px",
+            borderBottom: "1px solid var(--cth-command-border)",
+            flexShrink: 0,
+            display: "flex", alignItems: "center", gap: 8,
+          }}>
+            <span style={{ fontSize: 10, color: "var(--cth-command-muted)", fontFamily: SANS }}>
+              Continuing from {resumedFrom}
+            </span>
+            <button
+              onClick={startNewSession}
+              style={{
+                marginLeft: "auto", background: "none", border: "none",
+                cursor: "pointer", fontSize: 10, fontFamily: SANS,
+                color: "var(--cth-command-cinnabar)",
+                textDecoration: "underline", padding: 0,
+              }}
+            >
+              Start new conversation
+            </button>
+          </div>
+        )}
 
         <div style={{
           padding: "10px 24px",
@@ -454,6 +564,87 @@ export default function AskTheHouseDrawer({
                 </div>
               </button>
             ))}
+          </div>
+        )}
+
+        {memoryOpen && (
+          <div style={{
+            height: 200, overflowY: "auto",
+            borderBottom: "1px solid var(--cth-command-border)",
+            background: "var(--cth-command-panel-soft)",
+            padding: "10px 24px",
+            flexShrink: 0,
+          }}>
+            <div style={{
+              fontSize: 11, color: "var(--cth-command-muted)",
+              fontFamily: SANS, marginBottom: 8,
+            }}>
+              What Zuri remembers across all our conversations.
+            </div>
+            {memoriesLoading ? (
+              <div style={{ fontSize: 12, color: "var(--cth-command-muted)", fontFamily: SANS }}>
+                Loading…
+              </div>
+            ) : memories.length === 0 ? (
+              <div style={{
+                fontSize: 12, color: "var(--cth-command-muted)",
+                fontFamily: SANS, fontStyle: "italic",
+              }}>
+                Nothing saved yet. As you talk, key decisions and insights are remembered here.
+              </div>
+            ) : (
+              memories.map((mem) => (
+                <div key={mem.memory_id} style={{
+                  display: "flex", gap: 8, alignItems: "flex-start",
+                  padding: "8px 0", borderBottom: "1px solid var(--cth-command-border)",
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                      <span style={{
+                        fontSize: 9, fontWeight: 700, textTransform: "uppercase",
+                        letterSpacing: "0.04em", padding: "1px 6px", borderRadius: 4,
+                        fontFamily: SANS,
+                        color: mem.pinned ? "var(--cth-command-gold)" : "var(--cth-command-muted)",
+                        border: `1px solid ${mem.pinned ? "var(--cth-command-gold)" : "var(--cth-command-border)"}`,
+                      }}>
+                        {MEMORY_TYPE_LABELS[mem.type] || mem.type}
+                      </span>
+                      <span style={{ fontSize: 10, color: "var(--cth-command-muted)", fontFamily: SANS }}>
+                        {relativeTime(mem.created_at)}
+                      </span>
+                    </div>
+                    <div style={{
+                      fontSize: 12, color: "var(--cth-command-ink)",
+                      fontFamily: SANS, lineHeight: 1.4,
+                    }}>
+                      {mem.content}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                    <button
+                      onClick={() => togglePin(mem)}
+                      title={mem.pinned ? "Unpin" : "Pin"}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer", padding: 2,
+                        color: mem.pinned ? "var(--cth-command-gold)" : "var(--cth-command-muted)",
+                      }}
+                    >
+                      <Pin size={13} fill={mem.pinned ? "var(--cth-command-gold)" : "none"} />
+                    </button>
+                    <button
+                      onClick={() => removeMemory(mem)}
+                      title="Delete"
+                      style={{
+                        background: "none", border: "none", cursor: "pointer", padding: 2,
+                        color: "var(--cth-command-muted)",
+                      }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 
