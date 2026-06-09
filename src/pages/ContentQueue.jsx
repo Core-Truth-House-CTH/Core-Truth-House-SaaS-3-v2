@@ -14,6 +14,18 @@ import {
 import { DashboardLayout } from "../components/Layout";
 import apiClient from "../lib/apiClient";
 
+// visual_url is stored as a backend-relative path (e.g.
+// /api/audience/portraits/<file>.png), served by the API host — prefix it with
+// the backend base URL. Full http(s)/data URLs pass through unchanged.
+const API_BASE = String(
+  import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_BACKEND_URL ||
+    "https://api.coretruthhouse.com"
+).replace(/\/$/, "");
+
+const absUrl = (u) =>
+  !u ? u : /^(https?:|data:)/.test(u) ? u : `${API_BASE}${u}`;
+
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 // Platform brand colours are an explicit spec requirement for the badges.
@@ -207,6 +219,7 @@ function QueueItemCard({ item, onPatch, onPush, onGenerateVisual, busy }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.generated_text || "");
+  const [lightboxUrl, setLightboxUrl] = useState(null);
   const status = item.status || "pending";
 
   useEffect(() => {
@@ -265,8 +278,10 @@ function QueueItemCard({ item, onPatch, onPush, onGenerateVisual, busy }) {
       <div style={{ display: "flex", gap: 14 }}>
         {item.visual_url ? (
           <img
-            src={item.visual_url}
+            src={absUrl(item.visual_url)}
             alt="Generated visual"
+            className="cth-thumb"
+            onClick={() => setLightboxUrl(absUrl(item.visual_url))}
             style={{
               width: 84,
               height: 84,
@@ -274,6 +289,7 @@ function QueueItemCard({ item, onPatch, onPush, onGenerateVisual, busy }) {
               borderRadius: 10,
               border: "1px solid var(--cth-command-border)",
               flexShrink: 0,
+              cursor: "pointer",
             }}
           />
         ) : null}
@@ -415,6 +431,54 @@ function QueueItemCard({ item, onPatch, onPush, onGenerateVisual, busy }) {
           </>
         )}
       </div>
+
+      {/* Full-size image lightbox */}
+      {lightboxUrl ? (
+        <div
+          onClick={() => setLightboxUrl(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1100,
+            background: "rgba(13,0,16,0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxUrl(null);
+            }}
+            aria-label="Close"
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 24,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              color: "#fff",
+              display: "inline-flex",
+            }}
+          >
+            <XIcon size={32} />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Generated visual, full size"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              objectFit: "contain",
+              borderRadius: 12,
+            }}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -922,7 +986,7 @@ export default function ContentQueue() {
 
   return (
     <DashboardLayout>
-      <style>{`@keyframes cth-spin{to{transform:rotate(360deg)}}.cth-spin{animation:cth-spin 1s linear infinite}`}</style>
+      <style>{`@keyframes cth-spin{to{transform:rotate(360deg)}}.cth-spin{animation:cth-spin 1s linear infinite}.cth-thumb{transition:opacity .15s ease}.cth-thumb:hover{opacity:.82}`}</style>
       <div style={{ padding: "28px 32px", maxWidth: 980, margin: "0 auto" }}>
         {/* Header */}
         <div
