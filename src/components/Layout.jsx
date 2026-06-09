@@ -63,6 +63,7 @@ import {
   Database,
   MessageCircle,
   Radar,
+  ClipboardList,
 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 
@@ -272,6 +273,7 @@ export function Sidebar() {
           { path: "/calendar", label: "Calendar", icon: Calendar },
           { path: "/social-media-manager", label: "Social Planner", icon: Share2 },
           { path: "/community", label: "Cohort Community", icon: MessageCircle },
+          { path: "/content-queue", label: "Content Queue", icon: ClipboardList },
         ],
       },
       {

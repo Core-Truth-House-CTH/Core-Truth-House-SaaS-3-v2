@@ -31,6 +31,7 @@ const OfferBuilder = lazy(() => import("../pages/OfferBuilder"));
 const LaunchPlanner = lazy(() => import("../pages/LaunchPlanner"));
 const Calendar = lazy(() => import("../pages/Calendar"));
 const SocialMediaManager = lazy(() => import("../pages/SocialMediaManager"));
+const ContentQueue = lazy(() => import("../pages/ContentQueue"));
 const CommunityPage = lazy(() => import("../pages/CommunityPage"));
 const KnowledgeBasePage = lazy(() => import("../pages/KnowledgeBasePage"));
 const JoinWorkspace = lazy(() => import("../pages/JoinWorkspace"));
@@ -84,6 +85,7 @@ const pageRegistry = {
 
   "/calendar": Calendar,
   "/social-media-manager": SocialMediaManager,
+  "/content-queue": ContentQueue,
   "/community": CommunityPage,
   "/cohort-manager": CohortManager,
 
