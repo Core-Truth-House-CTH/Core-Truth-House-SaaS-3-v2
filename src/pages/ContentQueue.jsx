@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { DashboardLayout } from "../components/Layout";
 import apiClient from "../lib/apiClient";
@@ -91,9 +92,9 @@ const DEFAULT_SETTINGS = {
 
 const unwrap = (res) => res?.data ?? res;
 
-const DEFAULT_VISUAL_MODEL = "gpt-image-1";
+const DEFAULT_VISUAL_MODEL = "openai/gpt-image-1";
 const VISUAL_MODELS = [
-  { value: "gpt-image-1", label: "GPT Image (best text)" },
+  { value: "openai/gpt-image-1", label: "GPT Image (best text)" },
   { value: "google/gemini-2.5-flash-image", label: "Gemini 2.5 Flash (fast)" },
   { value: "higgsfield-ai/soul/standard", label: "Higgsfield Soul", higgsfield: true },
   {
@@ -232,6 +233,7 @@ function QueueItemCard({
   onPatch,
   onPush,
   onGenerateVisual,
+  onDeleteVisual,
   busy,
   higgsfieldConnected,
   selectedModel,
@@ -241,6 +243,7 @@ function QueueItemCard({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.generated_text || "");
   const [lightboxUrl, setLightboxUrl] = useState(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const status = item.status || "pending";
 
   useEffect(() => {
@@ -298,21 +301,98 @@ function QueueItemCard({
 
       <div style={{ display: "flex", gap: 14 }}>
         {item.visual_url ? (
-          <img
-            src={absUrl(item.visual_url)}
-            alt="Generated visual"
-            className="cth-thumb"
-            onClick={() => setLightboxUrl(absUrl(item.visual_url))}
+          <div
             style={{
-              width: 84,
-              height: 84,
-              objectFit: "cover",
-              borderRadius: 10,
-              border: "1px solid var(--cth-command-border)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
               flexShrink: 0,
-              cursor: "pointer",
             }}
-          />
+          >
+            <img
+              src={absUrl(item.visual_url)}
+              alt="Generated visual"
+              className="cth-thumb"
+              onClick={() => setLightboxUrl(absUrl(item.visual_url))}
+              style={{
+                width: 84,
+                height: 84,
+                objectFit: "cover",
+                borderRadius: 10,
+                border: "1px solid var(--cth-command-border)",
+                cursor: "pointer",
+              }}
+            />
+            {confirmingDelete ? (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <span style={{ fontSize: 11, color: "var(--cth-command-muted)" }}>
+                  Remove this visual?
+                </span>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    onClick={() => {
+                      onDeleteVisual(item);
+                      setConfirmingDelete(false);
+                    }}
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: "3px 8px",
+                      borderRadius: 7,
+                      border: "1px solid var(--cth-command-error)",
+                      background: "var(--cth-command-error)",
+                      color: "#fff",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Remove
+                  </button>
+                  <button
+                    onClick={() => setConfirmingDelete(false)}
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: "3px 8px",
+                      borderRadius: 7,
+                      border: "1px solid var(--cth-command-border)",
+                      background: "transparent",
+                      color: "var(--cth-command-muted)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmingDelete(true)}
+                title="Remove visual"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontSize: 11,
+                  padding: "3px 8px",
+                  borderRadius: 7,
+                  border: "1px solid var(--cth-command-border)",
+                  background: "transparent",
+                  color: "var(--cth-command-muted)",
+                  cursor: "pointer",
+                }}
+              >
+                <Trash2 size={12} /> Remove
+              </button>
+            )}
+          </div>
         ) : null}
 
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -492,6 +572,28 @@ function QueueItemCard({
             padding: 24,
           }}
         >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteVisual(item);
+              setConfirmingDelete(false);
+              setLightboxUrl(null);
+            }}
+            aria-label="Delete visual"
+            title="Remove visual"
+            style={{
+              position: "absolute",
+              top: 20,
+              left: 24,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              color: "#fff",
+              display: "inline-flex",
+            }}
+          >
+            <Trash2 size={28} />
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -1010,6 +1112,22 @@ export default function ContentQueue() {
     }
   };
 
+  const deleteVisual = async (item) => {
+    setError("");
+    try {
+      await apiClient.delete(
+        `/api/content-automation/queue/${item.item_id}/visual`
+      );
+      setItems((list) =>
+        list.map((it) =>
+          it.item_id === item.item_id ? { ...it, visual_url: null } : it
+        )
+      );
+    } catch (e) {
+      setError(e?.payload?.detail || e?.message || "Failed to remove visual.");
+    }
+  };
+
   const saveSettings = async (next) => {
     setSavingSettings(true);
     try {
@@ -1361,6 +1479,7 @@ export default function ContentQueue() {
                   onPatch={patchItem}
                   onPush={pushItem}
                   onGenerateVisual={generateVisual}
+                  onDeleteVisual={deleteVisual}
                   busy={busyItem}
                   higgsfieldConnected={higgsfieldConnected}
                   selectedModel={modelByItem[it.item_id] || DEFAULT_VISUAL_MODEL}

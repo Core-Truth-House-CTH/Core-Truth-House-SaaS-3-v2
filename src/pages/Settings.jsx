@@ -338,6 +338,13 @@ export default function Settings() {
   const [hfApiSecret, setHfApiSecret] = useState('');
   const [hfSaving, setHfSaving] = useState(false);
 
+  // Integrations — OpenAI connect state (no plan gating).
+  const [oaLoading, setOaLoading] = useState(false);
+  const [oaConnected, setOaConnected] = useState(false);
+  const [oaLast4, setOaLast4] = useState('');
+  const [oaApiKey, setOaApiKey] = useState('');
+  const [oaSaving, setOaSaving] = useState(false);
+
   useEffect(() => {
     loadSettings();
   }, [user?.id]);
@@ -374,7 +381,10 @@ export default function Settings() {
   }, [activeTab, canUseBrandIdentity, user?.id]);
 
   useEffect(() => {
-    if (activeTab === 'integrations') loadHiggsfield();
+    if (activeTab === 'integrations') {
+      loadHiggsfield();
+      loadOpenAI();
+    }
   }, [activeTab]);
 
   const loadDomain = async () => {
@@ -619,6 +629,56 @@ export default function Settings() {
       toast.error(e.message || 'Failed to disconnect Higgsfield.');
     } finally {
       setHfSaving(false);
+    }
+  };
+
+  const loadOpenAI = async () => {
+    setOaLoading(true);
+    try {
+      const res = await apiClient.get('/api/integrations/openai');
+      setOaConnected(!!res?.connected);
+      setOaLast4(res?.api_key_last4 || '');
+    } catch (e) {
+      // Not connected yet, or workspace not resolved.
+      setOaConnected(false);
+      setOaLast4('');
+    } finally {
+      setOaLoading(false);
+    }
+  };
+
+  const handleConnectOpenAI = async () => {
+    if (!oaApiKey.trim()) {
+      toast.error('Enter your OpenAI API key.');
+      return;
+    }
+    setOaSaving(true);
+    try {
+      const res = await apiClient.post('/api/integrations/openai', {
+        api_key: oaApiKey.trim(),
+      });
+      setOaConnected(true);
+      setOaLast4(res?.api_key_last4 || oaApiKey.trim().slice(-4));
+      setOaApiKey('');
+      toast.success('OpenAI connected.');
+    } catch (e) {
+      toast.error(e.message || 'Failed to connect OpenAI.');
+    } finally {
+      setOaSaving(false);
+    }
+  };
+
+  const handleDisconnectOpenAI = async () => {
+    setOaSaving(true);
+    try {
+      await apiClient.delete('/api/integrations/openai');
+      setOaConnected(false);
+      setOaLast4('');
+      toast.success('OpenAI disconnected.');
+    } catch (e) {
+      toast.error(e.message || 'Failed to disconnect OpenAI.');
+    } finally {
+      setOaSaving(false);
     }
   };
 
@@ -1383,7 +1443,134 @@ export default function Settings() {
                     )}
                   </div>
 
-                  {/* Section 2 — Coming soon */}
+                  {/* Section 2 — OpenAI */}
+                  <div className="mb-5" style={{ ...CARD_STYLE, padding: 24 }}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h2 style={SECTION_HEADING_STYLE}>OpenAI</h2>
+                        <p style={{ ...MUTED_STYLE, marginTop: 8, maxWidth: 560 }}>
+                          Connect your own OpenAI account to use your credits for GPT Image
+                          generation (gpt-image-1) in the Content Queue. Get your API key at
+                          platform.openai.com.
+                        </p>
+                      </div>
+                      {oaConnected && (
+                        <span
+                          data-testid="openai-connected-badge"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            flexShrink: 0,
+                            background: 'color-mix(in srgb, var(--cth-command-success) 14%, var(--cth-command-panel))',
+                            color: 'var(--cth-command-success)',
+                            border: '1px solid color-mix(in srgb, var(--cth-command-success) 35%, var(--cth-command-border))',
+                            borderRadius: 20,
+                            padding: '4px 12px',
+                            fontFamily: SANS,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            letterSpacing: '0.04em',
+                          }}
+                        >
+                          <CheckCircle size={13} />
+                          Connected
+                        </span>
+                      )}
+                    </div>
+
+                    {oaLoading ? (
+                      <div className="flex justify-center p-8">
+                        <Loader2 size={20} className="animate-spin" style={{ color: 'var(--cth-command-crimson)' }} />
+                      </div>
+                    ) : oaConnected ? (
+                      <div className="mt-5">
+                        <label style={FIELD_LABEL_STYLE}>OpenAI API key</label>
+                        <div
+                          style={{
+                            ...INNER_CARD_STYLE,
+                            background: 'var(--cth-command-panel-soft)',
+                            padding: 12,
+                            fontFamily: MONO,
+                            fontSize: 13,
+                            color: 'var(--cth-command-muted)',
+                            letterSpacing: '0.08em',
+                          }}
+                        >
+                          {`•••• •••• •••• ${oaLast4 || '••••'}`}
+                        </div>
+                        <div className="flex justify-end mt-5">
+                          <button
+                            data-testid="openai-disconnect-btn"
+                            onClick={handleDisconnectOpenAI}
+                            disabled={oaSaving}
+                            type="button"
+                            style={{
+                              ...DESTRUCTIVE_BUTTON_STYLE,
+                              opacity: oaSaving ? 0.65 : 1,
+                              cursor: oaSaving ? 'wait' : 'pointer',
+                            }}
+                          >
+                            {oaSaving ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                            {oaSaving ? 'Disconnecting...' : 'Disconnect'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-5">
+                        <div>
+                          <label style={FIELD_LABEL_STYLE}>OpenAI API key</label>
+                          <input
+                            data-testid="openai-api-key"
+                            type="password"
+                            value={oaApiKey}
+                            onChange={(e) => setOaApiKey(e.target.value)}
+                            placeholder="Your OpenAI API key (sk-...)"
+                            autoComplete="off"
+                            style={INPUT_STYLE}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4 mt-5 flex-wrap">
+                          <a
+                            href="https://platform.openai.com/api-keys"
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              fontFamily: SANS,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: 'var(--cth-command-crimson)',
+                              textDecoration: 'none',
+                            }}
+                          >
+                            Get your API key at platform.openai.com
+                            <ExternalLink size={13} />
+                          </a>
+
+                          <button
+                            data-testid="openai-connect-btn"
+                            onClick={handleConnectOpenAI}
+                            disabled={oaSaving || !oaApiKey.trim()}
+                            type="button"
+                            style={{
+                              ...PRIMARY_CTA_STYLE,
+                              opacity: oaSaving || !oaApiKey.trim() ? 0.65 : 1,
+                              cursor: oaSaving || !oaApiKey.trim() ? 'not-allowed' : 'pointer',
+                            }}
+                          >
+                            {oaSaving ? <Loader2 size={14} className="animate-spin" /> : <Plug size={14} />}
+                            {oaSaving ? 'Connecting...' : 'Connect'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section 3 — Coming soon */}
                   <div className="mb-5">
                     <p style={{ ...SECTION_LABEL_STYLE, marginBottom: 12 }}>More integrations coming soon</p>
                     <div className="grid gap-4 md:grid-cols-3">
