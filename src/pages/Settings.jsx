@@ -36,7 +36,6 @@ import { NotificationPreferences } from '../components/NotificationPreferences';
 import { IOSInstallInstructions } from '../pwa/PWAProvider';
 import apiClient from "../lib/apiClient";
 import { toast } from 'sonner';
-import MailIntegrationsSettings from "../components/mail/MailIntegrationsSettings";
 import SocialConnectionsSection from "../components/SocialConnectionsSection";
 
 const SANS = "'DM Sans', sans-serif";
@@ -751,7 +750,6 @@ export default function Settings() {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'socials', label: 'Social Media', icon: Instagram },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'mail', label: 'Mail Integrations', icon: Mail },
     { id: 'integrations', label: 'Integrations', icon: Plug },
     ...(canUseDomain ? [{ id: 'domain', label: 'Custom Domain', icon: Link2 }] : []),
     { id: 'billing', label: 'Billing & Plan', icon: CreditCard },
@@ -1295,12 +1293,6 @@ export default function Settings() {
                 </div>
               )}
 
-              {activeTab === 'mail' && (
-                <div className="mb-5" style={{ ...CARD_STYLE, padding: 24 }}>
-                  <MailIntegrationsSettings />
-                </div>
-              )}
-
               {activeTab === 'integrations' && (
                 <>
                   {/* Section 1 — Higgsfield */}
@@ -1816,7 +1808,6 @@ export default function Settings() {
 
               {activeTab !== 'billing' &&
                 activeTab !== 'domain' &&
-                activeTab !== 'mail' &&
                 activeTab !== 'brand-identity' &&
                 activeTab !== 'integrations' && (
                   <div className="flex justify-end pt-2">
