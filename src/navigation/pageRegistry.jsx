@@ -19,6 +19,7 @@ const SignalInbox = lazy(() => import("../pages/SignalInbox"));
 const CustomerJourney = lazy(() => import("../pages/CustomerJourney"));
 const Analytics = lazy(() => import("../pages/Analytics"));
 const Settings = lazy(() => import("../pages/Settings"));
+const Alerts = lazy(() => import("../pages/Alerts"));
 const CRMSuite = lazy(() => import("../pages/CRMSuite"));
 const MailSuite = lazy(() => import("../pages/MailSuite"));
 const EmailSettings = lazy(() => import("../pages/EmailSettings"));
@@ -99,6 +100,7 @@ const pageRegistry = {
     "/workspace-library": TenantDataDashboardV2,
   "/billing": Billing,
   "/settings": Settings,
+  "/alerts": Alerts,
 
   "/automations": Automations,
   "/join": JoinWorkspace,

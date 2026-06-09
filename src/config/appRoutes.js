@@ -441,6 +441,15 @@ export const APP_ROUTES = [
     tooltip:
       "Workspace name, display preferences, notifications, and integrations.",
   },
+    {
+    path: "/alerts",
+    label: "Alerts",
+    icon: Radar,
+    group: "account",
+    requiredPlan: null,
+    gateType: null,
+    tooltip: "Your brand health and signal activity in one place.",
+  },
 
   // Placeholder pages — registered so React Router resolves them; content is "Coming soon"
   { path: "/automations", label: "Automations", group: "placeholder", requiredPlan: "structure", gateType: null },

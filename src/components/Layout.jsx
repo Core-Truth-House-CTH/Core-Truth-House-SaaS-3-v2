@@ -66,6 +66,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
+import { BrandAlertBell } from "./BrandAlertBell";
 
 const ADMIN_ROLES = [
   "SUPER_ADMIN",
@@ -291,6 +292,7 @@ export function Sidebar() {
           { path: "/workspace-library", label: "Workspace Library", icon: FolderOpen },
           { path: "/members", label: "Members", icon: Users },
           { path: "/settings", label: "Settings", icon: Settings },
+          { path: "/alerts", label: "Alerts", icon: Radar },
         ],
       },
       {
@@ -667,6 +669,7 @@ export function DashboardLayout({ children }) {
           >
             Ask the House
           </button>
+          <BrandAlertBell />
           <NotificationBell />
         </div>
         <main className="cth-app-stage">

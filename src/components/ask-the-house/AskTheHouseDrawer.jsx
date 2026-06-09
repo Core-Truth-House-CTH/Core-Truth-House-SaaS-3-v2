@@ -40,6 +40,22 @@ function relativeTime(iso) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+// Build Zuri's opening line from an unread high-priority brand alert.
+function buildAlertOpening(alert) {
+  const d = alert?.data || {};
+  const timeAgo = relativeTime(alert?.created_at);
+  switch (alert?.type) {
+    case "signal_level4":
+      return `You have a Level ${d.level ?? ""} signal from ${d.source ?? "a buyer"} that came in ${timeAgo}. Someone is making a decision. Want to talk through how to respond?`;
+    case "signal_cluster":
+      return `${d.count ?? "Several"} signals confirmed in the last 48 hours — this is meaningful momentum. Want to break down what it means for your next move?`;
+    case "score_dropped":
+      return `Your brand score dropped ${d.delta != null ? Math.round(d.delta) : "a few"} points since your last audit. That usually means something structural shifted. Want to walk through what changed?`;
+    default:
+      return `${alert?.title || ""}${alert?.body ? `\n\n${alert.body}` : ""}`.trim();
+  }
+}
+
 export default function AskTheHouseDrawer({
   open,
   onClose,
@@ -63,6 +79,7 @@ export default function AskTheHouseDrawer({
   const [avatarUrl, setAvatarUrl] = useState("");
   const avatarUrlRef = useRef("");
   const messagesEndRef = useRef(null);
+  const alertShownRef = useRef(false);
 
   // Fetch Zuri's avatar as an authed blob once the drawer opens (cached after).
   useEffect(() => {
@@ -105,13 +122,49 @@ export default function AskTheHouseDrawer({
 
   // Reset transient state when drawer opens
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      alertShownRef.current = false;
+      return;
+    }
     setSessionId(null);
     setMessages([]);
     setInput("");
     setMode("guide");
     setSessionsOpen(false);
   }, [open]);
+
+  // On open, if there's an unread high-priority brand alert, prepend a Zuri
+  // opening line to the conversation and mark the alert read.
+  useEffect(() => {
+    if (!open || !wsId || alertShownRef.current) return;
+    alertShownRef.current = true;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiClient.get(
+          "/api/brand-alerts?priority=high&read=false&limit=1"
+        );
+        const data = res?.data ?? res;
+        const alert = (data?.alerts || [])[0];
+        if (!alert || cancelled) return;
+        const opening = buildAlertOpening(alert);
+        if (!opening) return;
+        setMessages((prev) =>
+          prev.length === 0 ? [{ role: "assistant", content: opening }] : prev
+        );
+        try {
+          await apiClient.patch(`/api/brand-alerts/${alert.alert_id}/read`);
+        } catch {
+          /* ignore */
+        }
+      } catch {
+        /* no alert / not available */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, wsId]);
 
   // Load context + sessions. Extracted so the retry button can call it too.
   const loadContext = async () => {
