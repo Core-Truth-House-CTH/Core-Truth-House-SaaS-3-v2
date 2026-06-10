@@ -6,12 +6,6 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 const SANS = '"DM Sans", system-ui, sans-serif';
 const SERIF = '"Playfair Display", serif';
 
-// Brand Architect persona ("Zuri") avatar — the "Replicate Headshot" record in
-// media_assets. Served behind the global /api auth middleware, so it is fetched
-// as an authenticated blob URL (a direct <img src> would 401).
-const ZURI_AVATAR_PATH =
-  "/api/media-upload/files/brand_asset_reference/47ec8f1a92bc4a77968bc1f4f7d5eb19.png";
-
 const MODES = [
   { id: "guide", label: "Guide" },
   { id: "review", label: "Review" },
@@ -84,45 +78,12 @@ export default function AskTheHouseDrawer({
   const [mode, setMode] = useState("guide");
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState(null);
-  const [avatarUrl, setAvatarUrl] = useState("");
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [memories, setMemories] = useState([]);
   const [memoriesLoading, setMemoriesLoading] = useState(false);
   const [resumedFrom, setResumedFrom] = useState(null);
-  const avatarUrlRef = useRef("");
   const messagesEndRef = useRef(null);
   const resumeHandledRef = useRef(false);
-
-  // Fetch Zuri's avatar as an authed blob once the drawer opens (cached after).
-  useEffect(() => {
-    if (!open || avatarUrlRef.current) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const url = typeof apiClient.buildApiUrl === "function"
-          ? apiClient.buildApiUrl(ZURI_AVATAR_PATH)
-          : ZURI_AVATAR_PATH;
-        const headers = typeof apiClient.getAuthHeaders === "function"
-          ? await apiClient.getAuthHeaders()
-          : {};
-        const res = await fetch(url, { method: "GET", headers, credentials: "include" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const blob = await res.blob();
-        if (cancelled) return;
-        const objUrl = window.URL.createObjectURL(blob);
-        avatarUrlRef.current = objUrl;
-        setAvatarUrl(objUrl);
-      } catch (err) {
-        if (!cancelled) console.error("Failed to load Zuri avatar:", err);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [open]);
-
-  // Revoke the object URL only on unmount (not on re-open, so the cache holds).
-  useEffect(() => () => {
-    if (avatarUrlRef.current) window.URL.revokeObjectURL(avatarUrlRef.current);
-  }, []);
 
   // ESC closes
   useEffect(() => {

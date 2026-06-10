@@ -21,11 +21,6 @@ import { PLAN_INFO, normalizePlan } from "../config/planAccess";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
-// Brand Architect persona ("Zuri") avatar — the "Replicate Headshot" media_asset,
-// served behind the global /api auth middleware, so fetched as an authed blob.
-const ZURI_AVATAR_PATH =
-  "/api/media-upload/files/brand_asset_reference/47ec8f1a92bc4a77968bc1f4f7d5eb19.png";
-
 const COMMAND_CENTER_CSS = `
 .cth-command-page {
   --cc-night: #0d0010;
@@ -461,33 +456,6 @@ function greetingFor(date) {
   return "Good evening";
 }
 
-function useAuthedBlobUrl(path) {
-  const [blobUrl, setBlobUrl] = useState("");
-  const ref = useRef("");
-  useEffect(() => {
-    if (!path || ref.current) return undefined;
-    let cancelled = false;
-    (async () => {
-      try {
-        const url = typeof apiClient.buildApiUrl === "function" ? apiClient.buildApiUrl(path) : path;
-        const headers = typeof apiClient.getAuthHeaders === "function" ? await apiClient.getAuthHeaders() : {};
-        const res = await fetch(url, { method: "GET", headers, credentials: "include" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const blob = await res.blob();
-        if (cancelled) return;
-        const obj = window.URL.createObjectURL(blob);
-        ref.current = obj;
-        setBlobUrl(obj);
-      } catch (err) {
-        if (!cancelled) console.error("Failed to load Zuri avatar:", err);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [path]);
-  useEffect(() => () => { if (ref.current) window.URL.revokeObjectURL(ref.current); }, []);
-  return blobUrl;
-}
-
 // ---------------------------------------------------------------------------
 // Section components
 // ---------------------------------------------------------------------------
@@ -605,7 +573,6 @@ function TodayFocus({ actions, navigate }) {
 }
 
 function ZuriCard({ bestMove, navigate }) {
-  const avatarUrl = useAuthedBlobUrl(ZURI_AVATAR_PATH);
   const move = bestMove || {
     title: "Complete your Brand Diagnostic",
     body: "I need a current score before I can recommend the most accurate next move.",
