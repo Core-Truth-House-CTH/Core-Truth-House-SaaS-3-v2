@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
  ArrowRight,
  CheckCircle2,
@@ -33,6 +33,8 @@ const API_BASE = (
  "https://api.coretruthhouse.com"
 ).replace(/\/$/, "");
 
+const RESULT_STORAGE_KEY = "cth_brand_diagnostic_result";
+
 const initialLeadInfo = {
  first_name: "",
  last_name: "",
@@ -63,21 +65,21 @@ const answerOptions = [
 ];
 
 const questions = [
- ["core_truth_1", "Core Truth Clarity", "Core Truth Clarity", "When someone asks what you do, do you have one clean sentence that names the specific problem you solve and the specific person you solve it for?", A.foundation],
+ ["core_truth_1", "Core Truth Clarity", "Core Truth Clarity", "Do you have one sentence that clearly names who you serve and the specific problem you solve for them?", A.foundation],
  ["core_truth_2", "Brand Independence", "Core Truth Clarity", "If someone saw your brand without your face, name, or personal story attached, would it still feel recognizable as yours?", A.trust],
  ["core_truth_3", "Brand Beliefs", "Core Truth Clarity", "Can you name the three core beliefs that separate you from every other person doing what you do?", A.positioning],
- ["messaging_1", "Message Consistency", "Messaging Coherence", "Across your website, most recent content, and a sales conversation, does your brand sound like the same person?", A.messaging],
- ["messaging_2", "Voice Framework", "Messaging Coherence", "When you create content, are you following a documented voice framework, or are you guessing based on mood?", A.content],
+ ["messaging_1", "Message Consistency", "Messaging Coherence", "Does your brand voice stay consistent whether someone reads your website, sees your content, or speaks with you directly?", A.messaging],
+ ["messaging_2", "Voice Framework", "Messaging Coherence", "Do you follow a documented framework when you create content?", A.content],
  ["messaging_3", "Delegatable Voice", "Messaging Coherence", "Could you hand your messaging guidelines to a contractor or assistant and have them create content that still sounds like your brand?", A.messaging],
- ["conversion_1", "Homepage Clarity", "Conversion Architecture", "When a stranger lands on your homepage, can they answer what this is, who it is for, and what to do next within five seconds?", A.conversion],
- ["conversion_2", "Buyer Path", "Conversion Architecture", "Is there a documented path from stranger to buyer, or does conversion depend on you personally showing up for every sale?", A.structure],
- ["conversion_3", "Lost Prospect Insight", "Conversion Architecture", "Do you know specifically why your last few prospects did not buy, or are you guessing?", A.conversion],
- ["audience_1", "Buyer Language", "Audience Resonance", "When you describe your ideal client's biggest frustration, do you use their words or your industry's words?", A.audience],
- ["audience_2", "Language Feedback Loop", "Audience Resonance", "When was the last time something a prospect or client said actually changed a piece of your messaging?", A.audience],
+ ["conversion_1", "Homepage Clarity", "Conversion Architecture", "Would a stranger understand who your website is for and what to do next without you explaining it?", A.conversion],
+ ["conversion_2", "Buyer Path", "Conversion Architecture", "Do you have a documented process that moves a stranger toward becoming a buyer without you personally facilitating every step?", A.structure],
+ ["conversion_3", "Lost Prospect Insight", "Conversion Architecture", "Do you understand specifically why your last few prospects did not buy?", A.conversion],
+ ["audience_1", "Buyer Language", "Audience Resonance", "Do you describe your ideal client's frustrations using their exact words?", A.audience],
+ ["audience_2", "Language Feedback Loop", "Audience Resonance", "Do you regularly update your messaging based on what prospects and clients tell you?", A.audience],
  ["audience_3", "Belief Shift", "Audience Resonance", "Do you know the specific belief your buyer has to shift before they say yes?", A.strategic],
- ["operations_1", "Brand Continuity", "Operational Discipline", "If you took 30 days off starting tomorrow, would your brand keep building authority and trust, or would it go quiet?", A.execution],
- ["operations_2", "Brand Operations System", "Operational Discipline", "Do you have a documented brand operations system, or do you rebuild your decisions every time you create content?", A.structure],
- ["operations_3", "Brand Health Metrics", "Operational Discipline", "Can you measure whether your brand is healthier this month than it was last month, or is it mostly a feeling?", A.trust],
+ ["operations_1", "Brand Continuity", "Operational Discipline", "Is your brand building authority and trust even when you are not actively creating content?", A.execution],
+ ["operations_2", "Brand Operations System", "Operational Discipline", "Do you have a documented system that guides your brand decisions without rebuilding them from scratch each time?", A.structure],
+ ["operations_3", "Brand Health Metrics", "Operational Discipline", "Do you have a way to measure whether your brand is growing stronger month over month?", A.trust],
 ];
 
 const dimensions = [
@@ -505,7 +507,15 @@ function ModalDiagnostic({ open, onClose, onComplete }) {
  </button>
 
  {resultSaved ? (
- <a href={recommendation.next}>
+ <a
+ href={
+ `/sign-up?tier=${encodeURIComponent(recommendation.tier)}` +
+ `&source=diagnostic` +
+ `&score=${encodeURIComponent(score)}` +
+ `&challenge=${encodeURIComponent(leadInfo.current_challenge)}` +
+ `&first_name=${encodeURIComponent(leadInfo.first_name)}`
+ }
+ >
  {recommendation.cta}
  <ArrowRight size={15} />
  </a>
@@ -529,6 +539,21 @@ function ModalDiagnostic({ open, onClose, onComplete }) {
 export default function BrandDiagnosticPage() {
  const [diagnosticOpen, setDiagnosticOpen] = useState(false);
  const [resultSnapshot, setResultSnapshot] = useState(null);
+
+ // Restore a saved diagnostic result on load so refreshing does not lose it.
+ useEffect(() => {
+ try {
+ const raw = window.localStorage.getItem(RESULT_STORAGE_KEY);
+ if (!raw) return;
+ const saved = JSON.parse(raw);
+ if (saved && typeof saved.score === "number" && saved.recommendation) {
+ setResultSnapshot(saved);
+ }
+ } catch (error) {
+ // Corrupt or unavailable storage — clear it and start fresh.
+ try { window.localStorage.removeItem(RESULT_STORAGE_KEY); } catch (_) {}
+ }
+ }, []);
 
  const liveDimensions = useMemo(
  () => buildLiveDimensions(resultSnapshot?.answers || {}),
@@ -751,6 +776,12 @@ export default function BrandDiagnosticPage() {
  onComplete={(snapshot) => {
  setResultSnapshot(snapshot);
  setDiagnosticOpen(false);
+ // Persist the result so a page refresh restores it.
+ try {
+ window.localStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify(snapshot));
+ } catch (error) {
+ // Storage unavailable (private mode / quota) — non-fatal.
+ }
  }}
  />
 
