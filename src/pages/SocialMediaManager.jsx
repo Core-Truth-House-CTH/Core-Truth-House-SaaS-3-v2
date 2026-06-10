@@ -660,11 +660,11 @@ export default function SocialMediaManager() {
  const [confirmBusy, setConfirmBusy] = useState(false);
  const [toast, setToast] = useState(null);
 
- const showToast = (message, tone = "success") => setToast({ message, tone });
+ const showToast = (message, tone = "success", duration = 2500) => setToast({ message, tone, duration });
 
  useEffect(() => {
  if (!toast) return undefined;
- const id = setTimeout(() => setToast(null), 2500);
+ const id = setTimeout(() => setToast(null), toast.duration || 2500);
  return () => clearTimeout(id);
  }, [toast]);
 
@@ -1441,13 +1441,13 @@ export default function SocialMediaManager() {
  window.location.href = url;
  } catch (err) {
  console.error(`${platformKey} connect error:`, err);
- const detail = err?.response?.data?.detail || err?.message;
+ const detail = err?.payload?.detail || err?.message;
  const platformLabel =
  SOCIAL_CONNECT_PLATFORMS.find((p) => p.key === platformKey)?.label || platformKey;
- if (err?.response?.status === 500 && /not configured/i.test(detail || "")) {
- showToast(`${platformLabel} OAuth is not configured on the backend yet.`, "error");
+ if (err?.status === 500 && /not configured/i.test(detail || "")) {
+ showToast(`${platformLabel} OAuth is not configured on the backend yet.`, "error", 8000);
  } else {
- showToast(detail || `Could not start ${platformLabel} connect flow`, "error");
+ showToast(detail || `Could not start ${platformLabel} connect flow`, "error", 8000);
  }
  } finally {
  setActionBusyPlatform("");
