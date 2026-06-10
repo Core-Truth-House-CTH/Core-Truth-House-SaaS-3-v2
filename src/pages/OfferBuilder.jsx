@@ -175,7 +175,32 @@ const EMPTY_FORM = {
   sales_page_url: '',
   checkout_url: '',
   booking_url: '',
+  checkout_processor: '',
+  slug: '',
 };
+
+const CHECKOUT_PROCESSORS = [
+  { value: '', label: 'Select processor' },
+  { value: 'stripe', label: 'Stripe Payment Links' },
+  { value: 'gumroad', label: 'Gumroad' },
+  { value: 'thrivecart', label: 'ThriveCart' },
+  { value: 'samcart', label: 'SamCart' },
+  { value: 'kajabi', label: 'Kajabi' },
+  { value: 'paypal', label: 'PayPal' },
+  { value: 'square', label: 'Square' },
+  { value: 'custom', label: 'Custom' },
+];
+
+function processorHelper(value) {
+  if (!value) return '';
+  if (value === 'stripe') return 'Create a payment link in your Stripe dashboard and paste it above.';
+  if (value === 'gumroad') return 'Use your Gumroad product URL.';
+  if (value === 'custom') return 'Paste any checkout URL.';
+  const label = CHECKOUT_PROCESSORS.find((p) => p.value === value)?.label || value;
+  return `Paste your ${label} checkout link.`;
+}
+
+const PUBLIC_OFFER_HOST = 'coretruthhouse.com';
 
 const CADENCE_OPTIONS = [
   { value: 'one-time', label: 'One-time', cardLabel: 'one-time payment' },
@@ -220,6 +245,9 @@ function normalizeOffer(raw) {
     sales_page_url: raw?.sales_page_url || '',
     checkout_url: raw?.checkout_url || '',
     booking_url: raw?.booking_url || '',
+    slug: raw?.slug || '',
+    checkout_processor: raw?.checkout_processor || '',
+    status: raw?.status || 'draft',
     sales_copy: raw?.sales_copy || '',
     created_at: raw?.created_at || '',
     updated_at: raw?.updated_at || '',
@@ -335,6 +363,12 @@ function OfferBuilderContent() {
   const [audienceAvatars, setAudienceAvatars] = useState([]);
   const [audienceCustom, setAudienceCustom] = useState(false);
 
+  // Public offer URL: workspace slug + (optional) custom domain, copy feedback
+  const [workspaceSlug, setWorkspaceSlug] = useState('');
+  const [customDomain, setCustomDomain] = useState('');
+  const [copiedUrlId, setCopiedUrlId] = useState(null);
+  const [togglingPublishId, setTogglingPublishId] = useState(null);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -350,6 +384,50 @@ function OfferBuilderContent() {
       cancelled = true;
     };
   }, []);
+
+  // Fetch the workspace slug (and any connected custom domain) so we can show
+  // the public offer-page URL on published offers.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiClient.get('/api/workspaces/my-slug');
+        if (cancelled) return;
+        setWorkspaceSlug(res?.slug || '');
+        setCustomDomain(res?.custom_domain || '');
+      } catch (err) {
+        if (!cancelled) {
+          setWorkspaceSlug('');
+          setCustomDomain('');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceId]);
+
+  const offerHost = customDomain || PUBLIC_OFFER_HOST;
+
+  const buildOfferUrl = useCallback(
+    (offer, withProtocol = false) => {
+      if (!workspaceSlug || !offer?.slug) return '';
+      const path = `${offerHost}/offers/${workspaceSlug}/${offer.slug}`;
+      return withProtocol ? `https://${path}` : path;
+    },
+    [workspaceSlug, offerHost]
+  );
+
+  const copyOfferUrl = useCallback(async (offer) => {
+    const url = `https://${customDomain || PUBLIC_OFFER_HOST}/offers/${workspaceSlug}/${offer.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrlId(offer.id);
+      setTimeout(() => setCopiedUrlId(null), 1600);
+    } catch (err) {
+      console.error('Failed to copy offer URL:', err);
+    }
+  }, [customDomain, workspaceSlug]);
 
   const offerCountSubtitle = useMemo(
     () => `${offers.length} offer${offers.length !== 1 ? 's' : ''} created`,
@@ -393,6 +471,23 @@ function OfferBuilderContent() {
     loadOffers();
   }, [loadOffers]);
 
+  const handleTogglePublish = useCallback(async (offer) => {
+    if (!offer?.id) return;
+    const nextStatus = offer.status === 'published' ? 'draft' : 'published';
+    setTogglingPublishId(offer.id);
+    setError('');
+    try {
+      await apiClient.put(`/api/offers/${offer.id}`, { status: nextStatus });
+      await loadOffers();
+      refreshBrandHealth();
+    } catch (err) {
+      console.error('Publish toggle error:', err);
+      setError(err?.message || 'Failed to update publish status.');
+    } finally {
+      setTogglingPublishId(null);
+    }
+  }, [loadOffers, refreshBrandHealth]);
+
   const handleOpenModal = useCallback((offer = null) => {
     if (offer) {
       setEditingOffer(offer);
@@ -407,6 +502,8 @@ function OfferBuilderContent() {
         sales_page_url: offer.sales_page_url || offer.salesPageUrl || offer.sales_page || offer.url || '',
         checkout_url: offer.checkout_url || offer.checkoutUrl || offer.checkout_page_url || '',
         booking_url: offer.booking_url || offer.bookingUrl || offer.booking_link || '',
+        checkout_processor: offer.checkout_processor || '',
+        slug: offer.slug || '',
       });
     } else {
       setEditingOffer(null);
@@ -453,6 +550,7 @@ function OfferBuilderContent() {
       sales_page_url: formData.sales_page_url?.trim() || '',
       checkout_url: formData.checkout_url?.trim() || '',
       booking_url: formData.booking_url?.trim() || '',
+      checkout_processor: formData.checkout_processor || '',
     };
 
     setSavingOffer(true);
@@ -768,9 +866,14 @@ function OfferBuilderContent() {
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
                   {displayedOffers.map((offer) => {
-                    const isDraft = getOfferStatus(offer) === 'draft';
+                    const isPublished = offer.status === 'published';
+                    const isDraft = !isPublished;
                     const hasCopy = Boolean((offer.sales_copy || '').trim());
                     const priceSet = Number(offer.price) > 0;
+                    const hasCheckout = Boolean((offer.checkout_url || '').trim());
+                    const offerUrl = buildOfferUrl(offer);
+                    const showOfferPage = isPublished && hasCheckout && Boolean(offerUrl);
+                    const isToggling = togglingPublishId === offer.id;
                     return (
                       <div
                         key={offer.id}
@@ -811,7 +914,7 @@ function OfferBuilderContent() {
                                 border: `1px solid ${isDraft ? 'var(--cth-command-border)' : 'color-mix(in srgb, var(--cth-command-success) 35%, var(--cth-command-border))'}`,
                               }}
                             >
-                              {isDraft ? 'Draft' : 'Active'}
+                              {isPublished ? 'Published' : 'Draft'}
                             </span>
                             {hasCopy ? (
                               <span className="inline-flex items-center gap-1" style={{ fontFamily: SANS, fontSize: 9, color: 'var(--cth-command-gold)' }}>
@@ -898,6 +1001,83 @@ function OfferBuilderContent() {
                             <Trash2 size={14} />
                           </button>
                         </div>
+
+                        {/* Publish toggle */}
+                        <div
+                          className="flex items-center justify-between"
+                          style={{ padding: '10px 16px', borderTop: '1px solid var(--cth-command-border)' }}
+                        >
+                          <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: 'var(--cth-command-ink)' }}>
+                            Published
+                          </span>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isPublished}
+                            disabled={isToggling}
+                            data-testid={`publish-toggle-${offer.id}`}
+                            onClick={() => handleTogglePublish(offer)}
+                            aria-label={isPublished ? `Unpublish ${offer.name}` : `Publish ${offer.name}`}
+                            style={{
+                              position: 'relative',
+                              width: 38,
+                              height: 22,
+                              borderRadius: 999,
+                              border: 'none',
+                              cursor: isToggling ? 'wait' : 'pointer',
+                              background: isPublished ? 'var(--cth-command-success)' : 'var(--cth-command-border)',
+                              transition: 'background 0.2s ease',
+                              opacity: isToggling ? 0.6 : 1,
+                              flexShrink: 0,
+                            }}
+                          >
+                            <span
+                              style={{
+                                position: 'absolute',
+                                top: 2,
+                                left: isPublished ? 18 : 2,
+                                width: 18,
+                                height: 18,
+                                borderRadius: '50%',
+                                background: '#fff',
+                                transition: 'left 0.2s ease',
+                              }}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Offer page URL (published + has checkout only) */}
+                        {showOfferPage ? (
+                          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--cth-command-border)', background: 'var(--cth-command-panel-soft)' }}>
+                            <div style={{ fontFamily: SANS, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 600, color: 'var(--cth-command-muted)', marginBottom: 6 }}>
+                              Offer page
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={`https://${offerUrl}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                data-testid={`offer-url-${offer.id}`}
+                                style={{ flex: 1, minWidth: 0, fontFamily: SANS, fontSize: 11, color: 'var(--cth-command-crimson)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                title={offerUrl}
+                              >
+                                {offerUrl}
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => copyOfferUrl(offer)}
+                                data-testid={`copy-offer-url-${offer.id}`}
+                                aria-label="Copy offer page URL"
+                                style={{ ...ICON_BUTTON_STYLE, borderRadius: 6, padding: 6, flexShrink: 0 }}
+                              >
+                                {copiedUrlId === offer.id ? <Check size={13} style={{ color: 'var(--cth-command-success)' }} /> : <Clipboard size={13} />}
+                              </button>
+                            </div>
+                            <div style={{ fontFamily: SANS, fontSize: 10, color: 'var(--cth-command-muted)', marginTop: 6, lineHeight: 1.45 }}>
+                              Share this link to let buyers view and purchase your offer.
+                            </div>
+                          </div>
+                        ) : null}
                       </div>
                     );
                   })}
@@ -1216,6 +1396,24 @@ function OfferBuilderContent() {
                       <div className="flex flex-col" style={{ gap: 5 }}>
                         <label style={FIELD_LABEL_STYLE}>Checkout URL</label>
                         <input data-testid="offer-checkout-url" type="url" value={formData.checkout_url || ''} onChange={(e) => setFormData((p) => ({ ...p, checkout_url: e.target.value }))} placeholder="https://checkout.yourdomain.com/offer" style={INPUT_STYLE} />
+                      </div>
+                      <div className="flex flex-col" style={{ gap: 5 }}>
+                        <label style={FIELD_LABEL_STYLE}>Checkout processor</label>
+                        <select
+                          data-testid="offer-checkout-processor"
+                          value={formData.checkout_processor || ''}
+                          onChange={(e) => setFormData((p) => ({ ...p, checkout_processor: e.target.value }))}
+                          style={INPUT_STYLE}
+                        >
+                          {CHECKOUT_PROCESSORS.map((proc) => (
+                            <option key={proc.value || 'none'} value={proc.value}>{proc.label}</option>
+                          ))}
+                        </select>
+                        {processorHelper(formData.checkout_processor) ? (
+                          <span style={{ fontFamily: SANS, fontSize: 11, color: 'var(--cth-command-muted)', lineHeight: 1.5 }}>
+                            {processorHelper(formData.checkout_processor)}
+                          </span>
+                        ) : null}
                       </div>
                       <div className="flex flex-col" style={{ gap: 5 }}>
                         <label style={FIELD_LABEL_STYLE}>Booking URL</label>

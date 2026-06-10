@@ -21,6 +21,7 @@ const BlogJournalPage = lazy(() => import("./pages/BlogJournalPage"));
 const StorefrontPage = lazy(() => import("./pages/StorefrontPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const BrandDiagnosticPage = lazy(() => import("./pages/BrandDiagnosticPage"));
+const PublicOfferPage = lazy(() => import("./pages/PublicOfferPage"));
 const ScorecardPage = lazy(() => import("./pages/ScorecardPage"));
 const CohortPage = lazy(() => import("./pages/CohortPage"));
 const CohortApplyPage = lazy(() => import("./pages/CohortApplyPage"));
@@ -42,6 +43,7 @@ function PublicRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/brand-diagnostic" element={<BrandDiagnosticPage />} />
         <Route path="/brand-diagnostic/" element={<BrandDiagnosticPage />} />
+        <Route path="/offers/:workspaceSlug/:offerSlug" element={<PublicOfferPage />} />
         <Route path="/scorecard" element={<ScorecardPage />} />
         <Route path="/scorecard/" element={<ScorecardPage />} />
         <Route path="/cohort" element={<CohortPage />} />
