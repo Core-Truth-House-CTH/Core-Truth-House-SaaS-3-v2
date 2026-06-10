@@ -1419,6 +1419,7 @@ export default function SocialMediaManager() {
  igConnection?.extra?.page_name || igConnection?.extra?.page_id || null;
 
  async function handleConnectPlatform(platformKey) {
+ console.log("connect start:", { platformKey, routingMode });
  setActionBusyPlatform(platformKey);
  try {
  let url = null;
@@ -1438,6 +1439,7 @@ export default function SocialMediaManager() {
  if (!url) {
  throw new Error("Connect endpoint did not return an authorize URL.");
  }
+ console.log("connect response:", { platformKey, routingMode, authorize_url: url });
  window.location.href = url;
  } catch (err) {
  console.error(`${platformKey} connect error:`, err);
