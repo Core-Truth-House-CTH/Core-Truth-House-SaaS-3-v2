@@ -635,8 +635,8 @@ export default function PreAuditIntake({ onComplete, onSkip, workspaceId = '' })
           {/* Zuri card */}
           <div style={{ background: INK, borderRadius: 10, padding: '12px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
-              <div style={{ width: 16, height: 16, borderRadius: '50%', background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: 8, fontWeight: 500, color: '#fff' }}>Z</span>
+              <div style={{ width: 16, height: 16, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+                <img src="/zuri.png" alt="Zuri" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <span style={{ fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7a6090' }}>{currentSection.zuriLabel}</span>
             </div>

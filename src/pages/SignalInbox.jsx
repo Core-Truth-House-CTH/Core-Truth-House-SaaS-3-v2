@@ -1442,8 +1442,8 @@ function RecommendedActionTab({ recommendation, onAct }) {
   return (
     <div style={{ background: "#1a0828", borderRadius: 12, padding: "20px 22px" }} data-testid="recommended-action-tab">
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--cth-command-cinnabar)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 500, color: "var(--cth-command-ivory)" }}>Z</span>
+        <div style={{ width: 20, height: 20, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+          <img src="/zuri.png" alt="Zuri" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
         <span style={{ fontFamily: SANS, fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: "#7a6090" }}>
           Zuri · Next Best Move

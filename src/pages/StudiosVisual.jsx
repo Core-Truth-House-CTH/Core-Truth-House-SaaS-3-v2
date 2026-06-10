@@ -604,8 +604,8 @@ export default function StudiosVisual() {
             {/* Zuri */}
             <div style={{ background: "#1a0828", borderRadius: 10, padding: "13px 15px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7 }}>
-                <div style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--cth-command-cinnabar)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: 8, fontWeight: 500, color: "var(--cth-command-ivory)" }}>Z</span>
+                <div style={{ width: 18, height: 18, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+                  <img src="/zuri.png" alt="Zuri" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
                 <span style={{ fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--cth-command-purple-mid)" }}>Zuri · visual direction</span>
               </div>

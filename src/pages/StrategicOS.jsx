@@ -1652,7 +1652,7 @@ export default function StrategicOS() {
                 {!activeLocked ? (
                   <div style={{ background: "#1a0828", borderRadius: 10, padding: "15px 17px" }} data-testid="zuri-inline">
                     <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
-                      <span style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--cth-command-crimson)", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: SANS, fontSize: 8, fontWeight: 600, color: "#fff" }}>Z</span>
+                      <img src="/zuri.png" alt="Zuri" style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
                       <span style={{ fontFamily: SANS, fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase", color: "#7a6090" }}>Zuri · suggestion</span>
                     </div>
 

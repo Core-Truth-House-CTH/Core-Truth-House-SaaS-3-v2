@@ -365,21 +365,12 @@ export default function AskTheHouseDrawer({
           <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
             <div style={{
               width: 40, height: 40, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
-              background: "var(--cth-command-purple)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              border: "1px solid var(--cth-command-border)",
             }}>
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="Zuri"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : (
-                <span style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 600, color: "var(--cth-command-gold)" }}>
-                  Z
-                </span>
-              )}
+              <img
+                src="/zuri.png"
+                alt="Zuri"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
             </div>
             <div style={{ minWidth: 0 }}>
               <h2 style={{

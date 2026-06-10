@@ -213,8 +213,6 @@ const COMMAND_CENTER_CSS = `
   overflow: hidden;
   flex-shrink: 0;
   display: grid; place-items: center;
-  background: rgba(196,169,91,0.18);
-  border: 1px solid rgba(196,169,91,0.5);
 }
 .cc-zuri-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .cc-zuri-avatar span { font-family: var(--font-display); font-weight: 500; font-size: 20px; color: var(--cc-gold); }
@@ -618,7 +616,7 @@ function ZuriCard({ bestMove, navigate }) {
     <section className="cc-zuri">
       <div className="cc-zuri-head">
         <div className="cc-zuri-avatar">
-          {avatarUrl ? <img src={avatarUrl} alt="Zuri" /> : <span>Z</span>}
+          <img src="/zuri.png" alt="Zuri" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
         <div>
           <div className="cc-zuri-name">Zuri</div>

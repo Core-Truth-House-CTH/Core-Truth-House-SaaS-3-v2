@@ -1917,7 +1917,7 @@ function CampaignBuilderPageContent() {
                   {/* Zuri card */}
                   <div style={{ background: '#1a0828', borderRadius: 10, padding: '13px 15px' }} data-testid="zuri-campaign-step">
                     <div className="flex items-center gap-2" style={{ marginBottom: 9 }}>
-                      <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--cth-command-crimson)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: "'DM Sans', sans-serif", fontSize: 8, fontWeight: 600, color: '#fff' }}>Z</span>
+                      <img src="/zuri.png" alt="Zuri" style={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                       <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7a6090' }}>Zuri · {active.label.toLowerCase()} guidance</span>
                     </div>
                     {zuriBusyStep === activeMagnetStep ? (

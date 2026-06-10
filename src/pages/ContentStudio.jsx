@@ -1446,8 +1446,8 @@ export default function ContentStudio() {
           {/* ============ Zuri card (bottom of page) ============ */}
           <div style={{ background: "#1a0828", borderRadius: 12, padding: "18px 20px", marginTop: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-              <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#e04e35", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 8, fontWeight: 600, color: "#fff" }}>Z</span>
+              <div style={{ width: 20, height: 20, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+                <img src="/zuri.png" alt="Zuri" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
               <span style={{ fontFamily: SANS, fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: "#7a6090" }}>
                 Zuri · Content Inspiration

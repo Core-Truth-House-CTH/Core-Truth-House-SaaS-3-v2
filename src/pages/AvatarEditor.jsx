@@ -433,13 +433,11 @@ function ZuriCard({ section, onAssist }) {
             width: 16,
             height: 16,
             borderRadius: "50%",
-            background: C.zuriAccent,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            overflow: "hidden",
+            flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: 8, fontWeight: 500, color: "#fff" }}>Z</span>
+          <img src="/zuri.png" alt="Zuri" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
         <span
           style={{

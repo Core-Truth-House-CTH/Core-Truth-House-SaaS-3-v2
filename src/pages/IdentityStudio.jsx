@@ -1685,24 +1685,17 @@ function IdentityStudioContent() {
             {/* Zuri inline suggestion — static per-section guidance (AI wiring deferred to a future per-section endpoint) */}
             <div style={{ background: '#1a0828', borderRadius: 10, padding: '13px 15px' }} data-testid="zuri-inline">
               <div className="flex items-center gap-2" style={{ marginBottom: 9 }}>
-                <span
+                <img
+                  src="/zuri.png"
+                  alt="Zuri"
                   style={{
                     width: 18,
                     height: 18,
                     borderRadius: '50%',
-                    background: 'var(--cth-command-crimson)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    objectFit: 'cover',
                     flexShrink: 0,
-                    fontFamily: SANS,
-                    fontSize: 8,
-                    fontWeight: 600,
-                    color: '#fff',
                   }}
-                >
-                  Z
-                </span>
+                />
                 <span
                   style={{
                     fontFamily: SANS,

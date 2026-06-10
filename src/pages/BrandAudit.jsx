@@ -720,8 +720,8 @@ export default function BrandAudit() {
             {/* Zuri interpretation — replaces the old AI Analysis card */}
             <div style={{ background: '#1a0828', borderRadius: 12, padding: '18px 20px' }} data-testid="zuri-brand-interpretation">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#e04e35', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 9, fontWeight: 500, color: '#fff' }}>Z</span>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+                  <img src="/zuri.png" alt="Zuri" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <span style={{ fontFamily: SANS, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a6090' }}>
                   Zuri · Brand Interpretation

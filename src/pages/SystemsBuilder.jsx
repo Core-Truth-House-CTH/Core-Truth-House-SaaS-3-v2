@@ -1399,23 +1399,17 @@ export default function SystemsBuilder() {
                     {/* Zuri systems assist */}
                     <div style={{ background: "#1a0828", borderRadius: 10, padding: "14px 16px" }}>
                       <div className="flex items-center" style={{ gap: 7, marginBottom: 8 }}>
-                        <span
+                        <img
+                          src="/zuri.png"
+                          alt="Zuri"
                           style={{
                             width: 16,
                             height: 16,
                             borderRadius: 999,
-                            background: "var(--cth-command-cinnabar)",
-                            color: "#fff",
-                            fontFamily: SANS,
-                            fontSize: 8,
-                            fontWeight: 600,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
+                            objectFit: "cover",
+                            flexShrink: 0,
                           }}
-                        >
-                          Z
-                        </span>
+                        />
                         <span
                           style={{
                             fontFamily: SANS,
