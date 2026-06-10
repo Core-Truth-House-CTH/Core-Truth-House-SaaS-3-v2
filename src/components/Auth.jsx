@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import { useColors } from "../context/ThemeContext";
 import { Layers, ArrowLeft } from "lucide-react";
@@ -13,8 +13,79 @@ if (HAS_CLERK) {
   SignUp = ClerkSignUp;
 }
 
-function AuthShell({ title, subtitle, children }) {
+// CTH crimson — primary accent used across the auth experience.
+const CTH_CRIMSON = "#e04e35";
+
+// Shared Clerk appearance so SignUp and SignIn render identically.
+const CLERK_APPEARANCE = {
+  variables: {
+    colorPrimary: "#e04e35",
+    colorText: "#2b1040",
+    colorTextSecondary: "#763b5b",
+    colorBackground: "#ffffff",
+    colorInputBackground: "#ffffff",
+    colorInputText: "#2b1040",
+    borderRadius: "18px",
+    fontFamily: '"DM Sans", system-ui, sans-serif',
+  },
+  elements: {
+    card: {
+      boxShadow: "0 20px 70px rgba(20,15,43,0.10)",
+      border: "1px solid #d8c5c3",
+      borderRadius: "28px",
+    },
+    headerTitle: {
+      fontFamily: "Georgia, serif",
+      letterSpacing: "-0.045em",
+      color: "#2b1040",
+    },
+    headerSubtitle: {
+      color: "#763b5b",
+    },
+    formButtonPrimary: {
+      backgroundColor: "#e04e35",
+      boxShadow: "0 18px 40px rgba(224,78,53,0.22)",
+      borderRadius: "999px",
+      fontWeight: 800,
+    },
+    formFieldInput: {
+      borderColor: "#d8c5c3",
+      borderRadius: "18px",
+      minHeight: "48px",
+    },
+    footerActionLink: {
+      color: "#e04e35",
+      fontWeight: 800,
+    },
+  },
+};
+
+// Maps the diagnostic "current challenge" select values to readable labels.
+const CHALLENGE_LABELS = {
+  visible_not_converting: "Visibility without conversion",
+  inconsistent_messaging: "Inconsistent messaging",
+  unclear_offer: "Offer clarity",
+  content_not_converting: "Content that does not sell",
+  brand_depends_on_me: "Brand dependency on you",
+  need_operating_system: "No brand operating system",
+};
+
+function readableChallenge(value) {
+  if (!value) return "";
+  return CHALLENGE_LABELS[value] || value;
+}
+
+// Tier-specific motivating line shown on the story panel.
+const TIER_MOTIVATION = {
+  Foundation: "Your foundation is closer than you think.",
+  Structure: "The structure you need already exists in your answers.",
+  House: "You have built something real. Now make it run.",
+  Estate: "You are ready to operate at scale.",
+};
+
+function AuthShell({ title, subtitle, children, diagnosticContext }) {
   const navigate = useNavigate();
+  const dc = diagnosticContext;
 
   return (
     <main className="cth-auth-page">
@@ -41,11 +112,36 @@ function AuthShell({ title, subtitle, children }) {
             <span>{subtitle}</span>
           </div>
 
-          <div className="cth-auth-proof">
-            <span>Clarity</span>
-            <span>Structure</span>
-            <span>Power</span>
-          </div>
+          {dc ? (
+            <div className="cth-auth-diagnostic">
+              {dc.first_name ? (
+                <div className="cth-auth-diag-greeting">Welcome, {dc.first_name}</div>
+              ) : null}
+              {dc.score ? (
+                <div className="cth-auth-diag-score">
+                  <span className="cth-auth-diag-score-num">{dc.score}/60</span>
+                  {dc.tier ? (
+                    <span className="cth-auth-diag-tier">{dc.tier} Brand</span>
+                  ) : null}
+                </div>
+              ) : null}
+              {dc.challenge ? (
+                <div className="cth-auth-diag-challenge">
+                  <span className="cth-auth-diag-challenge-label">Your biggest gap:</span>{" "}
+                  {readableChallenge(dc.challenge)}
+                </div>
+              ) : null}
+              {dc.tier && TIER_MOTIVATION[dc.tier] ? (
+                <p className="cth-auth-diag-motivation">{TIER_MOTIVATION[dc.tier]}</p>
+              ) : null}
+            </div>
+          ) : (
+            <div className="cth-auth-proof">
+              <span>Clarity</span>
+              <span>Structure</span>
+              <span>Power</span>
+            </div>
+          )}
         </div>
 
         <div className="cth-auth-form-panel">
@@ -200,6 +296,64 @@ function AuthShell({ title, subtitle, children }) {
           font-weight: 850;
         }
 
+        .cth-auth-diagnostic {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .cth-auth-diag-greeting {
+          color: #c7a09d;
+          font-size: 13px;
+          font-weight: 850;
+          letter-spacing: 0.04em;
+        }
+
+        .cth-auth-diag-score {
+          display: flex;
+          align-items: baseline;
+          gap: 14px;
+          flex-wrap: wrap;
+        }
+
+        .cth-auth-diag-score-num {
+          font-family: "Cormorant Garamond", Georgia, serif;
+          font-size: clamp(3rem, 6vw, 4.6rem);
+          font-weight: 600;
+          line-height: 0.9;
+          color: #fff;
+          letter-spacing: -0.02em;
+        }
+
+        .cth-auth-diag-tier {
+          font-size: 13px;
+          font-weight: 950;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: ${CTH_CRIMSON};
+        }
+
+        .cth-auth-diag-challenge {
+          color: rgba(248,244,242,0.86);
+          font-size: 15px;
+          font-weight: 700;
+          line-height: 1.5;
+        }
+
+        .cth-auth-diag-challenge-label {
+          color: rgba(248,244,242,0.58);
+          font-weight: 850;
+        }
+
+        .cth-auth-diag-motivation {
+          margin: 0;
+          color: rgba(248,244,242,0.78);
+          font-size: 15px;
+          font-weight: 750;
+          line-height: 1.55;
+          max-width: 380px;
+        }
+
         .cth-auth-form-panel {
           background: linear-gradient(180deg, #f8f4f2, #ffffff);
           display: flex;
@@ -282,48 +436,7 @@ export function SignInPage() {
         path="/sign-in"
         signUpUrl="/sign-up"
         forceRedirectUrl={redirectUrl}
-        appearance={{
-          variables: {
-            colorPrimary: "#e04e35",
-            colorText: "#2b1040",
-            colorTextSecondary: "#763b5b",
-            colorBackground: "#ffffff",
-            colorInputBackground: "#ffffff",
-            colorInputText: "#2b1040",
-            borderRadius: "18px",
-            fontFamily: '"DM Sans", system-ui, sans-serif',
-          },
-          elements: {
-            card: {
-              boxShadow: "0 20px 70px rgba(20,15,43,0.10)",
-              border: "1px solid #d8c5c3",
-              borderRadius: "28px",
-            },
-            headerTitle: {
-              fontFamily: "Georgia, serif",
-              letterSpacing: "-0.045em",
-              color: "#2b1040",
-            },
-            headerSubtitle: {
-              color: "#763b5b",
-            },
-            formButtonPrimary: {
-              backgroundColor: "#e04e35",
-              boxShadow: "0 18px 40px rgba(224,78,53,0.22)",
-              borderRadius: "999px",
-              fontWeight: 800,
-            },
-            formFieldInput: {
-              borderColor: "#d8c5c3",
-              borderRadius: "18px",
-              minHeight: "48px",
-            },
-            footerActionLink: {
-              color: "#e04e35",
-              fontWeight: 800,
-            },
-          },
-        }}
+        appearance={CLERK_APPEARANCE}
       />
     </AuthShell>
   );
@@ -332,24 +445,62 @@ export function SignInPage() {
 export function SignUpPage() {
   const { isSignedIn } = useUser();
 
+  const params = useMemo(() => new URLSearchParams(window.location.search), []);
+  const source = params.get("source");
+
+  // Diagnostic context surfaced on the story panel (only the readable fields).
+  const diagnosticContext = useMemo(() => {
+    if (source !== "diagnostic") return null;
+    return {
+      tier: params.get("tier") || "",
+      score: params.get("score") || "",
+      challenge: params.get("challenge") || "",
+      first_name: params.get("first_name") || "",
+      source,
+    };
+  }, [params, source]);
+
+  // Persist the full param set immediately on mount so the diagnostic context
+  // survives Clerk's sub-route changes during the multi-step sign-up flow.
+  useEffect(() => {
+    if (source !== "diagnostic") return;
+    try {
+      const full = {};
+      params.forEach((value, key) => {
+        full[key] = value;
+      });
+      sessionStorage.setItem("cth_diagnostic_context", JSON.stringify(full));
+    } catch (err) {
+      console.error("Failed to persist diagnostic context", err);
+    }
+  }, [params, source]);
+
   if (!HAS_CLERK) {
     return <div style={{ color: "white", padding: 20 }}>Clerk not configured</div>;
   }
 
-  const params = new URLSearchParams(window.location.search);
-  const redirectUrl = params.get("redirect_url") || "/command-center";
+  // redirect_url takes priority; otherwise diagnostic sign-ups land on the
+  // personalized welcome.
+  const redirectUrl =
+    params.get("redirect_url") ||
+    (source === "diagnostic" ? "/command-center?welcome=diagnostic" : "/command-center");
 
   if (isSignedIn) {
     return <Navigate to={redirectUrl} replace />;
   }
 
   return (
-    <AuthShell title="Create Account" subtitle="Start building">
+    <AuthShell
+      title="Create Account"
+      subtitle="Start building"
+      diagnosticContext={diagnosticContext}
+    >
       <SignUp
         routing="path"
         path="/sign-up"
         signInUrl="/sign-in"
         forceRedirectUrl={redirectUrl}
+        appearance={CLERK_APPEARANCE}
       />
     </AuthShell>
   );

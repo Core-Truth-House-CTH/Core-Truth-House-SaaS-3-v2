@@ -10,6 +10,7 @@ import {
   PenTool,
   ShieldCheck,
   Sparkles,
+  X,
 } from "lucide-react";
 
 import { DashboardLayout } from "../components/Layout";
@@ -245,6 +246,68 @@ const COMMAND_CENTER_CSS = `
   font-size: 14px;
 }
 
+/* Diagnostic welcome banner — dark Zuri card pattern */
+.cc-diag-welcome {
+  position: relative;
+  padding: clamp(24px, 3vw, 38px);
+  background: #1a0828;
+  color: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 44px rgba(26,8,40,0.32);
+  overflow: hidden;
+}
+.cc-diag-welcome::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(196,169,91,0.18), transparent 42%);
+  pointer-events: none;
+}
+.cc-diag-welcome > * { position: relative; z-index: 1; }
+.cc-diag-welcome-title {
+  margin: 0;
+  max-width: 640px;
+  font-family: "Cormorant Garamond", var(--font-display), Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(28px, 3.4vw, 42px);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+.cc-diag-welcome-line {
+  margin: 12px 0 0;
+  max-width: 640px;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.82);
+}
+.cc-diag-welcome-cta {
+  margin-top: 22px;
+  border: 0;
+  padding: 12px 24px;
+  background: var(--cc-crimson);
+  color: #fff;
+  border-radius: 999px;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 14px 32px rgba(175,0,42,0.32);
+}
+.cc-diag-welcome-dismiss {
+  position: absolute;
+  top: 16px; right: 16px;
+  z-index: 2;
+  border: 0;
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.74);
+  width: 32px; height: 32px;
+  border-radius: 999px;
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+.cc-diag-welcome-dismiss:hover { background: rgba(255,255,255,0.18); }
+
 @media (max-width: 880px) {
   .cc-top-row { grid-template-columns: 1fr; }
   .cc-hero { flex-direction: column-reverse; align-items: flex-start; }
@@ -456,6 +519,57 @@ function greetingFor(date) {
   return "Good evening";
 }
 
+// Diagnostic tier → first move copy + destination module for the welcome banner.
+const TIER_WELCOME = {
+  Foundation: {
+    line: "Your first move is Brand Foundation. That is where your positioning, beliefs, and brand promise get built into structure.",
+    route: "/brand-foundation",
+  },
+  Structure: {
+    line: "Head to Brand Positioning and Messaging Structure. Your score shows the gaps are in how your brand communicates, not what it offers.",
+    route: "/brand-positioning",
+  },
+  House: {
+    line: "Start with Identity Studio and Strategic OS. You are ready to build the operational layer.",
+    route: "/identity-studio",
+  },
+  Estate: {
+    line: "Your brand is established. Head to Campaign Builder and Signal Inbox to start running it at scale.",
+    route: "/signal-inbox",
+  },
+};
+
+function DiagnosticWelcomeBanner({ context, onGo, onDismiss }) {
+  const tier = context?.tier || "";
+  const score = context?.score || "";
+  const firstName = context?.first_name || "";
+  const tierLine = TIER_WELCOME[tier]?.line || TIER_WELCOME.Foundation.line;
+  return (
+    <section className="cc-diag-welcome">
+      <button
+        type="button"
+        className="cc-diag-welcome-dismiss"
+        aria-label="Dismiss welcome"
+        onClick={onDismiss}
+      >
+        <X size={16} />
+      </button>
+      <h2 className="cc-diag-welcome-title">
+        {firstName
+          ? `Welcome to Core Truth House, ${firstName}.`
+          : "Welcome to Core Truth House."}
+      </h2>
+      <p className="cc-diag-welcome-line">
+        Your brand diagnostic score was {score}/60. You are starting in the {tier} tier.
+      </p>
+      <p className="cc-diag-welcome-line">{tierLine}</p>
+      <button type="button" className="cc-diag-welcome-cta" onClick={onGo}>
+        Let’s go →
+      </button>
+    </section>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Section components
 // ---------------------------------------------------------------------------
@@ -640,6 +754,42 @@ export default function CommandCenter() {
     })();
   }, [searchParams, activeWorkspaceId, setSearchParams]);
 
+  // Personalized welcome banner driven by the diagnostic context persisted at sign-up.
+  const [diagnosticWelcome, setDiagnosticWelcome] = useState(null);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("cth_diagnostic_context");
+      if (!raw) return;
+      const ctx = JSON.parse(raw);
+      if (ctx && ctx.shown !== true) {
+        setDiagnosticWelcome(ctx);
+      }
+    } catch (err) {
+      console.error("Failed to read diagnostic context", err);
+    }
+  }, []);
+
+  const markDiagnosticShown = useCallback(() => {
+    try {
+      const raw = sessionStorage.getItem("cth_diagnostic_context");
+      const ctx = raw ? JSON.parse(raw) : {};
+      sessionStorage.setItem(
+        "cth_diagnostic_context",
+        JSON.stringify({ ...ctx, shown: true })
+      );
+    } catch (err) {
+      console.error("Failed to update diagnostic context", err);
+    }
+    setDiagnosticWelcome(null);
+  }, []);
+
+  const handleDiagnosticGo = useCallback(() => {
+    const route = TIER_WELCOME[diagnosticWelcome?.tier]?.route || "/brand-foundation";
+    markDiagnosticShown();
+    navigate(route);
+  }, [diagnosticWelcome, markDiagnosticShown, navigate]);
+
   const firstName = useMemo(() => {
     return user?.firstName || (user?.fullName || "").split(" ")[0] || user?.name || activeWorkspace?.name || "there";
   }, [activeWorkspace?.name, user?.firstName, user?.fullName, user?.name]);
@@ -727,6 +877,15 @@ export default function CommandCenter() {
       <style>{COMMAND_CENTER_CSS}</style>
       <main className="cth-command-page">
         <div className="cc-shell">
+          {/* 0 — Personalized diagnostic welcome banner */}
+          {diagnosticWelcome ? (
+            <DiagnosticWelcomeBanner
+              context={diagnosticWelcome}
+              onGo={handleDiagnosticGo}
+              onDismiss={markDiagnosticShown}
+            />
+          ) : null}
+
           {/* 1 — Greeting */}
           <header>
             <h1 className="cc-greeting">{greeting}, {firstName}.</h1>
