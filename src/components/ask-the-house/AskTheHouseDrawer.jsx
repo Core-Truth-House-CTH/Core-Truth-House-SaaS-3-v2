@@ -375,6 +375,20 @@ export default function AskTheHouseDrawer({
           </div>
         </div>
 
+        <img
+          src="/zuri-hero.png"
+          alt="Zuri — the Brand Alchemist"
+          style={{
+            width: "100%",
+            height: 160,
+            objectFit: "cover",
+            objectPosition: "top",
+            flexShrink: 0,
+            display: "block",
+            borderBottom: "1px solid var(--cth-command-border)",
+          }}
+        />
+
         <div style={{
           display: "flex", gap: 6,
           padding: "12px 24px",
