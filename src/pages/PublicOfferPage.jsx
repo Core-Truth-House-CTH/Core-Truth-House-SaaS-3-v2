@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { getWorkspaceSlugFromHost } from "../utils/subdomain";
 
 // Fully public, standalone offer page. No DashboardLayout, no auth, no sidebar.
 // Renders an offer branded entirely to the tenant's identity — intentionally
@@ -143,7 +144,14 @@ function PoweredByFooter() {
 }
 
 export default function PublicOfferPage() {
-  const { workspaceSlug, offerSlug } = useParams();
+  const { workspaceSlug: paramWorkspaceSlug, offerSlug } = useParams();
+
+  // Two routing modes resolve to the same offer:
+  //   {slug}.coretruthhouse.com/offers/{offerSlug}   -> slug from hostname
+  //   coretruthhouse.com/offers/{slug}/{offerSlug}    -> slug from URL param
+  // Hostname takes precedence so a subdomain always wins.
+  const hostWorkspaceSlug = getWorkspaceSlugFromHost();
+  const workspaceSlug = hostWorkspaceSlug || paramWorkspaceSlug;
 
   const [state, setState] = useState({ status: "loading", data: null });
   const [logoFailed, setLogoFailed] = useState(false);
@@ -151,6 +159,11 @@ export default function PublicOfferPage() {
   useEffect(() => {
     let cancelled = false;
     setState({ status: "loading", data: null });
+
+    if (!workspaceSlug || !offerSlug) {
+      setState({ status: "notfound", data: null });
+      return undefined;
+    }
 
     (async () => {
       try {

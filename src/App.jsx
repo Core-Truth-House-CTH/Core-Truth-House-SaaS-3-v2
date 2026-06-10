@@ -44,6 +44,8 @@ function PublicRoutes() {
         <Route path="/brand-diagnostic" element={<BrandDiagnosticPage />} />
         <Route path="/brand-diagnostic/" element={<BrandDiagnosticPage />} />
         <Route path="/offers/:workspaceSlug/:offerSlug" element={<PublicOfferPage />} />
+        {/* Subdomain mode: {slug}.coretruthhouse.com/offers/:offerSlug — workspace resolved from hostname */}
+        <Route path="/offers/:offerSlug" element={<PublicOfferPage />} />
         <Route path="/scorecard" element={<ScorecardPage />} />
         <Route path="/scorecard/" element={<ScorecardPage />} />
         <Route path="/cohort" element={<CohortPage />} />

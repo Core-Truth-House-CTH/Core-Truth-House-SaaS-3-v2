@@ -407,19 +407,19 @@ function OfferBuilderContent() {
     };
   }, [workspaceId]);
 
-  const offerHost = customDomain || PUBLIC_OFFER_HOST;
-
+  // Subdomain-based offer URL: {workspace-slug}.coretruthhouse.com/offers/{offer-slug}
+  // (Serving from a tenant custom domain remains deferred to a Cloudflare step.)
   const buildOfferUrl = useCallback(
     (offer, withProtocol = false) => {
       if (!workspaceSlug || !offer?.slug) return '';
-      const path = `${offerHost}/offers/${workspaceSlug}/${offer.slug}`;
+      const path = `${workspaceSlug}.${PUBLIC_OFFER_HOST}/offers/${offer.slug}`;
       return withProtocol ? `https://${path}` : path;
     },
-    [workspaceSlug, offerHost]
+    [workspaceSlug]
   );
 
   const copyOfferUrl = useCallback(async (offer) => {
-    const url = `https://${customDomain || PUBLIC_OFFER_HOST}/offers/${workspaceSlug}/${offer.slug}`;
+    const url = `https://${workspaceSlug}.${PUBLIC_OFFER_HOST}/offers/${offer.slug}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedUrlId(offer.id);
@@ -427,7 +427,7 @@ function OfferBuilderContent() {
     } catch (err) {
       console.error('Failed to copy offer URL:', err);
     }
-  }, [customDomain, workspaceSlug]);
+  }, [workspaceSlug]);
 
   const offerCountSubtitle = useMemo(
     () => `${offers.length} offer${offers.length !== 1 ? 's' : ''} created`,
@@ -1075,6 +1075,9 @@ function OfferBuilderContent() {
                             </div>
                             <div style={{ fontFamily: SANS, fontSize: 10, color: 'var(--cth-command-muted)', marginTop: 6, lineHeight: 1.45 }}>
                               Share this link to let buyers view and purchase your offer.
+                            </div>
+                            <div style={{ fontFamily: SANS, fontSize: 10, fontStyle: 'italic', color: 'var(--cth-command-muted)', marginTop: 4, lineHeight: 1.45, opacity: 0.85 }}>
+                              Requires wildcard subdomain SSL — contact support to activate.
                             </div>
                           </div>
                         ) : null}
