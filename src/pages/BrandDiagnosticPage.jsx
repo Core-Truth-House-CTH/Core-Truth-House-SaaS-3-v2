@@ -159,6 +159,43 @@ const dimensionQuestionMap = [
  },
 ];
 
+// Next Best Move actions, keyed by the category label (item[2] of a question).
+// Used to turn a user's weakest gap categories into concrete recommended moves.
+const NEXT_MOVE_BY_CATEGORY = {
+ "Core Truth Clarity": {
+ title: "Define Your Positioning Core",
+ text: "Build one sentence that names exactly who you serve and what you solve. Everything else follows from that.",
+ icon: A.foundation,
+ },
+ "Messaging Coherence": {
+ title: "Build Your Voice Framework",
+ text: "Document the rules your brand follows when it communicates. Without rules, every piece of content starts from scratch.",
+ icon: A.messaging,
+ },
+ "Conversion Architecture": {
+ title: "Map Your Buyer Path",
+ text: "Document every step from stranger to buyer. If the path is not written down it cannot be optimized.",
+ icon: A.conversion,
+ },
+ "Audience Resonance": {
+ title: "Run a Language Audit",
+ text: "Pull your last 10 sales conversations. The words your buyers use to describe their problem are your messaging.",
+ icon: A.audience,
+ },
+ "Operational Discipline": {
+ title: "Build Your Brand OS",
+ text: "Document the decisions you make repeatedly so your brand runs without you rebuilding it each time.",
+ icon: A.strategic,
+ },
+};
+
+// Default preview moves shown before a diagnostic result exists.
+const defaultNextMoves = [
+ ["Clarify Positioning", "Define a distinct, ownable position in your market.", A.positioning],
+ ["Strengthen Offer Hierarchy", "Lead with your core offer.", A.structure],
+ ["Align Messaging", "Speak to what your audience actually cares about.", A.audience],
+];
+
 function buildLiveDimensions(answers) {
  const hasAnswers = Object.keys(answers || {}).length > 0;
 
@@ -282,14 +319,16 @@ function ScoreRing({ score = 72, total = 100 }) {
  );
 }
 
-function ModalDiagnostic({ open, onClose, onComplete }) {
- const [step, setStep] = useState("lead");
+function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", initialData = null }) {
+ const [step, setStep] = useState(initialStep);
  const [currentQuestion, setCurrentQuestion] = useState(0);
  const [leadInfo, setLeadInfo] = useState(initialLeadInfo);
- const [answers, setAnswers] = useState({});
+ // When opened at the "result" step, pre-load the saved answers so score,
+ // recommendation, and topGaps all derive from them (see useMemos below).
+ const [answers, setAnswers] = useState(initialData?.answers || {});
  const [leadSubmitting, setLeadSubmitting] = useState(false);
  const [leadError, setLeadError] = useState("");
- const [resultSaved, setResultSaved] = useState(false);
+ const [resultSaved, setResultSaved] = useState(initialStep === "result");
 
  const answeredCount = Object.keys(answers).length;
  const isComplete = answeredCount === questions.length;
@@ -334,7 +373,7 @@ function ModalDiagnostic({ open, onClose, onComplete }) {
  score: score ?? undefined,
  score_range: recommendation?.range || "",
  recommended_tier: recommendation?.tier || "",
- top_gaps: topGaps.map((item) => item[2] || item[1]),
+ top_gaps: topGaps.map((item) => item[1] || item[2]),
  answers,
  status,
  consent: Boolean(leadInfo.consent),
@@ -493,7 +532,7 @@ function ModalDiagnostic({ open, onClose, onComplete }) {
  {topGaps.map(([id, label, category, , icon]) => (
  <span key={id}>
  <img src={icon} alt="" />
- {category || label}
+ {label || category}
  </span>
  ))}
  </div>
@@ -539,6 +578,37 @@ function ModalDiagnostic({ open, onClose, onComplete }) {
 export default function BrandDiagnosticPage() {
  const [diagnosticOpen, setDiagnosticOpen] = useState(false);
  const [resultSnapshot, setResultSnapshot] = useState(null);
+ const [modalInitialStep, setModalInitialStep] = useState("lead");
+ const [modalInitialData, setModalInitialData] = useState(null);
+ // Bumped on each open so the modal remounts and re-reads initialStep/initialData.
+ const [modalKey, setModalKey] = useState(0);
+
+ // Open the modal. Restore a saved result to the "result" step when one exists,
+ // otherwise open fresh at the "lead" capture step.
+ function openDiagnostic() {
+ let saved = null;
+ try {
+ const raw = window.localStorage.getItem(RESULT_STORAGE_KEY);
+ if (raw) {
+ const parsed = JSON.parse(raw);
+ if (parsed && typeof parsed.score === "number" && parsed.recommendation) {
+ saved = parsed;
+ }
+ }
+ } catch (_) {
+ saved = null;
+ }
+
+ if (saved) {
+ setModalInitialStep("result");
+ setModalInitialData(saved);
+ } else {
+ setModalInitialStep("lead");
+ setModalInitialData(null);
+ }
+ setModalKey((current) => current + 1);
+ setDiagnosticOpen(true);
+ }
 
  // Restore a saved diagnostic result on load so refreshing does not lose it.
  useEffect(() => {
@@ -583,6 +653,26 @@ export default function BrandDiagnosticPage() {
  [liveDimensions]
  );
 
+ // Next Best Move: derive from the result's top gap categories, deduped, with a
+ // static preview fallback when no result has been saved yet.
+ const nextMoves = useMemo(() => {
+ const gaps = resultSnapshot?.topGaps;
+ if (!Array.isArray(gaps) || gaps.length === 0) {
+ return defaultNextMoves;
+ }
+ const seen = new Set();
+ const moves = [];
+ for (const gap of gaps) {
+ const category = Array.isArray(gap) ? gap[2] : null;
+ const move = category ? NEXT_MOVE_BY_CATEGORY[category] : null;
+ if (move && !seen.has(move.title)) {
+ seen.add(move.title);
+ moves.push([move.title, move.text, move.icon]);
+ }
+ }
+ return moves.length > 0 ? moves : defaultNextMoves;
+ }, [resultSnapshot]);
+
  const pathwaySteps = resultSnapshot
  ? [
  ["✓", "Discover", "complete"],
@@ -601,7 +691,7 @@ export default function BrandDiagnosticPage() {
 
  return (
  <main className="bdx-page">
- <Header onStart={() => setDiagnosticOpen(true)} />
+ <Header onStart={openDiagnostic} />
 
  <section className="bdx-wrap">
  <div className="bdx-hero">
@@ -610,7 +700,7 @@ export default function BrandDiagnosticPage() {
  <p>Find the disconnect. Name the truth. Clarify the next move.</p>
 
  <div className="bdx-hero-buttons">
- <button type="button" onClick={() => setDiagnosticOpen(true)} className="bdx-primary-btn">
+ <button type="button" onClick={openDiagnostic} className="bdx-primary-btn">
  Start the Brand Diagnostic
  <ArrowRight size={16} />
  </button>
@@ -637,7 +727,7 @@ export default function BrandDiagnosticPage() {
 
  <div>
  <h2>{displaySummary}</h2>
- <button type="button" onClick={() => setDiagnosticOpen(true)}>Take the full diagnostic <ArrowRight size={13} /></button>
+ <button type="button" onClick={openDiagnostic}>Take the full diagnostic <ArrowRight size={13} /></button>
  </div>
 
  <div className="bdx-pathway">
@@ -712,11 +802,7 @@ export default function BrandDiagnosticPage() {
  <h2>Next Best Move</h2>
  </div>
 
- {[
- ["Clarify Positioning", "Define a distinct, ownable position in your market.", A.positioning],
- ["Strengthen Offer Hierarchy", "Lead with your core offer.", A.structure],
- ["Align Messaging", "Speak to what your audience actually cares about.", A.audience],
- ].map(([title, text, icon], index) => (
+ {nextMoves.map(([title, text, icon], index) => (
  <article key={title}>
  <span>{index + 1}</span>
  <img src={icon} alt="" />
@@ -727,7 +813,7 @@ export default function BrandDiagnosticPage() {
  </article>
  ))}
 
- <button type="button" onClick={() => setDiagnosticOpen(true)} className="bdx-outline-btn">
+ <button type="button" onClick={openDiagnostic} className="bdx-outline-btn">
  View Full Recommendation
  <ArrowRight size={14} />
  </button>
@@ -754,7 +840,7 @@ export default function BrandDiagnosticPage() {
  <p>Your Next Step</p>
  <h2>Turn Insight Into Impact</h2>
  <span>You’ve identified the gaps. Now let’s close them with a clear plan and expert guidance.</span>
- <button type="button" onClick={() => setDiagnosticOpen(true)}>Start the Diagnostic <ArrowRight size={14} /></button>
+ <button type="button" onClick={openDiagnostic}>Start the Diagnostic <ArrowRight size={14} /></button>
 
  <small><ShieldCheck size={14} /> Trusted by founders and teams worldwide.</small>
  </section>
@@ -771,7 +857,10 @@ export default function BrandDiagnosticPage() {
  </footer>
 
  <ModalDiagnostic
+ key={modalKey}
  open={diagnosticOpen}
+ initialStep={modalInitialStep}
+ initialData={modalInitialData}
  onClose={() => setDiagnosticOpen(false)}
  onComplete={(snapshot) => {
  setResultSnapshot(snapshot);
