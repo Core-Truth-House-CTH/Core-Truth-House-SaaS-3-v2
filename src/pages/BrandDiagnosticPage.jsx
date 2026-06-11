@@ -8,6 +8,11 @@ import {
  Target,
  X,
 } from "lucide-react";
+import {
+ questions,
+ buildLiveDimensions,
+ buildNextMoves,
+} from "../utils/diagnosticDimensions";
 
 const A = {
  logo: "/brand-assets/logo/cth-logo-seal.png",
@@ -64,152 +69,12 @@ const answerOptions = [
  { label: "Yes", value: 4 },
 ];
 
-const questions = [
- ["core_truth_1", "Core Truth Clarity", "Core Truth Clarity", "Do you have one sentence that clearly names who you serve and the specific problem you solve for them?", A.foundation],
- ["core_truth_2", "Brand Independence", "Core Truth Clarity", "If someone saw your brand without your face, name, or personal story attached, would it still feel recognizable as yours?", A.trust],
- ["core_truth_3", "Brand Beliefs", "Core Truth Clarity", "Can you name the three core beliefs that separate you from every other person doing what you do?", A.positioning],
- ["messaging_1", "Message Consistency", "Messaging Coherence", "Does your brand voice stay consistent whether someone reads your website, sees your content, or speaks with you directly?", A.messaging],
- ["messaging_2", "Voice Framework", "Messaging Coherence", "Do you follow a documented framework when you create content?", A.content],
- ["messaging_3", "Delegatable Voice", "Messaging Coherence", "Could you hand your messaging guidelines to a contractor or assistant and have them create content that still sounds like your brand?", A.messaging],
- ["conversion_1", "Homepage Clarity", "Conversion Architecture", "Would a stranger understand who your website is for and what to do next without you explaining it?", A.conversion],
- ["conversion_2", "Buyer Path", "Conversion Architecture", "Do you have a documented process that moves a stranger toward becoming a buyer without you personally facilitating every step?", A.structure],
- ["conversion_3", "Lost Prospect Insight", "Conversion Architecture", "Do you understand specifically why your last few prospects did not buy?", A.conversion],
- ["audience_1", "Buyer Language", "Audience Resonance", "Do you describe your ideal client's frustrations using their exact words?", A.audience],
- ["audience_2", "Language Feedback Loop", "Audience Resonance", "Do you regularly update your messaging based on what prospects and clients tell you?", A.audience],
- ["audience_3", "Belief Shift", "Audience Resonance", "Do you know the specific belief your buyer has to shift before they say yes?", A.strategic],
- ["operations_1", "Brand Continuity", "Operational Discipline", "Is your brand building authority and trust even when you are not actively creating content?", A.execution],
- ["operations_2", "Brand Operations System", "Operational Discipline", "Do you have a documented system that guides your brand decisions without rebuilding them from scratch each time?", A.structure],
- ["operations_3", "Brand Health Metrics", "Operational Discipline", "Do you have a way to measure whether your brand is growing stronger month over month?", A.trust],
-];
-
-const dimensions = [
- ["Positioning", 68, "Your position is unclear in the market.", A.positioning],
- ["Messaging", 64, "Core message lacks clarity and distinction.", A.messaging],
- ["Offer Clarity", 78, "Offer is strong but not clearly communicated.", A.offer],
- ["Audience Fit", 74, "You know your audience, but not their intent.", A.audience],
- ["Visual Identity", 81, "Visuals are cohesive but not fully differentiated.", A.visual],
- ["Conversion Path", 59, "Journey has friction and unclear next steps.", A.conversion],
- ["Content Consistency", 69, "Inconsistent across channels and touchpoints.", A.content],
- ["Brand Trust", 76, "Trust signals are present but under-leveraged.", A.trust],
-];
-
 const afterScore = [
  ["Foundation", "Establish your truth, purpose, and strategic positioning.", A.foundation],
  ["Strategic OS", "Build the operating system that aligns your brand.", A.strategic],
  ["Structure", "Design the systems, offers, and experiences.", A.structure],
  ["Execution", "Launch with confidence and measure what matters.", A.execution],
 ];
-
-const dimensionQuestionMap = [
- {
- name: "Positioning",
- ids: ["core_truth_1", "core_truth_2", "core_truth_3"],
- icon: A.positioning,
- strong: "Your position is distinct enough to build from.",
- weak: "Your position needs clearer ownership in the market.",
- },
- {
- name: "Messaging",
- ids: ["messaging_1", "messaging_2", "messaging_3"],
- icon: A.messaging,
- strong: "Your voice and message have real consistency.",
- weak: "Your message is shifting too much across touchpoints.",
- },
- {
- name: "Offer Clarity",
- ids: ["conversion_1", "conversion_2", "conversion_3"],
- icon: A.offer,
- strong: "Your offer path is clear enough to support action.",
- weak: "Your offer and next-step path need sharper structure.",
- },
- {
- name: "Audience Fit",
- ids: ["audience_1", "audience_2", "audience_3"],
- icon: A.audience,
- strong: "Your audience language is close to buyer reality.",
- weak: "Your message needs to mirror the buyer more directly.",
- },
- {
- name: "Visual Identity",
- ids: ["core_truth_2", "messaging_1", "operations_3"],
- icon: A.visual,
- strong: "Your brand signals feel cohesive and recognizable.",
- weak: "Your visual trust signals need stronger alignment.",
- },
- {
- name: "Conversion Path",
- ids: ["conversion_1", "conversion_2", "conversion_3"],
- icon: A.conversion,
- strong: "Your brand has a clearer route from attention to action.",
- weak: "Your buyer path has friction and unclear next steps.",
- },
- {
- name: "Content Consistency",
- ids: ["messaging_2", "messaging_3", "operations_2"],
- icon: A.content,
- strong: "Your content can be repeated without rebuilding the brand.",
- weak: "Your content system depends too much on guessing.",
- },
- {
- name: "Brand Trust",
- ids: ["operations_1", "operations_2", "operations_3"],
- icon: A.trust,
- strong: "Your brand has stronger operational trust signals.",
- weak: "Your trust signals are present but not systemized.",
- },
-];
-
-// Next Best Move actions, keyed by the category label (item[2] of a question).
-// Used to turn a user's weakest gap categories into concrete recommended moves.
-const NEXT_MOVE_BY_CATEGORY = {
- "Core Truth Clarity": {
- title: "Define Your Positioning Core",
- text: "Build one sentence that names exactly who you serve and what you solve. Everything else follows from that.",
- icon: A.foundation,
- },
- "Messaging Coherence": {
- title: "Build Your Voice Framework",
- text: "Document the rules your brand follows when it communicates. Without rules, every piece of content starts from scratch.",
- icon: A.messaging,
- },
- "Conversion Architecture": {
- title: "Map Your Buyer Path",
- text: "Document every step from stranger to buyer. If the path is not written down it cannot be optimized.",
- icon: A.conversion,
- },
- "Audience Resonance": {
- title: "Run a Language Audit",
- text: "Pull your last 10 sales conversations. The words your buyers use to describe their problem are your messaging.",
- icon: A.audience,
- },
- "Operational Discipline": {
- title: "Build Your Brand OS",
- text: "Document the decisions you make repeatedly so your brand runs without you rebuilding it each time.",
- icon: A.strategic,
- },
-};
-
-// Default preview moves shown before a diagnostic result exists.
-const defaultNextMoves = [
- ["Clarify Positioning", "Define a distinct, ownable position in your market.", A.positioning],
- ["Strengthen Offer Hierarchy", "Lead with your core offer.", A.structure],
- ["Align Messaging", "Speak to what your audience actually cares about.", A.audience],
-];
-
-function buildLiveDimensions(answers) {
- const hasAnswers = Object.keys(answers || {}).length > 0;
-
- if (!hasAnswers) {
- return dimensions;
- }
-
- return dimensionQuestionMap.map((item) => {
- const total = item.ids.reduce((sum, id) => sum + Number(answers[id] || 0), 0);
- const score = Math.round((total / (item.ids.length * 4)) * 100);
- const text = score >= 75 ? item.strong : item.weak;
- return [item.name, score, text, item.icon];
- });
-}
 
 function getSeverity(score) {
  if (score < 50) return "Critical";
@@ -653,25 +518,13 @@ export default function BrandDiagnosticPage() {
  [liveDimensions]
  );
 
- // Next Best Move: derive from the result's top gap categories, deduped, with a
- // static preview fallback when no result has been saved yet.
- const nextMoves = useMemo(() => {
- const gaps = resultSnapshot?.topGaps;
- if (!Array.isArray(gaps) || gaps.length === 0) {
- return defaultNextMoves;
- }
- const seen = new Set();
- const moves = [];
- for (const gap of gaps) {
- const category = Array.isArray(gap) ? gap[2] : null;
- const move = category ? NEXT_MOVE_BY_CATEGORY[category] : null;
- if (move && !seen.has(move.title)) {
- seen.add(move.title);
- moves.push([move.title, move.text, move.icon]);
- }
- }
- return moves.length > 0 ? moves : defaultNextMoves;
- }, [resultSnapshot]);
+ // Next Best Move: derive from the result's weakest gap categories (recomputed
+ // from the saved answers), deduped, with a static preview fallback when no
+ // result has been saved yet. Shared with the public results page.
+ const nextMoves = useMemo(
+ () => buildNextMoves(resultSnapshot?.answers || {}),
+ [resultSnapshot]
+ );
 
  const pathwaySteps = resultSnapshot
  ? [

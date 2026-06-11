@@ -21,6 +21,7 @@ const BlogJournalPage = lazy(() => import("./pages/BlogJournalPage"));
 const StorefrontPage = lazy(() => import("./pages/StorefrontPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const BrandDiagnosticPage = lazy(() => import("./pages/BrandDiagnosticPage"));
+const PublicDiagnosticResults = lazy(() => import("./pages/PublicDiagnosticResults"));
 const PublicOfferPage = lazy(() => import("./pages/PublicOfferPage"));
 const ScorecardPage = lazy(() => import("./pages/ScorecardPage"));
 const CohortPage = lazy(() => import("./pages/CohortPage"));
@@ -43,6 +44,7 @@ function PublicRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/brand-diagnostic" element={<BrandDiagnosticPage />} />
         <Route path="/brand-diagnostic/" element={<BrandDiagnosticPage />} />
+        <Route path="/diagnostic-results/:token" element={<PublicDiagnosticResults />} />
         <Route path="/offers/:workspaceSlug/:offerSlug" element={<PublicOfferPage />} />
         {/* Subdomain mode: {slug}.coretruthhouse.com/offers/:offerSlug — workspace resolved from hostname */}
         <Route path="/offers/:offerSlug" element={<PublicOfferPage />} />
