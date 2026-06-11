@@ -479,11 +479,16 @@ export function SignUpPage() {
     return <div style={{ color: "white", padding: 20 }}>Clerk not configured</div>;
   }
 
-  // redirect_url takes priority; otherwise diagnostic sign-ups land on the
-  // personalized welcome.
+  // redirect_url takes priority; otherwise diagnostic sign-ups land on billing
+  // (with the recommended tier preselected) before the personalized welcome.
+  const diagnosticTier = params.get("tier");
   const redirectUrl =
     params.get("redirect_url") ||
-    (source === "diagnostic" ? "/command-center?welcome=diagnostic" : "/command-center");
+    (source === "diagnostic"
+      ? (diagnosticTier
+          ? `/billing?welcome=diagnostic&tier=${diagnosticTier}`
+          : "/billing?welcome=diagnostic")
+      : "/command-center");
 
   if (isSignedIn) {
     return <Navigate to={redirectUrl} replace />;

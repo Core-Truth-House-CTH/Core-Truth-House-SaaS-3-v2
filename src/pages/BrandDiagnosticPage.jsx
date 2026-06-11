@@ -255,7 +255,7 @@ function getRecommendation(score) {
  range: "15 to 29",
  cta: "Start Foundation",
  line: "Your brand needs documented core truth, buyer clarity, beliefs, and voice before more content can convert.",
- next: "/sign-up?redirect_url=%2Fbrand-foundation",
+ next: "/sign-up?redirect_url=%2Fbilling&tier=foundation&source=diagnostic",
  };
  }
 
@@ -265,7 +265,7 @@ function getRecommendation(score) {
  range: "30 to 42",
  cta: "Build My Structure",
  line: "You have pieces, but not architecture. The next move is structure across content, offers, and conversion.",
- next: "/sign-up?redirect_url=%2Fstructure",
+ next: "/sign-up?redirect_url=%2Fbilling&tier=structure&source=diagnostic",
  };
  }
 
@@ -275,7 +275,7 @@ function getRecommendation(score) {
  range: "43 to 52",
  cta: "Enter the House",
  line: "You have a real brand. The next move is integration across identity, offers, content, and launch planning.",
- next: "/sign-up?redirect_url=%2Fidentity-studio",
+ next: "/sign-up?redirect_url=%2Fbilling&tier=house&source=diagnostic",
  };
  }
 
@@ -284,7 +284,7 @@ function getRecommendation(score) {
  range: "53 to 60",
  cta: "Apply for Estate",
  line: "You are ready for refinement and scale. The risk is no longer clarity. The risk is dilution.",
- next: "/contact?interest=estate",
+ next: "/sign-up?redirect_url=%2Fbilling&tier=estate&source=diagnostic",
  };
 }
 
