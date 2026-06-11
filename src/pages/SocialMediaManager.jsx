@@ -1460,9 +1460,9 @@ export default function SocialMediaManager() {
  setActionBusyPlatform(platformKey);
  try {
  if (routingMode === "zernio") {
- await apiClient.delete("/api/social/zernio/disconnect", { data: { platform: platformKey } });
+ await apiClient.delete(`/api/social/zernio/disconnect?platform=${encodeURIComponent(platformKey)}`);
  } else if (routingMode === "ayrshare") {
- await apiClient.delete("/api/social/ayrshare/disconnect", { data: { platform: platformKey } });
+ await apiClient.delete(`/api/social/ayrshare/disconnect?platform=${encodeURIComponent(platformKey)}`);
  } else {
  await apiClient.delete(`/api/social/${platformKey}/disconnect`);
  if (platformKey === "instagram") {
