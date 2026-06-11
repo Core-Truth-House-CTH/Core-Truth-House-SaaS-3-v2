@@ -527,10 +527,214 @@ function AssetCard({ asset, onDelete, onEdit }) {
   );
 }
 
+// Category options offered when editing an existing asset. Mirrors
+// ASSET_CATEGORIES but also includes a plain "logo" bucket for legacy assets.
+const EDIT_CATEGORY_OPTIONS = [
+  { id: 'logo', label: 'Logo' },
+  { id: 'logo_light', label: 'Logo — Light' },
+  { id: 'logo_dark', label: 'Logo — Dark' },
+  { id: 'icon', label: 'Brand Icon' },
+  { id: 'pattern', label: 'Pattern' },
+  { id: 'watermark', label: 'Watermark' },
+  { id: 'font_file', label: 'Font File' },
+  { id: 'other', label: 'Other' },
+];
+
+// Edit an asset's label and category. The actual PATCH /api/media-upload/assets/{id}
+// is performed by the parent's onSave handler (handleEditSave), which also updates
+// local state; this modal just collects the edits and surfaces save errors.
+function EditAssetModal({ asset, onSave, onClose }) {
+  const [label, setLabel] = useState(asset?.label || asset?.filename || '');
+  const [category, setCategory] = useState(asset?.category || 'other');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const assetId = asset?.asset_id || asset?.id;
+
+  async function handleSave() {
+    if (!assetId) {
+      setError('This asset is missing an identifier and cannot be edited.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave(assetId, {
+        label: label.trim() || asset?.filename || 'Asset',
+        category,
+      });
+      onClose();
+    } catch (err) {
+      console.error('Edit asset failed:', err);
+      setError(err?.response?.data?.detail || 'Could not save changes. Please try again.');
+      setSaving(false);
+    }
+  }
+
+  const fieldLabelStyle = {
+    display: 'block',
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.12em',
+    color: 'var(--cth-command-muted)',
+    margin: '0 0 7px',
+  };
+
+  const inputStyle = {
+    width: '100%',
+    boxSizing: 'border-box',
+    background: 'var(--cth-command-panel-soft)',
+    border: '1px solid var(--cth-command-border)',
+    borderRadius: 8,
+    padding: '10px 12px',
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13.5,
+    color: 'var(--cth-command-ink)',
+    outline: 'none',
+  };
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Edit Asset"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        background: 'rgba(13, 0, 16, 0.6)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+      }}
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        style={{
+          background: 'var(--cth-command-panel)',
+          border: '1px solid var(--cth-command-border)',
+          borderRadius: 12,
+          width: '100%',
+          maxWidth: 480,
+          padding: 28,
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: 22,
+            fontWeight: 600,
+            color: 'var(--cth-command-ink)',
+            margin: '0 0 20px',
+            letterSpacing: '-0.005em',
+            lineHeight: 1.25,
+          }}
+        >
+          Edit Asset
+        </h2>
+
+        <div style={{ marginBottom: 16 }}>
+          <label htmlFor="edit-asset-label" style={fieldLabelStyle}>
+            Label
+          </label>
+          <input
+            id="edit-asset-label"
+            type="text"
+            value={label}
+            onChange={(event) => setLabel(event.target.value)}
+            placeholder={asset?.filename || 'Asset name'}
+            style={inputStyle}
+          />
+        </div>
+
+        <div style={{ marginBottom: error ? 14 : 24 }}>
+          <label htmlFor="edit-asset-category" style={fieldLabelStyle}>
+            Category
+          </label>
+          <select
+            id="edit-asset-category"
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+            style={{ ...inputStyle, cursor: 'pointer' }}
+          >
+            {EDIT_CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {error && (
+          <p
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 12.5,
+              color: 'var(--cth-command-error)',
+              margin: '0 0 18px',
+              lineHeight: 1.5,
+            }}
+          >
+            {error}
+          </p>
+        )}
+
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            style={{
+              background: 'transparent',
+              color: 'var(--cth-command-ink)',
+              border: '1px solid var(--cth-command-border)',
+              borderRadius: 8,
+              padding: '10px 18px',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: saving ? 'default' : 'pointer',
+              opacity: saving ? 0.6 : 1,
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            data-testid="save-edit-asset-btn"
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              background: 'var(--cth-command-crimson)',
+              color: 'var(--cth-command-ivory)',
+              border: 'none',
+              borderRadius: 8,
+              padding: '10px 18px',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13,
+              fontWeight: 600,
+              letterSpacing: '0.04em',
+              cursor: saving ? 'default' : 'pointer',
+              opacity: saving ? 0.7 : 1,
+            }}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function IdentityStudioAssets({
   workspaceId = '',
   assets = [],
   onAssetsChange,
+  onAssetsLoad,
   onDeleteAsset,
 }) {
   const [loading, setLoading] = useState(true);
@@ -558,14 +762,16 @@ export default function IdentityStudioAssets({
         const loadedAssets = Array.isArray(res?.assets)
           ? res.assets.map((a, idx) => normalizeAsset(a, idx))
           : [];
-        if (onAssetsChange) onAssetsChange(loadedAssets);
+        // Initial fetch must NOT mark the form dirty — use the dedicated load
+        // callback. onAssetsChange is reserved for real user add/remove/edit.
+        if (onAssetsLoad) onAssetsLoad(loadedAssets);
       })
       .catch((err) => {
         console.error('Failed to load assets:', err);
         toast.error("Could not load brand assets. Please refresh.");
       })
       .finally(() => setLoading(false));
-  }, [workspaceId, onAssetsChange]);
+  }, [workspaceId, onAssetsLoad]);
 
   useEffect(() => {
     if (uploader.uploading > 0 || uploader.errors > 0) {

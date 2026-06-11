@@ -363,17 +363,9 @@ function IdentityStudioContent() {
           });
         }
 
-        if (Array.isArray(res?.assets)) {
-          const normalizedAssets = res.assets.map((a, idx) => ({
-            id: a.id || `asset-${idx}`,
-            name: a.name || a.filename || 'Asset',
-            type: a.type || 'logo',
-            url: a.url || a.file_url || '',
-            fileType: a.fileType || a.file_type || 'FILE',
-            fileSize: a.fileSize || a.file_size || '',
-          }));
-          setAssets(normalizedAssets);
-        }
+        // Brand assets are owned and loaded by the IdentityStudioAssets child
+        // (via /api/media-upload/assets). The /api/identity payload does not
+        // persist them, so parsing res.assets here was a dead duplicate load.
 
         if (originalColorsRef.current === null) {
           const baseline = nextColors || DEFAULT_COLORS;
@@ -555,6 +547,12 @@ function IdentityStudioContent() {
   const handleAssetsChange = useCallback((nextAssets) => {
     setAssets(Array.isArray(nextAssets) ? nextAssets : []);
     setHasUnsaved(true);
+  }, []);
+
+  // Populate assets from the child's initial fetch WITHOUT marking the form
+  // dirty — viewing the tab should never flip hasUnsaved.
+  const handleAssetsLoad = useCallback((nextAssets) => {
+    setAssets(Array.isArray(nextAssets) ? nextAssets : []);
   }, []);
 
   const handleAddColor = useCallback(() => {
@@ -1677,6 +1675,7 @@ function IdentityStudioContent() {
                 workspaceId={activeWorkspace?.id || activeWorkspace?.workspace_id || ''}
                 assets={assets}
                 onAssetsChange={handleAssetsChange}
+                onAssetsLoad={handleAssetsLoad}
                 onDeleteAsset={handleDeleteAsset}
               />
             </section>
