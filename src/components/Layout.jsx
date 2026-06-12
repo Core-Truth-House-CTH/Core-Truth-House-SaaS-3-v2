@@ -250,7 +250,7 @@ export function Sidebar() {
         id: "structure",
         label: "STRUCTURE",
         items: [
-          { path: "/systems-builder", label: "Structure", icon: Workflow },
+          { path: "/systems-builder", label: "Brand Playbooks", icon: Workflow },
           { path: "/customer-journey", label: "Customer Journey", icon: Layers },
           { path: "/offer-builder", label: "Offers", icon: Package },
           { path: "/campaign-builder", label: "Campaign Builder", icon: Megaphone },
