@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { X, Send, Loader2, Lock, Plus, MessageSquare, Brain, Pin, Trash2 } from "lucide-react";
 import apiClient from "../../lib/apiClient";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { getSurfaceLabelFromPath } from "../../context/AskTheHouseContext";
 
 const SANS = '"DM Sans", system-ui, sans-serif';
 const SERIF = '"Playfair Display", serif';
@@ -67,6 +69,9 @@ export default function AskTheHouseDrawer({
 }) {
   const { activeWorkspace, activeWorkspaceId } = useWorkspace();
   const wsId = activeWorkspace?.id || activeWorkspaceId;
+  const location = useLocation();
+  // Display-only label for the header. The `surface` prop stays the backend key.
+  const surfaceLabel = getSurfaceLabelFromPath(location.pathname);
   const [contextLoading, setContextLoading] = useState(true);
   const [caps, setCaps] = useState(null);
   const [nextRoom, setNextRoom] = useState(null);
@@ -346,7 +351,7 @@ export default function AskTheHouseDrawer({
                 color: "var(--cth-command-muted)", fontFamily: SANS,
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
               }}>
-                Brand Architect · {(surface || "").replace(/_/g, " ")}
+                Brand Architect · {surfaceLabel}
               </p>
             </div>
           </div>
@@ -382,7 +387,7 @@ export default function AskTheHouseDrawer({
             width: "100%",
             height: 160,
             objectFit: "cover",
-            objectPosition: "top",
+            objectPosition: "center 15%",
             flexShrink: 0,
             display: "block",
             borderBottom: "1px solid var(--cth-command-border)",
@@ -684,7 +689,7 @@ export default function AskTheHouseDrawer({
               fontStyle: "italic",
               padding: "12px 0",
             }}>
-              Ask Zuri anything about your {(surface || "").replace(/_/g, " ")}.
+              Ask Zuri anything about your {surfaceLabel}.
             </div>
           ) : (
             messages.map((m, idx) => (
