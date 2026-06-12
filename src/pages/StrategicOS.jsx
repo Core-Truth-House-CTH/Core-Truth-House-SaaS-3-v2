@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import DOMPurify from "dompurify";
+import { toast } from "sonner";
 import { useAuth } from "@clerk/react";
 
 import { DashboardLayout } from "../components/Layout";
@@ -910,6 +911,9 @@ export default function StrategicOS() {
   const [zuriLoadingStep, setZuriLoadingStep] = useState(null);
   const [zuriError, setZuriError] = useState("");
   const [zuriExpanded, setZuriExpanded] = useState(false);
+  const [pillarsExtracting, setPillarsExtracting] = useState(false);
+  const [extractedPillarNames, setExtractedPillarNames] = useState([]);
+  const [foundationPillarsExist, setFoundationPillarsExist] = useState(false);
 
   const saveTimers = useRef({});
 
@@ -1011,6 +1015,25 @@ export default function StrategicOS() {
       Object.values(saveTimers.current || {}).forEach((timer) => clearTimeout(timer));
     };
   }, [loadPage]);
+
+  // On mount (and when workspace changes) check whether content pillars have
+  // already been extracted, so the Step 5 button can signal overwrite.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiClient.get(API_PATHS.persist.brandFoundation);
+        const pillars = Array.isArray(res?.brand_pillars) ? res.brand_pillars : [];
+        if (!cancelled) setFoundationPillarsExist(pillars.length > 0);
+      } catch (err) {
+        // Non-fatal: button simply defaults to "Extract Pillars to Brand Foundation".
+        console.error("Could not load existing brand pillars", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeWorkspaceId]);
 
   const ensureWorkflow = async () => {
     if (workflowId) return workflowId;
@@ -1255,6 +1278,35 @@ export default function StrategicOS() {
       setZuriError(err?.message || "Zuri could not generate this step.");
     } finally {
       setZuriLoadingStep(null);
+    }
+  };
+
+  // Parse Step 5's generated content-pillar output into structured pillars and
+  // persist them to Brand Foundation (available platform-wide).
+  const extractPillars = async () => {
+    setPillarsExtracting(true);
+    try {
+      const targetWorkflowId = await ensureWorkflow();
+      const res = await apiClient.post(
+        `${WORKFLOW_BASE}/${targetWorkflowId}/extract-pillars`,
+        {
+          user_id: userId,
+          workspace_id: activeWorkspaceId || undefined,
+        }
+      );
+      const extracted = Array.isArray(res?.extracted) ? res.extracted : [];
+      const names = extracted.map((pillar) => pillar?.name).filter(Boolean);
+      const count = typeof res?.count === "number" ? res.count : names.length;
+      setExtractedPillarNames(names);
+      setFoundationPillarsExist(names.length > 0);
+      toast.success(
+        `${count} content pillar${count === 1 ? "" : "s"} saved to Brand Foundation. They are now available across the platform.`
+      );
+    } catch (err) {
+      console.error("Pillar extraction failed", err);
+      toast.error(err?.message || "Could not extract pillars from Step 5.");
+    } finally {
+      setPillarsExtracting(false);
     }
   };
 
@@ -1702,6 +1754,56 @@ export default function StrategicOS() {
                             Dismiss
                           </button>
                         </div>
+
+                        {/* Step 5 only — parse the generated pillars into Brand Foundation */}
+                        {activeNum === 5 ? (
+                          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "0.5px solid rgba(255,255,255,0.08)" }}>
+                            <button
+                              onClick={extractPillars}
+                              disabled={pillarsExtracting}
+                              data-testid="extract-pillars-btn"
+                              className="inline-flex items-center gap-1.5"
+                              style={{
+                                fontFamily: SANS,
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: "var(--cth-command-gold)",
+                                background: "transparent",
+                                border: "0.5px solid rgba(196,169,91,0.5)",
+                                borderRadius: 5,
+                                padding: "7px 13px",
+                                cursor: pillarsExtracting ? "default" : "pointer",
+                                opacity: pillarsExtracting ? 0.6 : 1,
+                              }}
+                            >
+                              {pillarsExtracting ? (
+                                <Loader2 size={12} className="animate-spin" />
+                              ) : (
+                                <Sparkles size={12} />
+                              )}
+                              {pillarsExtracting
+                                ? "Extracting…"
+                                : foundationPillarsExist
+                                ? "Re-extract Pillars"
+                                : "Extract Pillars to Brand Foundation"}
+                            </button>
+
+                            {extractedPillarNames.length > 0 ? (
+                              <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none" }} data-testid="extracted-pillars-list">
+                                {extractedPillarNames.map((name, i) => (
+                                  <li
+                                    key={`${name}-${i}`}
+                                    className="flex items-center gap-1.5"
+                                    style={{ fontFamily: SANS, fontSize: 11, color: "rgba(255,255,255,0.85)", padding: "2px 0" }}
+                                  >
+                                    <CheckCircle2 size={11} style={{ color: "var(--cth-command-success)", flexShrink: 0 }} />
+                                    {name}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </>
                     ) : (
                       <>
