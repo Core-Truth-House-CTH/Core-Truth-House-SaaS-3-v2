@@ -6,6 +6,7 @@ import {
   Circle,
   Loader2,
   Pencil,
+  Sparkles,
   Trash2,
   Upload,
   Wand2,
@@ -515,6 +516,8 @@ export default function AvatarEditor({
   const [isPrimarySaving, setIsPrimarySaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
+  const [pullingFromOS, setPullingFromOS] = useState(false);
+  const [pulledFromOS, setPulledFromOS] = useState(false);
   const draftRestoredRef = useRef(false);
   const originalCoreFearWasEmptyRef = useRef(false);
 
@@ -727,6 +730,48 @@ export default function AvatarEditor({
     toast.message("Zuri avatar drafting is coming soon.");
   };
 
+  // Pull a draft avatar from the workspace's Strategic OS Step 1/2 data.
+  const handlePullFromOS = async () => {
+    setPullingFromOS(true);
+    try {
+      const res = await apiClient.get("/api/audience/from-strategic-os");
+      const d = res?.avatar_draft || {};
+      // Populate (overwrite with any non-empty returned value; keep existing otherwise).
+      setForm((prev) => ({
+        ...prev,
+        name: d.name?.trim() ? d.name : prev.name,
+        description: d.description?.trim() ? d.description : prev.description,
+        primary_problem: d.primary_problem?.trim() ? d.primary_problem : prev.primary_problem,
+        core_fear: d.core_fear?.trim() ? d.core_fear : prev.core_fear,
+        core_desire: d.core_desire?.trim() ? d.core_desire : prev.core_desire,
+        emotional_trigger: d.emotional_trigger?.trim() ? d.emotional_trigger : prev.emotional_trigger,
+        transformation_desired: d.transformation_desired?.trim()
+          ? d.transformation_desired
+          : prev.transformation_desired,
+        surface_symptoms: Array.isArray(d.surface_symptoms) && d.surface_symptoms.length
+          ? d.surface_symptoms
+          : prev.surface_symptoms,
+        where_they_are: Array.isArray(d.where_they_are) && d.where_they_are.length
+          ? d.where_they_are
+          : prev.where_they_are,
+        objections: Array.isArray(d.objections) && d.objections.length
+          ? d.objections
+          : prev.objections,
+      }));
+      setErrors({});
+      setPulledFromOS(true);
+      toast.success("Avatar pre-filled from your Strategic OS data. Review and adjust before saving.");
+    } catch (err) {
+      if (err?.status === 404) {
+        toast.error("Complete Strategic OS Step 2 first to use this feature.");
+      } else {
+        toast.error(err?.message || "Couldn't pull from Strategic OS. Try again.");
+      }
+    } finally {
+      setPullingFromOS(false);
+    }
+  };
+
   // ---- Portrait: generate (same draft + generate endpoints as the card) ----
   const openPortraitGen = useCallback(async () => {
     if (!avatarData?.id) return;
@@ -825,6 +870,13 @@ export default function AvatarEditor({
   const isLastSection = activeSection === SECTIONS.length - 1;
 
   const headerTitle = isNew ? "New avatar" : form.name?.trim() || "Avatar";
+
+  // "Pull from Strategic OS" reads as "Re-pull" once the form holds real data,
+  // signalling it will overwrite existing content.
+  const hasSubstantialData = !!form.name?.trim();
+  const pullLabel = hasSubstantialData
+    ? "Re-pull from Strategic OS"
+    : "Pull from Strategic OS";
 
   return (
     <div
@@ -947,6 +999,61 @@ export default function AvatarEditor({
               <X size={11} color={C.muted} />
             </button>
           </div>
+        </div>
+
+        {/* Pull from Strategic OS — pre-fills the form from Step 1/2 answers */}
+        <div
+          style={{
+            padding: "9px 18px",
+            borderBottom: `0.5px solid ${C.border}`,
+            background: C.white,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            flexShrink: 0,
+          }}
+        >
+          <button
+            type="button"
+            onClick={handlePullFromOS}
+            disabled={pullingFromOS}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontFamily: SANS,
+              fontSize: 11,
+              fontWeight: 500,
+              color: C.crimson,
+              background: "transparent",
+              border: `0.5px solid ${C.inputBorder}`,
+              borderRadius: 7,
+              padding: "6px 12px",
+              cursor: pullingFromOS ? "default" : "pointer",
+              opacity: pullingFromOS ? 0.6 : 1,
+            }}
+          >
+            {pullingFromOS ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Sparkles size={12} />
+            )}
+            {pullingFromOS ? "Pulling…" : pullLabel}
+          </button>
+          {pulledFromOS && !pullingFromOS && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 10,
+                color: C.green,
+              }}
+            >
+              <Check size={11} />
+              Updated from Strategic OS
+            </span>
+          )}
         </div>
 
         {/* Body: section nav + field area */}
