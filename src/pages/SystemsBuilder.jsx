@@ -728,6 +728,8 @@ export default function SystemsBuilder() {
   const [isGeneratingFromOs, setIsGeneratingFromOs] = useState(false);
   const [connectionItems, setConnectionItems] = useState([]);
   const [loadingConnectionItems, setLoadingConnectionItems] = useState(false);
+  const [pillars, setPillars] = useState([]);
+  const [loadingPillars, setLoadingPillars] = useState(false);
   const [viewingSystem, setViewingSystem] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -741,6 +743,7 @@ export default function SystemsBuilder() {
     loadSystems();
     loadOsWorkflow();
     loadTemplates();
+    loadPillars();
   }, [workspaceId]);
 
   // Fetch brand-connection items when the connection type changes inside an open modal.
@@ -751,6 +754,9 @@ export default function SystemsBuilder() {
       loadConnectionItems(type);
     } else {
       setConnectionItems([]);
+    }
+    if (type === "pillar") {
+      loadPillars();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showModal, formData.brand_connection_type]);
@@ -814,6 +820,18 @@ export default function SystemsBuilder() {
       setConnectionItems([]);
     } finally {
       setLoadingConnectionItems(false);
+    }
+  }
+
+  async function loadPillars() {
+    setLoadingPillars(true);
+    try {
+      const res = await apiClient.get("/api/systems/pillars");
+      setPillars(Array.isArray(res?.pillars) ? res.pillars.filter(Boolean) : []);
+    } catch {
+      setPillars([]);
+    } finally {
+      setLoadingPillars(false);
     }
   }
 
@@ -1982,18 +2000,43 @@ export default function SystemsBuilder() {
                     {formData.brand_connection_type === "pillar" ? (
                       <div>
                         <label style={FIELD_LABEL_STYLE}>Content pillar</label>
-                        <input
-                          type="text"
-                          value={formData.brand_connection_id}
-                          onChange={(event) =>
-                            setFormData((prev) => ({ ...prev, brand_connection_id: event.target.value }))
-                          }
-                          placeholder="Name the content pillar this supports"
-                          style={{ ...INPUT_STYLE, marginTop: 6 }}
-                        />
-                        <p style={{ ...MUTED_STYLE, marginTop: 6 }}>
-                          Type the pillar name from your Strategic OS content pillars.
-                        </p>
+                        {loadingPillars ? (
+                          <div
+                            style={{
+                              ...MUTED_STYLE,
+                              marginTop: 8,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <Loader2 size={14} className="animate-spin" />
+                            Loading...
+                          </div>
+                        ) : pillars.length ? (
+                          <select
+                            value={formData.brand_connection_id}
+                            onChange={(event) =>
+                              setFormData((prev) => ({ ...prev, brand_connection_id: event.target.value }))
+                            }
+                            style={{ ...INPUT_STYLE, marginTop: 6 }}
+                          >
+                            <option value="">Select...</option>
+                            {(formData.brand_connection_id &&
+                            !pillars.includes(formData.brand_connection_id)
+                              ? [formData.brand_connection_id, ...pillars]
+                              : pillars
+                            ).map((name) => (
+                              <option key={name} value={name}>
+                                {name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <p style={{ ...MUTED_STYLE, marginTop: 8 }}>
+                            No content pillars found — add pillars in Brand Foundation or complete Strategic OS Step 5.
+                          </p>
+                        )}
                       </div>
                     ) : null}
                   </>
