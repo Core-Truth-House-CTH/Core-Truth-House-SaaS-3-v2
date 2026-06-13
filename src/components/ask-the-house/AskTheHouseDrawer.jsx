@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { X, Send, Loader2, Lock, Plus, MessageSquare, Brain, Pin, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { X, Send, Loader2, Lock, Plus, MessageSquare, Brain, Pin, Trash2, ArrowDownToLine } from "lucide-react";
 import apiClient from "../../lib/apiClient";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { getSurfaceLabelFromPath } from "../../context/AskTheHouseContext";
@@ -21,6 +21,103 @@ const MEMORY_TYPE_LABELS = {
   context: "Context",
   insight: "Insight",
 };
+
+// ── "Use this" — fields Zuri can save generated copy into ──────────────────────
+const FOUNDATION_FIELDS = [
+  { field: "mission", label: "Mission" },
+  { field: "vision", label: "Vision" },
+  { field: "values", label: "Values" },
+  { field: "tagline", label: "Tagline" },
+  { field: "positioning", label: "Positioning Statement" },
+  { field: "story", label: "Brand Story" },
+];
+const POSITIONING_FIELDS = [
+  { field: "audienceSpecificity", label: "Audience Specificity" },
+  { field: "differentiator", label: "Differentiator" },
+  { field: "category", label: "Category" },
+];
+const MESSAGING_FIELDS = [
+  { field: "brandPromise", label: "Brand Promise" },
+  { field: "elevatorPitch", label: "Elevator Pitch" },
+  { field: "oneLiner", label: "One Liner" },
+  { field: "coreMessage", label: "Core Message" },
+  { field: "proofPoints", label: "Proof Points" },
+  { field: "callsToAction", label: "Calls to Action" },
+];
+const AUDIENCE_FIELDS = [
+  { field: "core_fear", label: "Core Fear" },
+  { field: "core_desire", label: "Core Desire" },
+  { field: "primary_problem", label: "Primary Problem" },
+  { field: "emotional_trigger", label: "Emotional Trigger" },
+  { field: "description", label: "Description" },
+  { field: "transformation_desired", label: "Transformation Desired" },
+];
+
+// Grouped fallback shown on command_center and any surface without its own list.
+const FIELD_GROUPS = [
+  { group: "Brand Foundation", fields: FOUNDATION_FIELDS },
+  { group: "Brand Positioning", fields: POSITIONING_FIELDS },
+  { group: "Messaging", fields: MESSAGING_FIELDS },
+  { group: "Audience", fields: AUDIENCE_FIELDS },
+];
+
+// Backend surface key → the fields relevant to that surface. `messaging_structure`
+// is aliased to `strategic_os` so the messaging page resolves regardless of which
+// surface key the drawer is opened with.
+const SURFACE_FIELDS = {
+  brand_foundation: FOUNDATION_FIELDS,
+  brand_positioning: POSITIONING_FIELDS,
+  strategic_os: MESSAGING_FIELDS,
+  messaging_structure: MESSAGING_FIELDS,
+  audience: AUDIENCE_FIELDS,
+};
+
+// Where each field lives, for the deep link in the success toast.
+const FIELD_PAGE = [
+  { fields: FOUNDATION_FIELDS, name: "Brand Foundation", path: "/brand-foundation" },
+  { fields: POSITIONING_FIELDS, name: "Brand Positioning", path: "/brand-positioning" },
+  { fields: MESSAGING_FIELDS, name: "Messaging Structure", path: "/messaging-structure" },
+  { fields: AUDIENCE_FIELDS, name: "Audience", path: "/audience" },
+];
+
+// In guide mode, only offer "Use this" when the reply reads like specific copy.
+const GUIDE_ACTION_PHRASES = [
+  "here is", "try this", "use this",
+  "your positioning", "your brand promise", "your one liner",
+];
+
+function fieldLabel(field) {
+  for (const g of FIELD_GROUPS) {
+    const found = g.fields.find((f) => f.field === field);
+    if (found) return found.label;
+  }
+  return field;
+}
+
+function fieldPage(field) {
+  for (const p of FIELD_PAGE) {
+    if (p.fields.some((f) => f.field === field)) return p;
+  }
+  return { name: "your brand", path: "/" };
+}
+
+function firstFieldOf(groups) {
+  for (const g of groups) {
+    if (g.fields.length) return g.fields[0].field;
+  }
+  return "";
+}
+
+// Whether an assistant message should offer the "Use this" save action.
+function canUseThis(message, mode) {
+  if (message.role !== "assistant") return false;
+  if (mode === "generate") return true;
+  if (mode === "guide") {
+    const c = (message.content || "").toLowerCase();
+    return GUIDE_ACTION_PHRASES.some((p) => c.includes(p));
+  }
+  return false;
+}
 
 function sessionTitle(s) {
   return (
@@ -70,6 +167,7 @@ export default function AskTheHouseDrawer({
   const { activeWorkspace, activeWorkspaceId } = useWorkspace();
   const wsId = activeWorkspace?.id || activeWorkspaceId;
   const location = useLocation();
+  const navigate = useNavigate();
   // Display-only label for the header. The `surface` prop stays the backend key.
   const surfaceLabel = getSurfaceLabelFromPath(location.pathname);
   const [contextLoading, setContextLoading] = useState(true);
@@ -87,8 +185,21 @@ export default function AskTheHouseDrawer({
   const [memories, setMemories] = useState([]);
   const [memoriesLoading, setMemoriesLoading] = useState(false);
   const [resumedFrom, setResumedFrom] = useState(null);
+  // "Use this" picker: which message index has its picker open, the selected
+  // field, and which message is mid-save (its own loading state).
+  const [openPicker, setOpenPicker] = useState(null);
+  const [pickerField, setPickerField] = useState("");
+  const [savingIdx, setSavingIdx] = useState(null);
   const messagesEndRef = useRef(null);
   const resumeHandledRef = useRef(false);
+
+  // Fields offered for the current surface — a single ungrouped list when the
+  // surface has its own field set, otherwise all four groups (command_center).
+  const surfaceGroups = useMemo(() => {
+    const direct = SURFACE_FIELDS[surface];
+    if (direct) return [{ group: null, fields: direct }];
+    return FIELD_GROUPS;
+  }, [surface]);
 
   // ESC closes
   useEffect(() => {
@@ -110,6 +221,8 @@ export default function AskTheHouseDrawer({
     setMode("guide");
     setSessionsOpen(false);
     setResumedFrom(null);
+    setOpenPicker(null);
+    setSavingIdx(null);
     resumeHandledRef.current = false;
   }, [open]);
 
@@ -298,6 +411,43 @@ export default function AskTheHouseDrawer({
       setInput(text);
     } finally {
       setSending(false);
+    }
+  };
+
+  // ── "Use this" — open picker / save selected field ──
+  const toggleUseThis = (idx) => {
+    setOpenPicker((prev) => {
+      const next = prev === idx ? null : idx;
+      if (next !== null) setPickerField(firstFieldOf(surfaceGroups));
+      return next;
+    });
+  };
+
+  const handleSaveToField = async (idx, content) => {
+    if (!pickerField || savingIdx !== null) return;
+    setSavingIdx(idx);
+    try {
+      await apiClient.post("/api/ask-the-house/save-to-field", {
+        surface,
+        field: pickerField,
+        value: content,
+        session_id: sessionId,
+      });
+      const page = fieldPage(pickerField);
+      const label = fieldLabel(pickerField);
+      setOpenPicker(null);
+      setToast({
+        prefix: `Saved to ${label}. `,
+        linkText: `Go to ${page.name}`,
+        link: page.path,
+        suffix: " to view it.",
+      });
+      setTimeout(() => setToast(null), 6000);
+    } catch (e) {
+      setToast({ message: e?.message || "Could not save. Try again." });
+      setTimeout(() => setToast(null), 4000);
+    } finally {
+      setSavingIdx(null);
     }
   };
 
@@ -692,28 +842,129 @@ export default function AskTheHouseDrawer({
               Ask Zuri anything about your {surfaceLabel}.
             </div>
           ) : (
-            messages.map((m, idx) => (
-              <div
-                key={idx}
-                style={{
-                  alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-                  maxWidth: "85%",
-                  padding: "10px 14px", borderRadius: 8,
-                  background: m.role === "user"
-                    ? "var(--cth-command-purple)"
-                    : "var(--cth-command-panel-soft)",
-                  color: m.role === "user"
-                    ? "var(--cth-command-gold)"
-                    : "var(--cth-command-ink)",
-                  fontFamily: SANS, fontSize: 13,
-                  lineHeight: 1.5,
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-word",
-                }}
-              >
-                {m.content}
-              </div>
-            ))
+            messages.map((m, idx) => {
+              const showUse = canUseThis(m, mode);
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+                    maxWidth: "85%",
+                    display: "flex", flexDirection: "column",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "10px 14px", borderRadius: 8,
+                      background: m.role === "user"
+                        ? "var(--cth-command-purple)"
+                        : "var(--cth-command-panel-soft)",
+                      color: m.role === "user"
+                        ? "var(--cth-command-gold)"
+                        : "var(--cth-command-ink)",
+                      fontFamily: SANS, fontSize: 13,
+                      lineHeight: 1.5,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {m.content}
+                  </div>
+
+                  {showUse && (
+                    <div style={{ marginTop: 4 }}>
+                      <button
+                        onClick={() => toggleUseThis(idx)}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 4,
+                          background: "none", border: "none",
+                          color: "var(--cth-command-muted)",
+                          cursor: "pointer", padding: 4,
+                          fontSize: 10, fontFamily: SANS,
+                        }}
+                      >
+                        <ArrowDownToLine size={11} /> Use this
+                      </button>
+
+                      {openPicker === idx && (
+                        <div style={{
+                          marginTop: 4, padding: "8px 10px",
+                          border: "1px solid var(--cth-command-border)",
+                          borderRadius: 6,
+                          background: "var(--cth-command-panel-soft)",
+                        }}>
+                          <div style={{
+                            fontSize: 10, color: "var(--cth-command-muted)",
+                            fontFamily: SANS, marginBottom: 4,
+                            textTransform: "uppercase", letterSpacing: "0.04em",
+                          }}>
+                            Save to which field?
+                          </div>
+                          <select
+                            value={pickerField}
+                            onChange={(e) => setPickerField(e.target.value)}
+                            style={{
+                              width: "100%", padding: "6px 8px", borderRadius: 4,
+                              fontSize: 12, fontFamily: SANS,
+                              background: "var(--cth-command-panel)",
+                              color: "var(--cth-command-ink)",
+                              border: "1px solid var(--cth-command-border)",
+                            }}
+                          >
+                            {surfaceGroups.map((g, gi) =>
+                              g.group ? (
+                                <optgroup key={gi} label={g.group}>
+                                  {g.fields.map((f) => (
+                                    <option key={f.field} value={f.field}>{f.label}</option>
+                                  ))}
+                                </optgroup>
+                              ) : (
+                                g.fields.map((f) => (
+                                  <option key={f.field} value={f.field}>{f.label}</option>
+                                ))
+                              )
+                            )}
+                          </select>
+                          <div style={{
+                            display: "flex", alignItems: "center", gap: 10,
+                            marginTop: 6,
+                          }}>
+                            <button
+                              onClick={() => handleSaveToField(idx, m.content)}
+                              disabled={savingIdx === idx}
+                              style={{
+                                padding: "5px 14px", borderRadius: 4,
+                                background: "var(--cth-crimson)",
+                                color: "#fff", border: "none",
+                                cursor: savingIdx === idx ? "default" : "pointer",
+                                fontSize: 12, fontFamily: SANS, fontWeight: 600,
+                                display: "inline-flex", alignItems: "center",
+                                justifyContent: "center", minWidth: 52,
+                              }}
+                            >
+                              {savingIdx === idx
+                                ? <Loader2 size={12} className="animate-spin" />
+                                : "Save"}
+                            </button>
+                            <button
+                              onClick={() => setOpenPicker(null)}
+                              style={{
+                                background: "none", border: "none",
+                                color: "var(--cth-command-muted)",
+                                cursor: "pointer", fontSize: 11, fontFamily: SANS,
+                                textDecoration: "underline", padding: 0,
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -800,7 +1051,31 @@ export default function AskTheHouseDrawer({
             maxWidth: "85%", textAlign: "center",
             zIndex: 10,
           }}>
-            {toast}
+            {typeof toast === "string" ? (
+              toast
+            ) : toast.link ? (
+              <>
+                {toast.prefix}
+                <button
+                  onClick={() => {
+                    const path = toast.link;
+                    setToast(null);
+                    onClose();
+                    navigate(path);
+                  }}
+                  style={{
+                    background: "none", border: "none", padding: 0,
+                    cursor: "pointer", color: "var(--cth-command-gold)",
+                    textDecoration: "underline", fontFamily: SANS, fontSize: 13,
+                  }}
+                >
+                  {toast.linkText}
+                </button>
+                {toast.suffix}
+              </>
+            ) : (
+              toast.message || ""
+            )}
           </div>
         )}
       </div>
