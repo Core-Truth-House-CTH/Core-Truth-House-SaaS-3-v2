@@ -8,6 +8,8 @@ import { SidebarTooltip } from "./ui/tooltip";
 import apiClient from "../lib/apiClient";
 import AskTheHouseDrawer from "./ask-the-house/AskTheHouseDrawer";
 import { useAskTheHouse, getSurfaceFromPath } from "../context/AskTheHouseContext";
+import OnboardingChecklist from "./OnboardingChecklist";
+import useOnboardingProgress from "../hooks/useOnboardingProgress";
 import {
   Shield,
   Key,
@@ -641,6 +643,12 @@ export function DashboardLayout({ children }) {
   const location = useLocation();
   const surface = getSurfaceFromPath(location.pathname);
 
+  const { user } = useUser();
+  const { metrics: onboardingMetrics } = useOnboardingProgress();
+  const onboardingFirstName =
+    user?.firstName || (user?.fullName || "").split(" ")[0] || "";
+  const onboardingUserId = user?.id || null;
+
   return (
     <div className="cth-app-shell">
       <Sidebar />
@@ -681,6 +689,11 @@ export function DashboardLayout({ children }) {
         onClose={close}
         surface={surface}
         sectionId={sectionId}
+      />
+      <OnboardingChecklist
+        metrics={onboardingMetrics}
+        userFirstName={onboardingFirstName}
+        userId={onboardingUserId}
       />
     </div>
   );

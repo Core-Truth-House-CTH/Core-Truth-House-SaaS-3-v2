@@ -570,11 +570,37 @@ function DiagnosticWelcomeBanner({ context, onGo, onDismiss }) {
   );
 }
 
+// Generic first-login welcome for founders who did NOT arrive via the diagnostic
+// and have zero onboarding milestones complete. Dismissal is per-user localStorage.
+function GenericWelcomeBanner({ firstName, onGo, onDismiss }) {
+  return (
+    <section className="cc-diag-welcome">
+      <button
+        type="button"
+        className="cc-diag-welcome-dismiss"
+        aria-label="Dismiss welcome"
+        onClick={onDismiss}
+      >
+        <X size={16} />
+      </button>
+      <h2 className="cc-diag-welcome-title">
+        {firstName
+          ? `Welcome to Core Truth House, ${firstName}.`
+          : "Welcome to Core Truth House."}
+      </h2>
+      <p className="cc-diag-welcome-line">Your brand infrastructure starts here.</p>
+      <button type="button" className="cc-diag-welcome-cta" onClick={onGo}>
+        Start the Brand Audit →
+      </button>
+    </section>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Section components
 // ---------------------------------------------------------------------------
 
-function ScoreRing({ score, launchReady }) {
+function ScoreRing({ score, launchReady, hasScore = true }) {
   const C = 175.93; // circumference: 2π·28
   const pct = Math.max(0, Math.min(100, Number(score) || 0));
   const offset = C * (1 - pct / 100);
@@ -583,26 +609,36 @@ function ScoreRing({ score, launchReady }) {
     <div className="cc-ring-wrap">
       <svg width="68" height="68" viewBox="0 0 68 68">
         <circle cx="34" cy="34" r="28" fill="none" stroke="#f0e8e5" strokeWidth="5" />
-        <circle
-          cx="34" cy="34" r="28" fill="none"
-          stroke={color} strokeWidth="5"
-          strokeDasharray={C} strokeDashoffset={offset}
-          strokeLinecap="round" transform="rotate(-90 34 34)"
-        />
+        {hasScore ? (
+          <circle
+            cx="34" cy="34" r="28" fill="none"
+            stroke={color} strokeWidth="5"
+            strokeDasharray={C} strokeDashoffset={offset}
+            strokeLinecap="round" transform="rotate(-90 34 34)"
+          />
+        ) : null}
       </svg>
       <div className="cc-ring-num">
-        <div className="cc-ring-score">{pct}</div>
-        <div className="cc-ring-max">/100</div>
+        {hasScore ? (
+          <>
+            <div className="cc-ring-score">{pct}</div>
+            <div className="cc-ring-max">/100</div>
+          </>
+        ) : (
+          <div className="cc-ring-max" style={{ fontSize: 8, lineHeight: 1.25, padding: "0 8px", color: "var(--cc-muted)" }}>
+            No score yet
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // Score card: ring LEFT, text stack (label / status / hint) RIGHT.
-function HealthHero({ score, rating, launchReady, hint }) {
+function HealthHero({ score, rating, launchReady, hint, hasScore = true }) {
   return (
     <section className="cc-hero">
-      <ScoreRing score={score} launchReady={launchReady} />
+      <ScoreRing score={score} launchReady={launchReady} hasScore={hasScore} />
       <div>
         <div className="cc-score-label">Brand Health Score</div>
         <div className="cc-score-status">{rating}</div>
@@ -790,6 +826,43 @@ export default function CommandCenter() {
     navigate(route);
   }, [diagnosticWelcome, markDiagnosticShown, navigate]);
 
+  // Generic welcome banner: any founder with zero milestones who hasn't dismissed it.
+  const [showGenericWelcome, setShowGenericWelcome] = useState(false);
+
+  const dismissGenericWelcome = useCallback(() => {
+    try {
+      const uid = user?.id;
+      if (uid) localStorage.setItem(`cth-welcome-${uid}`, "true");
+    } catch (err) {
+      console.error("Failed to persist welcome dismissal", err);
+    }
+    setShowGenericWelcome(false);
+  }, [user?.id]);
+
+  const handleGenericGo = useCallback(() => {
+    dismissGenericWelcome();
+    navigate("/brand-audit");
+  }, [dismissGenericWelcome, navigate]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (diagnosticWelcome) { setShowGenericWelcome(false); return; } // diagnostic banner wins
+    const uid = user?.id;
+    if (!uid) return;
+    let dismissed = false;
+    try {
+      dismissed = localStorage.getItem(`cth-welcome-${uid}`) === "true";
+    } catch (err) {
+      console.error("Failed to read welcome dismissal", err);
+    }
+    if (dismissed) { setShowGenericWelcome(false); return; }
+    const anyMilestone = [
+      progress?.audit_complete, progress?.brand_memory_complete, progress?.foundation_complete,
+      progress?.strategic_os_started, progress?.first_campaign_created,
+    ].some(Boolean);
+    setShowGenericWelcome(!anyMilestone);
+  }, [loading, diagnosticWelcome, user?.id, progress]);
+
   const firstName = useMemo(() => {
     return user?.firstName || (user?.fullName || "").split(" ")[0] || user?.name || activeWorkspace?.name || "there";
   }, [activeWorkspace?.name, user?.firstName, user?.fullName, user?.name]);
@@ -845,8 +918,10 @@ export default function CommandCenter() {
     return unregister;
   }, [registerRefreshCallback, loadCommandCenter]);
 
-  const overallScore = latestAudit?.overall_score ?? latestAudit?.scores?.overall ?? 78;
-  const rating = latestAudit?.brand_health_rating || latestAudit?.rating || "Strong Foundation";
+  // No real audit/health score yet → show an honest empty state, never a fake 78.
+  const hasScore = Boolean(latestAudit) || Number.isFinite(Number(healthData?.overall_score));
+  const overallScore = latestAudit?.overall_score ?? latestAudit?.scores?.overall ?? 0;
+  const rating = latestAudit?.brand_health_rating || latestAudit?.rating || "Complete your Brand Audit to see your score.";
   const displayScore = Number.isFinite(Number(healthData?.overall_score)) ? Number(healthData.overall_score) : overallScore;
   const displayRating = healthData?.rating || rating;
 
@@ -877,12 +952,18 @@ export default function CommandCenter() {
       <style>{COMMAND_CENTER_CSS}</style>
       <main className="cth-command-page">
         <div className="cc-shell">
-          {/* 0 — Personalized diagnostic welcome banner */}
+          {/* 0 — Welcome banner: diagnostic-personalized first, else generic first-login */}
           {diagnosticWelcome ? (
             <DiagnosticWelcomeBanner
               context={diagnosticWelcome}
               onGo={handleDiagnosticGo}
               onDismiss={markDiagnosticShown}
+            />
+          ) : showGenericWelcome ? (
+            <GenericWelcomeBanner
+              firstName={firstName && firstName !== "there" ? firstName : ""}
+              onGo={handleGenericGo}
+              onDismiss={dismissGenericWelcome}
             />
           ) : null}
 
@@ -904,7 +985,7 @@ export default function CommandCenter() {
             <>
               {/* 2 + 3 — Brand Health hero (left) + stat cards (right) in one row */}
               <div className="cc-top-row">
-                <HealthHero score={displayScore} rating={displayRating} launchReady={launchReady} hint={scoreHint} />
+                <HealthHero score={displayScore} rating={displayRating} launchReady={launchReady} hint={scoreHint} hasScore={hasScore} />
                 <StatCards
                   activeProjects={activeProjects}
                   signalsThisWeek={signalsThisWeek}

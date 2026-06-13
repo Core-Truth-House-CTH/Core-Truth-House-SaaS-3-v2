@@ -2,82 +2,86 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   X, ChevronRight, ChevronLeft, CheckCircle2, BookOpen,
-  Zap, Target, LayoutGrid, Sparkles, Trophy, ArrowRight, FileText
+  Search, MessageSquare, Users, Package, Sparkles, Trophy, ArrowRight, FileText
 } from 'lucide-react';
 
 // ─── STEP DEFINITIONS ────────────────────────────────────────
+// `metricKey` maps each step to a boolean on the metrics object supplied by
+// useOnboardingProgress. A step is complete when its milestone flag is true OR
+// its module_completed_at timestamp exists (the hook resolves both into the
+// metric boolean).
 const STEPS = [
   {
-    id: 'brand-memory',
-    title: 'Complete Your Brand Memory',
-    description:
-      'Brand Memory is the engine behind every AI generation on this platform. The more complete it is, the more your content sounds like you — not like generic AI output. Start here before anything else.',
-    icon: Zap,
-    route: '/brand-foundation',
-    cta: 'Open Brand Foundation',
-    tip: 'Aim for 80% or above. The five fields that matter most: Positioning Statement, Audience Pains, Audience Desires, Brand Voice Settings, and Audience Transformation.',
-    successCriteria: 'Brand Memory at 70%+',
-    minutesEstimate: 20,
-  },
-  {
-    id: 'brand-foundation',
-    title: 'Build Your Brand Foundation',
-    description:
-      'Your Brand Foundation documents your mission, vision, values, brand story, positioning statement, and tagline — all generated from your Brand Memory. This is your internal brand bible.',
-    icon: BookOpen,
-    route: '/brand-foundation',
-    cta: 'Build Foundation',
-    tip: 'Click Ask the House and let the platform draft every section from your Brand Memory. Edit anything that does not feel accurate before saving.',
-    successCriteria: 'Brand Clarity Score 75+',
+    id: 'brand-audit',
+    metricKey: 'audit_complete',
+    title: 'Complete Brand Audit',
+    description: 'See where your brand stands today.',
+    icon: Search,
+    route: '/brand-audit',
+    cta: 'Start Brand Audit',
+    tip: 'Answer honestly — the audit sets your baseline brand health score and tells Zuri exactly where to focus first.',
+    successCriteria: 'Audit complete',
     minutesEstimate: 10,
   },
   {
-    id: 'offer-builder',
-    title: 'Document Your First Offer',
-    description:
-      'The Offer Builder documents what you sell in a structured format the AI uses to generate offer-specific content. Every caption, email, and sales page can now be anchored to a real offer.',
-    icon: Target,
+    id: 'brand-foundation',
+    metricKey: 'foundation_complete',
+    title: 'Build Brand Foundation',
+    description: 'Define your mission, vision, and positioning.',
+    icon: BookOpen,
+    route: '/brand-foundation',
+    cta: 'Build Foundation',
+    tip: 'Use Ask the House to draft every section, then edit anything that does not sound like you before saving.',
+    successCriteria: 'Foundation complete',
+    minutesEstimate: 15,
+  },
+  {
+    id: 'messaging',
+    metricKey: 'messaging_complete',
+    title: 'Structure Your Messaging',
+    description: 'Build the rules your brand follows when it speaks.',
+    icon: MessageSquare,
+    route: '/messaging-structure',
+    cta: 'Open Messaging Structure',
+    tip: 'Lock your brand promise, elevator pitch, one-liner, and core message — these become the voice behind every generation.',
+    successCriteria: 'Messaging structured',
+    minutesEstimate: 15,
+  },
+  {
+    id: 'audience',
+    metricKey: 'audience_complete',
+    title: 'Define Your Audience',
+    description: 'Document who you are building this brand for.',
+    icon: Users,
+    route: '/audience',
+    cta: 'Define Audience',
+    tip: 'Start with one primary avatar — their core fear, core desire, and the transformation they want most.',
+    successCriteria: 'Audience defined',
+    minutesEstimate: 10,
+  },
+  {
+    id: 'offer',
+    metricKey: 'offer_complete',
+    title: 'Create Your First Offer',
+    description: 'Package what you sell into a clear, buyable offer.',
+    icon: Package,
     route: '/offer-builder',
     cta: 'Create Your Offer',
-    tip: 'The Transformation Statement is the most important field. Finish this sentence: "After working with me, my client goes from ___ to ___." This is the result, not a description of what you do.',
+    tip: 'The Transformation Statement matters most: "After working with me, my client goes from ___ to ___."',
     successCriteria: 'One offer published',
-    minutesEstimate: 5,
-  },
-  {
-    id: 'content-studio',
-    title: 'Generate Your First Content',
-    description:
-      'Content Studio is where your brand comes to life. Generate captions, emails, sales copy, blog posts, video scripts, and more — all written using your Brand Memory as context.',
-    icon: Sparkles,
-    route: '/content-studio',
-    cta: 'Generate Content',
-    tip: 'Start with an Instagram Caption or Brand Statement. Select your offer from the dropdown, click Generate, then add it to your Content Calendar.',
-    successCriteria: 'First content published',
-    minutesEstimate: 5,
-  },
-  {
-    id: 'content-calendar',
-    title: 'Populate Your Content Calendar',
-    description:
-      'The Content Calendar is your unified publishing plan. Content you generate in Content Studio auto-populates here. Fill your first month so you stop scrambling and start executing.',
-    icon: LayoutGrid,
-    route: '/calendar',
-    cta: 'Open Calendar',
-    tip: 'Target 3–4 events per week across at least two content types. Add your offer launch or promotion dates first — then build content around them.',
-    successCriteria: 'Calendar populated for the month',
-    minutesEstimate: 30,
+    minutesEstimate: 10,
   },
 ];
 
 // ─── PROGRESS CALCULATOR ─────────────────────────────────────
-function calcProgress({ foundationScore, offersCreated, contentGenerated, hasCalendarEvents, brandMemoryScore }) {
-  return {
-    'brand-memory':     (brandMemoryScore || 0) >= 70,
-    'brand-foundation': (foundationScore || 0) >= 75,
-    'offer-builder':    (offersCreated || 0) >= 1,
-    'content-studio':   (contentGenerated || 0) >= 1,
-    'content-calendar': !!hasCalendarEvents,
-  };
+// Reads each step's boolean straight off the metrics object from
+// useOnboardingProgress (milestone flag OR module_completed_at, resolved upstream).
+function calcProgress(metrics) {
+  const m = metrics || {};
+  return STEPS.reduce((acc, step) => {
+    acc[step.id] = Boolean(m[step.metricKey]);
+    return acc;
+  }, {});
 }
 
 // ─── WELCOME MODAL ───────────────────────────────────────────
@@ -108,10 +112,10 @@ function WelcomeModal({ userFirstName, onStart, onDismiss }) {
           <div style={{ borderRadius: 16, padding: 20, marginBottom: 24, background: 'var(--cth-surface-raised)', border: '1px solid var(--cth-brand-primary-soft)' }}>
             <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cth-command-cinnabar)', marginBottom: 14 }}>Your 30-Day Goals</p>
             {[
-              'Brand Foundation completed',
-              'Offer documented in Offer Builder',
-              'First piece of content generated and published',
-              'Content Calendar populated for the month',
+              'Brand Audit completed',
+              'Brand Foundation defined',
+              'Messaging and audience structured',
+              'First offer created',
             ].map((goal) => (
               <div key={goal} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--cth-command-cinnabar)', flexShrink: 0 }} />
@@ -283,13 +287,7 @@ export function OnboardingChecklist({ metrics, upcomingEvents, userFirstName, us
     }
   }, [userId]);
 
-  const progress = calcProgress({
-    foundationScore: metrics?.foundation_score,
-    offersCreated: metrics?.offers_created,
-    contentGenerated: metrics?.content_generated,
-    hasCalendarEvents: upcomingEvents?.length > 0,
-    brandMemoryScore: metrics?.brand_memory_score,
-  });
+  const progress = calcProgress(metrics);
 
   const completed = STEPS.filter((s) => progress[s.id]).length;
   const total = STEPS.length;
