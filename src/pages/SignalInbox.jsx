@@ -297,6 +297,11 @@ export default function SignalInbox() {
   const [showCreate, setShowCreate] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
 
+  // Generated response actions, keyed by signal_id. Each entry is one of:
+  //   { loading: true } | { action: {...} } | { error: "..." }
+  const [signalActions, setSignalActions] = useState({});
+  const [confirmedOpen, setConfirmedOpen] = useState(false);
+
   // Aux data (levels / tracking / attribution)
   const [confirmedSignals, setConfirmedSignals] = useState([]);
   const [attribution, setAttribution] = useState([]);
@@ -326,6 +331,45 @@ export default function SignalInbox() {
 
   const campaignName = useCallback((id) => campaigns.find((c) => c.id === id)?.name || "", [campaigns]);
   const offerName = useCallback((id) => offers.find((o) => o.id === id)?.name || "", [offers]);
+
+  // Generate (or regenerate) a response action for a confirmed signal. Stores
+  // the result keyed by signal_id; never throws to the caller.
+  const generateAction = useCallback(async (signalId) => {
+    if (!signalId) return;
+    setSignalActions((prev) => ({ ...prev, [signalId]: { loading: true } }));
+    try {
+      const res = await apiClient.post(
+        `${API_PATHS.buyerSignals.byId(signalId)}/generate-action`
+      );
+      const action = res?.action || null;
+      setSignalActions((prev) => ({
+        ...prev,
+        [signalId]: action ? { action } : { error: "No response was generated." },
+      }));
+    } catch (err) {
+      setSignalActions((prev) => ({
+        ...prev,
+        [signalId]: { error: err?.message || "Could not generate a response." },
+      }));
+    }
+  }, []);
+
+  // Seed actions already persisted on confirmed signals (so prior generations
+  // render after a reload) without clobbering fresh in-flight/just-set entries.
+  useEffect(() => {
+    if (!confirmedSignals.length) return;
+    setSignalActions((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const s of confirmedSignals) {
+        if (s?.generated_action && !next[s.id]) {
+          next[s.id] = { action: s.generated_action };
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [confirmedSignals]);
 
   // ---- loaders ----
   const loadMeta = useCallback(async () => {
@@ -613,6 +657,20 @@ export default function SignalInbox() {
   const recommendation = dashboard?.recommended_next_action ||
     "Keep logging and confirming signals. As buyers move through your tracking links, your next best move will sharpen here.";
 
+  // Highest-level (4+) confirmed signal that already has a generated action —
+  // this becomes the primary recommended move when present.
+  const primaryConfirmedAction = useMemo(() => {
+    const candidates = confirmedSignals
+      .map((s) => {
+        const level = Number(s.confirmed_level ?? s.suggested_level ?? 0);
+        const action = signalActions[s.id]?.action || s.generated_action || null;
+        return level >= 4 && action ? { signal: s, level, action } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.level - a.level);
+    return candidates[0] || null;
+  }, [confirmedSignals, signalActions]);
+
   if (pageLocked) return <LockedView />;
 
   const tabIsLocked = (tab) => tab.tier === "structure" && structureLocked;
@@ -726,6 +784,12 @@ export default function SignalInbox() {
                     onConfirm={setConfirmTarget}
                     onDismiss={handleDismiss}
                     onDelete={handleDelete}
+                    confirmedSignals={confirmedSignals}
+                    confirmedOpen={confirmedOpen}
+                    setConfirmedOpen={setConfirmedOpen}
+                    signalActions={signalActions}
+                    onGenerateAction={generateAction}
+                    offerName={offerName}
                   />
                 );
               }
@@ -782,6 +846,9 @@ export default function SignalInbox() {
                 return (
                   <RecommendedActionTab
                     recommendation={recommendation}
+                    primary={primaryConfirmedAction}
+                    levels={levels}
+                    offerName={offerName}
                     onAct={() => setActiveTab("new")}
                   />
                 );
@@ -850,7 +917,10 @@ export default function SignalInbox() {
           onConfirmed={(id) => {
             setConfirmTarget(null);
             setSignals((cur) => cur.filter((s) => s.id !== id));
+            setConfirmedOpen(true);
             loadAux();
+            // Fire-and-forget: generate the response action after confirm resolves.
+            generateAction(id);
           }}
           setError={setError}
         />
@@ -933,6 +1003,8 @@ function NewSignalsTab({
   signals, levels, sources, loading, busyId,
   sourceFilter, levelFilter, setSourceFilter, setLevelFilter,
   onConfirm, onDismiss, onDelete,
+  confirmedSignals = [], confirmedOpen, setConfirmedOpen,
+  signalActions = {}, onGenerateAction, offerName,
 }) {
   const selectStyle = {
     background: "var(--cth-command-panel)",
@@ -1094,6 +1166,214 @@ function NewSignalsTab({
           </p>
         </div>
       )}
+
+      <ConfirmedSignalsSection
+        confirmedSignals={confirmedSignals}
+        levels={levels}
+        open={confirmedOpen}
+        setOpen={setConfirmedOpen}
+        signalActions={signalActions}
+        onGenerateAction={onGenerateAction}
+        offerName={offerName}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Confirmed signals — collapsible section with generated response actions
+// ---------------------------------------------------------------------------
+
+const URGENCY_META = {
+  immediate: { label: "Immediate", color: "var(--cth-command-crimson)" },
+  this_week: { label: "This week", color: "var(--cth-command-gold)" },
+  nurture: { label: "Nurture", color: "var(--cth-command-muted)" },
+};
+
+function GeneratedActionView({ action }) {
+  const [copied, setCopied] = useState(false);
+  const meta = URGENCY_META[action.urgency] || URGENCY_META.nurture;
+
+  const copyDraft = async () => {
+    try {
+      await navigator.clipboard.writeText(action.outreach_draft || "");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("Could not copy to clipboard.");
+    }
+  };
+
+  return (
+    <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--cth-command-border)" }}>
+      <div className="flex flex-wrap items-center gap-2" style={{ marginBottom: 8 }}>
+        <span
+          style={{
+            fontFamily: SANS, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+            textTransform: "uppercase", padding: "2px 9px", borderRadius: 999,
+            color: "var(--cth-command-ivory)", background: meta.color,
+          }}
+        >
+          {meta.label}
+        </span>
+        {action.channel_suggestion ? (
+          <span
+            style={{
+              fontFamily: SANS, fontSize: 9.5, fontWeight: 600, padding: "2px 9px",
+              borderRadius: 999, color: "var(--cth-command-ink)",
+              background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)",
+            }}
+          >
+            {action.channel_suggestion}
+          </span>
+        ) : null}
+      </div>
+
+      {action.next_move ? (
+        <p className="text-[12.5px]" style={{ color: "var(--cth-command-ink)", marginBottom: 8 }}>
+          <span style={{ color: "var(--cth-command-muted)" }}>Next move: </span>
+          <span style={{ fontWeight: 700 }}>{action.next_move}</span>
+        </p>
+      ) : null}
+
+      {action.outreach_draft ? (
+        <div style={{ marginBottom: 8 }}>
+          <div
+            style={{
+              fontFamily: SANS, fontSize: 12, lineHeight: 1.55, color: "var(--cth-command-ink)",
+              background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)",
+              borderRadius: 8, padding: "10px 12px", whiteSpace: "pre-wrap",
+            }}
+          >
+            {action.outreach_draft}
+          </div>
+          <button
+            type="button"
+            onClick={copyDraft}
+            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold"
+            style={{
+              marginTop: 6, background: "var(--cth-command-panel-soft)",
+              border: "1px solid var(--cth-command-border)", color: "var(--cth-command-ink)",
+              fontFamily: SANS, cursor: "pointer",
+            }}
+          >
+            {copied ? <Check size={12} /> : <Copy size={12} />} {copied ? "Copied" : "Copy message"}
+          </button>
+        </div>
+      ) : null}
+
+      {action.reasoning ? (
+        <p className="text-[11px] italic" style={{ color: "var(--cth-command-muted)", lineHeight: 1.5 }}>
+          {action.reasoning}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function ConfirmedSignalCard({ signal, levels, entry, onGenerateAction, offerName }) {
+  const offerConn = (signal.connections || []).find(
+    (c) => String(c.entity_type).toLowerCase() === "offer"
+  );
+  const connectedOffer = offerConn
+    ? (offerName?.(offerConn.entity_id) || offerConn.entity_id)
+    : "";
+  const level = signal.confirmed_level ?? signal.suggested_level;
+
+  return (
+    <article
+      className="rounded-xl p-4"
+      style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" }}
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <LevelBadge level={level} levels={levels} />
+        {connectedOffer ? (
+          <span
+            className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium"
+            style={{ background: "var(--cth-command-panel-soft)", border: "1px solid var(--cth-command-border)", color: "var(--cth-command-muted)" }}
+          >
+            <Link2 size={10} /> {connectedOffer}
+          </span>
+        ) : null}
+        <span className="ml-auto text-[11px]" style={{ color: "var(--cth-command-muted)" }}>
+          {formatDate(signal.confirmed_at || signal.updated_at)}
+        </span>
+      </div>
+
+      {signal.signal_text ? (
+        <p className="mt-2 text-[13px] leading-6" style={{ color: "var(--cth-command-ink)" }}>
+          {signal.signal_text}
+        </p>
+      ) : null}
+
+      {entry?.loading ? (
+        <div
+          className="mt-3 flex items-center gap-2 pt-3"
+          style={{ borderTop: "1px solid var(--cth-command-border)", color: "var(--cth-command-muted)", fontFamily: SANS, fontSize: 12 }}
+        >
+          <Loader2 size={13} className="animate-spin" /> Zuri is generating your response…
+        </div>
+      ) : entry?.action ? (
+        <GeneratedActionView action={entry.action} />
+      ) : (
+        <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--cth-command-border)" }}>
+          {entry?.error ? (
+            <p className="text-[11px]" style={{ color: "var(--cth-command-error)", marginBottom: 6 }}>
+              {entry.error}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => onGenerateAction?.(signal.id)}
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
+            style={{ background: "var(--cth-command-crimson)", color: "var(--cth-command-ivory)", border: "none", fontFamily: SANS, cursor: "pointer" }}
+          >
+            <Radar size={13} /> {entry?.error ? "Retry response" : "Generate Response"}
+          </button>
+        </div>
+      )}
+    </article>
+  );
+}
+
+function ConfirmedSignalsSection({
+  confirmedSignals = [], levels, open, setOpen, signalActions = {}, onGenerateAction, offerName,
+}) {
+  const count = confirmedSignals.length;
+  if (!count) return null;
+
+  return (
+    <div className="rounded-xl" style={{ border: "1px solid var(--cth-command-border)", background: "var(--cth-command-panel-soft)", overflow: "hidden" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2 px-4 py-3"
+        style={{ background: "transparent", border: "none", cursor: "pointer", fontFamily: SANS }}
+        data-testid="confirmed-signals-toggle"
+      >
+        {open ? <ChevronDown size={15} style={{ color: "var(--cth-command-muted)" }} /> : <ChevronRight size={15} style={{ color: "var(--cth-command-muted)" }} />}
+        <span style={{ fontWeight: 700, fontSize: 13, color: "var(--cth-command-ink)" }}>
+          Confirmed Signals ({count})
+        </span>
+        <span className="ml-auto text-[11px]" style={{ color: "var(--cth-command-muted)" }}>
+          {open ? "Hide" : "Show"}
+        </span>
+      </button>
+
+      {open ? (
+        <div className="space-y-3" style={{ padding: "0 12px 12px" }}>
+          {confirmedSignals.map((signal) => (
+            <ConfirmedSignalCard
+              key={signal.id}
+              signal={signal}
+              levels={levels}
+              entry={signalActions[signal.id]}
+              onGenerateAction={onGenerateAction}
+              offerName={offerName}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1438,7 +1718,16 @@ function ConversionEventsTab({ rows, loading }) {
 // Recommended Action tab — dark Zuri card (#1a0828 established exception)
 // ---------------------------------------------------------------------------
 
-function RecommendedActionTab({ recommendation, onAct }) {
+function RecommendedActionTab({ recommendation, primary, levels, offerName, onAct }) {
+  const action = primary?.action || null;
+  const meta = action ? (URGENCY_META[action.urgency] || URGENCY_META.nurture) : null;
+
+  const offerConn = primary
+    ? (primary.signal.connections || []).find((c) => String(c.entity_type).toLowerCase() === "offer")
+    : null;
+  const offerLabel = offerConn ? (offerName?.(offerConn.entity_id) || offerConn.entity_id) : "";
+  const levelMeta = primary ? (levels || []).find((l) => l.value === Number(primary.level)) : null;
+
   return (
     <div style={{ background: "#1a0828", borderRadius: 12, padding: "20px 22px" }} data-testid="recommended-action-tab">
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -1449,18 +1738,56 @@ function RecommendedActionTab({ recommendation, onAct }) {
           Zuri · Next Best Move
         </span>
       </div>
-      <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: "var(--cth-command-ivory)", marginBottom: 10, lineHeight: 1.3 }}>
-        Your next best move
-      </div>
-      <div style={{ fontFamily: SANS, fontSize: 12.5, color: "rgba(232,223,240,0.78)", lineHeight: 1.6, marginBottom: 16 }}>
-        {recommendation}
-      </div>
+
+      {action ? (
+        <>
+          <div style={{ fontFamily: SANS, fontSize: 10.5, color: "#9a7fb0", marginBottom: 6 }}>
+            Level {primary.level} buyer signal{offerLabel ? ` · ${offerLabel}` : ""}{levelMeta ? ` · ${levelMeta.label}` : ""}
+          </div>
+          <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: "var(--cth-command-ivory)", marginBottom: 10, lineHeight: 1.3 }}>
+            {action.next_move || "Respond to your hottest signal"}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2" style={{ marginBottom: 12 }}>
+            <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "2px 9px", borderRadius: 999, color: "var(--cth-command-ivory)", background: meta.color }}>
+              {meta.label}
+            </span>
+            {action.channel_suggestion ? (
+              <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, padding: "2px 9px", borderRadius: 999, color: "var(--cth-command-ivory)", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.16)" }}>
+                {action.channel_suggestion}
+              </span>
+            ) : null}
+          </div>
+
+          {action.outreach_draft ? (
+            <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.55, color: "rgba(232,223,240,0.92)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "10px 12px", marginBottom: 12, whiteSpace: "pre-wrap" }}>
+              {action.outreach_draft}
+            </div>
+          ) : null}
+
+          {action.reasoning ? (
+            <div style={{ fontFamily: SANS, fontSize: 11, fontStyle: "italic", color: "rgba(232,223,240,0.6)", marginBottom: 16, lineHeight: 1.5 }}>
+              {action.reasoning}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <>
+          <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: "var(--cth-command-ivory)", marginBottom: 10, lineHeight: 1.3 }}>
+            Your next best move
+          </div>
+          <div style={{ fontFamily: SANS, fontSize: 12.5, color: "rgba(232,223,240,0.78)", lineHeight: 1.6, marginBottom: 16 }}>
+            {recommendation}
+          </div>
+        </>
+      )}
+
       <button
         type="button"
         onClick={onAct}
         style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: SANS, fontSize: 11, fontWeight: 500, color: "var(--cth-command-cinnabar)", background: "transparent", border: "1px solid rgba(224,78,53,0.4)", borderRadius: 6, padding: "6px 13px", cursor: "pointer" }}
       >
-        Review pending signals
+        {action ? "View confirmed signals" : "Review pending signals"}
         <ChevronRight size={13} />
       </button>
     </div>
