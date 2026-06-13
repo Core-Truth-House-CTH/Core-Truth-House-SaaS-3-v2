@@ -311,6 +311,15 @@ export const APP_ROUTES = [
     tooltip: "Generate professional AI voiceovers from your scripts using AI voices.",
   },
     {
+    path: "/studios/bio",
+    label: "Bio Generator",
+    icon: Sparkles,
+    group: "execution",
+    requiredPlan: null,
+    gateType: null,
+    tooltip: "Generate professional bios for LinkedIn, speaking events, and your website.",
+  },
+    {
     path: "/launch-planner",
     label: "Launch Planner",
     icon: Rocket,
