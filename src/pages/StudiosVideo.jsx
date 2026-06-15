@@ -50,6 +50,58 @@ const HIGGSFIELD_VIDEO_MODELS = [
   { id: "kling-video/v2.1/pro/image-to-video", label: "Kling v2.1 Pro", sub: "Higgsfield · image-to-video" },
 ];
 
+// Fallback fal.ai video shortlist if the /api/studios/models fetch hasn't
+// resolved yet (mirrors the backend FAL_VIDEO_MODELS curation).
+const FAL_VIDEO_FALLBACK = [
+  { id: "fal-ai/kling-video/v2.6/pro/text-to-video", label: "Kling v2.6 Pro", sub: "fal.ai · text-to-video" },
+  { id: "fal-ai/veo3.1/text-to-video", label: "Veo 3.1", sub: "fal.ai · cinematic" },
+  { id: "fal-ai/sora-2/text-to-video", label: "Sora 2", sub: "fal.ai · highest fidelity" },
+];
+
+// Shared "browse all fal.ai models" modal — searchable + category-filterable
+// catalog pulled live from the backend; picking a model returns its id.
+function FalModelBrowser({ title, loading, models, search, setSearch, cat, setCat, categories, onPick, onClose }) {
+  const q = (search || "").trim().toLowerCase();
+  const filtered = (models || []).filter((m) => {
+    if (cat && cat !== "all" && m.category !== cat) return false;
+    if (!q) return true;
+    return (m.id || "").toLowerCase().includes(q)
+      || (m.title || "").toLowerCase().includes(q)
+      || (m.shortDescription || "").toLowerCase().includes(q);
+  });
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1200, background: "rgba(13,0,16,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 680, maxHeight: "82vh", display: "flex", flexDirection: "column", background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", borderRadius: 14, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--cth-command-border)" }}>
+          <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 600, color: "var(--cth-command-ink)" }}>{title}</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cth-command-muted)", fontSize: 20, lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ display: "flex", gap: 8, padding: "12px 18px", borderBottom: "1px solid var(--cth-command-border)", flexWrap: "wrap" }}>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search models…" style={{ flex: "1 1 200px", padding: "7px 10px", borderRadius: 8, border: "1px solid var(--cth-command-border)", background: "var(--cth-command-blush)", color: "var(--cth-command-ink)", fontSize: 12 }} />
+          <select value={cat} onChange={(e) => setCat(e.target.value)} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid var(--cth-command-border)", background: "var(--cth-command-blush)", color: "var(--cth-command-ink)", fontSize: 12 }}>
+            {categories.map((c) => <option key={c} value={c}>{c === "all" ? "All categories" : c}</option>)}
+          </select>
+        </div>
+        <div style={{ overflowY: "auto", padding: 12 }}>
+          {loading ? (
+            <div style={{ padding: 28, textAlign: "center", color: "var(--cth-command-muted)", fontSize: 13 }}>Loading fal.ai catalog…</div>
+          ) : !filtered.length ? (
+            <div style={{ padding: 28, textAlign: "center", color: "var(--cth-command-muted)", fontSize: 13 }}>No models match.</div>
+          ) : (
+            filtered.map((m) => (
+              <button key={m.id} onClick={() => onPick(m.id)} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 12px", marginBottom: 6, borderRadius: 8, border: "1px solid var(--cth-command-border)", background: "var(--cth-command-blush)", cursor: "pointer" }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--cth-command-ink)" }}>{m.title || m.id}</div>
+                <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 1 }}>{m.id}{m.category ? ` · ${m.category}` : ""}</div>
+                {m.shortDescription ? <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 2 }}>{m.shortDescription.slice(0, 120)}</div> : null}
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Supported duration range (seconds) per OpenRouter model. Used to filter the
 // duration select so a founder can't pick a length the model can't render.
 const MODEL_DURATION_LIMITS = {
@@ -198,10 +250,17 @@ export default function StudiosVideo() {
 
   const [script, setScript] = useState("");
   const [visualPrompt, setVisualPrompt] = useState("");
-  const [modelId, setModelId] = useState(MODELS[0].id);
+  const [modelId, setModelId] = useState(FAL_VIDEO_FALLBACK[0].id);
   const [generateAudio, setGenerateAudio] = useState(true);
   const [higgsfieldConnected, setHiggsfieldConnected] = useState(false);
-  const [provider, setProvider] = useState("openrouter");
+  const [provider, setProvider] = useState("fal");
+  const [falVideoModels, setFalVideoModels] = useState([]);
+  // "Browse all fal.ai models" modal
+  const [browseOpen, setBrowseOpen] = useState(false);
+  const [browseModels, setBrowseModels] = useState([]);
+  const [browseLoading, setBrowseLoading] = useState(false);
+  const [browseSearch, setBrowseSearch] = useState("");
+  const [browseCat, setBrowseCat] = useState("all");
 
   const [watermark, setWatermark] = useState(false);
   const [wmPosition, setWmPosition] = useState("bottom_right");
@@ -224,7 +283,9 @@ export default function StudiosVideo() {
   const [hoverQueueId, setHoverQueueId] = useState(null);   // queue card under cursor
   const [confirmQueueId, setConfirmQueueId] = useState(null); // queue inline confirm open
 
-  const activeModels = provider === "higgsfield" ? HIGGSFIELD_VIDEO_MODELS : MODELS;
+  const activeModels = provider === "higgsfield"
+    ? HIGGSFIELD_VIDEO_MODELS
+    : (falVideoModels.length ? falVideoModels : FAL_VIDEO_FALLBACK);
   const modelLimit = MODEL_DURATION_LIMITS[modelId] || { min: 0, max: Infinity };
   const availableDurations = durationsForModel(activeFormat, modelId);
   const isSeedance = provider === "openrouter" && modelId.startsWith("bytedance/seedance");
@@ -300,17 +361,42 @@ export default function StudiosVideo() {
     catch { setHiggsfieldConnected(false); }
   }, []);
 
+  const loadModels = useCallback(async () => {
+    try {
+      const r = await apiClient.get("/api/studios/models");
+      const vids = Array.isArray(r?.video_models) ? r.video_models : [];
+      setFalVideoModels(vids);
+    } catch {
+      /* keep curated fallback */
+    }
+  }, []);
+
+  const openBrowse = useCallback(async () => {
+    setBrowseOpen(true);
+    setBrowseLoading(true);
+    try {
+      const r = await apiClient.get("/api/studios/fal-models/video");
+      setBrowseModels(Array.isArray(r?.models) ? r.models : []);
+    } catch {
+      setBrowseModels([]);
+    } finally {
+      setBrowseLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (pageLocked) return;
-    loadUsage(); loadHeadshots(); loadMedia(); loadQueue(); loadSaved(); loadIdentityAndLogo(); loadHiggsfield();
-  }, [pageLocked, loadUsage, loadHeadshots, loadMedia, loadQueue, loadSaved, loadIdentityAndLogo, loadHiggsfield]);
+    loadUsage(); loadHeadshots(); loadMedia(); loadQueue(); loadSaved(); loadIdentityAndLogo(); loadHiggsfield(); loadModels();
+  }, [pageLocked, loadUsage, loadHeadshots, loadMedia, loadQueue, loadSaved, loadIdentityAndLogo, loadHiggsfield, loadModels]);
 
   // When the provider changes, snap the model to the first one that provider
   // offers (the previously selected id won't exist in the other provider's list).
   useEffect(() => {
-    const models = provider === "higgsfield" ? HIGGSFIELD_VIDEO_MODELS : MODELS;
-    if (!models.some((m) => m.id === modelId)) setModelId(models[0].id);
-  }, [provider]); // eslint-disable-line react-hooks/exhaustive-deps
+    const models = provider === "higgsfield"
+      ? HIGGSFIELD_VIDEO_MODELS
+      : (falVideoModels.length ? falVideoModels : FAL_VIDEO_FALLBACK);
+    if (models.length && !models.some((m) => m.id === modelId)) setModelId(models[0].id);
+  }, [provider, falVideoModels]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Background queue poll, every 30s.
   useEffect(() => {
@@ -419,7 +505,7 @@ export default function StudiosVideo() {
       const body = {
         provider,
         model_id: modelId,
-        model_label: model.label,
+        model_label: (model && model.label) || modelId,
         format: `${activeFormat.label} ${activeFormat.ratio}`,
         form: activeFormat.form,
         aspect_ratio: activeFormat.ratio,
@@ -724,21 +810,49 @@ export default function StudiosVideo() {
                 })}
               </div>
 
-              {/* Provider toggle — only when Higgsfield is connected */}
-              {higgsfieldConnected && (
-                <div style={{ display: "flex", gap: 5, marginTop: 8 }} data-testid="video-provider-toggle">
-                  {[{ key: "openrouter", label: "OpenRouter" }, { key: "higgsfield", label: "Higgsfield" }].map((p) => {
-                    const on = p.key === provider;
-                    return (
-                      <button key={p.key} onClick={() => setProvider(p.key)} data-testid={`video-provider-${p.key}`}
-                        style={{ ...pill(on), flex: 1, padding: "6px 8px", borderRadius: 7, fontSize: 10, fontWeight: 500, textAlign: "center" }}>
-                        {p.label}
-                      </button>
-                    );
-                  })}
-                </div>
+              {/* Provider toggle — fal.ai (default), Higgsfield (if connected) */}
+              <div style={{ display: "flex", gap: 5, marginTop: 8 }} data-testid="video-provider-toggle">
+                {[{ key: "fal", label: "fal.ai" }, ...(higgsfieldConnected ? [{ key: "higgsfield", label: "Higgsfield" }] : [])].map((p) => {
+                  const on = p.key === provider;
+                  return (
+                    <button key={p.key} onClick={() => setProvider(p.key)} data-testid={`video-provider-${p.key}`}
+                      style={{ ...pill(on), flex: 1, padding: "6px 8px", borderRadius: 7, fontSize: 10, fontWeight: 500, textAlign: "center" }}>
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {provider === "fal" && (
+                <button
+                  type="button"
+                  onClick={openBrowse}
+                  data-testid="video-browse-models"
+                  style={{
+                    marginTop: 6, padding: "5px 8px", borderRadius: 7, fontSize: 10, fontWeight: 500,
+                    border: "0.5px solid var(--cth-command-border)", background: "var(--cth-command-blush)",
+                    color: "var(--cth-command-ink)", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", width: "100%",
+                  }}
+                >
+                  Browse all fal.ai models
+                </button>
               )}
             </div>
+
+            {browseOpen && (
+              <FalModelBrowser
+                title="fal.ai video models"
+                loading={browseLoading}
+                models={browseModels}
+                search={browseSearch}
+                setSearch={setBrowseSearch}
+                cat={browseCat}
+                setCat={setBrowseCat}
+                categories={["all", "text-to-video", "image-to-video"]}
+                onPick={(id) => { setFalVideoModels((cur) => (cur.some((m) => m.id === id) ? cur : [{ id, label: id, sub: "fal.ai" }, ...cur])); setModelId(id); setProvider("fal"); setBrowseOpen(false); }}
+                onClose={() => setBrowseOpen(false)}
+              />
+            )}
 
             {/* Audio toggle */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: "var(--cth-command-blush)", border: "0.5px solid var(--cth-command-border)", borderRadius: 9, marginBottom: 8 }}>

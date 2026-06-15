@@ -344,6 +344,13 @@ export default function Settings() {
   const [oaApiKey, setOaApiKey] = useState('');
   const [oaSaving, setOaSaving] = useState(false);
 
+  // Integrations — fal.ai connect state (no plan gating).
+  const [faLoading, setFaLoading] = useState(false);
+  const [faConnected, setFaConnected] = useState(false);
+  const [faLast4, setFaLast4] = useState('');
+  const [faApiKey, setFaApiKey] = useState('');
+  const [faSaving, setFaSaving] = useState(false);
+
   useEffect(() => {
     loadSettings();
   }, [user?.id]);
@@ -383,6 +390,7 @@ export default function Settings() {
     if (activeTab === 'integrations') {
       loadHiggsfield();
       loadOpenAI();
+      loadFal();
     }
   }, [activeTab]);
 
@@ -678,6 +686,55 @@ export default function Settings() {
       toast.error(e.message || 'Failed to disconnect OpenAI.');
     } finally {
       setOaSaving(false);
+    }
+  };
+
+  const loadFal = async () => {
+    setFaLoading(true);
+    try {
+      const res = await apiClient.get('/api/integrations/fal');
+      setFaConnected(!!res?.connected);
+      setFaLast4(res?.api_key_last4 || '');
+    } catch (e) {
+      setFaConnected(false);
+      setFaLast4('');
+    } finally {
+      setFaLoading(false);
+    }
+  };
+
+  const handleConnectFal = async () => {
+    if (!faApiKey.trim()) {
+      toast.error('Enter your fal.ai API key.');
+      return;
+    }
+    setFaSaving(true);
+    try {
+      const res = await apiClient.post('/api/integrations/fal', {
+        api_key: faApiKey.trim(),
+      });
+      setFaConnected(true);
+      setFaLast4(res?.api_key_last4 || faApiKey.trim().slice(-4));
+      setFaApiKey('');
+      toast.success('fal.ai connected.');
+    } catch (e) {
+      toast.error(e.message || 'Failed to connect fal.ai.');
+    } finally {
+      setFaSaving(false);
+    }
+  };
+
+  const handleDisconnectFal = async () => {
+    setFaSaving(true);
+    try {
+      await apiClient.delete('/api/integrations/fal');
+      setFaConnected(false);
+      setFaLast4('');
+      toast.success('fal.ai disconnected.');
+    } catch (e) {
+      toast.error(e.message || 'Failed to disconnect fal.ai.');
+    } finally {
+      setFaSaving(false);
     }
   };
 
@@ -1556,6 +1613,132 @@ export default function Settings() {
                           >
                             {oaSaving ? <Loader2 size={14} className="animate-spin" /> : <Plug size={14} />}
                             {oaSaving ? 'Connecting...' : 'Connect'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section 2b — fal.ai */}
+                  <div className="mb-5" style={{ ...CARD_STYLE, padding: 24 }}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h2 style={SECTION_HEADING_STYLE}>fal.ai</h2>
+                        <p style={{ ...MUTED_STYLE, marginTop: 8, maxWidth: 560 }}>
+                          Connect your own fal.ai account to use your credits for AI image and
+                          video generation in Studios. Get your API key at fal.ai.
+                        </p>
+                      </div>
+                      {faConnected && (
+                        <span
+                          data-testid="fal-connected-badge"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            flexShrink: 0,
+                            background: 'color-mix(in srgb, var(--cth-command-success) 14%, var(--cth-command-panel))',
+                            color: 'var(--cth-command-success)',
+                            border: '1px solid color-mix(in srgb, var(--cth-command-success) 35%, var(--cth-command-border))',
+                            borderRadius: 20,
+                            padding: '4px 12px',
+                            fontFamily: SANS,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            letterSpacing: '0.04em',
+                          }}
+                        >
+                          <CheckCircle size={13} />
+                          Connected
+                        </span>
+                      )}
+                    </div>
+
+                    {faLoading ? (
+                      <div className="flex justify-center p-8">
+                        <Loader2 size={20} className="animate-spin" style={{ color: 'var(--cth-command-crimson)' }} />
+                      </div>
+                    ) : faConnected ? (
+                      <div className="mt-5">
+                        <label style={FIELD_LABEL_STYLE}>fal.ai API key</label>
+                        <div
+                          style={{
+                            ...INNER_CARD_STYLE,
+                            background: 'var(--cth-command-panel-soft)',
+                            padding: 12,
+                            fontFamily: MONO,
+                            fontSize: 13,
+                            color: 'var(--cth-command-muted)',
+                            letterSpacing: '0.08em',
+                          }}
+                        >
+                          {`•••• •••• •••• ${faLast4 || '••••'}`}
+                        </div>
+                        <div className="flex justify-end mt-5">
+                          <button
+                            data-testid="fal-disconnect-btn"
+                            onClick={handleDisconnectFal}
+                            disabled={faSaving}
+                            type="button"
+                            style={{
+                              ...DESTRUCTIVE_BUTTON_STYLE,
+                              opacity: faSaving ? 0.65 : 1,
+                              cursor: faSaving ? 'wait' : 'pointer',
+                            }}
+                          >
+                            {faSaving ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                            {faSaving ? 'Disconnecting...' : 'Disconnect'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-5">
+                        <div>
+                          <label style={FIELD_LABEL_STYLE}>fal.ai API key</label>
+                          <input
+                            data-testid="fal-api-key"
+                            type="password"
+                            value={faApiKey}
+                            onChange={(e) => setFaApiKey(e.target.value)}
+                            placeholder="Your fal.ai API key"
+                            autoComplete="off"
+                            style={INPUT_STYLE}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4 mt-5 flex-wrap">
+                          <a
+                            href="https://fal.ai/dashboard/keys"
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              fontFamily: SANS,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: 'var(--cth-command-crimson)',
+                              textDecoration: 'none',
+                            }}
+                          >
+                            Get your API key at fal.ai
+                            <ExternalLink size={13} />
+                          </a>
+
+                          <button
+                            data-testid="fal-connect-btn"
+                            onClick={handleConnectFal}
+                            disabled={faSaving || !faApiKey.trim()}
+                            type="button"
+                            style={{
+                              ...PRIMARY_CTA_STYLE,
+                              opacity: faSaving || !faApiKey.trim() ? 0.65 : 1,
+                              cursor: faSaving || !faApiKey.trim() ? 'not-allowed' : 'pointer',
+                            }}
+                          >
+                            {faSaving ? <Loader2 size={14} className="animate-spin" /> : <Plug size={14} />}
+                            {faSaving ? 'Connecting...' : 'Connect'}
                           </button>
                         </div>
                       </div>

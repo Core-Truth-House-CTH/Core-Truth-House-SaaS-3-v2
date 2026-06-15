@@ -35,6 +35,50 @@ const HIGGSFIELD_IMAGE_MODELS = [
   { id: "higgsfield-ai/cinema-studio/2.5", label: "Cinema Studio" },
 ];
 
+// Shared "browse all fal.ai models" modal — searchable + category-filterable
+// catalog pulled live from the backend; picking a model returns its id.
+function FalModelBrowser({ title, loading, models, search, setSearch, cat, setCat, categories, onPick, onClose }) {
+  const q = (search || "").trim().toLowerCase();
+  const filtered = (models || []).filter((m) => {
+    if (cat && cat !== "all" && m.category !== cat) return false;
+    if (!q) return true;
+    return (m.id || "").toLowerCase().includes(q)
+      || (m.title || "").toLowerCase().includes(q)
+      || (m.shortDescription || "").toLowerCase().includes(q);
+  });
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1200, background: "rgba(13,0,16,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 680, maxHeight: "82vh", display: "flex", flexDirection: "column", background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", borderRadius: 14, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--cth-command-border)" }}>
+          <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 600, color: "var(--cth-command-ink)" }}>{title}</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cth-command-muted)", fontSize: 20, lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ display: "flex", gap: 8, padding: "12px 18px", borderBottom: "1px solid var(--cth-command-border)", flexWrap: "wrap" }}>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search models…" style={{ flex: "1 1 200px", padding: "7px 10px", borderRadius: 8, border: "1px solid var(--cth-command-border)", background: "var(--cth-command-blush)", color: "var(--cth-command-ink)", fontSize: 12 }} />
+          <select value={cat} onChange={(e) => setCat(e.target.value)} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid var(--cth-command-border)", background: "var(--cth-command-blush)", color: "var(--cth-command-ink)", fontSize: 12 }}>
+            {categories.map((c) => <option key={c} value={c}>{c === "all" ? "All categories" : c}</option>)}
+          </select>
+        </div>
+        <div style={{ overflowY: "auto", padding: 12 }}>
+          {loading ? (
+            <div style={{ padding: 28, textAlign: "center", color: "var(--cth-command-muted)", fontSize: 13 }}>Loading fal.ai catalog…</div>
+          ) : !filtered.length ? (
+            <div style={{ padding: 28, textAlign: "center", color: "var(--cth-command-muted)", fontSize: 13 }}>No models match.</div>
+          ) : (
+            filtered.map((m) => (
+              <button key={m.id} onClick={() => onPick(m.id)} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 12px", marginBottom: 6, borderRadius: 8, border: "1px solid var(--cth-command-border)", background: "var(--cth-command-blush)", cursor: "pointer" }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--cth-command-ink)" }}>{m.title || m.id}</div>
+                <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 1 }}>{m.id}{m.category ? ` · ${m.category}` : ""}</div>
+                {m.shortDescription ? <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 2 }}>{m.shortDescription.slice(0, 120)}</div> : null}
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const CARD = {
   background: "var(--cth-command-panel)",
   border: "0.5px solid var(--cth-command-border)",
@@ -122,8 +166,16 @@ export default function StudiosVisual() {
   const [usage, setUsage] = useState(null);
   const [hoveredImg, setHoveredImg] = useState(-1);
   const [higgsfieldConnected, setHiggsfieldConnected] = useState(false);
-  const [provider, setProvider] = useState("openrouter");
+  const [provider, setProvider] = useState("fal");
   const [higgsfieldModel, setHiggsfieldModel] = useState(HIGGSFIELD_IMAGE_MODELS[0].id);
+  const [falImageModels, setFalImageModels] = useState([]);
+  const [falModel, setFalModel] = useState("fal-ai/flux-pro/v1.1-ultra");
+  // "Browse all fal.ai models" modal
+  const [browseOpen, setBrowseOpen] = useState(false);
+  const [browseModels, setBrowseModels] = useState([]);
+  const [browseLoading, setBrowseLoading] = useState(false);
+  const [browseSearch, setBrowseSearch] = useState("");
+  const [browseCat, setBrowseCat] = useState("all");
 
   const activeFormat = FORMATS.find((f) => f.key === format) || FORMATS[0];
 
@@ -170,13 +222,38 @@ export default function StudiosVisual() {
     }
   }, []);
 
+  const loadModels = useCallback(async () => {
+    try {
+      const r = await apiClient.get("/api/studios/models");
+      const imgs = Array.isArray(r?.image_models) ? r.image_models : [];
+      setFalImageModels(imgs);
+      if (imgs.length) setFalModel((cur) => (imgs.some((m) => m.id === cur) ? cur : imgs[0].id));
+    } catch {
+      /* keep curated defaults */
+    }
+  }, []);
+
+  const openBrowse = useCallback(async () => {
+    setBrowseOpen(true);
+    setBrowseLoading(true);
+    try {
+      const r = await apiClient.get("/api/studios/fal-models/image");
+      setBrowseModels(Array.isArray(r?.models) ? r.models : []);
+    } catch {
+      setBrowseModels([]);
+    } finally {
+      setBrowseLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (pageLocked) return;
     loadUsage();
     loadSaved();
     loadIdentity();
     loadHiggsfield();
-  }, [pageLocked, loadUsage, loadSaved, loadIdentity, loadHiggsfield]);
+    loadModels();
+  }, [pageLocked, loadUsage, loadSaved, loadIdentity, loadHiggsfield, loadModels]);
 
   const acceptRef = useCallback((f) => {
     if (!f) return;
@@ -237,6 +314,7 @@ export default function StudiosVisual() {
       fd.append("brand_context", hasIdentity ? brandContext : "");
       fd.append("provider", provider);
       if (provider === "higgsfield") fd.append("model_id", higgsfieldModel);
+      else if (provider === "fal") fd.append("model_id", falModel);
 
       const res = await apiClient.post("/api/studios/visuals/generate", fd);
       const urls = Array.isArray(res?.image_urls) ? res.image_urls : [];
@@ -616,47 +694,92 @@ export default function StudiosVisual() {
               </div>
             </div>
 
-            {/* Provider toggle — only when Higgsfield is connected */}
-            {higgsfieldConnected && (
-              <div style={{ marginTop: 12 }} data-testid="visual-provider">
-                <div style={FIELD_LABEL}>Generation provider</div>
-                <div style={{ display: "flex", gap: 5, marginTop: 4 }}>
-                  {[{ key: "openrouter", label: "OpenRouter" }, { key: "higgsfield", label: "Higgsfield" }].map((p) => {
-                    const on = p.key === provider;
-                    return (
-                      <button
-                        key={p.key}
-                        onClick={() => setProvider(p.key)}
-                        data-testid={`visual-provider-${p.key}`}
-                        style={{
-                          flex: 1, padding: "6px 8px", borderRadius: 7, fontSize: 10, fontWeight: 500, textAlign: "center",
-                          border: `0.5px solid ${on ? "var(--cth-command-crimson)" : "var(--cth-command-border)"}`,
-                          background: on ? "var(--cth-command-crimson)" : "var(--cth-command-blush)",
-                          color: on ? "var(--cth-command-ivory)" : "var(--cth-command-ink)",
-                          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                        }}
-                      >
-                        {p.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {provider === "higgsfield" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
-                    <div style={FIELD_LABEL}>Higgsfield model</div>
-                    <select
-                      value={higgsfieldModel}
-                      onChange={(e) => setHiggsfieldModel(e.target.value)}
-                      style={FIELD_INPUT}
-                      data-testid="visual-higgsfield-model"
+            {/* Provider toggle — fal.ai (default), Higgsfield (if connected) */}
+            <div style={{ marginTop: 12 }} data-testid="visual-provider">
+              <div style={FIELD_LABEL}>Generation provider</div>
+              <div style={{ display: "flex", gap: 5, marginTop: 4 }}>
+                {[{ key: "fal", label: "fal.ai" }, ...(higgsfieldConnected ? [{ key: "higgsfield", label: "Higgsfield" }] : [])].map((p) => {
+                  const on = p.key === provider;
+                  return (
+                    <button
+                      key={p.key}
+                      onClick={() => setProvider(p.key)}
+                      data-testid={`visual-provider-${p.key}`}
+                      style={{
+                        flex: 1, padding: "6px 8px", borderRadius: 7, fontSize: 10, fontWeight: 500, textAlign: "center",
+                        border: `0.5px solid ${on ? "var(--cth-command-crimson)" : "var(--cth-command-border)"}`,
+                        background: on ? "var(--cth-command-crimson)" : "var(--cth-command-blush)",
+                        color: on ? "var(--cth-command-ivory)" : "var(--cth-command-ink)",
+                        cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                      }}
                     >
-                      {HIGGSFIELD_IMAGE_MODELS.map((m) => (
-                        <option key={m.id} value={m.id}>{m.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                      {p.label}
+                    </button>
+                  );
+                })}
               </div>
+
+              {provider === "fal" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
+                  <div style={FIELD_LABEL}>fal.ai model</div>
+                  <select
+                    value={falModel}
+                    onChange={(e) => setFalModel(e.target.value)}
+                    style={FIELD_INPUT}
+                    data-testid="visual-fal-model"
+                  >
+                    {(falImageModels.length ? falImageModels : [{ id: falModel, label: falModel }]).map((m) => (
+                      <option key={m.id} value={m.id}>{m.label || m.title || m.id}</option>
+                    ))}
+                    {!falImageModels.some((m) => m.id === falModel) && falModel ? (
+                      <option value={falModel}>{falModel}</option>
+                    ) : null}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={openBrowse}
+                    data-testid="visual-browse-models"
+                    style={{
+                      marginTop: 2, padding: "5px 8px", borderRadius: 7, fontSize: 10, fontWeight: 500,
+                      border: "0.5px solid var(--cth-command-border)", background: "var(--cth-command-blush)",
+                      color: "var(--cth-command-ink)", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    Browse all fal.ai models
+                  </button>
+                </div>
+              )}
+
+              {provider === "higgsfield" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
+                  <div style={FIELD_LABEL}>Higgsfield model</div>
+                  <select
+                    value={higgsfieldModel}
+                    onChange={(e) => setHiggsfieldModel(e.target.value)}
+                    style={FIELD_INPUT}
+                    data-testid="visual-higgsfield-model"
+                  >
+                    {HIGGSFIELD_IMAGE_MODELS.map((m) => (
+                      <option key={m.id} value={m.id}>{m.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {browseOpen && (
+              <FalModelBrowser
+                title="fal.ai image models"
+                loading={browseLoading}
+                models={browseModels}
+                search={browseSearch}
+                setSearch={setBrowseSearch}
+                cat={browseCat}
+                setCat={setBrowseCat}
+                categories={["all", "text-to-image", "image-to-image"]}
+                onPick={(id) => { setFalModel(id); setProvider("fal"); setBrowseOpen(false); }}
+                onClose={() => setBrowseOpen(false)}
+              />
             )}
 
             <button
