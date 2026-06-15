@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import CampaignContextBanner from "../components/shared/CampaignContextBanner";
+import BestPostingTimes from "../components/social/BestPostingTimes";
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Playfair Display', serif";
@@ -87,6 +88,7 @@ const SURFACES = [
  { key: "publish", label: "Publish Calendar", icon: CalendarIcon },
  { key: "grid", label: "Instagram Grid", icon: Grid3x3 },
  { key: "posts", label: "Posts", icon: ListIcon },
+ { key: "times", label: "Best Times", icon: Clock },
 ];
 
 const SOCIAL_CONNECT_PLATFORMS = [
@@ -2864,6 +2866,10 @@ export default function SocialMediaManager() {
  </div>
  )}
  </>
+ )}
+
+ {activeView === "times" && (
+ <BestPostingTimes workspaceId={workspaceId} connections={connections} />
  )}
  </div>
 
