@@ -22,6 +22,7 @@ import {
   FileText,
   ImagePlus,
   Loader2,
+  Play,
   RefreshCw,
   Search,
   Send,
@@ -119,6 +120,7 @@ const TYPE_CHIP_COLORS = {
 const TYPE_FILTERS = [
   { id: "all", label: "All" },
   { id: "image", label: "Images" },
+  { id: "video", label: "Videos" },
   { id: "document", label: "Documents" },
   { id: "font", label: "Fonts" },
   { id: "report", label: "Reports" },
@@ -180,6 +182,7 @@ function itemType(item) {
   if (item?.origin === "report") return "report";
   const mime = String(item?.mime || "").toLowerCase();
   const ext = extensionOf(item?.filename);
+  if (mime.startsWith("video/") || item?.type === "video") return "video";
   if (mime.startsWith("image/")) return "image";
   if (mime.startsWith("font/") || FONT_EXTS.has(ext) || item?.category === "font_file") return "font";
   if (
@@ -260,6 +263,51 @@ function normalizeReport(r = {}) {
     ownerId: r.user_id || "",
     raw: r,
   };
+}
+
+// Normalize a studios_videos record into the unified card shape.
+// origin "video": generated Studios video served from a public content URL.
+function normalizeVideo(v = {}) {
+  return {
+    origin: "video",
+    id: v.id || "",
+    name: v.name || "Untitled video",
+    type: "video",
+    filename: v.name || "video",
+    mime: "video/mp4",
+    url: v.content_url || "",
+    previewPath: null,
+    preview_url: null,
+    size: null,
+    created_at: v.created_at || "",
+    meta: {
+      model: v.model,
+      duration: v.duration,
+      aspect_ratio: v.aspect_ratio,
+      job_id: v.job_id,
+    },
+    ownerId: v.user_id || "",
+    raw: v,
+  };
+}
+
+// Format a duration in seconds into m:ss (e.g. 15 -> "0:15").
+function formatDuration(secs) {
+  const n = Number(secs);
+  if (!Number.isFinite(n) || n < 0) return "";
+  const m = Math.floor(n / 60);
+  const s = Math.floor(n % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+// Map a Studios aspect ratio string into a CSS aspect-ratio value.
+function aspectRatioStyle(ar) {
+  switch (String(ar || "")) {
+    case "9:16": return "9 / 16";
+    case "16:9": return "16 / 9";
+    case "1:1": return "1 / 1";
+    default: return "1 / 1";
+  }
 }
 
 function useAuthedBlobUrl(path) {
@@ -537,6 +585,86 @@ function ImagePreviewModal({ item, onClose, onDownload }) {
   );
 }
 
+function VideoCard({ item, onOpen }) {
+  const duration = formatDuration(item.meta?.duration);
+  return (
+    <article
+      className="overflow-hidden rounded-xl"
+      style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" }}
+    >
+      <button
+        type="button"
+        onClick={onOpen}
+        className="group relative block w-full overflow-hidden"
+        style={{
+          aspectRatio: aspectRatioStyle(item.meta?.aspect_ratio),
+          background: "var(--cth-command-panel)",
+          borderBottom: "1px solid var(--cth-command-border)",
+        }}
+      >
+        <div className="absolute inset-0 grid place-items-center transition-transform group-hover:scale-110">
+          <Play size={32} style={{ color: "#ffffff" }} />
+        </div>
+        {duration ? (
+          <span
+            className="absolute bottom-1.5 right-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold"
+            style={{ background: "rgba(13,0,16,0.75)", color: "#ffffff" }}
+          >
+            {duration}
+          </span>
+        ) : null}
+      </button>
+
+      <div className="space-y-1 p-2.5">
+        <p className="truncate font-serif text-xs font-semibold" style={{ color: "var(--cth-command-ink)" }} title={item.name}>
+          {item.name}
+        </p>
+        <div className="flex items-center justify-between gap-1.5 text-[10px]" style={{ color: "var(--cth-command-muted)" }}>
+          <span className="truncate" title={item.meta?.model || ""}>{item.meta?.model || "Video"}</span>
+          <span className="flex-shrink-0">{formatDate(item.created_at)}</span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function VideoPlayerModal({ item, onClose }) {
+  return (
+    <div
+      className="fixed inset-0 flex flex-col items-center justify-center p-4"
+      style={{ background: "rgba(13,0,16,0.9)", zIndex: 1200 }}
+      onClick={onClose}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        title="Close"
+        className="absolute right-3 top-3 rounded-full p-1.5"
+        style={{ background: "rgba(13,0,16,0.5)", color: "#ffffff" }}
+      >
+        <X size={16} />
+      </button>
+      <video
+        src={item.url}
+        controls
+        autoPlay
+        muted={false}
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: "90vw", maxHeight: "80vh", borderRadius: "8px", background: "#000" }}
+      />
+      <a
+        href={item.url}
+        download={item.name}
+        onClick={(e) => e.stopPropagation()}
+        className="mt-4 inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
+        style={{ background: "var(--cth-command-panel)", color: "var(--cth-command-ink)" }}
+      >
+        <Download size={12} /> Download
+      </a>
+    </div>
+  );
+}
+
 function StatCard({ label, value, sub }) {
   return (
     <div className="rounded-xl px-3 py-2.5" style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" }}>
@@ -565,6 +693,7 @@ export default function TenantDataDashboard() {
   const [documents, setDocuments] = useState([]);
   const [media, setMedia] = useState([]);
   const [reports, setReports] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
@@ -573,6 +702,7 @@ export default function TenantDataDashboard() {
   const [filterType, setFilterType] = useState("all");
   const [search, setSearch] = useState("");
   const [previewItem, setPreviewItem] = useState(null);
+  const [videoItem, setVideoItem] = useState(null);
   const [pendingUpload, setPendingUpload] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -607,13 +737,14 @@ export default function TenantDataDashboard() {
       setDocuments([]);
       setMedia([]);
       setReports([]);
+      setVideos([]);
       setLoading(false);
       return;
     }
     setLoading(true);
     setError("");
     try {
-      const [docRes, mediaRes, reportRes] = await Promise.all([
+      const [docRes, mediaRes, reportRes, videoRes] = await Promise.all([
         apiClient.get(API_PATHS.documents.list({})).catch((e) => {
           console.error("Failed to load documents:", e);
           return { documents: [] };
@@ -626,10 +757,15 @@ export default function TenantDataDashboard() {
           console.error("Failed to load saved reports:", e);
           return { reports: [] };
         }),
+        apiClient.get("/api/studios/videos").catch((e) => {
+          console.error("Failed to load studios videos:", e);
+          return { videos: [] };
+        }),
       ]);
       setDocuments(Array.isArray(docRes?.documents) ? docRes.documents.map(normalizeDoc) : []);
       setMedia(Array.isArray(mediaRes?.assets) ? mediaRes.assets.map(normalizeMedia) : []);
       setReports(Array.isArray(reportRes?.reports) ? reportRes.reports.map(normalizeReport) : []);
+      setVideos(Array.isArray(videoRes?.videos) ? videoRes.videos.map(normalizeVideo) : []);
     } catch (err) {
       console.error("Failed to load workspace library:", err);
       setError(err?.message || "Could not load workspace library.");
@@ -653,10 +789,10 @@ export default function TenantDataDashboard() {
     const dedupedDocs = documents.filter(
       (d) => !reportFilenames.has(String(d.raw?.stored_filename || ""))
     );
-    const merged = [...dedupedDocs, ...media, ...reports];
+    const merged = [...dedupedDocs, ...media, ...reports, ...videos];
     merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     return merged;
-  }, [documents, media, reports]);
+  }, [documents, media, reports, videos]);
 
   const visibleItems = useMemo(() => {
     let result = filterType === "all" ? items : items.filter((item) => itemType(item) === filterType);
@@ -1059,19 +1195,27 @@ export default function TenantDataDashboard() {
           </p>
         ) : (
           <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {visibleItems.map((item) => (
-              <ItemCard
-                key={`${item.origin}:${item.id}`}
-                item={item}
-                canManage={canManage(item)}
-                busyDelete={deletingIds.has(item.id)}
-                busyCategory={categoryBusyIds.has(item.id)}
-                onOpen={() => handleOpen(item)}
-                onDownload={() => handleDownload(item)}
-                onDelete={() => handleDelete(item)}
-                onCategoryChange={(next) => handleCategoryChange(item, next)}
-              />
-            ))}
+            {visibleItems.map((item) =>
+              itemType(item) === "video" ? (
+                <VideoCard
+                  key={`${item.origin}:${item.id}`}
+                  item={item}
+                  onOpen={() => setVideoItem(item)}
+                />
+              ) : (
+                <ItemCard
+                  key={`${item.origin}:${item.id}`}
+                  item={item}
+                  canManage={canManage(item)}
+                  busyDelete={deletingIds.has(item.id)}
+                  busyCategory={categoryBusyIds.has(item.id)}
+                  onOpen={() => handleOpen(item)}
+                  onDownload={() => handleDownload(item)}
+                  onDelete={() => handleDelete(item)}
+                  onCategoryChange={(next) => handleCategoryChange(item, next)}
+                />
+              )
+            )}
           </section>
         )}
 
@@ -1101,6 +1245,13 @@ export default function TenantDataDashboard() {
           item={previewItem}
           onClose={() => setPreviewItem(null)}
           onDownload={() => handleDownload(previewItem)}
+        />
+      ) : null}
+
+      {videoItem ? (
+        <VideoPlayerModal
+          item={videoItem}
+          onClose={() => setVideoItem(null)}
         />
       ) : null}
     </DashboardLayout>
