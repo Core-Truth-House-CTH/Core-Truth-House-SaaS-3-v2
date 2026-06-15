@@ -354,6 +354,78 @@ function useAuthedBlobUrl(path) {
   return blobUrl;
 }
 
+// Generate a poster frame for a video entirely client-side: load the video
+// offscreen, seek ~1s in, and paint that frame onto a canvas -> JPEG data URL.
+// studios_videos carries no stored thumbnail, so this gives the card a real
+// frame preview. Fails silently (CORS / non-seekable) — caller keeps the dark
+// play-icon placeholder when this returns "".
+function usePoster(url) {
+  const [posterUrl, setPosterUrl] = useState("");
+
+  useEffect(() => {
+    if (!url) {
+      setPosterUrl("");
+      return undefined;
+    }
+
+    let cancelled = false;
+    const video = document.createElement("video");
+    video.crossOrigin = "anonymous";
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+
+    const cleanup = () => {
+      video.removeEventListener("loadeddata", handleLoaded);
+      video.removeEventListener("seeked", handleSeeked);
+      video.removeEventListener("error", cleanup);
+      try {
+        video.removeAttribute("src");
+        video.load();
+      } catch {
+        /* noop */
+      }
+    };
+
+    function handleLoaded() {
+      try {
+        // Seek 1s in; for sub-second clips, grab the midpoint instead.
+        video.currentTime = video.duration && video.duration < 1 ? video.duration / 2 : 1;
+      } catch {
+        cleanup();
+      }
+    }
+
+    function handleSeeked() {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 320;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const data = canvas.toDataURL("image/jpeg", 0.7);
+        if (!cancelled && data && data.length > 10) setPosterUrl(data);
+      } catch {
+        /* tainted canvas (CORS) — fail silently, keep the placeholder */
+      } finally {
+        cleanup();
+      }
+    }
+
+    video.addEventListener("loadeddata", handleLoaded);
+    video.addEventListener("seeked", handleSeeked);
+    video.addEventListener("error", cleanup);
+    video.src = url;
+
+    return () => {
+      cancelled = true;
+      cleanup();
+    };
+  }, [url]);
+
+  return posterUrl;
+}
+
 // =========================================================
 // Sub-components
 // =========================================================
@@ -585,25 +657,48 @@ function ImagePreviewModal({ item, onClose, onDownload }) {
   );
 }
 
-function VideoCard({ item, onOpen }) {
+function VideoCard({ item, canManage, onOpen, onDelete }) {
   const duration = formatDuration(item.meta?.duration);
+  const posterUrl = usePoster(item.url);
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleConfirmDelete(e) {
+    e.stopPropagation();
+    setDeleting(true);
+    // onDelete resolves true on success (card unmounts as the item leaves
+    // state) or false on failure (keep the confirmation open).
+    const ok = await onDelete();
+    if (!ok) {
+      setDeleting(false);
+    }
+  }
+
   return (
     <article
       className="overflow-hidden rounded-xl"
       style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)" }}
     >
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={onOpen}
-        className="group relative block w-full overflow-hidden"
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onOpen(); }}
+        className="group relative block w-full cursor-pointer overflow-hidden"
         style={{
           aspectRatio: aspectRatioStyle(item.meta?.aspect_ratio),
           background: "var(--cth-command-panel)",
           borderBottom: "1px solid var(--cth-command-border)",
         }}
       >
+        {posterUrl ? (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url("${posterUrl}")` }}
+          />
+        ) : null}
         <div className="absolute inset-0 grid place-items-center transition-transform group-hover:scale-110">
-          <Play size={32} style={{ color: "#ffffff" }} />
+          <Play size={32} style={{ color: "#ffffff", filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.6))" }} />
         </div>
         {duration ? (
           <span
@@ -613,7 +708,49 @@ function VideoCard({ item, onOpen }) {
             {duration}
           </span>
         ) : null}
-      </button>
+
+        {canManage && !confirming ? (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setConfirming(true); }}
+            title="Delete video"
+            className="absolute right-1.5 top-1.5 rounded-md p-1.5 opacity-0 transition-opacity group-hover:opacity-100"
+            style={{ background: "rgba(248,244,242,0.92)", color: "var(--cth-command-crimson)" }}
+          >
+            <Trash2 size={12} />
+          </button>
+        ) : null}
+
+        {confirming ? (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 text-center"
+            style={{ background: "rgba(13,0,16,0.82)" }}
+          >
+            <p className="text-[11px] font-semibold" style={{ color: "#ffffff" }}>Delete this video?</p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold disabled:opacity-60"
+                style={{ background: "var(--cth-command-crimson)", color: "var(--cth-command-panel)" }}
+              >
+                {deleting ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />} Delete
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setConfirming(false); }}
+                disabled={deleting}
+                className="rounded-md px-2.5 py-1 text-[11px] font-semibold disabled:opacity-60"
+                style={{ background: "var(--cth-command-panel)", color: "var(--cth-command-ink)" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </div>
 
       <div className="space-y-1 p-2.5">
         <p className="truncate font-serif text-xs font-semibold" style={{ color: "var(--cth-command-ink)" }} title={item.name}>
@@ -1019,6 +1156,21 @@ export default function TenantDataDashboard() {
     }
   }
 
+  // ---- Delete video (studios_videos; public content URL, no blob) ----
+  // Returns true on success so the card can keep its confirmation open on error.
+  async function handleVideoDelete(item) {
+    try {
+      await apiClient.delete(`/api/studios/videos/${encodeURIComponent(item.id)}`);
+      setVideos((cur) => cur.filter((v) => v.id !== item.id));
+      flash("Video deleted.");
+      return true;
+    } catch (err) {
+      console.error("Video delete failed", err);
+      setError(err?.message || "Could not delete video.");
+      return false;
+    }
+  }
+
   // ---- Inline category edit (routed by origin) ----
   function patchCategoryInState(item, nextCategory) {
     if (item.origin === "media") {
@@ -1200,7 +1352,9 @@ export default function TenantDataDashboard() {
                 <VideoCard
                   key={`${item.origin}:${item.id}`}
                   item={item}
+                  canManage={canManage(item)}
                   onOpen={() => setVideoItem(item)}
+                  onDelete={() => handleVideoDelete(item)}
                 />
               ) : (
                 <ItemCard
