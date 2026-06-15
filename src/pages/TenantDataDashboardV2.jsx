@@ -354,23 +354,40 @@ function useAuthedBlobUrl(path) {
   return blobUrl;
 }
 
-// Generate a poster frame for a video entirely client-side: load the video
-// offscreen, seek ~1s in, and paint that frame onto a canvas -> JPEG data URL.
-// studios_videos carries no stored thumbnail, so this gives the card a real
-// frame preview. Fails silently (CORS / non-seekable) — caller keeps the dark
-// play-icon placeholder when this returns "".
-function usePoster(url) {
+// Authenticated fetch of the inline playback stream -> object URL. Routes
+// through the server proxy (`/api/studios/videos/{id}/playback`) so OpenRouter
+// videos (bearer-gated) load too; apiClient's helpers attach the auth header.
+// (apiClient itself has no blob response mode — it parses bodies as JSON/text —
+// so we use native fetch with its auth headers, the same pattern as
+// useAuthedBlobUrl / fetchBlobUrl elsewhere in this file.)
+async function fetchPlaybackBlobUrl(videoId) {
+  const path = `/api/studios/videos/${videoId}/playback`;
+  const fullUrl = typeof apiClient.buildApiUrl === "function" ? apiClient.buildApiUrl(path) : path;
+  const headers = typeof apiClient.getAuthHeaders === "function" ? await apiClient.getAuthHeaders() : {};
+  const response = await fetch(fullUrl, { method: "GET", headers, credentials: "include" });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const blob = await response.blob();
+  return window.URL.createObjectURL(blob);
+}
+
+// Generate a poster frame for a video entirely client-side: pull the video via
+// the auth'd playback proxy as a blob, load it offscreen, seek ~1s in, and
+// paint that frame onto a canvas -> JPEG data URL. studios_videos carries no
+// stored thumbnail, so this gives the card a real frame preview. The blob URL
+// is same-origin so the canvas is never tainted. Fails silently (fetch error /
+// non-seekable) — caller keeps the dark play-icon placeholder.
+function usePoster(videoId) {
   const [posterUrl, setPosterUrl] = useState("");
 
   useEffect(() => {
-    if (!url) {
+    if (!videoId) {
       setPosterUrl("");
       return undefined;
     }
 
     let cancelled = false;
+    let blobUrl = "";
     const video = document.createElement("video");
-    video.crossOrigin = "anonymous";
     video.preload = "metadata";
     video.muted = true;
     video.playsInline = true;
@@ -384,6 +401,10 @@ function usePoster(url) {
         video.load();
       } catch {
         /* noop */
+      }
+      if (blobUrl) {
+        window.URL.revokeObjectURL(blobUrl);
+        blobUrl = "";
       }
     };
 
@@ -406,22 +427,34 @@ function usePoster(url) {
         const data = canvas.toDataURL("image/jpeg", 0.7);
         if (!cancelled && data && data.length > 10) setPosterUrl(data);
       } catch {
-        /* tainted canvas (CORS) — fail silently, keep the placeholder */
+        /* draw/encode failed — fail silently, keep the placeholder */
       } finally {
         cleanup();
       }
     }
 
-    video.addEventListener("loadeddata", handleLoaded);
-    video.addEventListener("seeked", handleSeeked);
-    video.addEventListener("error", cleanup);
-    video.src = url;
+    (async () => {
+      try {
+        const objectUrl = await fetchPlaybackBlobUrl(videoId);
+        if (cancelled) {
+          window.URL.revokeObjectURL(objectUrl);
+          return;
+        }
+        blobUrl = objectUrl;
+        video.addEventListener("loadeddata", handleLoaded);
+        video.addEventListener("seeked", handleSeeked);
+        video.addEventListener("error", cleanup);
+        video.src = blobUrl;
+      } catch {
+        /* playback fetch failed — fail silently, keep the placeholder */
+      }
+    })();
 
     return () => {
       cancelled = true;
       cleanup();
     };
-  }, [url]);
+  }, [videoId]);
 
   return posterUrl;
 }
@@ -659,7 +692,7 @@ function ImagePreviewModal({ item, onClose, onDownload }) {
 
 function VideoCard({ item, canManage, onOpen, onDelete }) {
   const duration = formatDuration(item.meta?.duration);
-  const posterUrl = usePoster(item.url);
+  const posterUrl = usePoster(item.id);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -765,7 +798,50 @@ function VideoCard({ item, canManage, onOpen, onDelete }) {
   );
 }
 
-function VideoPlayerModal({ item, onClose }) {
+function VideoPlayerModal({ item, onClose, onError }) {
+  const [blobUrl, setBlobUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    let created = "";
+    (async () => {
+      try {
+        const objectUrl = await fetchPlaybackBlobUrl(item.id);
+        if (cancelled) {
+          window.URL.revokeObjectURL(objectUrl);
+          return;
+        }
+        created = objectUrl;
+        setBlobUrl(objectUrl);
+        setLoading(false);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Video playback load failed", err);
+          onError();
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (created) window.URL.revokeObjectURL(created);
+    };
+    // onError is recreated each render by the parent; item.id is the only real
+    // input, so we intentionally key the fetch on it alone.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.id]);
+
+  function handleDownload(e) {
+    e.stopPropagation();
+    if (!blobUrl) return;
+    const anchor = document.createElement("a");
+    anchor.href = blobUrl;
+    anchor.download = item.name || "video";
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  }
+
   return (
     <div
       className="fixed inset-0 flex flex-col items-center justify-center p-4"
@@ -781,23 +857,35 @@ function VideoPlayerModal({ item, onClose }) {
       >
         <X size={16} />
       </button>
-      <video
-        src={item.url}
-        controls
-        autoPlay
-        muted={false}
-        onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: "90vw", maxHeight: "80vh", borderRadius: "8px", background: "#000" }}
-      />
-      <a
-        href={item.url}
-        download={item.name}
-        onClick={(e) => e.stopPropagation()}
-        className="mt-4 inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
-        style={{ background: "var(--cth-command-panel)", color: "var(--cth-command-ink)" }}
-      >
-        <Download size={12} /> Download
-      </a>
+
+      {loading || !blobUrl ? (
+        <div
+          className="flex items-center gap-2 text-sm font-semibold"
+          style={{ color: "#ffffff" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Loader2 size={20} className="animate-spin" /> Loading video...
+        </div>
+      ) : (
+        <>
+          <video
+            src={blobUrl}
+            controls
+            autoPlay
+            muted={false}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: "90vw", maxHeight: "80vh", borderRadius: "8px", background: "#000" }}
+          />
+          <button
+            type="button"
+            onClick={handleDownload}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
+            style={{ background: "var(--cth-command-panel)", color: "var(--cth-command-ink)" }}
+          >
+            <Download size={12} /> Download
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -1406,6 +1494,7 @@ export default function TenantDataDashboard() {
         <VideoPlayerModal
           item={videoItem}
           onClose={() => setVideoItem(null)}
+          onError={() => { setError("Could not load video"); setVideoItem(null); }}
         />
       ) : null}
     </DashboardLayout>
