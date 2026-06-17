@@ -20,6 +20,7 @@ import {
   Download,
   File as FileIcon,
   FileText,
+  ImageOff,
   ImagePlus,
   Loader2,
   Play,
@@ -310,48 +311,76 @@ function aspectRatioStyle(ar) {
   }
 }
 
+// Time budget for a single thumbnail/preview fetch. A request that neither
+// resolves nor rejects (e.g. a stalled connection) is aborted after this so the
+// UI lands in "error" instead of spinning forever.
+const AUTHED_BLOB_TIMEOUT_MS = 20_000;
+
+// Returns { blobUrl, status } where status is "idle" | "loading" | "error".
+// "idle" = no source to load (empty path). "loading" = fetch in flight.
+// "error" = the fetch threw, timed out, or returned a non-OK status. The blob
+// URL is only ever set on success — a failure NEVER masquerades as the empty
+// (still-loading) state, so callers can distinguish "loading" from "failed".
 function useAuthedBlobUrl(path) {
   const [blobUrl, setBlobUrl] = useState("");
+  const [status, setStatus] = useState("idle");
+  // Bumping this re-runs the effect to retry a failed load.
+  const [attempt, setAttempt] = useState(0);
+
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
   useEffect(() => {
     if (!path) {
       setBlobUrl("");
+      setStatus("idle");
       return undefined;
     }
-    // Absolute non-API URL (e.g. CDN) — use directly.
+    // Absolute non-API URL (e.g. CDN) — use directly, no fetch.
     if (/^https?:\/\//i.test(path) && !path.includes("/api/")) {
       setBlobUrl(path);
+      setStatus("idle");
       return undefined;
     }
 
     let cancelled = false;
     let createdUrl = "";
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AUTHED_BLOB_TIMEOUT_MS);
+
+    setBlobUrl("");
+    setStatus("loading");
 
     (async () => {
       try {
         const fullUrl = typeof apiClient.buildApiUrl === "function" ? apiClient.buildApiUrl(path) : path;
         const headers = typeof apiClient.getAuthHeaders === "function" ? await apiClient.getAuthHeaders() : {};
-        const response = await fetch(fullUrl, { method: "GET", headers, credentials: "include" });
+        const response = await fetch(fullUrl, { method: "GET", headers, credentials: "include", signal: controller.signal });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const blob = await response.blob();
         if (cancelled) return;
         createdUrl = window.URL.createObjectURL(blob);
         setBlobUrl(createdUrl);
+        // Success — blobUrl is now truthy and drives the image render; clear the
+        // loading flag back to idle.
+        setStatus("idle");
       } catch (err) {
         if (!cancelled) {
           console.error("Failed to load authed preview:", err);
           setBlobUrl("");
+          setStatus("error");
         }
       }
     })();
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
+      controller.abort();
       if (createdUrl) window.URL.revokeObjectURL(createdUrl);
     };
-  }, [path]);
+  }, [path, attempt]);
 
-  return blobUrl;
+  return { blobUrl, status, retry };
 }
 
 // Authenticated fetch of the inline playback stream -> object URL. Routes
@@ -518,15 +547,43 @@ function TypeChip({ type, extension }) {
 
 function ItemThumb({ item, type }) {
   const imagePath = type === "image" ? String(item?.previewPath || "") : "";
-  const blobUrl = useAuthedBlobUrl(imagePath);
+  const { blobUrl, status, retry } = useAuthedBlobUrl(imagePath);
 
   if (type === "image") {
+    // Loaded successfully — the object URL drives the image.
     if (blobUrl) {
       return <img src={blobUrl} alt={item.name} className="absolute inset-0 h-full w-full object-cover" />;
     }
+    // Failed / timed out — show a broken-image icon and a retry button instead
+    // of an indistinguishable forever-spinner.
+    if (status === "error") {
+      return (
+        <div className="absolute inset-0 grid place-items-center gap-1.5">
+          <ImageOff size={22} style={{ color: "var(--cth-command-muted)" }} />
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); retry(); }}
+            title="Retry"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold"
+            style={{ background: "rgba(248,244,242,0.92)", color: "var(--cth-command-ink)" }}
+          >
+            <RefreshCw size={10} /> Retry
+          </button>
+        </div>
+      );
+    }
+    // Still in flight — spinner ONLY while genuinely loading.
+    if (status === "loading") {
+      return (
+        <div className="absolute inset-0 grid place-items-center">
+          <Loader2 size={20} className="animate-spin" style={{ color: TYPE_CHIP_COLORS.image }} />
+        </div>
+      );
+    }
+    // idle with no source (empty preview path) — generic file icon, no spinner.
     return (
       <div className="absolute inset-0 grid place-items-center">
-        <Loader2 size={20} className="animate-spin" style={{ color: TYPE_CHIP_COLORS.image }} />
+        <FileIcon size={36} style={{ color: TYPE_CHIP_COLORS.image }} />
       </div>
     );
   }
@@ -669,7 +726,7 @@ function UploadModal({ file, target, category, options, saving, error, onCategor
 }
 
 function ImagePreviewModal({ item, onClose, onDownload }) {
-  const blobUrl = useAuthedBlobUrl(String(item?.previewPath || ""));
+  const { blobUrl, status, retry } = useAuthedBlobUrl(String(item?.previewPath || ""));
   return (
     <div className="fixed inset-0 z-[1200] flex flex-col items-center justify-center p-4" style={{ background: "rgba(13,0,16,0.85)" }} onClick={onClose}>
       <div className="absolute right-3 top-3 flex items-center gap-2">
@@ -682,6 +739,19 @@ function ImagePreviewModal({ item, onClose, onDownload }) {
       </div>
       {blobUrl ? (
         <img src={blobUrl} alt={item.name} className="max-h-[85vh] max-w-[90vw] object-contain" onClick={(e) => e.stopPropagation()} />
+      ) : status === "error" ? (
+        <div className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
+          <ImageOff size={36} style={{ color: "var(--cth-command-panel)" }} />
+          <p className="text-xs" style={{ color: "var(--cth-command-panel)" }}>Couldn’t load this image.</p>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); retry(); }}
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
+            style={{ background: "var(--cth-command-panel)", color: "var(--cth-command-ink)" }}
+          >
+            <RefreshCw size={12} /> Retry
+          </button>
+        </div>
       ) : (
         <Loader2 size={28} className="animate-spin" style={{ color: "var(--cth-command-panel)" }} />
       )}
@@ -1159,10 +1229,18 @@ export default function TenantDataDashboard() {
     if (!raw) return "";
     const fullUrl = typeof apiClient.buildApiUrl === "function" ? apiClient.buildApiUrl(raw) : raw;
     const headers = typeof apiClient.getAuthHeaders === "function" ? await apiClient.getAuthHeaders() : {};
-    const response = await fetch(fullUrl, { method: "GET", headers, credentials: "include" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const blob = await response.blob();
-    return window.URL.createObjectURL(blob);
+    // Abort a stalled open/download after the same budget so the caller's catch
+    // surfaces an error instead of hanging indefinitely.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AUTHED_BLOB_TIMEOUT_MS);
+    try {
+      const response = await fetch(fullUrl, { method: "GET", headers, credentials: "include", signal: controller.signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      return window.URL.createObjectURL(blob);
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   async function handleOpen(item) {
