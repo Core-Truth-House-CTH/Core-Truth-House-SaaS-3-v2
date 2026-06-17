@@ -115,5 +115,6 @@ Static route HTML injection runs post-build via scripts/inject-static-route-meta
 - vite.config.ts is the active config (has API proxy for local dev)
 - vite.config.js is excluded from git (duplicate, no proxy config)
 - public/sw.js is an intentional cache kill-switch — do not modify
-- .bak files in src/pages/ are stale backups — safe to ignore, do not edit
+- Rollback comes from git — NEVER write per-edit `.bak`/`.bak.<timestamp>` siblings beside source files (they accumulate as stale clutter; 160 were swept from the backend tree on 2026-06-17). If a pre-edit local copy is truly needed mid-session, write it to /tmp, not into the source tree. Existing `./backups/` dirs are historical — leave them, don't add to them.
+- Any remaining .bak files are stale — safe to ignore, do not edit
 - Sidebar hover-expand is implemented in Layout.jsx — test after any Layout changes
