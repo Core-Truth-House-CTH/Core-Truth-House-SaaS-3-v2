@@ -1647,13 +1647,9 @@ function DiscussionLeftSidebar({
 }) {
   return (
     <aside
-      className="self-start rounded-xl p-3"
+      className="self-start rounded-xl p-3 md:sticky md:top-[120px] md:h-[calc(100vh-120px)] md:overflow-y-auto"
       style={{
         background: "var(--cth-command-ink)",
-        position: "sticky",
-        top: 120,
-        height: "calc(100vh - 120px)",
-        overflowY: "auto",
       }}
     >
       <div className="px-1 pb-2">
@@ -1745,13 +1741,7 @@ function DiscussionRightSidebar({ settings, members, threads, channels }) {
 
   return (
     <aside
-      className="space-y-3 self-start"
-      style={{
-        position: "sticky",
-        top: 120,
-        height: "calc(100vh - 120px)",
-        overflowY: "auto",
-      }}
+      className="space-y-3 self-start md:sticky md:top-[120px] md:h-[calc(100vh-120px)] md:overflow-y-auto"
     >
       <section className="rounded-xl p-3" style={cardStyle}>
         <h3
@@ -2531,6 +2521,8 @@ function FilesTab({ files, viewerId, isAdmin, onUpload, onDelete, onDownload, er
 
       <div style={{ borderTop: "1px solid var(--cth-command-border)" }} />
 
+      <div className="overflow-x-auto">
+        <div className="min-w-[680px] space-y-2">
       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em]">
         <div className="flex-1 rounded-full px-3 py-1.5" style={headerPill}>File</div>
         <div className="rounded-full px-3 py-1.5 text-center" style={{ ...headerPill, width: 80 }}>Type</div>
@@ -2593,7 +2585,10 @@ function FilesTab({ files, viewerId, isAdmin, onUpload, onDelete, onDownload, er
             );
           })}
         </ul>
-      ) : (
+      ) : null}
+        </div>
+      </div>
+      {visibleFiles.length ? null : (
         <div className="py-14 text-center">
           <p className="text-sm" style={{ color: "var(--cth-command-muted)" }}>
             {searchQuery.trim() ? "No files match that search." : "No files shared yet."}
@@ -3343,7 +3338,7 @@ export default function CommunityPage() {
         ) : null}
 
         {activeTab === "discussion" ? (
-          <div className="grid gap-4 grid-cols-[200px_minmax(0,1fr)_200px]">
+          <div className="grid gap-4 md:grid-cols-[200px_minmax(0,1fr)_200px]">
             <DiscussionLeftSidebar
               cohortName={cohortName}
               memberCount={members.length}
@@ -3354,7 +3349,7 @@ export default function CommunityPage() {
               onChangeNavFilter={setNavFilter}
               onCreatePostClick={focusComposer}
             />
-            <div className="space-y-3">
+            <div className="order-first space-y-3 md:order-none">
               <div ref={composerRef}>
                 <PostComposer
                   viewerName={viewerName}
@@ -3436,7 +3431,7 @@ export default function CommunityPage() {
         ) : null}
 
         {activeTab === "wins" ? (
-          <div className="grid gap-4 grid-cols-[200px_minmax(0,1fr)_200px]">
+          <div className="grid gap-4 md:grid-cols-[200px_minmax(0,1fr)_200px]">
             <DiscussionLeftSidebar
               cohortName={cohortName}
               memberCount={members.length}
@@ -3447,7 +3442,7 @@ export default function CommunityPage() {
               onChangeNavFilter={setNavFilter}
               onCreatePostClick={focusComposer}
             />
-            <div className="space-y-3">
+            <div className="order-first space-y-3 md:order-none">
               <div ref={composerRef}>
                 <PostComposer
                   viewerName={viewerName}
