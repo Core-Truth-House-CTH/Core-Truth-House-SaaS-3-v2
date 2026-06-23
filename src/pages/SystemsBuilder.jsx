@@ -2364,12 +2364,12 @@ export default function SystemsBuilder() {
           style={{
             position: "fixed",
             inset: 0,
-            zIndex: 65,
+            zIndex: 10000,
             background: "rgba(13, 0, 16, 0.6)",
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "center",
-            padding: 24,
+            padding: "clamp(8px, 3vw, 24px)",
             overflowY: "auto",
           }}
         >
@@ -2381,18 +2381,21 @@ export default function SystemsBuilder() {
               borderRadius: 14,
               width: "100%",
               maxWidth: 900,
+              minWidth: 0,
               margin: "auto",
+              maxHeight: "90dvh",
               display: "flex",
               flexDirection: "column",
-              overflow: "hidden",
+              overflowX: "hidden",
+              overflowY: "auto",
             }}
           >
             {/* View header */}
             <div
-              className="flex items-start justify-between"
+              className="flex flex-wrap items-start justify-between"
               style={{
                 gap: 16,
-                padding: "20px 26px",
+                padding: "clamp(14px, 4vw, 20px) clamp(16px, 4vw, 26px)",
                 borderBottom: "1px solid var(--cth-command-border)",
               }}
             >
@@ -2403,7 +2406,7 @@ export default function SystemsBuilder() {
                 <h2
                   style={{
                     fontFamily: SERIF,
-                    fontSize: 30,
+                    fontSize: "clamp(20px, 5vw, 30px)",
                     fontWeight: 600,
                     color: "var(--cth-command-ink)",
                     margin: 0,
@@ -2427,7 +2430,7 @@ export default function SystemsBuilder() {
                   </p>
                 ) : null}
               </div>
-              <div className="flex items-center" style={{ gap: 8, flexShrink: 0 }}>
+              <div className="flex flex-wrap items-center" style={{ gap: 8 }}>
                 <button
                   type="button"
                   onClick={() => handleCopyPlaybook(viewingSystem)}
@@ -2473,7 +2476,7 @@ export default function SystemsBuilder() {
             </div>
 
             {/* View body */}
-            <div style={{ padding: "22px 26px" }}>
+            <div style={{ padding: "clamp(16px, 4vw, 22px) clamp(16px, 4vw, 26px)" }}>
               {/* Meta grid */}
               <div
                 style={{
