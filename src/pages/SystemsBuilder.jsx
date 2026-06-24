@@ -1613,9 +1613,68 @@ export default function SystemsBuilder() {
               className="grid grid-rows-[auto_minmax(0,1fr)] md:grid-rows-none md:grid-cols-[170px_1fr]"
               style={{ flex: 1, minHeight: 0 }}
             >
+              {/* Section nav — mobile: scrollable pill row, pinned above the scrolling form */}
+              <div
+                className="flex gap-2 overflow-x-auto scrollbar-hide border-b border-[var(--cth-command-border)] md:hidden"
+                style={{ background: "var(--cth-command-panel-soft)", padding: "10px 12px" }}
+              >
+                {MODAL_SECTIONS.map((section) => {
+                  const active = activeSection === section.id;
+                  return (
+                    <button
+                      key={section.id}
+                      type="button"
+                      onClick={() => setActiveSection(section.id)}
+                      style={{
+                        flexShrink: 0,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "6px 12px",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                        borderRadius: 999,
+                        border: active
+                          ? "1px solid var(--cth-command-crimson)"
+                          : "1px solid var(--cth-command-border)",
+                        background: active ? "var(--cth-command-panel)" : "transparent",
+                        fontFamily: SANS,
+                        fontSize: 12,
+                        fontWeight: active ? 500 : 400,
+                        color: active ? "var(--cth-command-crimson)" : "var(--cth-command-muted)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: 999,
+                          fontFamily: SANS,
+                          fontSize: 9,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          background: section.complete ? "var(--cth-command-success)" : "transparent",
+                          color: section.complete ? "#fff" : "var(--cth-command-muted)",
+                          border: section.complete
+                            ? "1.5px solid var(--cth-command-success)"
+                            : active
+                            ? "1.5px solid var(--cth-command-crimson)"
+                            : "1.5px solid var(--cth-command-border)",
+                        }}
+                      >
+                        {section.complete ? "✓" : section.id + 1}
+                      </span>
+                      {section.label}
+                    </button>
+                  );
+                })}
+              </div>
+
               {/* Section nav */}
               <div
-                className="border-b border-[var(--cth-command-border)] md:border-b-0 md:border-r"
+                className="hidden border-b border-[var(--cth-command-border)] md:block md:border-b-0 md:border-r"
                 style={{
                   background: "var(--cth-command-panel-soft)",
                   padding: "14px 0",
