@@ -1475,12 +1475,12 @@ export default function SystemsBuilder() {
           style={{
             position: "fixed",
             inset: 0,
-            zIndex: 60,
+            zIndex: 10000,
             background: "rgba(13, 0, 16, 0.6)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 24,
+            padding: "clamp(8px, 3vw, 24px)",
           }}
         >
           <div
@@ -1491,7 +1491,8 @@ export default function SystemsBuilder() {
               borderRadius: 14,
               width: "100%",
               maxWidth: 760,
-              maxHeight: "90vh",
+              minWidth: 0,
+              maxHeight: "90dvh",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
@@ -1499,7 +1500,7 @@ export default function SystemsBuilder() {
           >
             {/* Header */}
             <div
-              className="flex items-start justify-between"
+              className="flex flex-wrap items-start justify-between"
               style={{
                 gap: 16,
                 padding: "18px 22px",
@@ -1523,7 +1524,7 @@ export default function SystemsBuilder() {
                   Document a repeatable brand playbook
                 </p>
               </div>
-              <div className="flex items-center" style={{ gap: 14, flexShrink: 0 }}>
+              <div className="flex flex-wrap items-center" style={{ gap: 14 }}>
                 <span style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)" }}>
                   {completedSections} of {MODAL_SECTIONS.length} complete
                 </span>
@@ -1609,17 +1610,13 @@ export default function SystemsBuilder() {
 
             {/* Body: section nav + active section */}
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "170px 1fr",
-                flex: 1,
-                minHeight: 0,
-              }}
+              className="grid grid-rows-[auto_minmax(0,1fr)] md:grid-rows-none md:grid-cols-[170px_1fr]"
+              style={{ flex: 1, minHeight: 0 }}
             >
               {/* Section nav */}
               <div
+                className="border-b border-[var(--cth-command-border)] md:border-b-0 md:border-r"
                 style={{
-                  borderRight: "1px solid var(--cth-command-border)",
                   background: "var(--cth-command-panel-soft)",
                   padding: "14px 0",
                 }}
@@ -1695,7 +1692,7 @@ export default function SystemsBuilder() {
               </div>
 
               {/* Active section fields */}
-              <div className="space-y-4" style={{ padding: "20px 22px", overflowY: "auto" }}>
+              <div className="space-y-4" style={{ padding: "clamp(14px, 4vw, 20px) clamp(14px, 4vw, 22px)", overflowY: "auto" }}>
                 {generationError ? (
                   <div
                     style={{
@@ -2171,7 +2168,7 @@ export default function SystemsBuilder() {
 
             {/* Footer */}
             <div
-              className="flex items-center justify-between"
+              className="flex flex-wrap items-center justify-between"
               style={{
                 gap: 10,
                 padding: "14px 22px",
@@ -2191,7 +2188,7 @@ export default function SystemsBuilder() {
                 ) : null}
               </div>
 
-              <div className="flex items-center" style={{ gap: 8 }}>
+              <div className="flex flex-wrap items-center justify-end" style={{ gap: 8 }}>
                 <button type="button" onClick={handleCloseModal} style={SECONDARY_BUTTON_STYLE}>
                   Cancel
                 </button>
@@ -2240,7 +2237,7 @@ export default function SystemsBuilder() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: 24,
+                padding: "clamp(8px, 3vw, 24px)",
               }}
             >
               <div
@@ -2251,7 +2248,8 @@ export default function SystemsBuilder() {
                   borderRadius: 14,
                   width: "100%",
                   maxWidth: 640,
-                  maxHeight: "85vh",
+                  minWidth: 0,
+                  maxHeight: "85dvh",
                   display: "flex",
                   flexDirection: "column",
                   overflow: "hidden",
