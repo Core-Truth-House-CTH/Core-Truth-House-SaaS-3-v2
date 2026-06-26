@@ -7,6 +7,7 @@ const footerGroups = [
  links: [
  { label: "The System", to: "/methodology" },
  { label: "Tiers", href: "/tiers" },
+ { label: "Cohort", to: "/cohort" },
  { label: "The Diagnostic", href: "/brand-diagnostic/" },
  { label: "About", to: "/about" },
  { label: "Case Studies", to: "/blog" },
