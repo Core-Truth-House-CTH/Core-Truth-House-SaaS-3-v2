@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 const navItems = [
  { label: "The System", to: "/methodology" },
@@ -23,6 +23,24 @@ function isActive(item, active) {
 }
 
 export default function PublicHeader({ active = "" }) {
+ const [menuOpen, setMenuOpen] = useState(false);
+ const location = useLocation();
+
+ useEffect(() => {
+ setMenuOpen(false);
+ }, [location.pathname]);
+
+ useEffect(() => {
+ if (!menuOpen) return undefined;
+
+ const previousOverflow = document.body.style.overflow;
+ document.body.style.overflow = "hidden";
+
+ return () => {
+ document.body.style.overflow = previousOverflow;
+ };
+ }, [menuOpen]);
+
  return (
  <header className="cth-public-header">
  <div className="cth-public-shell cth-public-header-inner">
@@ -66,8 +84,84 @@ export default function PublicHeader({ active = "" }) {
  <Link to="/sign-in" className="cth-public-login-link">
  Login
  </Link>
+
+ <button
+ type="button"
+ className="cth-public-menu-toggle"
+ aria-label={menuOpen ? "Close menu" : "Open menu"}
+ aria-expanded={menuOpen}
+ aria-controls="cth-public-mobile-menu"
+ onClick={() => setMenuOpen((open) => !open)}
+ >
+ {menuOpen ? (
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+ <line x1="6" y1="6" x2="18" y2="18" />
+ <line x1="18" y1="6" x2="6" y2="18" />
+ </svg>
+ ) : (
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+ <line x1="3" y1="7" x2="21" y2="7" />
+ <line x1="3" y1="12" x2="21" y2="12" />
+ <line x1="3" y1="17" x2="21" y2="17" />
+ </svg>
+ )}
+ </button>
  </div>
  </div>
+
+ {menuOpen && (
+ <button
+ type="button"
+ className="cth-public-mobile-backdrop"
+ aria-label="Close menu"
+ onClick={() => setMenuOpen(false)}
+ />
+ )}
+
+ {menuOpen && (
+ <div className="cth-public-mobile-menu" id="cth-public-mobile-menu">
+ <nav className="cth-public-mobile-nav" aria-label="Mobile navigation">
+ {navItems.map((item) =>
+ item.to ? (
+ <Link
+ key={item.label}
+ to={item.to}
+ className={isActive(item, active) ? "active" : ""}
+ onClick={() => setMenuOpen(false)}
+ >
+ {item.label}
+ </Link>
+ ) : (
+ <a
+ key={item.label}
+ href={item.href}
+ className={isActive(item, active) ? "active" : ""}
+ onClick={() => setMenuOpen(false)}
+ >
+ {item.label}
+ </a>
+ )
+ )}
+ </nav>
+
+ <div className="cth-public-mobile-actions">
+ <a
+ href="/brand-diagnostic/"
+ className="cth-public-header-cta"
+ onClick={() => setMenuOpen(false)}
+ >
+ Start the Brand Diagnostic
+ </a>
+ <Link
+ to="/sign-in"
+ className="cth-public-mobile-login"
+ onClick={() => setMenuOpen(false)}
+ >
+ Login
+ </Link>
+ </div>
+ </div>
+ )}
 
  <style>{`
  .cth-public-header {
@@ -182,6 +276,114 @@ export default function PublicHeader({ active = "" }) {
  color: var(--cth-crimson);
  }
 
+ .cth-public-menu-toggle {
+ display: none;
+ align-items: center;
+ justify-content: center;
+ width: 44px;
+ height: 44px;
+ margin-left: 4px;
+ padding: 0;
+ border: 1px solid var(--cth-border);
+ border-radius: 6px;
+ background: transparent;
+ color: var(--cth-ruby);
+ cursor: pointer;
+ transition: color 180ms ease, border-color 180ms ease;
+ }
+
+ .cth-public-menu-toggle:hover {
+ color: var(--cth-crimson);
+ border-color: var(--cth-crimson);
+ }
+
+ .cth-public-menu-toggle svg {
+ width: 22px;
+ height: 22px;
+ display: block;
+ }
+
+ .cth-public-mobile-backdrop {
+ display: none;
+ position: absolute;
+ top: 100%;
+ left: 0;
+ right: 0;
+ height: 100vh;
+ border: 0;
+ padding: 0;
+ margin: 0;
+ background: rgba(43, 16, 64, 0.32);
+ background: color-mix(in srgb, var(--cth-purple-deep) 32%, transparent);
+ backdrop-filter: blur(2px);
+ cursor: default;
+ z-index: 98;
+ }
+
+ .cth-public-mobile-menu {
+ display: none;
+ position: absolute;
+ top: 100%;
+ left: 0;
+ right: 0;
+ background: rgba(248, 241, 236, 0.98);
+ border-bottom: 1px solid var(--cth-border);
+ backdrop-filter: blur(16px);
+ box-shadow: 0 24px 44px rgba(43, 16, 64, 0.14);
+ padding: 16px 0 24px;
+ z-index: 99;
+ }
+
+ .cth-public-mobile-nav {
+ width: min(100% - 34px, 1540px);
+ margin: 0 auto;
+ display: flex;
+ flex-direction: column;
+ }
+
+ .cth-public-mobile-nav a {
+ color: var(--cth-ruby);
+ text-decoration: none;
+ font-size: 15px;
+ font-weight: 850;
+ letter-spacing: 0.04em;
+ padding: 15px 4px;
+ border-bottom: 1px solid var(--cth-border);
+ transition: color 180ms ease;
+ }
+
+ .cth-public-mobile-nav a:hover,
+ .cth-public-mobile-nav a.active {
+ color: var(--cth-crimson);
+ }
+
+ .cth-public-mobile-actions {
+ width: min(100% - 34px, 1540px);
+ margin: 20px auto 0;
+ display: flex;
+ flex-direction: column;
+ gap: 14px;
+ }
+
+ .cth-public-mobile-actions .cth-public-header-cta {
+ width: 100%;
+ }
+
+ .cth-public-mobile-login {
+ color: var(--cth-ruby);
+ text-decoration: none;
+ text-align: center;
+ font-size: 13px;
+ font-weight: 850;
+ letter-spacing: 0.045em;
+ padding: 4px;
+ transition: color 180ms ease;
+ }
+
+ .cth-public-mobile-login:hover {
+ color: var(--cth-crimson);
+ }
+
  @media (max-width: 1100px) {
  .cth-public-shell {
  width: min(100% - 34px, 1540px);
@@ -189,6 +391,18 @@ export default function PublicHeader({ active = "" }) {
 
  .cth-public-nav {
  display: none;
+ }
+
+ .cth-public-menu-toggle {
+ display: inline-flex;
+ }
+
+ .cth-public-mobile-backdrop {
+ display: block;
+ }
+
+ .cth-public-mobile-menu {
+ display: block;
  }
 
  .cth-public-actions {
