@@ -309,7 +309,8 @@ select {
 [role="dialog"] {
   width: min(100%, 920px);
   max-width: 94vw;
-  max-height: 90vh;
+  max-height: 90vh;   /* fallback for older WebKit w/o dvh support */
+  max-height: 90dvh;
   overflow-y: auto;
 }
 
