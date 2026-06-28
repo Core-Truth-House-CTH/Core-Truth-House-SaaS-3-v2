@@ -333,7 +333,7 @@ export default function StrategicOSExport({ onClose, completedSteps = {}, inline
         style={{
           background: 'var(--cth-command-ivory)',
           borderColor: 'var(--cth-command-border)',
-          maxHeight: '90vh',
+          maxHeight: '90dvh',
           overflowY: 'auto',
         }}
       >

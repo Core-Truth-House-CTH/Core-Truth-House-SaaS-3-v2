@@ -26,7 +26,7 @@ const PANEL_STYLE = {
   border: "1px solid var(--cth-command-border)",
   borderRadius: 6,
   width: "min(680px, calc(100vw - 32px))",
-  maxHeight: "min(82vh, 720px)",
+  maxHeight: "min(82dvh, 720px)",
   display: "flex",
   flexDirection: "column",
   boxShadow: "0 24px 64px rgba(51, 3, 60, 0.25)",

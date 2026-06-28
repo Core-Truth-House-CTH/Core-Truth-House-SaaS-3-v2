@@ -2891,7 +2891,7 @@ export default function SocialMediaManager() {
  onClick={(e) => e.stopPropagation()}
  style={{
  width: "100%", maxWidth: 760,
- maxHeight: "90vh",
+ maxHeight: "90dvh",
  background: "var(--cth-command-panel)",
  border: "1px solid var(--cth-command-border)",
  borderRadius: 4,

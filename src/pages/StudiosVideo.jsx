@@ -71,7 +71,7 @@ function FalModelBrowser({ title, loading, models, search, setSearch, cat, setCa
   });
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1200, background: "rgba(13,0,16,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 680, maxHeight: "82vh", display: "flex", flexDirection: "column", background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", borderRadius: 14, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 680, maxHeight: "82dvh", display: "flex", flexDirection: "column", background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", borderRadius: 14, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--cth-command-border)" }}>
           <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 600, color: "var(--cth-command-ink)" }}>{title}</span>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cth-command-muted)", fontSize: 20, lineHeight: 1 }}>×</button>

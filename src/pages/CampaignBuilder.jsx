@@ -1719,7 +1719,7 @@ function CampaignBuilderPageContent() {
         };
         return (
           <div role="dialog" aria-modal="true" aria-label={editorCampaign ? 'Edit campaign' : 'New campaign'} onClick={() => setEditorOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(26,8,40,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-            <div data-testid="campaign-editor-modal" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 14, width: '100%', maxWidth: 820, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div data-testid="campaign-editor-modal" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--cth-command-panel)', border: '1px solid var(--cth-command-border)', borderRadius: 14, width: '100%', maxWidth: 820, maxHeight: '90dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {/* Header */}
               <div className="flex items-start justify-between" style={{ padding: '16px 22px 14px', borderBottom: '1px solid var(--cth-command-border)', background: 'var(--cth-command-panel)', flexShrink: 0, gap: 12 }}>
                 <div className="min-w-0">

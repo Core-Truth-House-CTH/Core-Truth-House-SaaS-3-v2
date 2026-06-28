@@ -619,7 +619,7 @@ function QueueItemCard({
             onClick={(e) => e.stopPropagation()}
             style={{
               maxWidth: "90vw",
-              maxHeight: "90vh",
+              maxHeight: "90dvh",
               objectFit: "contain",
               borderRadius: 12,
             }}

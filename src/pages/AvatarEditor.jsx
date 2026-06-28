@@ -904,7 +904,7 @@ export default function AvatarEditor({
           borderRadius: 14,
           width: "100%",
           maxWidth: 820,
-          maxHeight: "88vh",
+          maxHeight: "88dvh",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",

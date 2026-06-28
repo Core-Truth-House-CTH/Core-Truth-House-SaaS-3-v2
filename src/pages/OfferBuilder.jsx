@@ -1268,7 +1268,7 @@ function OfferBuilderContent() {
             <div
               data-testid="offer-modal"
               onClick={(e) => e.stopPropagation()}
-              style={{ ...CARD_STYLE, borderRadius: 14, width: '100%', maxWidth: 820, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+              style={{ ...CARD_STYLE, borderRadius: 14, width: '100%', maxWidth: 820, maxHeight: '90dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
             >
               {/* Header */}
               <div className="flex items-start justify-between" style={{ padding: '18px 24px 16px', borderBottom: '1px solid var(--cth-command-border)', background: 'var(--cth-command-panel)', flexShrink: 0, gap: 16 }}>

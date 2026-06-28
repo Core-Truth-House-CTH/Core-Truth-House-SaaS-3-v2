@@ -1806,7 +1806,7 @@ function LinkEditorModal({ form, fld, editingId, isSaving, campaigns, offers, on
       onClick={onClose}
       style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(13,0,16,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
     >
-      <div onClick={(e) => e.stopPropagation()} style={{ ...CARD_STYLE, borderRadius: 14, width: "100%", maxWidth: 560, maxHeight: "90vh", overflow: "auto" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ ...CARD_STYLE, borderRadius: 14, width: "100%", maxWidth: 560, maxHeight: "90dvh", overflow: "auto" }}>
         <div className="flex items-center justify-between" style={{ padding: "16px 20px", borderBottom: "1px solid var(--cth-command-border)" }}>
           <h2 style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}>
             {editingId ? "Edit tracking link" : "New tracking link"}
