@@ -6,7 +6,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./index.css";
 
 import { Toaster } from "./components/ui/toaster";
-import Chatbot from "./components/Chatbot";
 import ScrollToTop from "./components/ScrollToTop";
 import TiersPage from "./pages/TiersPage";
 
@@ -76,7 +75,6 @@ function PublicRoutes() {
         />
       </Routes>
 
-      <Chatbot />
       <Toaster />
     </>
   );
