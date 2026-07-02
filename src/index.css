@@ -435,6 +435,17 @@ canvas {
   background: transparent;
 }
 
+/* Mobile: take the actions out of the fixed-floating layer so they sit in
+   normal flow as a right-aligned row above the page content, instead of
+   overlapping the page title/subtitle. Desktop (>=768px) unchanged. */
+@media (max-width: 767px) {
+  .cth-global-controls {
+    position: static;
+    justify-content: flex-end;
+    padding: 10px 16px;
+  }
+}
+
 /* Inline page header that replaces TopBar on each page. Right padding on
    md+ reserves space so the page's own action area clears the floating
    global controls above. */
