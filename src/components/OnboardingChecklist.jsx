@@ -274,6 +274,18 @@ export function OnboardingChecklist({ metrics, upcomingEvents, userFirstName, us
   const [showWelcome, setShowWelcome] = useState(false);
   const [showStep, setShowStep] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [hidden, setHidden] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 767px)');
+    const onChange = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   const STORAGE_KEY = `cth-onboarding-dismissed-${userId || 'anon'}`;
 
@@ -311,8 +323,8 @@ export function OnboardingChecklist({ metrics, upcomingEvents, userFirstName, us
     setCurrentIdx(0);
   };
 
-  // Hide floating button if all complete
-  if (pct === 100) return null;
+  // Hide floating button if all complete, or dismissed for this session (mobile X)
+  if (pct === 100 || hidden) return null;
 
   return (
     <>
@@ -339,11 +351,22 @@ export function OnboardingChecklist({ metrics, upcomingEvents, userFirstName, us
       )}
 
       {/* Floating Widget */}
-      <div style={{ position: 'fixed', bottom: 72, right: 24, zIndex: 8000 }}>
+      <div style={{ position: 'fixed', zIndex: 8000, ...(isMobile
+        ? { top: '50%', right: 8, transform: 'translateY(-50%)' }
+        : { bottom: 72, right: 24 }) }}>
         {open ? (
           <div
             data-testid="onboarding-checklist-panel"
-            style={{ width: 300, borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', background: 'var(--cth-surface-deep)', border: '1px solid var(--cth-brand-primary-soft)' }}
+            style={{
+              width: isMobile ? 'min(300px, calc(100vw - 24px))' : 300,
+              borderRadius: 20,
+              ...(isMobile
+                ? { overflowX: 'hidden', overflowY: 'auto', maxHeight: '80dvh' }
+                : { overflow: 'hidden' }),
+              boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+              background: 'var(--cth-surface-deep)',
+              border: '1px solid var(--cth-brand-primary-soft)',
+            }}
           >
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: 'var(--cth-surface-strong)' }}>
@@ -417,6 +440,36 @@ export function OnboardingChecklist({ metrics, upcomingEvents, userFirstName, us
                 View Step-by-Step Guide
               </button>
             </div>
+          </div>
+        ) : isMobile ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              onClick={() => setHidden(true)}
+              aria-label="Hide Quick Start"
+              style={{
+                width: 28, height: 28, padding: 0, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 99,
+                border: '1px solid var(--cth-brand-primary-soft)', background: 'var(--cth-surface-deep)',
+                color: 'var(--cth-on-dark)', cursor: 'pointer',
+              }}
+            >
+              <X size={14} />
+            </button>
+            <button
+              data-testid="onboarding-checklist-toggle"
+              onClick={() => setOpen(true)}
+              aria-label={`Quick Start, ${pct}% complete`}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                width: 52, height: 52, padding: 0, flexShrink: 0, borderRadius: 99,
+                fontWeight: 800, color: 'var(--cth-on-dark)',
+                cursor: 'pointer', border: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                background: 'linear-gradient(135deg, var(--cth-surface-strong), var(--cth-brand-primary-deep))',
+              }}
+            >
+              <Trophy size={16} style={{ color: 'var(--cth-command-cinnabar)' }} />
+              <span style={{ fontSize: 9, fontWeight: 800 }}>{pct}%</span>
+            </button>
           </div>
         ) : (
           <button
