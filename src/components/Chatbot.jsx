@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
 import { MessageCircle, Send, X, Loader2, Bot, User, Sparkles } from 'lucide-react';
-
-const API = import.meta.env.VITE_BACKEND_URL;
+import apiClient from '../lib/apiClient';
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,14 +34,14 @@ export default function Chatbot() {
     setSuggestions([]);
 
     try {
-      const res = await axios.post(`${API}/api/chatbot`, {
+      const res = await apiClient.post('/api/chatbot', {
         message: userMessage,
         session_id: sessionId
       });
 
-      setSessionId(res.data.session_id);
-      setMessages(prev => [...prev, { role: 'assistant', content: res.data.response }]);
-      setSuggestions(res.data.suggestions || []);
+      setSessionId(res.session_id);
+      setMessages(prev => [...prev, { role: 'assistant', content: res.response }]);
+      setSuggestions(res.suggestions || []);
     } catch (err) {
       console.error('Chatbot error:', err);
       setMessages(prev => [...prev, { 
