@@ -15,6 +15,7 @@ import ApiClientBootstrap from "./components/ApiClientBootstrap";
 import { AppVersionBanner } from "./components/shared/useAppVersion";
 import { Toaster } from "./components/ui/toaster";
 import { SignInPage, SignUpPage } from "./components/Auth";
+import Chatbot from "./components/Chatbot";
 
 const AppRouter = React.lazy(() => import("./navigation/AppRouter"));
 const LockScreen = React.lazy(() => import("./pages/LockScreen"));
@@ -57,6 +58,7 @@ function LoadingFallback() {
 }
 
 function ProtectedRoutes() {
+  const { isSignedIn } = useOptionalClerkAuth();
   return (
     <>
       <AppVersionBanner />
@@ -76,6 +78,7 @@ function ProtectedRoutes() {
         />
       </Routes>
 
+      {isSignedIn && <Chatbot />}
       <Toaster />
     </>
   );
