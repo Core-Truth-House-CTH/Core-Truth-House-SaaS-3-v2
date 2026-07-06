@@ -108,7 +108,7 @@ const routes = [
     ogTitle: "The Core Truth Cohort",
     ogDescription:
       "A focused, high-touch sprint to repair what's costing you conversions and build a brand that finally performs. Founding seat $497, Standard seat $997.",
-    image: `${SITE}/cohort-assets/cth-cohort-hero-doorway.png`,
+    image: `${SITE}/cohort-assets/cth-cohort-hero-doorway-v2.png`,
     canonical: `${SITE}/cohort`,
     schemaType: "WebPage",
   },
@@ -120,7 +120,7 @@ const routes = [
     ogTitle: "Apply for The Core Truth Cohort",
     ogDescription:
       "Tell us about where you are and what you are building. Applications reviewed by hand within 48 hours.",
-    image: `${SITE}/cohort-assets/cth-cohort-hero-doorway.png`,
+    image: `${SITE}/cohort-assets/cth-cohort-hero-doorway-v2.png`,
     canonical: `${SITE}/cohort/apply`,
     schemaType: "WebPage",
   },
