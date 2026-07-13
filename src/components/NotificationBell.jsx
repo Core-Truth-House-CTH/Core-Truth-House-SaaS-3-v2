@@ -6,7 +6,6 @@ import {
   RefreshCw, Users, UserCheck, UserMinus, Settings, Wrench,
   Download, BookOpen, Filter, Trash2, ChevronDown
 } from 'lucide-react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../hooks/useAuth';
 import apiClient from "../lib/apiClient";
@@ -24,7 +23,6 @@ const alertActionLabel = (url) =>
   : url === '/alerts' ? 'View Alerts'
   : 'Open';
 
-const API = `${import.meta.env.VITE_BACKEND_URL}/api`;
 const WS_URL = import.meta.env.VITE_BACKEND_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
 
 // Icon mapping for notification types
@@ -343,7 +341,9 @@ export function NotificationBell() {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: 'mark_read', notification_id: id }));
     } else {
-      await axios.put(`${API}/notifications/${id}/read?user_id=${user.id}`);
+      await apiClient.put(`/api/notifications/${id}/read`, null, {
+        params: { user_id: user.id },
+      });
     }
   };
 
@@ -354,7 +354,9 @@ export function NotificationBell() {
     setBrandAlerts(prev => prev.map(a => ({ ...a, read: true })));
     setBrandUnread(0);
 
-    await axios.put(`${API}/notifications/mark-all-read?user_id=${user.id}`);
+    await apiClient.put("/api/notifications/mark-all-read", null, {
+      params: { user_id: user.id },
+    });
     try {
       await apiClient.patch("/api/brand-alerts/read-all");
     } catch {
@@ -394,12 +396,14 @@ export function NotificationBell() {
     // Optimistic update
     setNotifications(prev => prev.filter(n => n.id !== id));
     
-    await axios.delete(`${API}/notifications/${id}`);
+    await apiClient.delete(`/api/notifications/${id}`);
     load(); // Reload to get accurate unread count
   };
 
   const clearRead = async () => {
-    await axios.delete(`${API}/notifications/clear-all?user_id=${user.id}&read_only=true`);
+    await apiClient.delete("/api/notifications/clear-all", {
+      params: { user_id: user.id, read_only: true },
+    });
     load();
   };
 
