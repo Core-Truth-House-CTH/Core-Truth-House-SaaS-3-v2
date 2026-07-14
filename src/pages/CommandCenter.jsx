@@ -459,9 +459,22 @@ function buildPriorityActions({ latestAudit, milestones }) {
 // analytics_viewed, *_complete) were the source of the inflated percentages.
 const PIPELINE_COMPLETE_THRESHOLD = 70;
 
+// Identity Studio's Foundation-stage slot = "identity foundation complete": the
+// blended brand-health module (colors + fonts + assets), NOT the dead
+// workspace_stats.has_identity flag (which read the never-written `identity`
+// collection and contributed 0 permanently). The module has 4 checkpoints —
+// colors>=3, fonts>=1, >=1 brand asset, >=3 brand assets — and the slot is
+// "done" only at the full 4/4 bar.
+const IDENTITY_STUDIO_DONE_CHECKPOINTS = 4;
+
 function moduleScore(modules, key) {
   const v = Number(modules?.[key]?.score);
   return Number.isFinite(v) ? v : null;
+}
+
+function identityStudioComplete(modules) {
+  const completed = Number(modules?.identity_studio?.completed);
+  return Number.isFinite(completed) && completed >= IDENTITY_STUDIO_DONE_CHECKPOINTS;
 }
 
 function buildPipelineStages(workspaceStats, healthData) {
@@ -480,7 +493,7 @@ function buildPipelineStages(workspaceStats, healthData) {
       Boolean(s.has_positioning),
       Boolean(s.has_messaging),
       Boolean(Number(s.total_avatars) > 0),
-      done("identity_studio", s.has_identity),
+      identityStudioComplete(h),
     ], route: "/brand-foundation" },
     { id: "strategy", label: "Structure", icon: Compass, modules: [
       done("strategic_os", false), // real completion only — "started" no longer counts

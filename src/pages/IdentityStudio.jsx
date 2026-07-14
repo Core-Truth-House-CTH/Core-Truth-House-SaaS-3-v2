@@ -547,7 +547,8 @@ function IdentityStudioContent() {
   const handleAssetsChange = useCallback((nextAssets) => {
     setAssets(Array.isArray(nextAssets) ? nextAssets : []);
     setHasUnsaved(true);
-  }, []);
+    refreshBrandHealth();
+  }, [refreshBrandHealth]);
 
   // Populate assets from the child's initial fetch WITHOUT marking the form
   // dirty — viewing the tab should never flip hasUnsaved.
