@@ -835,6 +835,12 @@ export default function SocialMediaManager() {
  const [drawerSelectedContentId, setDrawerSelectedContentId] = useState(null);
  const [drawerSelectedMediaIds, setDrawerSelectedMediaIds] = useState([]);
  const [drawerLoading, setDrawerLoading] = useState(false);
+ // Brand Assets tab inside the media picker drawer. Selection only holds the
+ // asset in composer state (asset_id + url); no persistence / generate call yet.
+ const [drawerTab, setDrawerTab] = useState("campaign"); // 'campaign' | 'brand_assets'
+ const [brandAssets, setBrandAssets] = useState([]);
+ const [brandAssetsLoading, setBrandAssetsLoading] = useState(false);
+ const [selectedBrandAsset, setSelectedBrandAsset] = useState(null); // { asset_id, url, label }
 
  useEffect(() => {
  if (!handoff) return;
@@ -949,6 +955,36 @@ export default function SocialMediaManager() {
  } finally {
  setDrawerCampaignsLoading(false);
  }
+ }
+
+ async function loadBrandAssets() {
+ if (!workspaceId) return;
+ setBrandAssetsLoading(true);
+ try {
+ const res = await apiClient.get('/api/media-upload/assets', {
+ params: { context: 'brand_asset', workspace_id: workspaceId },
+ });
+ setBrandAssets(Array.isArray(res?.assets) ? res.assets : []);
+ } catch (err) {
+ console.error('Failed to load brand assets for drawer:', err);
+ setBrandAssets([]);
+ showToast("Could not load brand assets", "error");
+ } finally {
+ setBrandAssetsLoading(false);
+ }
+ }
+
+ function openDrawerTab(tab) {
+ setDrawerTab(tab);
+ if (tab === "brand_assets" && brandAssets.length === 0) loadBrandAssets();
+ }
+
+ // Direct entry point from the composer Media section: opens the picker drawer
+ // straight onto the Brand Assets tab (and loads campaigns for the other tab).
+ function openBrandAssetPicker() {
+ setDrawerTab("brand_assets");
+ loadBrandAssets();
+ openCampaignDrawer();
  }
 
  async function selectDrawerCampaign(campaign) {
@@ -2041,7 +2077,7 @@ export default function SocialMediaManager() {
  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
  <button
  type="button"
- onClick={() => openCampaignDrawer()}
+ onClick={() => { setDrawerTab("campaign"); openCampaignDrawer(); }}
  style={{
  ...SECONDARY_BUTTON_STYLE,
  padding: "10px 16px",
@@ -3287,6 +3323,49 @@ export default function SocialMediaManager() {
  <><Upload size={14} /> Upload Images or Videos</>
  )}
  </button>
+
+ <button
+ data-testid="choose-brand-asset-btn"
+ type="button"
+ onClick={openBrandAssetPicker}
+ style={{
+ width: "100%", marginTop: 8,
+ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+ padding: "12px 16px", borderRadius: 4,
+ background: "var(--cth-command-panel-soft)",
+ border: "1px dashed var(--cth-command-border)",
+ color: "var(--cth-command-muted)",
+ fontFamily: SANS, fontSize: 13, fontWeight: 500, cursor: "pointer",
+ }}
+ >
+ <LayoutIcon size={14} /> Choose from brand library
+ </button>
+
+ {selectedBrandAsset ? (
+ <div style={{
+ marginTop: 8, display: "flex", alignItems: "center", gap: 8,
+ padding: "8px 10px", borderRadius: 4,
+ background: "var(--cth-command-panel-soft)",
+ border: "1px solid var(--cth-command-gold)",
+ }}>
+ <img
+ src={backendAssetUrl(selectedBrandAsset.url)}
+ alt=""
+ style={{ width: 32, height: 32, borderRadius: 3, objectFit: "cover" }}
+ />
+ <span style={{ flex: 1, fontFamily: SANS, fontSize: 12, color: "var(--cth-command-ink)" }}>
+ Brand asset selected: {selectedBrandAsset.label}
+ </span>
+ <button
+ type="button"
+ onClick={() => setSelectedBrandAsset(null)}
+ aria-label="Clear selected brand asset"
+ style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cth-command-muted)", display: "flex" }}
+ >
+ <X size={12} />
+ </button>
+ </div>
+ ) : null}
  </div>
 
  <div>
@@ -3441,7 +3520,75 @@ export default function SocialMediaManager() {
  </div>
 
  <div style={{ flex: 1, overflowY: "auto", padding: "18px 22px" }}>
- {!drawerSelectedCampaignId ? (
+ <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+ {[["campaign", "From Campaign"], ["brand_assets", "Brand Assets"]].map(([key, label]) => (
+ <button
+ key={key}
+ type="button"
+ onClick={() => openDrawerTab(key)}
+ style={{
+ flex: 1, padding: "8px 10px", borderRadius: 4, cursor: "pointer",
+ fontFamily: SANS, fontSize: 12, fontWeight: 600,
+ background: drawerTab === key ? "rgba(196,169,91,0.15)" : "var(--cth-command-panel-soft)",
+ border: `1px solid ${drawerTab === key ? "var(--cth-command-gold)" : "var(--cth-command-border)"}`,
+ color: drawerTab === key ? "var(--cth-command-ink)" : "var(--cth-command-muted)",
+ }}
+ >
+ {label}
+ </button>
+ ))}
+ </div>
+
+ {drawerTab === "brand_assets" ? (
+ brandAssetsLoading ? (
+ <p style={{ color: "var(--cth-command-muted)", fontSize: 13, fontFamily: SANS }}>Loading brand assets…</p>
+ ) : brandAssets.length === 0 ? (
+ <EmptyState
+ icon={LayoutIcon}
+ title="No brand assets yet"
+ body="Upload brand assets in Identity Studio to use them here."
+ />
+ ) : (
+ <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+ {brandAssets.map((a) => {
+ const id = a.asset_id || a.id;
+ const isSel = selectedBrandAsset?.asset_id === id;
+ const rawUrl = a.preview_url || a.url || "";
+ return (
+ <button
+ key={id}
+ type="button"
+ title={a.label || a.filename || "Asset"}
+ onClick={() => {
+ setSelectedBrandAsset({ asset_id: id, url: rawUrl, label: a.label || a.filename || "Asset" });
+ setShowCampaignDrawer(false);
+ }}
+ style={{
+ padding: 0,
+ background: "var(--cth-command-panel-soft)",
+ border: `2px solid ${isSel ? "var(--cth-command-gold)" : "var(--cth-command-border)"}`,
+ borderRadius: 4, cursor: "pointer", overflow: "hidden",
+ aspectRatio: "1 / 1", position: "relative",
+ }}
+ >
+ {rawUrl ? (
+ <img src={backendAssetUrl(rawUrl)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+ ) : null}
+ {isSel ? (
+ <div style={{
+ position: "absolute", top: 4, right: 4,
+ background: "var(--cth-command-purple)", color: "var(--cth-command-gold)",
+ borderRadius: 3, padding: 2,
+ }}>
+ <Check size={10} />
+ </div>
+ ) : null}
+ </button>
+ );
+ })}
+ </div>
+ )
+ ) : !drawerSelectedCampaignId ? (
  drawerCampaignsLoading ? (
  <p style={{ color: "var(--cth-command-muted)", fontSize: 13, fontFamily: SANS }}>Loading campaigns…</p>
  ) : drawerCampaigns.length === 0 ? (
