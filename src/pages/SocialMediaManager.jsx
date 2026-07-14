@@ -672,6 +672,7 @@ export default function SocialMediaManager() {
 
  const closePostModal = () => {
  setShowModal(null);
+ setSelectedBrandAsset(null);
  if (surfaceParam === "create") {
  navigate("/social-media-manager?surface=publish", { replace: true });
  }
@@ -1066,13 +1067,25 @@ export default function SocialMediaManager() {
  formData.content || formData.topic || formData.title) &&
  overLimitPlatforms.length === 0;
 
+ // Merge the picked brand asset into a post's media_urls so it persists to the
+ // backend and flows to the publish dispatch. Spread-first + deduped: with no
+ // asset selected this returns the base array unchanged, so asset-less posts and
+ // any already-uploaded media are untouched.
+ const mediaUrlsWithAsset = (base) => {
+ const urls = [...(base || [])];
+ if (selectedBrandAsset?.url && !urls.includes(selectedBrandAsset.url)) {
+ urls.push(selectedBrandAsset.url);
+ }
+ return urls;
+ };
+
  async function handleCreatePost() {
  setSavingPost(true);
  try {
  if (editingPostId) {
  const postData = {
  ...formData,
- media_urls: formData.media_urls || [],
+ media_urls: mediaUrlsWithAsset(formData.media_urls),
  cta_url: formData.cta_url || "",
  link_in_bio_url: formData.link_in_bio_url || "",
  content: activePlatformData.content || formData.content || "",
@@ -1094,6 +1107,7 @@ export default function SocialMediaManager() {
  setActivePlatformTab("instagram");
  setPlatformContent({});
  setMediaPreview([]);
+ setSelectedBrandAsset(null);
  await fetchAllData({ silent: true });
  } else {
  const platformsToSave = selectedPlatforms.length
@@ -1108,7 +1122,7 @@ export default function SocialMediaManager() {
  platform: platformId,
  content: platformData.content || formData.content || "",
  hashtags: platformData.hashtags || formData.hashtags || [],
- media_urls: formData.media_urls || [],
+ media_urls: mediaUrlsWithAsset(formData.media_urls),
  cta_url: formData.cta_url || "",
  link_in_bio_url: formData.link_in_bio_url || "",
  campaign_id: formData.campaign_id || activeCampaignId || null,
@@ -1150,6 +1164,7 @@ export default function SocialMediaManager() {
  setActivePlatformTab("instagram");
  setPlatformContent({});
  setMediaPreview([]);
+ setSelectedBrandAsset(null);
  setActiveView("posts");
  }
  } catch (err) {
