@@ -841,6 +841,9 @@ export default function SocialMediaManager() {
  const [brandAssets, setBrandAssets] = useState([]);
  const [brandAssetsLoading, setBrandAssetsLoading] = useState(false);
  const [selectedBrandAsset, setSelectedBrandAsset] = useState(null); // { asset_id, url, label }
+ // Vision copy generation from the selected brand asset. Disabled + spinner while
+ // in flight so the (paid) call can't double-fire.
+ const [captionFromAssetLoading, setCaptionFromAssetLoading] = useState(false);
 
  useEffect(() => {
  if (!handoff) return;
@@ -1776,6 +1779,78 @@ export default function SocialMediaManager() {
  showToast("Could not publish post", "error");
  } finally {
  setPublishingId(null);
+ }
+ }
+
+ // Vision-based copy: send the selected brand asset + the composer's active
+ // platform to the backend, which looks at the image and writes on-brand copy.
+ // Each call costs money, so the button is disabled while this runs.
+ async function handleGenerateFromAsset() {
+ if (!selectedBrandAsset?.asset_id || captionFromAssetLoading) return;
+
+ // Empty text field: generate straight in. Existing text: confirm first.
+ const existingCopy = (activePlatformData.content || formData.content || "").trim();
+ if (existingCopy) {
+ const proceed = window.confirm(
+ "Replace the current post copy with copy generated from this asset?"
+ );
+ if (!proceed) return;
+ }
+
+ setCaptionFromAssetLoading(true);
+ try {
+ const res = await apiClient.post("/api/social/generate-caption-from-asset", {
+ asset_id: selectedBrandAsset.asset_id,
+ platform: activePlatformKey,
+ });
+
+ const copy = (res?.copy || "").trim();
+ if (!copy) {
+ showToast("No copy was returned. Please try again.", "error");
+ return;
+ }
+
+ // Write into the active platform's content and mirror the shared form field,
+ // exactly as the textarea onChange does.
+ setPlatformContent((prev) => ({
+ ...prev,
+ [activePlatformKey]: {
+ ...(prev[activePlatformKey] || {}),
+ content: copy,
+ hashtags: (prev[activePlatformKey] || {}).hashtags || formData.hashtags || [],
+ },
+ }));
+ setFormData((d) => ({
+ ...d,
+ content:
+ activePlatformKey === (d.platform || selectedPlatforms[0] || "instagram")
+ ? copy
+ : d.content,
+ }));
+ showToast("Copy generated from your brand asset.", "success");
+ } catch (err) {
+ // 422 brand_foundation_incomplete: surface the specific missing fields,
+ // not a generic error. apiClient throws a flat Error with .status/.payload.
+ const detail = err?.payload?.detail;
+ if (
+ err?.status === 422 &&
+ detail &&
+ typeof detail === "object" &&
+ detail.error === "brand_foundation_incomplete"
+ ) {
+ const missing = Array.isArray(detail.missing) ? detail.missing : [];
+ const message =
+ detail.message ||
+ (missing.length
+ ? `Complete your Brand Foundation first — missing: ${missing.join(", ")}.`
+ : "Complete your Brand Foundation before generating copy from an asset.");
+ showToast(message, "error", 6000);
+ } else {
+ console.error("caption-from-asset error:", err);
+ showToast(err?.message || "Could not generate copy from this asset.", "error");
+ }
+ } finally {
+ setCaptionFromAssetLoading(false);
  }
  }
 
@@ -3342,6 +3417,7 @@ export default function SocialMediaManager() {
  </button>
 
  {selectedBrandAsset ? (
+ <>
  <div style={{
  marginTop: 8, display: "flex", alignItems: "center", gap: 8,
  padding: "8px 10px", borderRadius: 4,
@@ -3365,6 +3441,29 @@ export default function SocialMediaManager() {
  <X size={12} />
  </button>
  </div>
+ <button
+ type="button"
+ onClick={handleGenerateFromAsset}
+ disabled={!selectedBrandAsset || captionFromAssetLoading}
+ style={{
+ width: "100%", marginTop: 8,
+ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+ padding: "10px 16px", borderRadius: 4,
+ background: "var(--cth-command-gold)",
+ border: "1px solid var(--cth-command-gold)",
+ color: "var(--cth-command-ink)",
+ fontFamily: SANS, fontSize: 13, fontWeight: 600,
+ cursor: captionFromAssetLoading ? "not-allowed" : "pointer",
+ opacity: captionFromAssetLoading ? 0.7 : 1,
+ }}
+ >
+ {captionFromAssetLoading ? (
+ <><Loader2 size={14} className="animate-spin" /> Generating…</>
+ ) : (
+ <><Sparkles size={14} /> Generate copy from this asset</>
+ )}
+ </button>
+ </>
  ) : null}
  </div>
 
