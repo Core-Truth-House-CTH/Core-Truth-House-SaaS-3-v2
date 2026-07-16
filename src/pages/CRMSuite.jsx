@@ -484,12 +484,14 @@ function DealCard({ deal, onOpen, onDelete }) {
  lineHeight: 1.1,
  }}
  >
- {currency(deal.value || 0)}
+ {currency(deal.value_dollars || 0)}
  </div>
 
  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
  {deal.stage ? <Chip>{deal.stage}</Chip> : null}
- {deal.close_date ? <Chip tone="muted">{formatDate(deal.close_date)}</Chip> : null}
+ {deal.expected_close_date ? (
+ <Chip tone="muted">{formatDate(deal.expected_close_date)}</Chip>
+ ) : null}
  </div>
  </div>
  );
@@ -823,7 +825,11 @@ function DetailDrawer({ drawer, onClose, onRequestDelete, onCompose }) {
  <>
  <DetailField label="Name">{record.title || <EmptyValue />}</DetailField>
  <DetailField label="Value">
- {record.value != null && record.value !== "" ? currency(record.value) : <EmptyValue />}
+ {record.value_dollars != null && record.value_dollars !== "" ? (
+ currency(record.value_dollars)
+ ) : (
+ <EmptyValue />
+ )}
  </DetailField>
  <DetailField label="Stage">
  {record.stage ? <Chip>{record.stage}</Chip> : <EmptyValue />}
@@ -836,7 +842,7 @@ function DetailDrawer({ drawer, onClose, onRequestDelete, onCompose }) {
  {record.contact_name || record.contact || <EmptyValue />}
  </DetailField>
  <DetailField label="Close date">
- {record.close_date ? formatDate(record.close_date) : <EmptyValue />}
+ {record.expected_close_date ? formatDate(record.expected_close_date) : <EmptyValue />}
  </DetailField>
  <DetailField label="Created">
  {record.created_at ? formatDate(record.created_at) : <EmptyValue />}
@@ -1161,10 +1167,10 @@ export default function CRMSuite() {
  await apiClient.post(API_PATHS.crm.deals, {
  title: dealDraft.title.trim(),
  company: dealDraft.company.trim() || null,
- value: Number(dealDraft.value || 0),
+ value_dollars: Number(dealDraft.value || 0),
  stage: dealDraft.stage || "lead",
  status: dealDraft.status || "open",
- close_date: fromInputDate(dealDraft.close_date),
+ expected_close_date: fromInputDate(dealDraft.close_date),
  });
 
  setDealDraft({
