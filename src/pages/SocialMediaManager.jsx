@@ -31,6 +31,7 @@ import {
  List as ListIcon,
  AlertCircle,
  RefreshCw,
+ Copy,
 } from "lucide-react";
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import CampaignContextBanner from "../components/shared/CampaignContextBanner";
@@ -54,7 +55,19 @@ const STATUS_CFG = {
  needs_approval: { label: "Needs Approval", tone: "gold" },
  rejected: { label: "Rejected", tone: "crimson" },
  scheduled: { label: "Scheduled", tone: "purple" },
+ publishing: {
+ label: "Publishing",
+ tone: "purple",
+ hint: "Being sent to the platform right now.",
+ },
  published: { label: "Published", tone: "success" },
+ publish_unknown: {
+ label: "May Have Posted",
+ tone: "gold",
+ hint:
+ "The platform never sent a reply, so this post may or may not be live. " +
+ "Check the platform before doing anything else — publishing again could post it twice.",
+ },
  failed: { label: "Failed", tone: "crimson" },
 };
 
@@ -63,9 +76,28 @@ const STATUS_FILTER_OPTIONS = [
  { key: "draft", label: "Drafts" },
  { key: "scheduled", label: "Scheduled" },
  { key: "needs_approval", label: "Needs Approval" },
+ { key: "publishing", label: "Publishing" },
  { key: "published", label: "Published" },
+ { key: "publish_unknown", label: "May Have Posted" },
  { key: "failed", label: "Failed" },
 ];
+
+// Mirrors the server's publish-owned check (routes/social.py _publish_locked and
+// services/social_dispatch._CLAIM_GUARD_FIELDS). Once a post is published, in
+// flight, or unresolved, editing it here cannot change what is already live on
+// the platform — so we stop pretending it can.
+const PUBLISH_LOCKED_STATUSES = ["published", "publishing", "publish_unknown"];
+
+function isPublishLocked(post) {
+ if (!post) return false;
+ if (PUBLISH_LOCKED_STATUSES.includes(post.status)) return true;
+ return Boolean(
+ post.published_at ||
+ post.platform_post_id ||
+ post.zernio_post_id ||
+ post.ayrshare_post_id
+ );
+}
 
 const SORT_OPTIONS = [
  { key: "time", label: "Most recent" },
@@ -1096,6 +1128,10 @@ export default function SocialMediaManager() {
  media_asset_ids: formData.media_asset_ids || [],
  platform_extra: formData.platform_extra || {},
  };
+ // status is derived server-side on update. Sending it here is what re-armed
+ // published posts for the scheduler; the server ignores it now, and we
+ // should not pretend to set it.
+ delete postData.status;
 
  await apiClient.put(`/api/social/posts/${editingPostId}`, postData);
  showToast("Post updated");
@@ -1129,6 +1165,10 @@ export default function SocialMediaManager() {
  content_item_id: formData.content_item_id || null,
  media_asset_ids: formData.media_asset_ids || [],
  platform_extra: formData.platform_extra || {},
+ // POST /posts still takes status (only PUT derives it), and the schedule
+ // input no longer sets it — so derive it here from the one thing it
+ // actually depends on.
+ status: formData.scheduled_for ? "scheduled" : "draft",
  };
 
  return apiClient.post("/api/social/posts", postData);
@@ -1178,18 +1218,31 @@ export default function SocialMediaManager() {
  async function handleBulkSchedule() {
  if (!selectedPostIds.length || !bulkScheduleDate) return;
 
+ // Never re-schedule something already published or in flight. The server
+ // refuses to recompute their status anyway, but sending the PUT at all would
+ // silently do nothing and report success.
+ const schedulableIds = selectedPostIds.filter((id) => {
+ const post = posts.find((p) => p.id === id);
+ return post && !isPublishLocked(post);
+ });
+
+ if (!schedulableIds.length) {
+ showToast("Those posts are already published — nothing to schedule", "error");
+ return;
+ }
+
  setBulkScheduling(true);
  try {
  await Promise.all(
- selectedPostIds.map((id) =>
+ schedulableIds.map((id) =>
+ // status is derived server-side from scheduled_for.
  apiClient.put(`/api/social/posts/${id}`, {
  scheduled_for: new Date(bulkScheduleDate).toISOString(),
- status: "scheduled",
  })
  )
  );
 
- const count = selectedPostIds.length;
+ const count = schedulableIds.length;
  setSelectedPostIds([]);
  setBulkScheduleDate("");
  await fetchAllData({ silent: true });
@@ -1233,9 +1286,23 @@ export default function SocialMediaManager() {
  return;
  }
 
+ openAsDraftCopy(sourcePost, { recycle: true });
+ } finally {
+ setRecycleBusy(false);
+ }
+ }
+
+ // Open a copy of an existing post as a brand-new draft. editingPostId stays
+ // null, so saving POSTs a fresh row — no platform_post_id, no published_at,
+ // status draft. This is the only sanctioned way to act on a published post:
+ // its content is already live and cannot be edited from here, but wanting a
+ // variant of it is the real intent behind trying to edit one.
+ function openAsDraftCopy(sourcePost, { recycle = false } = {}) {
+ if (!sourcePost) return;
  setShowModal("post");
  setEditingPostId(null);
  setSelectedPlatforms([sourcePost.platform || "instagram"]);
+ setPlatformContent({});
  setFormData({
  title: sourcePost.title || sourcePost.topic || "",
  topic: sourcePost.topic || sourcePost.title || "",
@@ -1243,23 +1310,27 @@ export default function SocialMediaManager() {
  content: sourcePost.content || "",
  hashtags: sourcePost.hashtags || [],
  media_urls: sourcePost.media_urls || [],
+ media_asset_ids: sourcePost.media_asset_ids || [],
  first_comment: sourcePost.first_comment || "",
  cta_url: sourcePost.cta_url || "",
  link_in_bio_url: sourcePost.link_in_bio_url || "",
+ campaign_id: sourcePost.campaign_id || null,
+ content_item_id: sourcePost.content_item_id || null,
+ platform_extra: sourcePost.platform_extra || {},
+ // A copy is never born scheduled — the user picks a new time deliberately.
+ scheduled_for: null,
  status: "draft",
  recycled_from_post_id: sourcePost.id,
- recycle_mode: true,
+ recycle_mode: recycle,
+ duplicate_mode: !recycle,
  });
  setMediaPreview(
  (sourcePost.media_urls || []).map((url, i) => ({
  url,
- name: `recycled-${i + 1}`,
+ name: `${recycle ? "recycled" : "copy"}-${i + 1}`,
  type: "image",
  }))
  );
- } finally {
- setRecycleBusy(false);
- }
  }
 
  async function handleMediaUpload(event) {
@@ -1773,6 +1844,7 @@ export default function SocialMediaManager() {
  cta_url: post.cta_url || "",
  link_in_bio_url: post.link_in_bio_url || "",
  recycle_mode: false,
+ duplicate_mode: false,
  });
  setMediaPreview(
  (post.media_urls || []).map((url, i) => ({
@@ -2134,8 +2206,17 @@ export default function SocialMediaManager() {
  const totalPublished = analytics?.total_published || 0;
  const totalDrafts = posts.filter((p) => p.status === "draft").length;
 
+ // A post already published (or mid-publish, or unresolved) opens read-only:
+ // nothing typed here can change what is already on the platform, so offering
+ // an edit would just fabricate a local record that disagrees with reality.
+ const editingLocked = Boolean(editingPostId) && isPublishLocked(formData);
+
  const modalTitle = formData.recycle_mode
  ? "Recycle Post"
+ : formData.duplicate_mode
+ ? "Duplicate as Draft"
+ : editingLocked
+ ? "Published Post"
  : editingPostId
  ? "Edit Post"
  : "Create Post";
@@ -2813,15 +2894,21 @@ export default function SocialMediaManager() {
  <button
  type="button"
  onClick={() => {
- if (selectedPostIds.length === filteredPosts.length) {
+ // Published / in-flight posts are never selectable — bulk schedule
+ // cannot do anything with them.
+ const schedulable = filteredPosts.filter((post) => !isPublishLocked(post));
+ if (selectedPostIds.length >= schedulable.length && schedulable.length > 0) {
  setSelectedPostIds([]);
  } else {
- setSelectedPostIds(filteredPosts.map((post) => post.id));
+ setSelectedPostIds(schedulable.map((post) => post.id));
  }
  }}
  style={SECONDARY_BUTTON_STYLE}
  >
- {selectedPostIds.length === filteredPosts.length ? "Clear Selection" : "Select All"}
+ {selectedPostIds.length >= filteredPosts.filter((p) => !isPublishLocked(p)).length
+ && selectedPostIds.length > 0
+ ? "Clear Selection"
+ : "Select All"}
  </button>
  <span style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>
  {selectedPostIds.length} selected
@@ -2853,6 +2940,8 @@ export default function SocialMediaManager() {
  filteredPosts.map((post) => {
  const statusCfg = STATUS_CFG[post.status] || STATUS_CFG.draft;
  const checked = selectedPostIds.includes(post.id);
+ // Bulk schedule cannot apply to a post that is already live or in flight.
+ const locked = isPublishLocked(post);
  return (
  <div
  key={post.id}
@@ -2869,6 +2958,8 @@ export default function SocialMediaManager() {
  <input
  type="checkbox"
  checked={checked}
+ disabled={locked}
+ title={locked ? "Already published — cannot be scheduled" : undefined}
  onChange={(e) => {
  setSelectedPostIds((prev) =>
  e.target.checked ? [...prev, post.id] : prev.filter((id) => id !== post.id)
@@ -2889,6 +2980,24 @@ export default function SocialMediaManager() {
  {post.campaign_id ? <Chip tone="purple">Campaign</Chip> : null}
  {post.content_item_id ? <Chip tone="muted">Content</Chip> : null}
  </div>
+
+ {statusCfg.hint ? (
+ <div style={{
+ display: "flex", gap: 8, alignItems: "flex-start",
+ margin: "0 0 10px", padding: "8px 10px", borderRadius: 4,
+ background: post.status === "publish_unknown"
+ ? "rgba(196,169,91,0.12)"
+ : "var(--cth-command-panel-soft)",
+ border: post.status === "publish_unknown"
+ ? "1px solid rgba(196,169,91,0.40)"
+ : "1px solid var(--cth-command-border)",
+ }}>
+ <AlertCircle size={13} style={{ flexShrink: 0, marginTop: 1, color: "var(--cth-command-purple)" }} />
+ <span style={{ fontFamily: SANS, fontSize: 11.5, lineHeight: 1.5, color: "var(--cth-command-ink)" }}>
+ {statusCfg.hint}
+ </span>
+ </div>
+ ) : null}
 
  <p style={{
  margin: "0 0 10px",
@@ -2961,9 +3070,17 @@ export default function SocialMediaManager() {
  </div>
 
  <div style={{ display: "flex", flexShrink: 0, gap: 4 }}>
- <IconButton label="Edit post" onClick={() => handleEditPost(post)}>
+ <IconButton
+ label={isPublishLocked(post) ? "View post (read-only)" : "Edit post"}
+ onClick={() => handleEditPost(post)}
+ >
  <Wand2 size={14} />
  </IconButton>
+ {isPublishLocked(post) ? (
+ <IconButton label="Duplicate as draft" onClick={() => openAsDraftCopy(post)}>
+ <Copy size={14} />
+ </IconButton>
+ ) : null}
  {post.status === "scheduled" ? (
  <IconButton
  label="Publish now"
@@ -3031,7 +3148,17 @@ export default function SocialMediaManager() {
  padding: "18px 24px", borderBottom: "1px solid var(--cth-command-border)",
  }}>
  <div>
- <Eyebrow>{formData.recycle_mode ? "Recycle" : editingPostId ? "Edit" : "New"}</Eyebrow>
+ <Eyebrow>
+ {formData.recycle_mode
+ ? "Recycle"
+ : formData.duplicate_mode
+ ? "Duplicate"
+ : editingLocked
+ ? "Read Only"
+ : editingPostId
+ ? "Edit"
+ : "New"}
+ </Eyebrow>
  <h3 style={{
  fontFamily: SERIF, fontSize: 20, fontWeight: 600,
  color: "var(--cth-command-ink)", margin: "4px 0 0",
@@ -3043,6 +3170,35 @@ export default function SocialMediaManager() {
  </div>
 
  <div style={{ flex: 1, overflowY: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 18 }}>
+ {editingLocked ? (
+ <div style={{
+ display: "flex", gap: 10, alignItems: "flex-start",
+ padding: "12px 14px", borderRadius: 4,
+ background: "rgba(196,169,91,0.12)",
+ border: "1px solid rgba(196,169,91,0.40)",
+ }}>
+ <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1, color: "var(--cth-command-purple)" }} />
+ <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: "var(--cth-command-ink)" }}>
+ {formData.status === "publish_unknown" ? (
+ <>
+ <strong>This post may or may not have gone live.</strong> The platform never
+ sent a reply, so we could not confirm it. Check the platform before doing
+ anything else — publishing it again could post it twice.
+ </>
+ ) : formData.status === "publishing" ? (
+ <><strong>This post is being published right now.</strong> It is read-only until
+ the platform responds.</>
+ ) : (
+ <>
+ <strong>This post is already live.</strong> Editing it here would not change
+ what is on the platform, so it is read-only. Use <em>Duplicate as draft</em>
+ {" "}to build a new version.
+ </>
+ )}
+ </div>
+ </div>
+ ) : null}
+
  <div>
  <FieldLabel>Platforms</FieldLabel>
  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(96px, 1fr))", gap: 8 }}>
@@ -3109,7 +3265,7 @@ export default function SocialMediaManager() {
  pinterest_board_id: e.target.value || undefined,
  },
  }))}
- disabled={!connections.pinterest || pinterestBoardsLoading}
+ disabled={editingLocked || !connections.pinterest || pinterestBoardsLoading}
  style={INPUT_STYLE}
  >
  <option value="">
@@ -3146,7 +3302,7 @@ export default function SocialMediaManager() {
  google_business_location_id: e.target.value || undefined,
  },
  }))}
- disabled={!connections.google_business || gbpLocationsLoading}
+ disabled={editingLocked || !connections.google_business || gbpLocationsLoading}
  style={INPUT_STYLE}
  >
  <option value="">
@@ -3209,6 +3365,7 @@ export default function SocialMediaManager() {
 
  <textarea
  data-testid="post-content-textarea"
+ disabled={editingLocked}
  value={activePlatformData.content || formData.content || ""}
  onChange={(e) => {
  const nextValue = e.target.value;
@@ -3267,6 +3424,7 @@ export default function SocialMediaManager() {
  <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
  <input
  data-testid="ai-topic-input"
+ disabled={editingLocked}
  placeholder="What should the post be about?"
  value={formData.topic || ""}
  onChange={(e) => setFormData((d) => ({ ...d, topic: e.target.value }))}
@@ -3274,6 +3432,7 @@ export default function SocialMediaManager() {
  />
  <div style={{ display: "flex", gap: 8 }}>
  <select
+ disabled={editingLocked}
  value={formData.tone || "professional"}
  onChange={(e) => setFormData((d) => ({ ...d, tone: e.target.value }))}
  style={{ ...INPUT_STYLE, flex: 1, textTransform: "capitalize" }}
@@ -3286,10 +3445,10 @@ export default function SocialMediaManager() {
  data-testid="generate-btn"
  type="button"
  onClick={handleGenerateContent}
- disabled={!formData.topic || !selectedPlatforms.length || generating}
+ disabled={editingLocked || !formData.topic || !selectedPlatforms.length || generating}
  style={{
  ...PRIMARY_BUTTON_STYLE,
- opacity: (!formData.topic || !selectedPlatforms.length || generating) ? 0.4 : 1,
+ opacity: (editingLocked || !formData.topic || !selectedPlatforms.length || generating) ? 0.4 : 1,
  }}
  >
  {generating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
@@ -3341,6 +3500,7 @@ export default function SocialMediaManager() {
  type="file"
  accept="image/*,video/*"
  multiple
+ disabled={editingLocked}
  onChange={handleMediaUpload}
  style={{ display: "none" }}
  data-testid="social-media-file-input"
@@ -3459,7 +3619,7 @@ export default function SocialMediaManager() {
  <button
  type="button"
  onClick={handleGenerateFromAsset}
- disabled={!selectedBrandAsset || captionFromAssetLoading}
+ disabled={editingLocked || !selectedBrandAsset || captionFromAssetLoading}
  style={{
  width: "100%", marginTop: 8,
  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -3482,6 +3642,7 @@ export default function SocialMediaManager() {
  ) : null}
  </div>
 
+ {editingLocked ? null : (
  <div>
  <FieldLabel>Schedule (optional)</FieldLabel>
  <input
@@ -3490,16 +3651,17 @@ export default function SocialMediaManager() {
  onChange={(e) => setFormData((d) => ({
  ...d,
  scheduled_for: e.target.value ? new Date(e.target.value).toISOString() : null,
- status: e.target.value ? "scheduled" : "draft",
  }))}
  style={INPUT_STYLE}
  />
  </div>
+ )}
 
  <div>
  <FieldLabel>CTA URL</FieldLabel>
  <input
  type="url"
+ disabled={editingLocked}
  value={formData.cta_url || ""}
  onChange={(e) => setFormData((d) => ({ ...d, cta_url: e.target.value }))}
  placeholder="https://yourdomain.com/cta"
@@ -3511,6 +3673,7 @@ export default function SocialMediaManager() {
  <FieldLabel>Link-in-bio URL</FieldLabel>
  <input
  type="url"
+ disabled={editingLocked}
  value={formData.link_in_bio_url || ""}
  onChange={(e) => setFormData((d) => ({ ...d, link_in_bio_url: e.target.value }))}
  placeholder="https://yourdomain.com/link-in-bio"
@@ -3557,6 +3720,7 @@ export default function SocialMediaManager() {
  <div>
  <FieldLabel>First comment (optional)</FieldLabel>
  <textarea
+ disabled={editingLocked}
  value={formData.first_comment || ""}
  onChange={(e) => setFormData((d) => ({ ...d, first_comment: e.target.value }))}
  rows={3}
@@ -3572,8 +3736,21 @@ export default function SocialMediaManager() {
  background: "var(--cth-command-panel)",
  }}>
  <button type="button" onClick={closePostModal} style={SECONDARY_BUTTON_STYLE}>
- Cancel
+ {editingLocked ? "Close" : "Cancel"}
  </button>
+ {editingLocked ? (
+ // No Save: this post is already live and nothing here can change it.
+ // Duplicating is the only forward action that makes sense.
+ <button
+ data-testid="duplicate-post-btn"
+ type="button"
+ onClick={() => openAsDraftCopy({ ...formData, id: editingPostId })}
+ style={PRIMARY_BUTTON_STYLE}
+ >
+ <Copy size={14} />
+ Duplicate as draft
+ </button>
+ ) : (
  <button
  data-testid="save-post-btn"
  type="button"
@@ -3587,6 +3764,7 @@ export default function SocialMediaManager() {
  {savingPost ? <Loader2 size={14} className="animate-spin" /> : null}
  {modalSubmitLabel}
  </button>
+ )}
  </div>
  </div>
  </div>
