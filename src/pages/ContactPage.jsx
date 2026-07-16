@@ -1,7 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
+import apiClient from "../lib/apiClient";
+
+// Values are sent as-is to ContactFormRequest.inquiry_type (free string).
+const INQUIRY_OPTIONS = [
+  "Brand Diagnostic question",
+  "Platform or pricing question",
+  "Customer support",
+  "Partnerships and press",
+];
+
+const EMPTY_FORM = {
+  first_name: "",
+  last_name: "",
+  email: "",
+  company: "",
+  inquiry_type: "",
+  message: "",
+  consent: false,
+};
 
 const contactStats = [
  {
@@ -141,6 +160,91 @@ function ContactStats() {
 }
 
 function ContactForm() {
+ const [form, setForm] = useState(EMPTY_FORM);
+ // idle | submitting | success | error
+ const [status, setStatus] = useState({ state: "idle", message: "" });
+
+ const submitting = status.state === "submitting";
+
+ const update = (field) => (event) => {
+ const value =
+ event.target.type === "checkbox" ? event.target.checked : event.target.value;
+ setForm((current) => ({ ...current, [field]: value }));
+ };
+
+ async function handleSubmit(event) {
+ event.preventDefault();
+ if (submitting) return; // guards against a double submit
+
+ // Mirror what the endpoint requires so the visitor gets a real sentence
+ // instead of a 422. consent is deliberately never defaulted true — the
+ // endpoint 400s on a false one, and it should.
+ const missingRequired =
+ !form.first_name.trim() ||
+ !form.last_name.trim() ||
+ !form.email.trim() ||
+ !form.message.trim();
+
+ if (missingRequired) {
+ setStatus({
+ state: "error",
+ message: "Please fill in your name, email, and message.",
+ });
+ return;
+ }
+ if (!form.inquiry_type) {
+ setStatus({ state: "error", message: "Please choose a reason for your inquiry." });
+ return;
+ }
+ if (!form.consent) {
+ setStatus({
+ state: "error",
+ message: "Please tick the consent box so we know we can reply to you.",
+ });
+ return;
+ }
+
+ setStatus({ state: "submitting", message: "" });
+
+ try {
+ await apiClient.post("/api/contact", {
+ first_name: form.first_name.trim(),
+ last_name: form.last_name.trim(),
+ email: form.email.trim(),
+ company: form.company.trim() || null,
+ inquiry_type: form.inquiry_type,
+ message: form.message.trim(),
+ consent: form.consent,
+ source: "contact_page",
+ });
+
+ setForm(EMPTY_FORM);
+ setStatus({
+ state: "success",
+ message:
+ "Message sent. A confirmation is on its way to your inbox — we reply within 1-2 business days.",
+ });
+ } catch (error) {
+ console.error("Contact form submission failed:", error);
+ // Show the server's own words when they are meant for a human (e.g.
+ // "Consent is required."), otherwise a sentence that gives them a way
+ // through. Never fail silently — that is the bug being fixed here.
+ const serverMessage =
+ typeof error?.message === "string" ? error.message.trim() : "";
+ const usable =
+ serverMessage &&
+ !serverMessage.startsWith("Request failed with status") &&
+ !/^failed to fetch$/i.test(serverMessage);
+
+ setStatus({
+ state: "error",
+ message: usable
+ ? serverMessage
+ : "Could not send your message. Please try again, or email hello@coretruthhouse.com directly.",
+ });
+ }
+ }
+
  return (
  <section className="cth-contact-form-section">
  <img
@@ -151,32 +255,115 @@ function ContactForm() {
  />
 
  <div className="cth-contact-shell cth-contact-form-grid">
- <form className="cth-contact-form">
+ <form className="cth-contact-form" onSubmit={handleSubmit} noValidate>
  <h2>Send Us a Message</h2>
  <p>We’ll get back to you within 1-2 business days.</p>
 
  <div className="cth-contact-field-grid">
- <input type="text" placeholder="First Name *" aria-label="First Name" autoComplete="given-name" />
- <input type="text" placeholder="Last Name *" aria-label="Last Name" autoComplete="family-name" />
- <input type="email" placeholder="Email Address *" aria-label="Email Address" autoComplete="email" />
- <input type="text" placeholder="Company" aria-label="Company" autoComplete="organization" />
+ <input
+ type="text"
+ name="first_name"
+ value={form.first_name}
+ onChange={update("first_name")}
+ disabled={submitting}
+ required
+ placeholder="First Name *"
+ aria-label="First Name"
+ autoComplete="given-name"
+ />
+ <input
+ type="text"
+ name="last_name"
+ value={form.last_name}
+ onChange={update("last_name")}
+ disabled={submitting}
+ required
+ placeholder="Last Name *"
+ aria-label="Last Name"
+ autoComplete="family-name"
+ />
+ <input
+ type="email"
+ name="email"
+ value={form.email}
+ onChange={update("email")}
+ disabled={submitting}
+ required
+ placeholder="Email Address *"
+ aria-label="Email Address"
+ autoComplete="email"
+ />
+ <input
+ type="text"
+ name="company"
+ value={form.company}
+ onChange={update("company")}
+ disabled={submitting}
+ placeholder="Company"
+ aria-label="Company"
+ autoComplete="organization"
+ />
  </div>
 
- <select aria-label="Reason for Inquiry" defaultValue="">
+ <select
+ name="inquiry_type"
+ value={form.inquiry_type}
+ onChange={update("inquiry_type")}
+ disabled={submitting}
+ required
+ aria-label="Reason for Inquiry"
+ >
  <option value="" disabled>Reason for Inquiry *</option>
- <option>Brand Diagnostic question</option>
- <option>Platform or pricing question</option>
- <option>Customer support</option>
- <option>Partnerships and press</option>
+ {INQUIRY_OPTIONS.map((option) => (
+ <option key={option} value={option}>{option}</option>
+ ))}
  </select>
 
  <textarea
+ name="message"
+ value={form.message}
+ onChange={update("message")}
+ disabled={submitting}
+ required
  placeholder="Message *&#10;Tell us what you are trying to clarify, fix, or understand."
  aria-label="Message"
  />
 
- <button type="button">
+ <label className="cth-contact-consent">
+ <input
+ type="checkbox"
+ name="consent"
+ checked={form.consent}
+ onChange={update("consent")}
+ disabled={submitting}
+ required
+ />
+ <span>
+ I agree to Core Truth House storing these details and contacting me
+ about this message. *
+ </span>
+ </label>
+
+ {status.state === "success" || status.state === "error" ? (
+ <div
+ className={`cth-contact-status cth-contact-status-${status.state}`}
+ role={status.state === "error" ? "alert" : "status"}
+ >
+ {status.message}
+ </div>
+ ) : null}
+
+ <button type="submit" disabled={submitting}>
+ {submitting ? (
+ <>
+ <span className="cth-contact-spinner" aria-hidden="true" />
+ Sending…
+ </>
+ ) : (
+ <>
  Send Message <span>→</span>
+ </>
+ )}
  </button>
 
  <small>🔒 Your information is secure and will never be shared.</small>
@@ -684,6 +871,77 @@ export default function ContactPage() {
  text-align: center;
  color: var(--cth-muted-soft);
  font-size: 11px;
+ }
+
+ .cth-contact-consent {
+ display: flex;
+ align-items: flex-start;
+ gap: 10px;
+ margin-top: 22px;
+ cursor: pointer;
+ }
+
+ /* The blanket .cth-contact-form input rule above forces width:100% and
+ min-height:56px, which turns a checkbox into a giant bar. Undo it here. */
+ .cth-contact-consent input[type="checkbox"] {
+ width: 18px;
+ height: 18px;
+ min-height: 0;
+ flex: 0 0 auto;
+ margin-top: 1px;
+ padding: 0;
+ accent-color: var(--cth-crimson);
+ cursor: pointer;
+ }
+
+ .cth-contact-consent span {
+ color: var(--cth-muted-soft);
+ font-size: 12px;
+ line-height: 1.5;
+ }
+
+ .cth-contact-status {
+ margin-top: 18px;
+ border-radius: 6px;
+ padding: 12px 14px;
+ font-size: 12.5px;
+ line-height: 1.5;
+ }
+
+ .cth-contact-status-error {
+ background: rgba(175, 0, 36, 0.08);
+ border: 1px solid rgba(175, 0, 36, 0.30);
+ color: var(--cth-crimson);
+ }
+
+ .cth-contact-status-success {
+ background: rgba(34, 135, 90, 0.10);
+ border: 1px solid rgba(34, 135, 90, 0.30);
+ color: #15803d;
+ }
+
+ .cth-contact-form button[disabled] {
+ opacity: 0.6;
+ cursor: not-allowed;
+ }
+
+ .cth-contact-form input[disabled],
+ .cth-contact-form select[disabled],
+ .cth-contact-form textarea[disabled] {
+ opacity: 0.7;
+ }
+
+ @keyframes cth-contact-spin {
+ to { transform: rotate(360deg); }
+ }
+
+ .cth-contact-spinner {
+ width: 14px;
+ height: 14px;
+ border: 2px solid rgba(255, 255, 255, 0.35);
+ border-top-color: var(--cth-white);
+ border-radius: 50%;
+ animation: cth-contact-spin 0.7s linear infinite;
  }
 
  .cth-contact-side-cards {
