@@ -425,6 +425,20 @@ const styles = {
     maxWidth: "650px",
     fontSize: "1.05rem",
   },
+  // ctaInner is a two-column grid (1fr auto). Both CTAs share the second column
+  // through this wrapper so the grid keeps exactly two children.
+  ctaActions: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: "12px",
+  },
+  ctaAside: {
+    margin: "6px 0 0",
+    color: "rgba(255,255,255,0.66)",
+    fontSize: "0.88rem",
+    textAlign: "center",
+  },
 };
 
 const benefits = [
@@ -758,9 +772,19 @@ export default function CoreTruthCohortPage() {
                 Join a focused group of founders for a 14-day sprint to clarify, position, and convert with confidence.
               </p>
             </div>
-            <Link to="/cohort/apply" style={{ ...styles.btn, ...styles.btnPrimary }}>
-              Apply for Cohort
-            </Link>
+            <div style={styles.ctaActions}>
+              <Link to="/cohort/apply" style={{ ...styles.btn, ...styles.btnPrimary }}>
+                Apply for Cohort
+              </Link>
+              {/* Subordinate path for hesitant visitors. The diagnostic is the only
+                  public funnel that captures an email and creates a CRM contact, so
+                  a visitor who isn't ready to apply is worth routing there rather
+                  than losing. btnSecondary (translucent) keeps Apply dominant. */}
+              <p style={styles.ctaAside}>Not sure the cohort is right for you?</p>
+              <Link to="/brand-diagnostic/" style={{ ...styles.btn, ...styles.btnSecondary }}>
+                Take the Brand Diagnostic
+              </Link>
+            </div>
           </div>
         </section>
 
