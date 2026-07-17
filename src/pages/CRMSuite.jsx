@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
- BarChart3,
- DollarSign,
  Loader2,
  Plus,
  RefreshCw,
@@ -11,7 +9,6 @@ import {
  Activity,
  FileText,
  BriefcaseBusiness,
- TrendingUp,
  X,
  Mail,
  Send,
@@ -30,7 +27,6 @@ import {
  PRIMARY_BUTTON_STYLE,
  SECONDARY_BUTTON_STYLE,
  DESTRUCTIVE_BUTTON_STYLE,
- DESTRUCTIVE_OUTLINE_STYLE,
  EYEBROW_STYLE,
  currency,
  formatDate,
@@ -124,94 +120,84 @@ function dealStageAccent(stage) {
 }
 
 
-function MetricTile({ icon: Icon, label, value, accent }) {
+// One cell of the metric strip. Number first, label under, no box: the tiles used
+// to be bordered cards at 20px 22px padding with the label above a 36px number,
+// which cost a full band of vertical space to say five short things.
+function MetricTile({ label, value, accent }) {
  return (
+ <div style={{ flex: "1 1 0", minWidth: 96, padding: "10px 16px" }}>
  <div
  style={{
- ...PANEL_STYLE,
- borderRadius: 10,
- padding: "20px 22px",
- display: "flex",
- flexDirection: "column",
- gap: 14,
- }}
- >
- <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
- <span
- aria-hidden="true"
- style={{
- width: 8,
- height: 8,
- borderRadius: "50%",
- background: accent,
- display: "inline-block",
- }}
- />
- <span style={{ ...EYEBROW_STYLE, fontSize: 10, letterSpacing: "0.2em" }}>{label}</span>
- </div>
- <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
- <span
- style={{
  fontFamily: SERIF,
- fontSize: 36,
+ fontSize: 24,
  fontWeight: 600,
  color: "var(--cth-command-ink)",
- lineHeight: 1,
+ lineHeight: 1.1,
  }}
  >
  {value}
- </span>
- {Icon ? <Icon size={18} style={{ color: "var(--cth-command-muted)" }} /> : null}
+ </div>
+ <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+ <span
+ aria-hidden="true"
+ style={{
+ width: 6,
+ height: 6,
+ borderRadius: "50%",
+ background: accent,
+ display: "inline-block",
+ flexShrink: 0,
+ }}
+ />
+ <span style={{ ...EYEBROW_STYLE, fontSize: 10, letterSpacing: "0.14em" }}>{label}</span>
  </div>
  </div>
  );
 }
 
-function Panel({ eyebrow, title, subtitle, action, children, padding = 24 }) {
+// Replaces Panel on data surfaces. Same information, none of the card chrome: one
+// hairline rule under a compact header instead of a bordered, rounded, 24px-padded
+// box per region.
+function SectionHead({ eyebrow, title, action }) {
  return (
- <section style={{ ...PANEL_STYLE, padding }}>
  <div
  style={{
  display: "flex",
  flexWrap: "wrap",
- alignItems: "flex-start",
+ alignItems: "center",
  justifyContent: "space-between",
- gap: 12,
- marginBottom: 20,
+ gap: 10,
+ padding: "12px 16px",
+ borderBottom: "1px solid var(--cth-command-border)",
  }}
  >
- <div>
- {eyebrow ? <div style={EYEBROW_STYLE}>{eyebrow}</div> : null}
+ <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
  <h2
  style={{
  fontFamily: SERIF,
- fontSize: 22,
- fontWeight: 500,
+ fontSize: 17,
+ fontWeight: 600,
  color: "var(--cth-command-ink)",
- margin: eyebrow ? "6px 0 0" : 0,
- letterSpacing: "-0.005em",
+ margin: 0,
  lineHeight: 1.2,
  }}
  >
  {title}
  </h2>
- {subtitle ? (
- <p
- style={{
- fontFamily: SANS,
- fontSize: 14,
- color: "var(--cth-command-muted)",
- margin: "6px 0 0",
- lineHeight: 1.5,
- }}
- >
- {subtitle}
- </p>
- ) : null}
+ {eyebrow ? <span style={EYEBROW_STYLE}>{eyebrow}</span> : null}
  </div>
  {action}
  </div>
- {children}
+ );
+}
+
+// flush = the body supplies its own row padding (tables, separator lists), so the
+// section must not add a second inset around it.
+function Section({ eyebrow, title, action, flush = false, children }) {
+ return (
+ <section style={{ ...PANEL_STYLE, borderRadius: 8, overflow: "hidden" }}>
+ <SectionHead eyebrow={eyebrow} title={title} action={action} />
+ {flush ? children : <div style={{ padding: 16 }}>{children}</div>}
  </section>
  );
 }
@@ -365,120 +351,201 @@ function DealCard({ deal, onOpen, onDelete }) {
  );
 }
 
+const TH_STYLE = {
+ ...EYEBROW_STYLE,
+ textAlign: "left",
+ padding: "8px 12px",
+ whiteSpace: "nowrap",
+ borderBottom: "1px solid var(--cth-command-border)",
+};
+
+const TD_STYLE = {
+ fontFamily: SANS,
+ fontSize: 13,
+ color: "var(--cth-command-ink)",
+ padding: "0 12px",
+ height: 42,
+ verticalAlign: "middle",
+ whiteSpace: "nowrap",
+ borderTop: "1px solid var(--cth-command-border)",
+};
+
 function NeedsAttentionRow({ lead, onOpen, onEmail, onDismiss, dismissing }) {
  const waited = formatWaiting(waitingSince(lead));
  const score = lead.diagnostic_score;
  const tier = lead.recommended_tier;
+ const muted = { ...TD_STYLE, color: "var(--cth-command-muted)" };
 
  return (
- <div
- role="button"
- tabIndex={0}
+ <tr
  onClick={() => onOpen(lead)}
- onKeyDown={(e) => {
- if (e.key === "Enter" || e.key === " ") {
- e.preventDefault();
- onOpen(lead);
- }
+ style={{ cursor: "pointer" }}
+ >
+ <td style={{ ...TD_STYLE, fontWeight: 600, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>
+ {lead.name || "Unnamed lead"}
+ </td>
+ <td style={{ ...muted, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>
+ {lead.company || "-"}
+ </td>
+ <td style={TD_STYLE}>{intakeLabel(lead.intake_channel)}</td>
+ <td style={muted}>
+ {score != null || tier ? (
+ <>
+ {score != null ? `${score}/60` : ""}
+ {score != null && tier ? " · " : ""}
+ {tier || ""}
+ </>
+ ) : (
+ "-"
+ )}
+ </td>
+ <td style={muted}>{waited || "-"}</td>
+ <td style={{ ...TD_STYLE, textAlign: "right", width: 1 }}>
+ <span
+ style={{ display: "inline-flex", gap: 2 }}
+ onClick={(e) => e.stopPropagation()}
+ >
+ <IconButton label={`Email ${lead.name || "lead"}`} onClick={() => onEmail(lead)}>
+ <Mail size={14} />
+ </IconButton>
+ <IconButton
+ label={dismissing ? "Dismissing" : `Dismiss ${lead.name || "lead"}`}
+ onClick={() => (dismissing ? null : onDismiss(lead))}
+ >
+ <X size={14} />
+ </IconButton>
+ </span>
+ </td>
+ </tr>
+ );
+}
+
+const ADD_TYPES = [
+ { key: "contact", label: "Contact", icon: Users },
+ { key: "deal", label: "Deal", icon: BriefcaseBusiness },
+ { key: "activity", label: "Activity", icon: Activity },
+ { key: "note", label: "Note", icon: FileText },
+];
+
+// Replaces four always-open Quick Add cards that held the entire right rail to
+// offer forms nobody was mid-way through filling. Same forms, same handlers, same
+// draft state: only where they render changed.
+function AddMenu({ open, onToggle, onPick }) {
+ return (
+ <div style={{ position: "relative" }}>
+ <button type="button" onClick={onToggle} style={{ ...PRIMARY_BUTTON_STYLE, padding: "8px 14px", fontSize: 13 }}>
+ <Plus size={14} />
+ Add
+ </button>
+ {open ? (
+ <>
+ {/* Click-away. Sits under the menu, over everything else. */}
+ <div onClick={onToggle} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
+ <div
+ role="menu"
+ style={{
+ position: "absolute",
+ top: "calc(100% + 6px)",
+ right: 0,
+ zIndex: 41,
+ minWidth: 168,
+ ...PANEL_STYLE,
+ borderRadius: 8,
+ padding: 4,
+ boxShadow: "0 18px 36px rgba(13,0,16,0.16)",
  }}
+ >
+ {ADD_TYPES.map(({ key, label, icon: Icon }) => (
+ <button
+ key={key}
+ type="button"
+ role="menuitem"
+ onClick={() => onPick(key)}
  style={{
  display: "flex",
  alignItems: "center",
- justifyContent: "space-between",
- gap: 16,
- padding: "16px 20px",
- borderTop: "1px solid var(--cth-command-border)",
+ gap: 10,
+ width: "100%",
+ padding: "8px 10px",
+ borderRadius: 6,
+ border: "none",
+ background: "transparent",
  cursor: "pointer",
- flexWrap: "wrap",
- }}
- >
- <div style={{ minWidth: 0, flex: "1 1 320px" }}>
- <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
- <span
- style={{
- fontFamily: SERIF,
- fontSize: 19,
- fontWeight: 600,
+ fontFamily: SANS,
+ fontSize: 13,
  color: "var(--cth-command-ink)",
+ textAlign: "left",
  }}
  >
- {lead.name || "Unnamed lead"}
- </span>
- {lead.company ? (
- <span style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-command-muted)" }}>
- {lead.company}
- </span>
- ) : null}
- </div>
-
- <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
- <Chip>{intakeLabel(lead.intake_channel)}</Chip>
- {score != null ? <Chip tone="muted">{`Scored ${score}/60`}</Chip> : null}
- {tier ? <Chip tone="muted">{tier}</Chip> : null}
- {waited ? (
- <span style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>
- {waited}
- </span>
- ) : null}
- </div>
- </div>
-
- <div
- style={{ display: "flex", alignItems: "center", gap: 8 }}
- onClick={(e) => e.stopPropagation()}
- >
- <button type="button" onClick={() => onEmail(lead)} style={PRIMARY_BUTTON_STYLE}>
- <Mail size={14} />
- Email
+ <Icon size={14} style={{ color: "var(--cth-command-muted)" }} />
+ {label}
  </button>
- <button
- type="button"
- onClick={() => onDismiss(lead)}
- disabled={dismissing}
- style={{ ...SECONDARY_BUTTON_STYLE, opacity: dismissing ? 0.5 : 1 }}
- >
- {dismissing ? "Dismissing…" : "Dismiss"}
- </button>
+ ))}
  </div>
+ </>
+ ) : null}
  </div>
  );
 }
 
-function QuickAddCard({ title, icon: Icon, eyebrow, children }) {
+function AddModal({ type, onClose, children }) {
+ if (!type) return null;
+ const label = ADD_TYPES.find((t) => t.key === type)?.label || "";
  return (
- <div style={{ ...PANEL_STYLE, padding: 20 }}>
- <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+ <div
+ role="presentation"
+ onClick={onClose}
+ style={{
+ position: "fixed",
+ inset: 0,
+ zIndex: 60,
+ background: "rgba(13,0,16,0.4)",
+ display: "flex",
+ alignItems: "flex-start",
+ justifyContent: "center",
+ padding: "8vh 16px 16px",
+ overflowY: "auto",
+ }}
+ >
+ <div
+ role="dialog"
+ aria-modal="true"
+ aria-label={`Add ${label}`}
+ onClick={(e) => e.stopPropagation()}
+ style={{
+ ...PANEL_STYLE,
+ borderRadius: 10,
+ width: "100%",
+ maxWidth: 460,
+ boxShadow: "0 30px 60px rgba(13,0,16,0.25)",
+ }}
+ >
  <div
  style={{
- width: 32,
- height: 32,
  display: "flex",
  alignItems: "center",
- justifyContent: "center",
- background: "var(--cth-command-panel-soft)",
- border: "1px solid var(--cth-command-border)",
- borderRadius: 8,
- color: "var(--cth-command-crimson)",
+ justifyContent: "space-between",
+ padding: "12px 16px",
+ borderBottom: "1px solid var(--cth-command-border)",
  }}
  >
- <Icon size={15} />
- </div>
- <div>
- {eyebrow ? <div style={{ ...EYEBROW_STYLE, fontSize: 10, letterSpacing: "0.2em" }}>{eyebrow}</div> : null}
- <div
+ <h2
  style={{
  fontFamily: SERIF,
- fontSize: 16,
+ fontSize: 18,
  fontWeight: 600,
  color: "var(--cth-command-ink)",
- marginTop: eyebrow ? 2 : 0,
+ margin: 0,
  }}
  >
- {title}
+ {`New ${label}`}
+ </h2>
+ <IconButton label="Close" onClick={onClose}>
+ <X size={14} />
+ </IconButton>
  </div>
+ <div style={{ padding: 16 }}>{children}</div>
  </div>
- </div>
- {children}
  </div>
  );
 }
@@ -740,6 +807,8 @@ export default function CRMSuite() {
  const [notes, setNotes] = useState([]);
  const [needsAttention, setNeedsAttention] = useState([]);
  const [dismissingId, setDismissingId] = useState(null);
+ const [addType, setAddType] = useState(null);
+ const [addMenuOpen, setAddMenuOpen] = useState(false);
 
  const [contactQuery, setContactQuery] = useState("");
  const [dealQuery, setDealQuery] = useState("");
@@ -928,6 +997,7 @@ export default function CRMSuite() {
  status: contactDraft.status || "lead",
  });
 
+ setAddType(null);
  setContactDraft({
  name: "",
  email: "",
@@ -965,6 +1035,7 @@ export default function CRMSuite() {
  expected_close_date: fromInputDate(dealDraft.close_date),
  });
 
+ setAddType(null);
  setDealDraft({
  title: "",
  company: "",
@@ -1003,6 +1074,7 @@ export default function CRMSuite() {
  details: "",
  });
 
+ setAddType(null);
  setActivityDraft({
  type: "call",
  title: "",
@@ -1035,6 +1107,7 @@ export default function CRMSuite() {
  body: noteDraft.body.trim() || "",
  });
 
+ setAddType(null);
  setNoteDraft({
  title: "",
  body: "",
@@ -1279,6 +1352,15 @@ export default function CRMSuite() {
  {refreshing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
  Refresh
  </button>
+
+ <AddMenu
+ open={addMenuOpen}
+ onToggle={() => setAddMenuOpen((v) => !v)}
+ onPick={(key) => {
+ setAddMenuOpen(false);
+ setAddType(key);
+ }}
+ />
  </div>
  </div>
 
@@ -1295,16 +1377,23 @@ export default function CRMSuite() {
  overflow: "hidden",
  }}
  >
- <div style={{ padding: "22px 20px 18px" }}>
- <div style={EYEBROW_STYLE}>Today</div>
+ <div
+ style={{
+ display: "flex",
+ alignItems: "baseline",
+ gap: 10,
+ padding: "12px 16px",
+ borderBottom: needsAttention.length ? "1px solid var(--cth-command-border)" : "none",
+ }}
+ >
  <h2
  style={{
  fontFamily: SERIF,
- fontSize: 26,
+ fontSize: 18,
  fontWeight: 600,
  color: "var(--cth-command-ink)",
- margin: "6px 0 0",
- lineHeight: 1.15,
+ margin: 0,
+ lineHeight: 1.2,
  }}
  >
  Who needs you
@@ -1312,10 +1401,24 @@ export default function CRMSuite() {
  <span style={{ color: "var(--cth-command-muted)" }}>{` (${needsAttention.length})`}</span>
  ) : null}
  </h2>
+ <span style={EYEBROW_STYLE}>Today</span>
  </div>
 
  {needsAttention.length ? (
- needsAttention.map((lead) => (
+ <div style={{ overflowX: "auto" }}>
+ <table style={{ width: "100%", borderCollapse: "collapse" }}>
+ <thead>
+ <tr>
+ <th style={TH_STYLE}>Name</th>
+ <th style={TH_STYLE}>Company</th>
+ <th style={TH_STYLE}>Channel</th>
+ <th style={TH_STYLE}>Score / Tier</th>
+ <th style={TH_STYLE}>Waiting</th>
+ <th style={{ ...TH_STYLE, textAlign: "right" }}>Actions</th>
+ </tr>
+ </thead>
+ <tbody>
+ {needsAttention.map((lead) => (
  <NeedsAttentionRow
  key={lead.id}
  lead={lead}
@@ -1324,26 +1427,24 @@ export default function CRMSuite() {
  onDismiss={handleDismiss}
  dismissing={dismissingId === lead.id}
  />
- ))
+ ))}
+ </tbody>
+ </table>
+ </div>
  ) : (
- <div
- style={{
- padding: "8px 20px 30px",
- fontFamily: SANS,
- }}
- >
+ <div style={{ padding: "4px 16px 18px", fontFamily: SANS }}>
  <div
  style={{
  fontFamily: SERIF,
- fontSize: 20,
+ fontSize: 18,
  fontWeight: 600,
  color: "var(--cth-command-ink)",
- marginBottom: 6,
+ marginBottom: 4,
  }}
  >
  You're clear.
  </div>
- <div style={{ fontSize: 14, color: "var(--cth-command-muted)", maxWidth: 560 }}>
+ <div style={{ fontSize: 13, color: "var(--cth-command-muted)", maxWidth: 560 }}>
  No one is waiting on you. New leads from the diagnostic, contact form, and
  cohort applications land here automatically.
  </div>
@@ -1351,21 +1452,37 @@ export default function CRMSuite() {
  )}
  </section>
 
- <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
- <MetricTile icon={Users} label="Contacts" value={summary.contacts || 0} accent="var(--cth-command-purple)" />
- <MetricTile icon={BriefcaseBusiness} label="Deals" value={summary.deals || 0} accent="var(--cth-command-crimson)" />
- <MetricTile icon={BarChart3} label="Open Deals" value={summary.open_deals || 0} accent="var(--cth-command-gold)" />
- <MetricTile icon={DollarSign} label="Open Pipeline" value={currency(summary.open_pipeline_dollars || 0)} accent="var(--cth-command-purple-mid)" />
- <MetricTile icon={TrendingUp} label="Won Revenue" value={currency(summary.won_revenue_dollars || 0)} accent="var(--cth-command-crimson)" />
+ {/* One strip, hairline-divided, instead of five padded cards. */}
+ <div
+ style={{
+ ...PANEL_STYLE,
+ borderRadius: 8,
+ display: "flex",
+ flexWrap: "wrap",
+ }}
+ >
+ {[
+ ["Contacts", summary.contacts || 0, "var(--cth-command-purple)"],
+ ["Deals", summary.deals || 0, "var(--cth-command-crimson)"],
+ ["Open Deals", summary.open_deals || 0, "var(--cth-command-gold)"],
+ ["Open Pipeline", currency(summary.open_pipeline_dollars || 0), "var(--cth-command-purple-mid)"],
+ ["Won Revenue", currency(summary.won_revenue_dollars || 0), "var(--cth-command-crimson)"],
+ ].map(([label, value, accent], i) => (
+ <div
+ key={label}
+ style={{
+ flex: "1 1 0",
+ minWidth: 110,
+ borderLeft: i === 0 ? "none" : "1px solid var(--cth-command-border)",
+ }}
+ >
+ <MetricTile label={label} value={value} accent={accent} />
+ </div>
+ ))}
  </div>
 
- <div className="grid gap-5 xl:grid-cols-12">
- <div className="grid gap-5 xl:col-span-8">
- <Panel
- eyebrow="Pipeline"
- title="Deals Pipeline"
- subtitle="A scalable board view built from your current CRM stages."
- >
+ <div className="grid gap-5">
+ <Section eyebrow="Pipeline" title="Deals Pipeline">
  <div className="grid gap-5 lg:grid-cols-4">
  {[
  { key: "lead", title: "Lead", accent: "var(--cth-command-muted)" },
@@ -1438,12 +1555,12 @@ export default function CRMSuite() {
  </div>
  ))}
  </div>
- </Panel>
+ </Section>
 
- <Panel
+ <Section
  eyebrow="Directory"
  title="Contacts"
- subtitle="Search and manage workspace contacts."
+ flush
  action={
  <div className="flex flex-wrap items-center gap-2">
  <div className="relative">
@@ -1583,163 +1700,9 @@ export default function CRMSuite() {
  </table>
  </div>
  )}
- </Panel>
- </div>
+ </Section>
 
- <div className="grid gap-5 xl:col-span-4">
- <QuickAddCard title="Contact" eyebrow="Quick Add" icon={Users}>
- <form onSubmit={handleCreateContact} style={{ display: "grid", gap: 12 }}>
- <LabeledInput
- label="Name"
- value={contactDraft.name}
- onChange={(e) => setContactDraft((s) => ({ ...s, name: e.target.value }))}
- placeholder="Contact name"
- />
- <LabeledInput
- label="Email"
- value={contactDraft.email}
- onChange={(e) => setContactDraft((s) => ({ ...s, email: e.target.value }))}
- placeholder="name@example.com"
- />
- <LabeledInput
- label="Company"
- value={contactDraft.company}
- onChange={(e) => setContactDraft((s) => ({ ...s, company: e.target.value }))}
- placeholder="Company"
- />
- <LabeledSelect
- label="Status"
- value={contactDraft.status}
- onChange={(e) => setContactDraft((s) => ({ ...s, status: e.target.value }))}
- options={CONTACT_STATUS_OPTIONS}
- />
- <button
- type="submit"
- disabled={contactBusy}
- style={{ ...PRIMARY_BUTTON_STYLE, opacity: contactBusy ? 0.7 : 1 }}
- >
- {contactBusy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
- Add Contact
- </button>
- </form>
- </QuickAddCard>
-
- <QuickAddCard title="Deal" eyebrow="Quick Add" icon={BriefcaseBusiness}>
- <form onSubmit={handleCreateDeal} style={{ display: "grid", gap: 12 }}>
- <LabeledInput
- label="Title"
- value={dealDraft.title}
- onChange={(e) => setDealDraft((s) => ({ ...s, title: e.target.value }))}
- placeholder="Deal title"
- />
- <LabeledInput
- label="Company"
- value={dealDraft.company}
- onChange={(e) => setDealDraft((s) => ({ ...s, company: e.target.value }))}
- placeholder="Company"
- />
- <LabeledInput
- label="Value (USD)"
- value={dealDraft.value}
- onChange={(e) => setDealDraft((s) => ({ ...s, value: e.target.value }))}
- placeholder="0"
- />
- <LabeledInput
- label="Close date"
- type="date"
- value={dealDraft.close_date}
- onChange={(e) => setDealDraft((s) => ({ ...s, close_date: e.target.value }))}
- />
- <LabeledSelect
- label="Stage"
- value={dealDraft.stage}
- onChange={(e) => setDealDraft((s) => ({ ...s, stage: e.target.value }))}
- options={DEAL_STAGE_OPTIONS}
- />
- <LabeledSelect
- label="Status"
- value={dealDraft.status}
- onChange={(e) => setDealDraft((s) => ({ ...s, status: e.target.value }))}
- options={DEAL_STATUS_OPTIONS}
- />
- <button
- type="submit"
- disabled={dealBusy}
- style={{ ...PRIMARY_BUTTON_STYLE, opacity: dealBusy ? 0.7 : 1 }}
- >
- {dealBusy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
- Add Deal
- </button>
- </form>
- </QuickAddCard>
-
- <QuickAddCard title="Activity" eyebrow="Quick Add" icon={Activity}>
- <form onSubmit={handleCreateActivity} style={{ display: "grid", gap: 12 }}>
- <LabeledSelect
- label="Type"
- value={activityDraft.type}
- onChange={(e) => setActivityDraft((s) => ({ ...s, type: e.target.value }))}
- options={ACTIVITY_TYPE_OPTIONS}
- />
- <LabeledSelect
- label="Status"
- value={activityDraft.status}
- onChange={(e) => setActivityDraft((s) => ({ ...s, status: e.target.value }))}
- options={ACTIVITY_STATUS_OPTIONS}
- />
- <LabeledInput
- label="Title"
- value={activityDraft.title}
- onChange={(e) => setActivityDraft((s) => ({ ...s, title: e.target.value }))}
- placeholder="Activity title"
- />
- <LabeledInput
- label="Due date"
- type="date"
- value={activityDraft.due_date}
- onChange={(e) => setActivityDraft((s) => ({ ...s, due_date: e.target.value }))}
- />
- <button
- type="submit"
- disabled={activityBusy}
- style={{ ...PRIMARY_BUTTON_STYLE, opacity: activityBusy ? 0.7 : 1 }}
- >
- {activityBusy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
- Add Activity
- </button>
- </form>
- </QuickAddCard>
-
- <QuickAddCard title="Note" eyebrow="Quick Add" icon={FileText}>
- <form onSubmit={handleCreateNote} style={{ display: "grid", gap: 12 }}>
- <LabeledInput
- label="Title"
- value={noteDraft.title}
- onChange={(e) => setNoteDraft((s) => ({ ...s, title: e.target.value }))}
- placeholder="Note title"
- />
- <div>
- <FieldLabel>Body</FieldLabel>
- <textarea
- rows={4}
- value={noteDraft.body}
- onChange={(e) => setNoteDraft((s) => ({ ...s, body: e.target.value }))}
- placeholder="Write a quick note"
- style={{ ...INPUT_STYLE, resize: "vertical" }}
- />
- </div>
- <button
- type="submit"
- disabled={noteBusy}
- style={{ ...PRIMARY_BUTTON_STYLE, opacity: noteBusy ? 0.7 : 1 }}
- >
- {noteBusy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
- Save Note
- </button>
- </form>
- </QuickAddCard>
-
- <Panel eyebrow="Activity" title="Recent Activity" subtitle="Latest workspace touchpoints and actions.">
+ <Section eyebrow="Activity" title="Recent Activity">
  {activities.length === 0 ? (
  <EmptyState text="No activity yet." />
  ) : (
@@ -1798,9 +1761,9 @@ export default function CRMSuite() {
  ))}
  </div>
  )}
- </Panel>
+ </Section>
 
- <Panel eyebrow="Notes" title="Notes Feed" subtitle="Quick CRM notes for this workspace.">
+ <Section eyebrow="Notes" title="Notes Feed">
  {notes.length === 0 ? (
  <EmptyState text="No notes yet." />
  ) : (
@@ -1863,11 +1826,161 @@ export default function CRMSuite() {
  ))}
  </div>
  )}
- </Panel>
+ </Section>
  </div>
  </div>
  </div>
+
+ <AddModal type={addType} onClose={() => setAddType(null)}>
+ {addType === "contact" ? (
+ <form onSubmit={handleCreateContact} style={{ display: "grid", gap: 12 }}>
+ <LabeledInput
+ label="Name"
+ value={contactDraft.name}
+ onChange={(e) => setContactDraft((s) => ({ ...s, name: e.target.value }))}
+ placeholder="Contact name"
+ />
+ <LabeledInput
+ label="Email"
+ value={contactDraft.email}
+ onChange={(e) => setContactDraft((s) => ({ ...s, email: e.target.value }))}
+ placeholder="name@example.com"
+ />
+ <LabeledInput
+ label="Company"
+ value={contactDraft.company}
+ onChange={(e) => setContactDraft((s) => ({ ...s, company: e.target.value }))}
+ placeholder="Company"
+ />
+ <LabeledSelect
+ label="Status"
+ value={contactDraft.status}
+ onChange={(e) => setContactDraft((s) => ({ ...s, status: e.target.value }))}
+ options={CONTACT_STATUS_OPTIONS}
+ />
+ <button
+ type="submit"
+ disabled={contactBusy}
+ style={{ ...PRIMARY_BUTTON_STYLE, opacity: contactBusy ? 0.7 : 1 }}
+ >
+ {contactBusy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+ Add Contact
+ </button>
+ </form>
+ ) : null}
+ {addType === "deal" ? (
+ <form onSubmit={handleCreateDeal} style={{ display: "grid", gap: 12 }}>
+ <LabeledInput
+ label="Title"
+ value={dealDraft.title}
+ onChange={(e) => setDealDraft((s) => ({ ...s, title: e.target.value }))}
+ placeholder="Deal title"
+ />
+ <LabeledInput
+ label="Company"
+ value={dealDraft.company}
+ onChange={(e) => setDealDraft((s) => ({ ...s, company: e.target.value }))}
+ placeholder="Company"
+ />
+ <LabeledInput
+ label="Value (USD)"
+ value={dealDraft.value}
+ onChange={(e) => setDealDraft((s) => ({ ...s, value: e.target.value }))}
+ placeholder="0"
+ />
+ <LabeledInput
+ label="Close date"
+ type="date"
+ value={dealDraft.close_date}
+ onChange={(e) => setDealDraft((s) => ({ ...s, close_date: e.target.value }))}
+ />
+ <LabeledSelect
+ label="Stage"
+ value={dealDraft.stage}
+ onChange={(e) => setDealDraft((s) => ({ ...s, stage: e.target.value }))}
+ options={DEAL_STAGE_OPTIONS}
+ />
+ <LabeledSelect
+ label="Status"
+ value={dealDraft.status}
+ onChange={(e) => setDealDraft((s) => ({ ...s, status: e.target.value }))}
+ options={DEAL_STATUS_OPTIONS}
+ />
+ <button
+ type="submit"
+ disabled={dealBusy}
+ style={{ ...PRIMARY_BUTTON_STYLE, opacity: dealBusy ? 0.7 : 1 }}
+ >
+ {dealBusy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+ Add Deal
+ </button>
+ </form>
+ ) : null}
+ {addType === "activity" ? (
+ <form onSubmit={handleCreateActivity} style={{ display: "grid", gap: 12 }}>
+ <LabeledSelect
+ label="Type"
+ value={activityDraft.type}
+ onChange={(e) => setActivityDraft((s) => ({ ...s, type: e.target.value }))}
+ options={ACTIVITY_TYPE_OPTIONS}
+ />
+ <LabeledSelect
+ label="Status"
+ value={activityDraft.status}
+ onChange={(e) => setActivityDraft((s) => ({ ...s, status: e.target.value }))}
+ options={ACTIVITY_STATUS_OPTIONS}
+ />
+ <LabeledInput
+ label="Title"
+ value={activityDraft.title}
+ onChange={(e) => setActivityDraft((s) => ({ ...s, title: e.target.value }))}
+ placeholder="Activity title"
+ />
+ <LabeledInput
+ label="Due date"
+ type="date"
+ value={activityDraft.due_date}
+ onChange={(e) => setActivityDraft((s) => ({ ...s, due_date: e.target.value }))}
+ />
+ <button
+ type="submit"
+ disabled={activityBusy}
+ style={{ ...PRIMARY_BUTTON_STYLE, opacity: activityBusy ? 0.7 : 1 }}
+ >
+ {activityBusy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+ Add Activity
+ </button>
+ </form>
+ ) : null}
+ {addType === "note" ? (
+ <form onSubmit={handleCreateNote} style={{ display: "grid", gap: 12 }}>
+ <LabeledInput
+ label="Title"
+ value={noteDraft.title}
+ onChange={(e) => setNoteDraft((s) => ({ ...s, title: e.target.value }))}
+ placeholder="Note title"
+ />
+ <div>
+ <FieldLabel>Body</FieldLabel>
+ <textarea
+ rows={4}
+ value={noteDraft.body}
+ onChange={(e) => setNoteDraft((s) => ({ ...s, body: e.target.value }))}
+ placeholder="Write a quick note"
+ style={{ ...INPUT_STYLE, resize: "vertical" }}
+ />
  </div>
+ <button
+ type="submit"
+ disabled={noteBusy}
+ style={{ ...PRIMARY_BUTTON_STYLE, opacity: noteBusy ? 0.7 : 1 }}
+ >
+ {noteBusy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+ Save Note
+ </button>
+ </form>
+ ) : null}
+ </AddModal>
 
  <DetailDrawer
  drawer={drawer}
