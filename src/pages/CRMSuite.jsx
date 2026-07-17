@@ -18,11 +18,29 @@ import {
 } from "lucide-react";
 
 import { DashboardLayout } from "../components/Layout";
+import DetailDrawer from "./crm/DetailDrawer";
+import {
+ SANS,
+ SERIF,
+ PAGE_STYLE,
+ PANEL_STYLE,
+ SOFT_PANEL_STYLE,
+ INPUT_STYLE,
+ SMALL_INPUT_STYLE,
+ PRIMARY_BUTTON_STYLE,
+ SECONDARY_BUTTON_STYLE,
+ DESTRUCTIVE_BUTTON_STYLE,
+ DESTRUCTIVE_OUTLINE_STYLE,
+ EYEBROW_STYLE,
+ currency,
+ formatDate,
+ EmptyValue,
+ Chip,
+ IconButton,
+} from "./crm/crmUi";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
-const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 const EMPTY_SUMMARY = {
  contacts: 0,
@@ -38,123 +56,7 @@ const DEAL_STATUS_OPTIONS = ["open", "active", "won", "closed_won", "lost", "clo
 const ACTIVITY_TYPE_OPTIONS = ["call", "email", "meeting", "task", "note"];
 const ACTIVITY_STATUS_OPTIONS = ["planned", "completed", "cancelled"];
 
-const PAGE_STYLE = {
- background: "var(--cth-command-blush)",
- minHeight: "100%",
-};
 
-const PANEL_STYLE = {
- background: "var(--cth-command-panel)",
- border: "1px solid var(--cth-command-border)",
- borderRadius: 12,
-};
-
-const SOFT_PANEL_STYLE = {
- background: "var(--cth-command-panel-soft)",
- border: "1px solid var(--cth-command-border)",
- borderRadius: 10,
-};
-
-const INPUT_STYLE = {
- width: "100%",
- background: "var(--cth-command-panel)",
- border: "1px solid var(--cth-command-border)",
- borderRadius: 7,
- padding: "10px 12px",
- color: "var(--cth-command-ink)",
- fontFamily: SANS,
- fontSize: 14,
- outline: "none",
-};
-
-const SMALL_INPUT_STYLE = {
- ...INPUT_STYLE,
- padding: "8px 12px",
- fontSize: 13,
-};
-
-const PRIMARY_BUTTON_STYLE = {
- display: "inline-flex",
- alignItems: "center",
- justifyContent: "center",
- gap: 8,
- padding: "10px 16px",
- borderRadius: 7,
- background: "var(--cth-command-purple)",
- color: "var(--cth-command-gold)",
- fontFamily: SANS,
- fontSize: 14,
- fontWeight: 600,
- border: "none",
- cursor: "pointer",
-};
-
-const SECONDARY_BUTTON_STYLE = {
- display: "inline-flex",
- alignItems: "center",
- justifyContent: "center",
- gap: 8,
- padding: "8px 14px",
- borderRadius: 7,
- background: "transparent",
- border: "1px solid var(--cth-command-border)",
- color: "var(--cth-command-ink)",
- fontFamily: SANS,
- fontSize: 14,
- fontWeight: 500,
- cursor: "pointer",
-};
-
-const DESTRUCTIVE_BUTTON_STYLE = {
- display: "inline-flex",
- alignItems: "center",
- justifyContent: "center",
- gap: 8,
- padding: "10px 16px",
- borderRadius: 7,
- background: "var(--cth-command-crimson)",
- color: "var(--cth-command-ivory)",
- fontFamily: SANS,
- fontSize: 14,
- fontWeight: 600,
- border: "none",
- cursor: "pointer",
-};
-
-const DESTRUCTIVE_OUTLINE_STYLE = {
- ...SECONDARY_BUTTON_STYLE,
- color: "var(--cth-command-crimson)",
- border: "1px solid var(--cth-command-crimson)",
-};
-
-const EYEBROW_STYLE = {
- fontFamily: SANS,
- fontSize: 11,
- fontWeight: 600,
- letterSpacing: "0.18em",
- textTransform: "uppercase",
- color: "var(--cth-command-muted)",
-};
-
-function currency(value) {
- const amount = Number(value || 0);
- return amount.toLocaleString("en-US", {
- style: "currency",
- currency: "USD",
- maximumFractionDigits: 0,
- });
-}
-
-function formatDate(value) {
- if (!value) return "";
- const date = new Date(value);
- if (Number.isNaN(date.getTime())) return "";
- return date.toLocaleDateString("en-US", {
- month: "short",
- day: "numeric",
- year: "numeric",
- });
-}
 
 function toInputDate(value) {
  if (!value) return "";
@@ -221,11 +123,6 @@ function dealStageAccent(stage) {
  return "var(--cth-command-muted)";
 }
 
-function EmptyValue({ label = "Not set" }) {
- return (
- <span style={{ fontStyle: "italic", color: "var(--cth-command-muted)" }}>{label}</span>
- );
-}
 
 function MetricTile({ icon: Icon, label, value, accent }) {
  return (
@@ -337,49 +234,6 @@ function EmptyState({ text }) {
  );
 }
 
-function Chip({ children, tone = "default" }) {
- const tones = {
- default: {
- background: "rgba(175,0,42,0.10)",
- border: "1px solid rgba(175,0,42,0.22)",
- color: "var(--cth-command-crimson)",
- },
- muted: {
- background: "var(--cth-command-panel-soft)",
- border: "1px solid var(--cth-command-border)",
- color: "var(--cth-command-muted)",
- },
- success: {
- background: "rgba(34,135,90,0.12)",
- border: "1px solid rgba(34,135,90,0.28)",
- color: "#15803d",
- },
- gold: {
- background: "rgba(196,169,91,0.18)",
- border: "1px solid rgba(196,169,91,0.40)",
- color: "var(--cth-command-purple)",
- },
- };
- const style = tones[tone] || tones.default;
- return (
- <span
- style={{
- display: "inline-flex",
- alignItems: "center",
- borderRadius: 999,
- padding: "3px 10px",
- fontFamily: SANS,
- fontSize: 11,
- fontWeight: 600,
- letterSpacing: "0.06em",
- textTransform: "uppercase",
- ...style,
- }}
- >
- {children}
- </span>
- );
-}
 
 function FieldLabel({ children }) {
  return (
@@ -419,35 +273,6 @@ function LabeledSelect({ label, value, onChange, options }) {
  );
 }
 
-function IconButton({ onClick, label, tone = "muted", children }) {
- const [hover, setHover] = useState(false);
- const baseColor = tone === "muted" ? "var(--cth-command-muted)" : "var(--cth-command-crimson)";
- const hoverColor = tone === "muted" ? "var(--cth-command-crimson)" : "var(--cth-command-crimson)";
- return (
- <button
- type="button"
- aria-label={label}
- onClick={onClick}
- onMouseEnter={() => setHover(true)}
- onMouseLeave={() => setHover(false)}
- style={{
- display: "inline-flex",
- alignItems: "center",
- justifyContent: "center",
- width: 32,
- height: 32,
- borderRadius: 7,
- background: "transparent",
- border: `1px solid ${hover ? "var(--cth-command-border)" : "transparent"}`,
- color: hover ? hoverColor : baseColor,
- cursor: "pointer",
- transition: "color 150ms ease, border-color 150ms ease",
- }}
- >
- {children}
- </button>
- );
-}
 
 function DealCard({ deal, onOpen, onDelete }) {
  const [hover, setHover] = useState(false);
@@ -852,191 +677,6 @@ function ComposeEmailModal({ contact, subject, body, busy, onSubjectChange, onBo
  );
 }
 
-function DetailField({ label, children }) {
- return (
- <div style={{ marginBottom: 18 }}>
- <div style={{ ...EYEBROW_STYLE, marginBottom: 6 }}>{label}</div>
- <div style={{ fontFamily: SANS, fontSize: 14, color: "var(--cth-command-ink)", lineHeight: 1.5 }}>
- {children}
- </div>
- </div>
- );
-}
-
-function DetailDrawer({ drawer, onClose, onRequestDelete, onCompose }) {
- const open = Boolean(drawer);
- const record = drawer?.record;
- const type = drawer?.type;
-
- const typeLabel = type === "deal" ? "Deal" : type === "contact" ? "Contact" : "";
- const heading = !record
- ? ""
- : type === "deal"
- ? record.title || "Untitled deal"
- : record.name || "Untitled contact";
-
- return (
- <>
- <div
- onClick={onClose}
- style={{
- position: "fixed",
- inset: 0,
- zIndex: 50,
- background: "rgba(13,0,16,0.4)",
- opacity: open ? 1 : 0,
- pointerEvents: open ? "auto" : "none",
- transition: "opacity 300ms ease",
- }}
- />
- <aside
- aria-hidden={!open}
- style={{
- position: "fixed",
- top: 0,
- right: 0,
- height: "100vh",
- width: "100%",
- maxWidth: 480,
- zIndex: 51,
- background: "var(--cth-command-panel)",
- borderLeft: "1px solid var(--cth-command-border)",
- boxShadow: "-30px 0 60px rgba(13,0,16,0.20)",
- transform: open ? "translateX(0)" : "translateX(100%)",
- transition: "transform 300ms ease",
- display: "flex",
- flexDirection: "column",
- }}
- >
- {record ? (
- <>
- <header
- style={{
- display: "flex",
- alignItems: "flex-start",
- justifyContent: "space-between",
- gap: 12,
- padding: "24px 28px",
- borderBottom: "1px solid var(--cth-command-border)",
- }}
- >
- <div style={{ minWidth: 0 }}>
- <div style={EYEBROW_STYLE}>{typeLabel}</div>
- <h3
- style={{
- fontFamily: SERIF,
- fontSize: 24,
- fontWeight: 600,
- color: "var(--cth-command-ink)",
- margin: "6px 0 0",
- letterSpacing: "-0.005em",
- lineHeight: 1.2,
- wordBreak: "break-word",
- }}
- >
- {heading}
- </h3>
- </div>
- <IconButton label="Close drawer" onClick={onClose}>
- <X size={16} />
- </IconButton>
- </header>
-
- <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
- {type === "deal" ? (
- <>
- <DetailField label="Name">{record.title || <EmptyValue />}</DetailField>
- <DetailField label="Value">
- {record.value_dollars != null && record.value_dollars !== "" ? (
- currency(record.value_dollars)
- ) : (
- <EmptyValue />
- )}
- </DetailField>
- <DetailField label="Stage">
- {record.stage ? <Chip>{record.stage}</Chip> : <EmptyValue />}
- </DetailField>
- <DetailField label="Status">
- {record.status ? <Chip tone="muted">{record.status}</Chip> : <EmptyValue />}
- </DetailField>
- <DetailField label="Company">{record.company || <EmptyValue />}</DetailField>
- <DetailField label="Contact">
- {record.contact_name || record.contact || <EmptyValue />}
- </DetailField>
- <DetailField label="Close date">
- {record.expected_close_date ? formatDate(record.expected_close_date) : <EmptyValue />}
- </DetailField>
- <DetailField label="Created">
- {record.created_at ? formatDate(record.created_at) : <EmptyValue />}
- </DetailField>
- </>
- ) : (
- <>
- <DetailField label="Name">{record.name || <EmptyValue />}</DetailField>
- <DetailField label="Email">{record.email || <EmptyValue />}</DetailField>
- <DetailField label="Phone">{record.phone || <EmptyValue />}</DetailField>
- <DetailField label="Company">{record.company || <EmptyValue />}</DetailField>
- <DetailField label="Status">
- {record.status ? <Chip>{record.status}</Chip> : <EmptyValue />}
- </DetailField>
- <DetailField label="Created">
- {record.created_at ? formatDate(record.created_at) : <EmptyValue />}
- </DetailField>
- </>
- )}
- </div>
-
- <footer
- style={{
- padding: "20px 28px",
- borderTop: "1px solid var(--cth-command-border)",
- display: "flex",
- flexDirection: "column",
- gap: 14,
- }}
- >
- <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
- {type === "contact" ? (
- <button
- type="button"
- onClick={() => onCompose(record)}
- style={PRIMARY_BUTTON_STYLE}
- >
- <Mail size={14} />
- Send email
- </button>
- ) : null}
- <button
- type="button"
- onClick={() => onRequestDelete(type, record)}
- style={DESTRUCTIVE_OUTLINE_STYLE}
- >
- <Trash2 size={14} />
- Delete {typeLabel.toLowerCase()}
- </button>
- </div>
- {type === "contact" ? (
- <div
- style={{
- display: "flex",
- alignItems: "center",
- gap: 6,
- fontFamily: SANS,
- fontSize: 12,
- color: "var(--cth-command-muted)",
- }}
- >
- <Mail size={12} />
- Inbox coming soon — receiving replies in-app is on the roadmap.
- </div>
- ) : null}
- </footer>
- </>
- ) : null}
- </aside>
- </>
- );
-}
 
 function Toast({ toast }) {
  if (!toast) return null;
