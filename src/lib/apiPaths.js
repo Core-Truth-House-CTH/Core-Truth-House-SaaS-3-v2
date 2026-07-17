@@ -205,6 +205,11 @@ export const API_PATHS = {
     dealById: (dealId) => `/api/crm/deals/${encode(dealId)}`,
     dealsSearch: (query) => buildPath("/api/crm/deals", query),
 
+    pipelines: "/api/crm/pipelines",
+    pipelineById: (pipelineId) => `/api/crm/pipelines/${encode(pipelineId)}`,
+    pipelineMakeDefault: (pipelineId) =>
+      `/api/crm/pipelines/${encode(pipelineId)}/make-default`,
+
     activities: "/api/crm/activities",
     activityById: (activityId) => `/api/crm/activities/${encode(activityId)}`,
 

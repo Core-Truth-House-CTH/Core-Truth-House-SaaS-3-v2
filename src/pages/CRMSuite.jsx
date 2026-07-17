@@ -36,6 +36,8 @@ import {
  formatWaiting,
  EmptyValue,
  FieldLabel,
+ buildStageIndex,
+ stageAccent,
  Chip,
  IconButton,
 } from "./crm/crmUi";
@@ -52,8 +54,8 @@ const EMPTY_SUMMARY = {
 };
 
 const CONTACT_STATUS_OPTIONS = ["lead", "prospect", "customer", "inactive"];
-const DEAL_STAGE_OPTIONS = ["lead", "qualified", "proposal", "negotiation", "won", "lost"];
-const DEAL_STATUS_OPTIONS = ["open", "active", "won", "closed_won", "lost", "closed_lost"];
+// Deal stage and status are gone: a deal's stage is a stage_id into its
+// pipeline, and open/won/lost is the stage's type, not a separate field.
 const ACTIVITY_TYPE_OPTIONS = ["call", "email", "meeting", "task", "note"];
 const ACTIVITY_STATUS_OPTIONS = ["planned", "completed", "cancelled"];
 
@@ -73,13 +75,6 @@ function fromInputDate(value) {
  return date.toISOString();
 }
 
-function dealStageAccent(stage) {
- const s = String(stage || "").toLowerCase();
- if (s === "qualified") return "var(--cth-command-gold)";
- if (s === "proposal" || s === "negotiation") return "var(--cth-command-purple)";
- if (s === "won" || s === "lost") return "var(--cth-command-crimson)";
- return "var(--cth-command-muted)";
-}
 
 
 // One cell of the metric strip. Number first, label under, no box: the tiles used
@@ -239,9 +234,10 @@ function ContactSelect({ label, value, onChange, contacts }) {
  );
 }
 
-function DealCard({ deal, onOpen, onDelete }) {
+function DealCard({ deal, onOpen, onDelete, stageIndex }) {
  const [hover, setHover] = useState(false);
- const accent = dealStageAccent(deal.stage);
+ const stage = stageIndex?.get(deal.stage_id);
+ const accent = stageAccent(stage?.type);
  return (
  <div
  role="button"
@@ -321,7 +317,9 @@ function DealCard({ deal, onOpen, onDelete }) {
  </div>
 
  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
- {deal.stage ? <Chip>{deal.stage}</Chip> : null}
+ <Chip tone={stage?.type === "won" ? "success" : stage?.type === "lost" ? "muted" : "default"}>
+ {stage?.name || "Unassigned"}
+ </Chip>
  {deal.expected_close_date ? (
  <Chip tone="muted">{formatDate(deal.expected_close_date)}</Chip>
  ) : null}
@@ -668,6 +666,8 @@ export default function CRMSuite() {
  const [summary, setSummary] = useState(EMPTY_SUMMARY);
  const [contacts, setContacts] = useState([]);
  const [deals, setDeals] = useState([]);
+ const [pipelines, setPipelines] = useState([]);
+ const [boardPipelineId, setBoardPipelineId] = useState("");
  const [activities, setActivities] = useState([]);
  const [notes, setNotes] = useState([]);
  const [needsAttention, setNeedsAttention] = useState([]);
@@ -697,8 +697,8 @@ export default function CRMSuite() {
  company: "",
  contact_id: "",
  value: "",
- stage: "lead",
- status: "open",
+ pipeline_id: "",
+ stage_id: "",
  close_date: "",
  });
 
@@ -726,11 +726,12 @@ export default function CRMSuite() {
  setPageError("");
 
  try {
- const [summaryRes, contactsRes, dealsRes, activitiesRes, notesRes, attentionRes] =
+ const [summaryRes, contactsRes, dealsRes, pipelinesRes, activitiesRes, notesRes, attentionRes] =
  await Promise.all([
  apiClient.get(API_PATHS.crm.dashboard),
  apiClient.get(API_PATHS.crm.contacts),
  apiClient.get(API_PATHS.crm.deals),
+ apiClient.get(API_PATHS.crm.pipelines),
  apiClient.get(API_PATHS.crm.activities),
  apiClient.get(API_PATHS.crm.notes),
  apiClient.get(API_PATHS.crm.contactsSearch({ needs_attention: true })),
@@ -739,6 +740,7 @@ export default function CRMSuite() {
  setSummary(summaryRes || EMPTY_SUMMARY);
  setContacts(contactsRes?.contacts || []);
  setDeals(dealsRes?.deals || []);
+ setPipelines(pipelinesRes?.pipelines || []);
  setActivities(activitiesRes?.activities || []);
  setNotes(notesRes?.notes || []);
  setNeedsAttention(attentionRes?.contacts || []);
@@ -763,6 +765,40 @@ export default function CRMSuite() {
  useEffect(() => {
  loadCRM();
  }, [loadCRM]);
+
+ // One stage_id -> {name, type, pipelineId} map, rebuilt when pipelines change,
+ // shared by the board, the cards, and the drawer.
+ const stageIndex = useMemo(() => buildStageIndex(pipelines), [pipelines]);
+
+ // The board shows one pipeline at a time; default to the workspace default.
+ // Keep the current selection if it still exists after a reload, so editing a
+ // pipeline does not bounce the board back to the default.
+ useEffect(() => {
+ if (!pipelines.length) return;
+ setBoardPipelineId((current) => {
+ if (current && pipelines.some((p) => p.id === current)) return current;
+ const preferred = pipelines.find((p) => p.is_default) || pipelines[0];
+ return preferred.id;
+ });
+ }, [pipelines]);
+
+ const boardPipeline = useMemo(
+ () => pipelines.find((p) => p.id === boardPipelineId) || null,
+ [pipelines, boardPipelineId]
+ );
+
+ // When the Add Deal form opens, pre-select the default pipeline and its first
+ // stage so the selects are never empty. create_deal would fall back anyway, but
+ // an operator should see where the deal is about to land.
+ useEffect(() => {
+ if (addType !== "deal" || dealDraft.pipeline_id || !pipelines.length) return;
+ const preferred = pipelines.find((p) => p.is_default) || pipelines[0];
+ setDealDraft((s) => ({
+ ...s,
+ pipeline_id: preferred.id,
+ stage_id: preferred.stages?.[0]?.id || "",
+ }));
+ }, [addType, pipelines, dealDraft.pipeline_id]);
 
  useEffect(() => {
  if (!toast) return undefined;
@@ -805,7 +841,7 @@ export default function CRMSuite() {
  const q = dealQuery.trim().toLowerCase();
  const base = q
  ? deals.filter((item) =>
- [item.title, item.company, item.stage, item.status]
+ [item.title, item.company, stageIndex.get(item.stage_id)?.name]
  .filter(Boolean)
  .some((value) => String(value).toLowerCase().includes(q))
  )
@@ -828,26 +864,31 @@ export default function CRMSuite() {
  break;
  }
  return sorted;
- }, [deals, dealQuery, dealSortOrder]);
+ }, [deals, dealQuery, dealSortOrder, stageIndex]);
 
- const dealsByStage = useMemo(() => {
- const buckets = {
- lead: [],
- qualified: [],
- proposal: [],
- won: [],
- };
+ // One column per stage of the selected pipeline, plus an explicit Unassigned
+ // column for that pipeline's deals whose stage_id no longer resolves (a deleted
+ // stage). No else->Lead catch-all: a deal at a dead stage must not silently read
+ // as a Lead. Deals belonging to other pipelines are not shown on this board.
+ const boardColumns = useMemo(() => {
+ if (!boardPipeline) return [];
+ const columns = boardPipeline.stages.map((stage) => ({
+ id: stage.id,
+ name: stage.name,
+ type: stage.type,
+ deals: [],
+ }));
+ const byId = new Map(columns.map((column) => [column.id, column]));
+ const unassigned = { id: "__unassigned__", name: "Unassigned", type: null, deals: [] };
 
  filteredDeals.forEach((deal) => {
- const stage = String(deal.stage || "").toLowerCase();
- if (stage === "qualified") buckets.qualified.push(deal);
- else if (stage === "proposal" || stage === "negotiation") buckets.proposal.push(deal);
- else if (stage === "won" || stage === "lost") buckets.won.push(deal);
- else buckets.lead.push(deal);
+ if (deal.pipeline_id !== boardPipeline.id) return;
+ const column = byId.get(deal.stage_id);
+ (column || unassigned).deals.push(deal);
  });
 
- return buckets;
- }, [filteredDeals]);
+ return unassigned.deals.length ? [...columns, unassigned] : columns;
+ }, [boardPipeline, filteredDeals]);
 
  const handleCreateContact = async (e) => {
  e.preventDefault();
@@ -904,8 +945,10 @@ export default function CRMSuite() {
  // honest about the difference between unset and empty-string.
  contact_id: dealDraft.contact_id || null,
  value_dollars: Number(dealDraft.value || 0),
- stage: dealDraft.stage || "lead",
- status: dealDraft.status || "open",
+ // Empty pipeline_id/stage_id let create_deal fall back to the default
+ // pipeline and its first stage; a chosen pair is sent through.
+ pipeline_id: dealDraft.pipeline_id || null,
+ stage_id: dealDraft.stage_id || null,
  expected_close_date: fromInputDate(dealDraft.close_date),
  });
 
@@ -915,8 +958,8 @@ export default function CRMSuite() {
  company: "",
  contact_id: "",
  value: "",
- stage: "lead",
- status: "open",
+ pipeline_id: "",
+ stage_id: "",
  close_date: "",
  });
  setDealQuery("");
@@ -1315,22 +1358,42 @@ export default function CRMSuite() {
  </div>
 
  <div className="grid gap-5">
- <Section eyebrow="Pipeline" title="Deals Pipeline">
- <div className="grid gap-5 lg:grid-cols-4">
- {[
- { key: "lead", title: "Lead", accent: "var(--cth-command-muted)" },
- { key: "qualified", title: "Qualified", accent: "var(--cth-command-gold)" },
- { key: "proposal", title: "Proposal", accent: "var(--cth-command-purple)" },
- { key: "won", title: "Won / Lost", accent: "var(--cth-command-crimson)" },
- ].map((column) => (
+ <Section
+ eyebrow="Pipeline"
+ title="Deals Pipeline"
+ action={
+ pipelines.length ? (
+ <select
+ value={boardPipelineId}
+ onChange={(e) => setBoardPipelineId(e.target.value)}
+ style={SMALL_INPUT_STYLE}
+ aria-label="Pipeline"
+ >
+ {pipelines.map((p) => (
+ <option key={p.id} value={p.id}>
+ {p.name}
+ {p.is_default ? " (default)" : ""}
+ </option>
+ ))}
+ </select>
+ ) : null
+ }
+ >
+ {!boardPipeline ? (
+ <EmptyState text="No pipeline yet." />
+ ) : (
+ <div style={{ display: "flex", gap: 20, overflowX: "auto", paddingBottom: 4 }}>
+ {boardColumns.map((column) => (
  <div
- key={column.key}
+ key={column.id}
  style={{
  ...SOFT_PANEL_STYLE,
  padding: 14,
  display: "flex",
  flexDirection: "column",
  gap: 12,
+ minWidth: 240,
+ flex: "1 0 240px",
  }}
  >
  <div
@@ -1351,12 +1414,14 @@ export default function CRMSuite() {
  width: 8,
  height: 8,
  borderRadius: "50%",
- background: column.accent,
+ background: stageAccent(column.type),
  display: "inline-block",
  }}
  />
  <div>
- <div style={{ ...EYEBROW_STYLE, fontSize: 10, letterSpacing: "0.2em" }}>Stage</div>
+ <div style={{ ...EYEBROW_STYLE, fontSize: 10, letterSpacing: "0.2em" }}>
+ {column.type || "No stage"}
+ </div>
  <div
  style={{
  fontFamily: SANS,
@@ -1366,20 +1431,21 @@ export default function CRMSuite() {
  marginTop: 2,
  }}
  >
- {column.title}
+ {column.name}
  </div>
  </div>
  </div>
- <Chip tone="muted">{dealsByStage[column.key].length}</Chip>
+ <Chip tone="muted">{column.deals.length}</Chip>
  </div>
 
- {dealsByStage[column.key].length === 0 ? (
+ {column.deals.length === 0 ? (
  <EmptyState text="No deals here." />
  ) : (
- dealsByStage[column.key].map((deal) => (
+ column.deals.map((deal) => (
  <DealCard
  key={deal.id}
  deal={deal}
+ stageIndex={stageIndex}
  onOpen={openDealDrawer}
  onDelete={(rec) => requestDelete("deal", rec)}
  />
@@ -1388,6 +1454,7 @@ export default function CRMSuite() {
  </div>
  ))}
  </div>
+ )}
  </Section>
 
  <Section
@@ -1733,18 +1800,43 @@ export default function CRMSuite() {
  value={dealDraft.close_date}
  onChange={(e) => setDealDraft((s) => ({ ...s, close_date: e.target.value }))}
  />
- <LabeledSelect
- label="Stage"
- value={dealDraft.stage}
- onChange={(e) => setDealDraft((s) => ({ ...s, stage: e.target.value }))}
- options={DEAL_STAGE_OPTIONS}
- />
- <LabeledSelect
- label="Status"
- value={dealDraft.status}
- onChange={(e) => setDealDraft((s) => ({ ...s, status: e.target.value }))}
- options={DEAL_STATUS_OPTIONS}
- />
+ <div>
+ <FieldLabel>Pipeline</FieldLabel>
+ <select
+ value={dealDraft.pipeline_id}
+ onChange={(e) => {
+ const pipelineId = e.target.value;
+ const picked = pipelines.find((p) => p.id === pipelineId);
+ // Moving pipelines invalidates the old stage; reset to the new one's first.
+ setDealDraft((s) => ({
+ ...s,
+ pipeline_id: pipelineId,
+ stage_id: picked?.stages?.[0]?.id || "",
+ }));
+ }}
+ style={INPUT_STYLE}
+ >
+ {pipelines.map((p) => (
+ <option key={p.id} value={p.id}>
+ {p.name}
+ </option>
+ ))}
+ </select>
+ </div>
+ <div>
+ <FieldLabel>Stage</FieldLabel>
+ <select
+ value={dealDraft.stage_id}
+ onChange={(e) => setDealDraft((s) => ({ ...s, stage_id: e.target.value }))}
+ style={INPUT_STYLE}
+ >
+ {(pipelines.find((p) => p.id === dealDraft.pipeline_id)?.stages || []).map((stage) => (
+ <option key={stage.id} value={stage.id}>
+ {stage.name}
+ </option>
+ ))}
+ </select>
+ </div>
  <button
  type="submit"
  disabled={dealBusy}
@@ -1826,6 +1918,7 @@ export default function CRMSuite() {
  contacts={contacts}
  deals={deals}
  activities={activities}
+ stageIndex={stageIndex}
  onClose={closeDrawer}
  onRequestDelete={requestDelete}
  onCompose={compose.open}

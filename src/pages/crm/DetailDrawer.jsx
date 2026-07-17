@@ -156,7 +156,8 @@ function TabEmpty({ text }) {
 
 // One deal, as it relates to this contact: what it is, what it is worth, where it
 // actually is, and when it is due. Its own stage, not the contact's status.
-function LinkedDealRow({ deal }) {
+function LinkedDealRow({ deal, stageIndex }) {
+ const stage = stageIndex?.get(deal.stage_id);
  return (
  <div
  style={{
@@ -200,7 +201,9 @@ function LinkedDealRow({ deal }) {
  </div>
  </div>
  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginTop: 10 }}>
- {deal.stage ? <Chip>{deal.stage}</Chip> : null}
+ <Chip tone={stage?.type === "won" ? "success" : stage?.type === "lost" ? "muted" : "default"}>
+ {stage?.name || "Unassigned"}
+ </Chip>
  {deal.expected_close_date && formatDate(deal.expected_close_date) ? (
  <span style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)" }}>
  {`Closes ${formatDate(deal.expected_close_date)}`}
@@ -262,7 +265,7 @@ function EmailRow({ activity }) {
  );
 }
 
-function DetailDrawer({ drawer, contacts, deals, activities, onClose, onRequestDelete, onCompose }) {
+function DetailDrawer({ drawer, contacts, deals, activities, stageIndex, onClose, onRequestDelete, onCompose }) {
  const open = Boolean(drawer);
  const record = drawer?.record;
  const type = drawer?.type;
@@ -484,10 +487,16 @@ function DetailDrawer({ drawer, contacts, deals, activities, onClose, onRequestD
  )}
  </DetailField>
  <DetailField label="Stage">
- {record.stage ? <Chip>{record.stage}</Chip> : <EmptyValue />}
- </DetailField>
- <DetailField label="Status">
- {record.status ? <Chip tone="muted">{record.status}</Chip> : <EmptyValue />}
+ {(() => {
+ const stage = stageIndex?.get(record.stage_id);
+ return stage ? (
+ <Chip tone={stage.type === "won" ? "success" : stage.type === "lost" ? "muted" : "default"}>
+ {stage.name}
+ </Chip>
+ ) : (
+ <EmptyValue label="Unassigned" />
+ );
+ })()}
  </DetailField>
  <DetailField label="Company">{record.company || <EmptyValue />}</DetailField>
  <DetailField label="Contact">
@@ -523,7 +532,7 @@ function DetailDrawer({ drawer, contacts, deals, activities, onClose, onRequestD
  ) : (
  <div style={{ display: "grid", gap: 10 }}>
  {contactDeals.map((deal) => (
- <LinkedDealRow key={deal.id} deal={deal} />
+ <LinkedDealRow key={deal.id} deal={deal} stageIndex={stageIndex} />
  ))}
  </div>
  )

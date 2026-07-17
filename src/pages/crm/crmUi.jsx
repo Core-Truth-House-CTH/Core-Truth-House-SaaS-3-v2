@@ -200,6 +200,31 @@ function EmptyValue({ label = "Not set" }) {
  );
 }
 
+// Resolve a deal's stage_id to its stage. A deal references a stage by id; the
+// name and type live on the pipeline. One Map, built once per load from GET
+// /pipelines, serves the board, the deal cards, the drawer, and the linked-deal
+// rows -- every place a deal's stage renders. get(stage_id) -> {name, type,
+// pipelineId} or undefined for a deleted/unknown stage.
+function buildStageIndex(pipelines) {
+ const index = new Map();
+ (pipelines || []).forEach((pipeline) => {
+ (pipeline.stages || []).forEach((stage) => {
+ index.set(stage.id, { name: stage.name, type: stage.type, pipelineId: pipeline.id });
+ });
+ });
+ return index;
+}
+
+// Accent by stage TYPE, not a hardcoded stage name: stages are user-named now,
+// but each is still open, won, or lost. Undefined type (unassigned/unknown) is
+// muted, so a deal at a deleted stage reads as neutral rather than borrowing a
+// real stage's color.
+function stageAccent(type) {
+ if (type === "won") return "var(--cth-command-gold)";
+ if (type === "open") return "var(--cth-command-purple)";
+ return "var(--cth-command-muted)";
+}
+
 // The eyebrow-styled form label. Moved here from CRMSuite because the compose
 // modal (now shared) and the contact record page both need it, and CRMSuite's
 // own LabeledInput/LabeledSelect keep using it by import.
@@ -320,6 +345,8 @@ export {
  EmptyValue,
  FieldLabel,
  DetailField,
+ buildStageIndex,
+ stageAccent,
  Chip,
  IconButton,
 };

@@ -39,6 +39,7 @@ import {
  daysWaiting,
  EmptyValue,
  DetailField,
+ buildStageIndex,
  Chip,
 } from "./crmUi";
 
@@ -197,7 +198,8 @@ function TabEmpty({ text }) {
  );
 }
 
-function LinkedDealRow({ deal }) {
+function LinkedDealRow({ deal, stageIndex }) {
+ const stage = stageIndex?.get(deal.stage_id);
  return (
  <div style={{ border: "1px solid var(--cth-command-border)", borderRadius: 8, padding: "14px 16px" }}>
  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
@@ -220,7 +222,9 @@ function LinkedDealRow({ deal }) {
  </div>
  </div>
  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 10 }}>
- {deal.stage ? <Chip>{deal.stage}</Chip> : null}
+ <Chip tone={stage?.type === "won" ? "success" : stage?.type === "lost" ? "muted" : "default"}>
+ {stage?.name || "Unassigned"}
+ </Chip>
  {deal.expected_close_date && formatDate(deal.expected_close_date) ? (
  <span style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>
  {`Closes ${formatDate(deal.expected_close_date)}`}
@@ -349,6 +353,7 @@ export default function ContactRecordPage() {
  const [contact, setContact] = useState(null);
  const [deals, setDeals] = useState([]);
  const [activities, setActivities] = useState([]);
+ const [pipelines, setPipelines] = useState([]);
  const [tab, setTab] = useState("overview");
  const [toast, setToast] = useState(null);
  const [confirmOpen, setConfirmOpen] = useState(false);
@@ -358,17 +363,20 @@ export default function ContactRecordPage() {
  setLoading(true);
  setError("");
  try {
- // Three fetches in parallel: the one contact, plus the workspace deals and
- // activities the tabs filter locally. contactById is what makes a hard
- // refresh work with no list in memory.
- const [contactRes, dealsRes, activitiesRes] = await Promise.all([
+ // Fetches in parallel: the one contact, plus the workspace deals,
+ // activities, and pipelines the tabs need. contactById is what makes a hard
+ // refresh work with no list in memory; pipelines resolve each linked deal's
+ // stage_id to a name for the Deals tab.
+ const [contactRes, dealsRes, activitiesRes, pipelinesRes] = await Promise.all([
  apiClient.get(API_PATHS.crm.contactById(id)),
  apiClient.get(API_PATHS.crm.deals),
  apiClient.get(API_PATHS.crm.activities),
+ apiClient.get(API_PATHS.crm.pipelines),
  ]);
  setContact(contactRes?.contact || null);
  setDeals(dealsRes?.deals || []);
  setActivities(activitiesRes?.activities || []);
+ setPipelines(pipelinesRes?.pipelines || []);
  if (!contactRes?.contact) setError("This contact could not be found.");
  } catch (err) {
  console.error("Failed to load contact", err);
@@ -392,6 +400,8 @@ export default function ContactRecordPage() {
  notify: (message) => setToast(message),
  onSent: () => load(),
  });
+
+ const stageIndex = useMemo(() => buildStageIndex(pipelines), [pipelines]);
 
  const contactDeals = useMemo(
  () => (contact ? deals.filter((deal) => deal.contact_id === contact.id) : []),
@@ -562,7 +572,7 @@ export default function ContactRecordPage() {
  ) : (
  <div style={{ display: "grid", gap: 12 }}>
  {contactDeals.map((deal) => (
- <LinkedDealRow key={deal.id} deal={deal} />
+ <LinkedDealRow key={deal.id} deal={deal} stageIndex={stageIndex} />
  ))}
  </div>
  )
