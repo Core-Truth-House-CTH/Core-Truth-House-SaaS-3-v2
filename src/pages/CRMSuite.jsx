@@ -1086,8 +1086,8 @@ export default function CRMSuite() {
  };
 
  const openDealDrawer = (deal) => setDrawer({ type: "deal", record: deal });
- // Contacts now open their own record page instead of the drawer. The drawer's
- // contact branch is left in place but dead (see DetailDrawer); deals still use it.
+ // Contacts open their own record page at /crm/contacts/:id, not the drawer.
+ // The drawer is deal-only now (its contact branch was deleted).
  const openContact = (contact) => {
  if (contact?.id) navigate(`/crm/contacts/${contact.id}`);
  };
@@ -1916,12 +1916,9 @@ export default function CRMSuite() {
  <DetailDrawer
  drawer={drawer}
  contacts={contacts}
- deals={deals}
- activities={activities}
  stageIndex={stageIndex}
  onClose={closeDrawer}
  onRequestDelete={requestDelete}
- onCompose={compose.open}
  />
  <ComposeEmailModal compose={compose} />
  <ConfirmDeleteModal
