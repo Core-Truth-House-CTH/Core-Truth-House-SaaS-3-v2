@@ -136,6 +136,64 @@ function formatDate(value) {
  });
 }
 
+// Server-owned intake_channel -> what the person actually did. The backend value
+// is the source of truth; anything unrecognized falls back to a neutral phrase
+// rather than rendering a raw enum at someone.
+const INTAKE_LABELS = {
+ cohort_application: "Applied to cohort",
+ brand_diagnostic: "Took the diagnostic",
+ contact_page: "Sent a message",
+};
+
+function intakeLabel(channel) {
+ return INTAKE_LABELS[channel] || "Came in through the site";
+}
+
+// How long they have been waiting, and since when.
+//
+// The reference point branches on state: a lead nobody has written to has been
+// waiting since they arrived (created_at), while a lead who is due again has
+// been waiting only since next_action_at passed. Using created_at for everyone
+// would claim a lead who arrived in January and was emailed yesterday has waited
+// six months, which is precisely backwards.
+function waitingSince(lead) {
+ return lead?.last_contacted_at == null ? lead?.created_at : lead?.next_action_at;
+}
+
+function formatWaiting(value) {
+ if (!value) return null;
+ const then = new Date(value);
+ if (Number.isNaN(then.getTime())) return null;
+
+ const minutes = Math.floor((Date.now() - then.getTime()) / 60000);
+ if (minutes < 1) return "Just now";
+ if (minutes < 60) return `Waiting ${minutes}m`;
+
+ const hours = Math.floor(minutes / 60);
+ if (hours < 24) return `Waiting ${hours}h`;
+
+ const days = Math.floor(hours / 24);
+ if (days < 30) return `Waiting ${days}d`;
+
+ const months = Math.floor(days / 30);
+ return months < 12 ? `Waiting ${months}mo` : `Waiting ${Math.floor(months / 12)}y`;
+}
+
+// The same clock as formatWaiting, as a bare integer for a number-first tile.
+//
+// Clamped at 0 rather than allowed to go negative: waitingSince returns
+// next_action_at for an already-contacted contact, and that timestamp is two days
+// in the future right after a send. A raw subtraction would render "-2 days
+// waiting" at someone who is not waiting at all.
+function daysWaiting(contact) {
+ const value = waitingSince(contact);
+ if (!value) return null;
+ const then = new Date(value);
+ if (Number.isNaN(then.getTime())) return null;
+ const days = Math.floor((Date.now() - then.getTime()) / 86400000);
+ return days > 0 ? days : 0;
+}
+
 function EmptyValue({ label = "Not set" }) {
  return (
  <span style={{ fontStyle: "italic", color: "var(--cth-command-muted)" }}>{label}</span>
@@ -231,6 +289,10 @@ export {
  EYEBROW_STYLE,
  currency,
  formatDate,
+ intakeLabel,
+ waitingSince,
+ formatWaiting,
+ daysWaiting,
  EmptyValue,
  Chip,
  IconButton,

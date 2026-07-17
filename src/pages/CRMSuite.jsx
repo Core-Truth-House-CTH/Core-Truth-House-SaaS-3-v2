@@ -30,6 +30,9 @@ import {
  EYEBROW_STYLE,
  currency,
  formatDate,
+ intakeLabel,
+ waitingSince,
+ formatWaiting,
  EmptyValue,
  Chip,
  IconButton,
@@ -66,49 +69,6 @@ function fromInputDate(value) {
  const date = new Date(`${value}T12:00:00`);
  if (Number.isNaN(date.getTime())) return null;
  return date.toISOString();
-}
-
-// Server-owned intake_channel -> what the person actually did. The backend value
-// is the source of truth; anything unrecognized falls back to a neutral phrase
-// rather than rendering a raw enum at someone.
-const INTAKE_LABELS = {
- cohort_application: "Applied to cohort",
- brand_diagnostic: "Took the diagnostic",
- contact_page: "Sent a message",
-};
-
-function intakeLabel(channel) {
- return INTAKE_LABELS[channel] || "Came in through the site";
-}
-
-// How long they have been waiting, and since when.
-//
-// The reference point branches on state: a lead nobody has written to has been
-// waiting since they arrived (created_at), while a lead who is due again has
-// been waiting only since next_action_at passed. Using created_at for everyone
-// would claim a lead who arrived in January and was emailed yesterday has waited
-// six months, which is precisely backwards.
-function waitingSince(lead) {
- return lead?.last_contacted_at == null ? lead?.created_at : lead?.next_action_at;
-}
-
-function formatWaiting(value) {
- if (!value) return null;
- const then = new Date(value);
- if (Number.isNaN(then.getTime())) return null;
-
- const minutes = Math.floor((Date.now() - then.getTime()) / 60000);
- if (minutes < 1) return "Just now";
- if (minutes < 60) return `Waiting ${minutes}m`;
-
- const hours = Math.floor(minutes / 60);
- if (hours < 24) return `Waiting ${hours}h`;
-
- const days = Math.floor(hours / 24);
- if (days < 30) return `Waiting ${days}d`;
-
- const months = Math.floor(days / 30);
- return months < 12 ? `Waiting ${months}mo` : `Waiting ${Math.floor(months / 12)}y`;
 }
 
 function dealStageAccent(stage) {
@@ -259,6 +219,31 @@ function LabeledSelect({ label, value, onChange, options }) {
  );
 }
 
+
+// The one field that links a deal to a contact. crm_deals has carried contact_id
+// since it was created and create_deal persists it; the form simply never sent
+// one, so every deal landed unlinked and the drawer's Deals tab could never have
+// anything to show.
+//
+// Its own component rather than a LabeledSelect: LabeledSelect maps a string[] to
+// options whose value and label are the same string, and here they differ -- the
+// value is an opaque contact id, the label is a human being.
+function ContactSelect({ label, value, onChange, contacts }) {
+ return (
+ <div>
+ {label ? <FieldLabel>{label}</FieldLabel> : null}
+ <select value={value} onChange={onChange} style={INPUT_STYLE}>
+ <option value="">No contact</option>
+ {contacts.map((contact) => (
+ <option key={contact.id} value={contact.id}>
+ {contact.name || "Untitled contact"}
+ {contact.email ? ` (${contact.email})` : ""}
+ </option>
+ ))}
+ </select>
+ </div>
+ );
+}
 
 function DealCard({ deal, onOpen, onDelete }) {
  const [hover, setHover] = useState(false);
@@ -830,6 +815,7 @@ export default function CRMSuite() {
  const [dealDraft, setDealDraft] = useState({
  title: "",
  company: "",
+ contact_id: "",
  value: "",
  stage: "lead",
  status: "open",
@@ -1029,6 +1015,10 @@ export default function CRMSuite() {
  await apiClient.post(API_PATHS.crm.deals, {
  title: dealDraft.title.trim(),
  company: dealDraft.company.trim() || null,
+ // "" means the operator chose "No contact". create_deal already coerces a
+ // falsy contact_id to null, but sending null outright keeps the wire payload
+ // honest about the difference between unset and empty-string.
+ contact_id: dealDraft.contact_id || null,
  value_dollars: Number(dealDraft.value || 0),
  stage: dealDraft.stage || "lead",
  status: dealDraft.status || "open",
@@ -1039,6 +1029,7 @@ export default function CRMSuite() {
  setDealDraft({
  title: "",
  company: "",
+ contact_id: "",
  value: "",
  stage: "lead",
  status: "open",
@@ -1882,6 +1873,12 @@ export default function CRMSuite() {
  onChange={(e) => setDealDraft((s) => ({ ...s, company: e.target.value }))}
  placeholder="Company"
  />
+ <ContactSelect
+ label="Contact"
+ value={dealDraft.contact_id}
+ onChange={(e) => setDealDraft((s) => ({ ...s, contact_id: e.target.value }))}
+ contacts={contacts}
+ />
  <LabeledInput
  label="Value (USD)"
  value={dealDraft.value}
@@ -1984,6 +1981,8 @@ export default function CRMSuite() {
 
  <DetailDrawer
  drawer={drawer}
+ deals={deals}
+ activities={activities}
  onClose={closeDrawer}
  onRequestDelete={requestDelete}
  onCompose={openCompose}
