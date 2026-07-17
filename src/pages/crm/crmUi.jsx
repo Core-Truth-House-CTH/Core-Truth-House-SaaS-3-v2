@@ -200,6 +200,17 @@ function EmptyValue({ label = "Not set" }) {
  );
 }
 
+// The eyebrow-styled form label. Moved here from CRMSuite because the compose
+// modal (now shared) and the contact record page both need it, and CRMSuite's
+// own LabeledInput/LabeledSelect keep using it by import.
+function FieldLabel({ children }) {
+ return (
+ <label style={{ ...EYEBROW_STYLE, display: "block", fontSize: 11, marginBottom: 6 }}>
+ {children}
+ </label>
+ );
+}
+
 function Chip({ children, tone = "default" }) {
  const tones = {
  default: {
@@ -294,6 +305,7 @@ export {
  formatWaiting,
  daysWaiting,
  EmptyValue,
+ FieldLabel,
  Chip,
  IconButton,
 };

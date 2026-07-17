@@ -11,11 +11,11 @@ import {
  BriefcaseBusiness,
  X,
  Mail,
- Send,
 } from "lucide-react";
 
 import { DashboardLayout } from "../components/Layout";
 import DetailDrawer from "./crm/DetailDrawer";
+import { useComposeEmail, ComposeEmailModal } from "./crm/composeEmail";
 import {
  SANS,
  SERIF,
@@ -34,6 +34,7 @@ import {
  waitingSince,
  formatWaiting,
  EmptyValue,
+ FieldLabel,
  Chip,
  IconButton,
 } from "./crm/crmUi";
@@ -180,14 +181,6 @@ function EmptyState({ text }) {
  );
 }
 
-
-function FieldLabel({ children }) {
- return (
- <label style={{ ...EYEBROW_STYLE, display: "block", fontSize: 11, marginBottom: 6 }}>
- {children}
- </label>
- );
-}
 
 function LabeledInput({ label, value, onChange, placeholder, type = "text" }) {
  return (
@@ -614,121 +607,6 @@ function ConfirmDeleteModal({ confirm, busy, onCancel, onConfirm }) {
  );
 }
 
-function ComposeEmailModal({ contact, subject, body, busy, onSubjectChange, onBodyChange, onCancel, onSend }) {
- if (!contact) return null;
- return (
- <div
- role="presentation"
- onClick={onCancel}
- style={{
- position: "fixed",
- inset: 0,
- zIndex: 65,
- background: "rgba(13, 0, 16, 0.6)",
- display: "flex",
- alignItems: "center",
- justifyContent: "center",
- padding: 16,
- }}
- >
- <div
- role="dialog"
- aria-modal="true"
- onClick={(e) => e.stopPropagation()}
- style={{
- width: "100%",
- maxWidth: 540,
- background: "var(--cth-command-panel)",
- border: "1px solid var(--cth-command-border)",
- borderRadius: 12,
- padding: 28,
- boxShadow: "0 30px 60px rgba(13,0,16,0.25)",
- }}
- >
- <h3
- style={{
- fontFamily: SERIF,
- fontSize: 24,
- fontWeight: 500,
- color: "var(--cth-command-ink)",
- margin: 0,
- letterSpacing: "-0.005em",
- }}
- >
- Send email
- </h3>
- <p
- style={{
- fontFamily: SANS,
- fontSize: 14,
- color: "var(--cth-command-muted)",
- margin: "8px 0 22px",
- lineHeight: 1.55,
- }}
- >
- Sent from your workspace sender identity.
- </p>
-
- <div style={{ display: "grid", gap: 16 }}>
- <div>
- <FieldLabel>To</FieldLabel>
- <input
- type="email"
- value={contact.email || ""}
- readOnly
- style={{
- ...INPUT_STYLE,
- background: "var(--cth-command-panel-soft)",
- color: "var(--cth-command-muted)",
- cursor: "not-allowed",
- }}
- />
- </div>
- <div>
- <FieldLabel>Subject</FieldLabel>
- <input
- type="text"
- value={subject}
- onChange={onSubjectChange}
- placeholder="Subject"
- style={INPUT_STYLE}
- />
- </div>
- <div>
- <FieldLabel>Message</FieldLabel>
- <textarea
- value={body}
- onChange={onBodyChange}
- onInput={(e) => {
- e.target.style.height = "auto";
- e.target.style.height = `${Math.max(120, e.target.scrollHeight)}px`;
- }}
- placeholder="Write your message"
- rows={5}
- style={{ ...INPUT_STYLE, minHeight: 120, resize: "vertical", lineHeight: 1.55 }}
- />
- </div>
- </div>
-
- <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 24 }}>
- <button type="button" onClick={onCancel} disabled={busy} style={{ ...SECONDARY_BUTTON_STYLE, opacity: busy ? 0.6 : 1 }}>
- Cancel
- </button>
- <button
- type="button"
- onClick={onSend}
- disabled={busy}
- style={{ ...PRIMARY_BUTTON_STYLE, opacity: busy ? 0.7 : 1 }}
- >
- {busy ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
- Send email
- </button>
- </div>
- </div>
- </div>
- );
-}
-
 
 function Toast({ toast }) {
  if (!toast) return null;
@@ -839,11 +717,6 @@ export default function CRMSuite() {
  const [drawer, setDrawer] = useState(null);
  const [toast, setToast] = useState(null);
 
- const [composeTarget, setComposeTarget] = useState(null);
- const [composeSubject, setComposeSubject] = useState("");
- const [composeBody, setComposeBody] = useState("");
- const [composeBusy, setComposeBusy] = useState(false);
-
  const loadCRM = useCallback(async ({ silent = false } = {}) => {
  if (silent) setRefreshing(true);
  else setLoading(true);
@@ -875,6 +748,15 @@ export default function CRMSuite() {
  setRefreshing(false);
  }
  }, []);
+
+ // The shared compose flow. notify routes its messages through this page's
+ // toast; onSent reloads the CRM so a sent email updates the activity feed and
+ // the follow-up clock. The contact record page consumes the same hook with its
+ // own notify and its own refresh.
+ const compose = useComposeEmail({
+ notify: (message) => setToast({ message }),
+ onSent: () => loadCRM({ silent: true }),
+ });
 
  useEffect(() => {
  loadCRM();
@@ -1197,52 +1079,6 @@ export default function CRMSuite() {
  }
  };
 
- const openCompose = (contact) => {
- if (!contact) return;
- if (!contact.email) {
- setToast({ message: "This contact has no email address." });
- return;
- }
- setComposeSubject("");
- setComposeBody("");
- setComposeTarget(contact);
- };
-
- const cancelCompose = () => {
- if (composeBusy) return;
- setComposeTarget(null);
- };
-
- const handleSendEmail = async () => {
- if (!composeTarget) return;
- const subject = composeSubject.trim();
- const body = composeBody.trim();
- if (!subject) {
- setToast({ message: "Subject is required." });
- return;
- }
- if (!body) {
- setToast({ message: "Write a message body." });
- return;
- }
-
- setComposeBusy(true);
- try {
- await apiClient.post(
- `/api/crm/contacts/${encodeURIComponent(composeTarget.id)}/send-email`,
- { subject, body }
- );
- setComposeTarget(null);
- setToast({ message: "Email sent" });
- await loadCRM({ silent: true });
- } catch (error) {
- console.error("Failed to send email", error);
- setToast({ message: error?.message || "Failed to send email." });
- } finally {
- setComposeBusy(false);
- }
- };
-
  const handleManualRefresh = async () => {
  await loadCRM({ silent: true });
  setToast({ message: "CRM data refreshed" });
@@ -1414,7 +1250,7 @@ export default function CRMSuite() {
  key={lead.id}
  lead={lead}
  onOpen={openContactDrawer}
- onEmail={openCompose}
+ onEmail={compose.open}
  onDismiss={handleDismiss}
  dismissing={dismissingId === lead.id}
  />
@@ -1669,7 +1505,7 @@ export default function CRMSuite() {
  label="Send email"
  onClick={(e) => {
  e.stopPropagation();
- openCompose(contact);
+ compose.open(contact);
  }}
  >
  <Mail size={14} />
@@ -1986,18 +1822,9 @@ export default function CRMSuite() {
  activities={activities}
  onClose={closeDrawer}
  onRequestDelete={requestDelete}
- onCompose={openCompose}
+ onCompose={compose.open}
  />
- <ComposeEmailModal
- contact={composeTarget}
- subject={composeSubject}
- body={composeBody}
- busy={composeBusy}
- onSubjectChange={(e) => setComposeSubject(e.target.value)}
- onBodyChange={(e) => setComposeBody(e.target.value)}
- onCancel={cancelCompose}
- onSend={handleSendEmail}
- />
+ <ComposeEmailModal compose={compose} />
  <ConfirmDeleteModal
  confirm={deleteConfirm}
  busy={deleteBusy}
