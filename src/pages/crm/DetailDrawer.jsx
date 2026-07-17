@@ -272,7 +272,7 @@ function EmailRow({ activity }) {
  );
 }
 
-function DetailDrawer({ drawer, deals, activities, onClose, onRequestDelete, onCompose }) {
+function DetailDrawer({ drawer, contacts, deals, activities, onClose, onRequestDelete, onCompose }) {
  const open = Boolean(drawer);
  const record = drawer?.record;
  const type = drawer?.type;
@@ -291,6 +291,15 @@ function DetailDrawer({ drawer, deals, activities, onClose, onRequestDelete, onC
  if (type !== "contact" || !recordId) return [];
  return (deals || []).filter((deal) => deal.contact_id === recordId);
  }, [deals, type, recordId]);
+
+ // The deal's Contact row, resolved off the contacts CRMSuite already fetched.
+ // The row used to read contact_name || contact, and create_deal writes neither
+ // field, so it had only ever rendered "Not set". contact_id is the link that
+ // actually exists.
+ const dealContact = useMemo(() => {
+ if (type !== "deal" || !record?.contact_id) return null;
+ return (contacts || []).find((item) => item.id === record.contact_id) || null;
+ }, [contacts, type, record?.contact_id]);
 
  // Also filtered on type: crm_activities holds calls, meetings, tasks and notes
  // against the same contact_id, and this tab claims to be email. Today the only
@@ -492,7 +501,7 @@ function DetailDrawer({ drawer, deals, activities, onClose, onRequestDelete, onC
  </DetailField>
  <DetailField label="Company">{record.company || <EmptyValue />}</DetailField>
  <DetailField label="Contact">
- {record.contact_name || record.contact || <EmptyValue />}
+ {dealContact?.name || record.contact_name || record.contact || <EmptyValue />}
  </DetailField>
  <DetailField label="Close date">
  {record.expected_close_date ? formatDate(record.expected_close_date) : <EmptyValue />}

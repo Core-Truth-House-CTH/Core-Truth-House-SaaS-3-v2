@@ -1981,6 +1981,7 @@ export default function CRMSuite() {
 
  <DetailDrawer
  drawer={drawer}
+ contacts={contacts}
  deals={deals}
  activities={activities}
  onClose={closeDrawer}
