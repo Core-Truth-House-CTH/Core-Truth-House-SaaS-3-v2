@@ -35,14 +35,18 @@ function resolveApiBase() {
   return '';
 }
 
-function inlineMarkdown(text) {
+// `palette` lets a caller retint the rendered markdown for a non-default surface
+// (e.g. the dark Zuri Interpretation card) without forking the renderer. It
+// defaults to the module `C` palette, so existing light-background callers are
+// unaffected.
+function inlineMarkdown(text, palette = C) {
   if (!text) return '';
   const parts = String(text).split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
 
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return (
-        <strong key={i} style={{ color: C.ink, fontWeight: 700 }}>
+        <strong key={i} style={{ color: palette.ink, fontWeight: 700 }}>
           {part.slice(2, -2)}
         </strong>
       );
@@ -50,7 +54,7 @@ function inlineMarkdown(text) {
 
     if (part.startsWith('*') && part.endsWith('*')) {
       return (
-        <em key={i} style={{ color: C.inkSoft }}>
+        <em key={i} style={{ color: palette.inkSoft }}>
           {part.slice(1, -1)}
         </em>
       );
@@ -60,7 +64,7 @@ function inlineMarkdown(text) {
   });
 }
 
-function renderMarkdown(text) {
+function renderMarkdown(text, palette = C) {
   if (!text) return [];
   const lines = String(text).split('\n');
   const output = [];
@@ -77,13 +81,13 @@ function renderMarkdown(text) {
             key={i}
             style={{
               fontSize: 14,
-              color: C.ink,
+              color: palette.ink,
               lineHeight: 1.7,
               marginBottom: 6,
               fontFamily: C.font,
             }}
           >
-            {inlineMarkdown(item)}
+            {inlineMarkdown(item, palette)}
           </li>
         ))}
       </ul>
@@ -115,7 +119,7 @@ function renderMarkdown(text) {
             fontWeight: 600,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
-            color: C.muted,
+            color: palette.muted,
             margin: '22px 0 10px',
             scrollMarginTop: 16,
           }}
@@ -136,7 +140,7 @@ function renderMarkdown(text) {
             fontFamily: C.serif,
             fontSize: 17,
             fontWeight: 600,
-            color: C.ink,
+            color: palette.ink,
             margin: '14px 0 6px',
             letterSpacing: '-0.005em',
           }}
@@ -158,7 +162,7 @@ function renderMarkdown(text) {
       output.push(
         <div
           key={`hr-${key++}`}
-          style={{ height: 1, background: C.border, margin: '12px 0' }}
+          style={{ height: 1, background: palette.border, margin: '12px 0' }}
         />
       );
       return;
@@ -170,13 +174,13 @@ function renderMarkdown(text) {
         key={`p-${key++}`}
         style={{
           fontSize: 14,
-          color: C.ink,
+          color: palette.ink,
           lineHeight: 1.75,
           margin: '0 0 10px',
           fontFamily: C.font,
         }}
       >
-        {inlineMarkdown(trimmed)}
+        {inlineMarkdown(trimmed, palette)}
       </p>
     );
   });
@@ -204,10 +208,14 @@ function extractHeadings(text) {
     });
 }
 
-export function AuditAnalysisText({ text = '' }) {
+// `colors` optionally retints the whole component (text, heading pills, toggle)
+// for a non-default surface — pass e.g. a light palette to render on a dark card.
+// Omitted, it falls back to the module `C` palette, so existing callers are unchanged.
+export function AuditAnalysisText({ text = '', colors }) {
+  const palette = useMemo(() => (colors ? { ...C, ...colors } : C), [colors]);
   const [expanded, setExpanded] = useState(false);
   const [activePill, setActivePill] = useState(null);
-  const rendered = useMemo(() => renderMarkdown(text), [text]);
+  const rendered = useMemo(() => renderMarkdown(text, palette), [text, palette]);
   const headings = useMemo(() => extractHeadings(text), [text]);
   const preview = rendered.slice(0, 8);
 
@@ -240,8 +248,8 @@ export function AuditAnalysisText({ text = '' }) {
                 onClick={() => handlePillClick(h.id)}
                 style={{
                   background: isActive ? 'var(--cth-command-purple)' : 'transparent',
-                  color: isActive ? 'var(--cth-command-gold)' : C.muted,
-                  border: `1px solid ${isActive ? 'var(--cth-command-purple)' : 'var(--cth-command-border)'}`,
+                  color: isActive ? 'var(--cth-command-gold)' : palette.muted,
+                  border: `1px solid ${isActive ? 'var(--cth-command-purple)' : palette.border}`,
                   borderRadius: 4,
                   padding: '6px 12px',
                   fontFamily: C.font,
@@ -272,7 +280,7 @@ export function AuditAnalysisText({ text = '' }) {
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            color: C.accent,
+            color: palette.accent,
             fontSize: 13,
             fontFamily: C.font,
             fontWeight: 600,

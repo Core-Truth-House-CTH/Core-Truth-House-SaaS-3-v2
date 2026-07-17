@@ -7,7 +7,7 @@ import { useWorkspace } from '../context/WorkspaceContext';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../lib/apiClient';
 import PreAuditIntake from '../components/Brand/PreAuditIntake';
-import { AuditNextSteps } from '../components/Brand/BrandAuditResults';
+import { AuditNextSteps, AuditAnalysisText } from '../components/Brand/BrandAuditResults';
 import { AuditExportButton } from '../components/Brand/AuditExportButton';
 
 const AUDIT_ENDPOINT = '/api/audit/latest';
@@ -196,6 +196,17 @@ function nextBestMovesFor(audit) {
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
+
+// Light-on-dark palette for AuditAnalysisText inside the dark Zuri Interpretation
+// card (#1a0828). The renderer defaults to dark ink for light panels; these
+// overrides make rendered markdown legible on the dark surface.
+const ZURI_INTERPRETATION_COLORS = {
+  ink: '#e8dff0',
+  inkSoft: '#cfc3dd',
+  muted: '#9a83b0',
+  border: 'rgba(255,255,255,0.14)',
+  accent: '#e04e35',
+};
 
 const PAGE_STYLE = {
   background: 'var(--cth-command-blush)',
@@ -727,11 +738,17 @@ export default function BrandAudit() {
                   Zuri · Brand Interpretation
                 </span>
               </div>
-              <div style={{ fontFamily: SERIF, fontSize: 16, color: '#e8dff0', fontStyle: 'italic', lineHeight: 1.55, marginBottom: nextMoves.length ? 12 : 0 }}>
-                {audit.aiAnalysisText
-                  ? `“${audit.aiAnalysisText}”`
-                  : '“Your audit is ready. Retake it any time to regenerate this interpretation from your latest answers.”'}
-              </div>
+              {audit.aiAnalysisText ? (
+                // Rendered markdown (bold/headings/lists) on the dark card. Curly-quote
+                // wrapping is dropped here — it doesn't read right around block markdown.
+                <div style={{ marginBottom: nextMoves.length ? 12 : 0 }}>
+                  <AuditAnalysisText text={audit.aiAnalysisText} colors={ZURI_INTERPRETATION_COLORS} />
+                </div>
+              ) : (
+                <div style={{ fontFamily: SERIF, fontSize: 16, color: '#e8dff0', fontStyle: 'italic', lineHeight: 1.55, marginBottom: nextMoves.length ? 12 : 0 }}>
+                  “Your audit is ready. Retake it any time to regenerate this interpretation from your latest answers.”
+                </div>
+              )}
               {nextMoves.length ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {nextMoves.map((move, i) => (
