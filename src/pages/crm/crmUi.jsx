@@ -10,6 +10,8 @@
  * Pure move: every value below is byte-identical to its CRMSuite original.
  */
 
+import React, { useState } from "react";
+
 const SANS = "'DM Sans', sans-serif";
 // The project's display face is a token (styles/cth-tokens.css). Referencing the
 // token rather than hardcoding a face keeps this file from disagreeing with the
