@@ -11,7 +11,10 @@
  */
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Cormorant Garamond', Georgia, serif";
+// The project's display face is a token (styles/cth-tokens.css). Referencing the
+// token rather than hardcoding a face keeps this file from disagreeing with the
+// brand when that decision changes.
+const SERIF = "var(--font-display)";
 
 const PAGE_STYLE = {
  background: "var(--cth-command-blush)",
