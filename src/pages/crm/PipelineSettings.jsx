@@ -96,6 +96,12 @@ export default function PipelineSettings() {
   const [error, setError] = useState("");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
+  // Id of the pipeline created this session via "New Pipeline" that hasn't yet
+  // been through an explicit Save. "New Pipeline" auto-persists a default funnel,
+  // so its draft matches server state and would leave Save disabled -- this flag
+  // forces Save on for that fresh pipeline (see `dirty`). Cleared on save/delete.
+  const [freshId, setFreshId] = useState("");
+
   // Monotonic source of keys for stages added this session -- never collides with
   // a server id, so React never confuses a new row with a kept one.
   const nextKey = useRef(1);
@@ -143,10 +149,16 @@ export default function PipelineSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, selected?.updated_at]);
 
-  const dirty = useMemo(
-    () => (draft && selected ? signature(draft) !== signature(toDraft(selected)) : false),
-    [draft, selected]
-  );
+  // A just-created pipeline is auto-persisted with a default funnel, so its draft
+  // equals server state and dirty-gating alone would leave Save disabled -- a dead
+  // button the moment the pipeline appears (click New Pipeline -> click Save ->
+  // nothing). Treat that fresh pipeline as dirty until one explicit Save, so the
+  // admin can commit the default draft as-is or tweak-then-commit.
+  const dirty = useMemo(() => {
+    if (!draft) return false;
+    if (freshId && draft.id === freshId) return true;
+    return selected ? signature(draft) !== signature(toDraft(selected)) : false;
+  }, [draft, selected, freshId]);
 
   const updateStage = (key, patch) => {
     setDraft((d) => ({
@@ -205,6 +217,9 @@ export default function PipelineSettings() {
       const res = await apiClient.put(API_PATHS.crm.pipelineById(draft.id), payload);
       await load({ preferId: res?.pipeline?.id || draft.id });
       setSavedAt(Date.now());
+      // The fresh pipeline has now been committed once; drop the flag so Save
+      // returns to dirty-gating and settles into the "Saved" state.
+      setFreshId("");
     } catch (e) {
       // A removed stage still holding deals, or a stale updated_at, comes back as
       // a 409 whose detail names the fix. Surface it verbatim; keep the edits so
@@ -236,6 +251,8 @@ export default function PipelineSettings() {
         name: "New Pipeline",
         stages: NEW_PIPELINE_STAGES,
       });
+      // Mark it fresh so Save is enabled until the admin commits it once.
+      setFreshId(res?.pipeline?.id || "");
       await load({ preferId: res?.pipeline?.id });
     } catch (e) {
       setError(e?.message || "Could not create the pipeline.");
@@ -250,6 +267,7 @@ export default function PipelineSettings() {
     try {
       await apiClient.delete(API_PATHS.crm.pipelineById(id));
       setConfirmingDelete(false);
+      setFreshId("");
       await load();
     } catch (e) {
       setError(e?.message || "Could not delete the pipeline.");
