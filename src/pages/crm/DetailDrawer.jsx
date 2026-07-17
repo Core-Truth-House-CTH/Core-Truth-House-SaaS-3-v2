@@ -195,7 +195,7 @@ function DetailDrawer({ drawer, onClose, onRequestDelete, onCompose }) {
  }}
  >
  <Mail size={12} />
- Inbox coming soon — receiving replies in-app is on the roadmap.
+ Inbox coming soon. Receiving replies in-app is on the roadmap.
  </div>
  ) : null}
  </footer>
