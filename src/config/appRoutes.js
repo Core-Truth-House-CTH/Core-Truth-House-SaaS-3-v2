@@ -383,6 +383,18 @@ export const APP_ROUTES = [
     lockedTooltip: "Upgrade to The House to unlock CRM.",
   },
   {
+    // The contact record page. Hidden like /audience/avatars/:id (a detail route,
+    // not a nav item). requiredPlan MUST match /crm: getRoute matches this literal
+    // pattern string, so omitting it would leave the page ungated below House.
+    path: "/crm/contacts/:id",
+    label: "CRM",
+    group: "insightsOps",
+    requiredPlan: "house",
+    gateType: "page",
+    hidden: true,
+    tooltip: "View a CRM contact record.",
+  },
+  {
     path: "/email-settings",
     label: "Email",
     icon: Mail,

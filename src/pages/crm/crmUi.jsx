@@ -211,6 +211,19 @@ function FieldLabel({ children }) {
  );
 }
 
+// Label-over-value read-only field. Moved here from DetailDrawer because the
+// drawer's deal branch and the contact record page's Overview both render it.
+function DetailField({ label, children }) {
+ return (
+ <div style={{ marginBottom: 18 }}>
+ <div style={{ ...EYEBROW_STYLE, marginBottom: 6 }}>{label}</div>
+ <div style={{ fontFamily: SANS, fontSize: 14, color: "var(--cth-command-ink)", lineHeight: 1.5 }}>
+ {children}
+ </div>
+ </div>
+ );
+}
+
 function Chip({ children, tone = "default" }) {
  const tones = {
  default: {
@@ -306,6 +319,7 @@ export {
  daysWaiting,
  EmptyValue,
  FieldLabel,
+ DetailField,
  Chip,
  IconButton,
 };

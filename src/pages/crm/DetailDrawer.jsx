@@ -24,6 +24,7 @@ import {
  intakeLabel,
  daysWaiting,
  EmptyValue,
+ DetailField,
  Chip,
  IconButton,
 } from "./crmUi";
@@ -35,17 +36,6 @@ import {
 // server's crm_contacts.status values.
 const CONTACT_LIFECYCLE = ["lead", "prospect", "customer"];
 const INACTIVE_STATUS = "inactive";
-
-function DetailField({ label, children }) {
- return (
- <div style={{ marginBottom: 18 }}>
- <div style={{ ...EYEBROW_STYLE, marginBottom: 6 }}>{label}</div>
- <div style={{ fontFamily: SANS, fontSize: 14, color: "var(--cth-command-ink)", lineHeight: 1.5 }}>
- {children}
- </div>
- </div>
- );
-}
 
 // Lead -> Prospect -> Customer, with Inactive as an off-ramp rather than a fourth
 // step: someone who goes quiet has left the track, not advanced along it. An

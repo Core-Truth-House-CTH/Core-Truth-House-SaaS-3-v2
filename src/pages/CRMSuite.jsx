@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
  Loader2,
  Plus,
@@ -659,6 +660,7 @@ function Toast({ toast }) {
 }
 
 export default function CRMSuite() {
+ const navigate = useNavigate();
  const [loading, setLoading] = useState(true);
  const [refreshing, setRefreshing] = useState(false);
  const [pageError, setPageError] = useState("");
@@ -1041,7 +1043,11 @@ export default function CRMSuite() {
  };
 
  const openDealDrawer = (deal) => setDrawer({ type: "deal", record: deal });
- const openContactDrawer = (contact) => setDrawer({ type: "contact", record: contact });
+ // Contacts now open their own record page instead of the drawer. The drawer's
+ // contact branch is left in place but dead (see DetailDrawer); deals still use it.
+ const openContact = (contact) => {
+ if (contact?.id) navigate(`/crm/contacts/${contact.id}`);
+ };
  const closeDrawer = () => setDrawer(null);
 
  // Dismiss = "handled, stop showing me". Undoable rather than confirmed: a
@@ -1249,7 +1255,7 @@ export default function CRMSuite() {
  <NeedsAttentionRow
  key={lead.id}
  lead={lead}
- onOpen={openContactDrawer}
+ onOpen={openContact}
  onEmail={compose.open}
  onDismiss={handleDismiss}
  dismissing={dismissingId === lead.id}
@@ -1464,11 +1470,11 @@ export default function CRMSuite() {
  {filteredContacts.map((contact) => (
  <tr
  key={contact.id}
- onClick={() => openContactDrawer(contact)}
+ onClick={() => openContact(contact)}
  onKeyDown={(e) => {
  if (e.key === "Enter" || e.key === " ") {
  e.preventDefault();
- openContactDrawer(contact);
+ openContact(contact);
  }
  }}
  tabIndex={0}
