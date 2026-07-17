@@ -170,6 +170,49 @@ function fromInputDate(value) {
  return date.toISOString();
 }
 
+// Server-owned intake_channel -> what the person actually did. The backend value
+// is the source of truth; anything unrecognized falls back to a neutral phrase
+// rather than rendering a raw enum at someone.
+const INTAKE_LABELS = {
+ cohort_application: "Applied to cohort",
+ brand_diagnostic: "Took the diagnostic",
+ contact_page: "Sent a message",
+};
+
+function intakeLabel(channel) {
+ return INTAKE_LABELS[channel] || "Came in through the site";
+}
+
+// How long they have been waiting, and since when.
+//
+// The reference point branches on state: a lead nobody has written to has been
+// waiting since they arrived (created_at), while a lead who is due again has
+// been waiting only since next_action_at passed. Using created_at for everyone
+// would claim a lead who arrived in January and was emailed yesterday has waited
+// six months, which is precisely backwards.
+function waitingSince(lead) {
+ return lead?.last_contacted_at == null ? lead?.created_at : lead?.next_action_at;
+}
+
+function formatWaiting(value) {
+ if (!value) return null;
+ const then = new Date(value);
+ if (Number.isNaN(then.getTime())) return null;
+
+ const minutes = Math.floor((Date.now() - then.getTime()) / 60000);
+ if (minutes < 1) return "Just now";
+ if (minutes < 60) return `Waiting ${minutes}m`;
+
+ const hours = Math.floor(minutes / 60);
+ if (hours < 24) return `Waiting ${hours}h`;
+
+ const days = Math.floor(hours / 24);
+ if (days < 30) return `Waiting ${days}d`;
+
+ const months = Math.floor(days / 30);
+ return months < 12 ? `Waiting ${months}mo` : `Waiting ${Math.floor(months / 12)}y`;
+}
+
 function dealStageAccent(stage) {
  const s = String(stage || "").toLowerCase();
  if (s === "qualified") return "var(--cth-command-gold)";
@@ -492,6 +535,85 @@ function DealCard({ deal, onOpen, onDelete }) {
  {deal.expected_close_date ? (
  <Chip tone="muted">{formatDate(deal.expected_close_date)}</Chip>
  ) : null}
+ </div>
+ </div>
+ );
+}
+
+function NeedsAttentionRow({ lead, onOpen, onEmail, onDismiss, dismissing }) {
+ const waited = formatWaiting(waitingSince(lead));
+ const score = lead.diagnostic_score;
+ const tier = lead.recommended_tier;
+
+ return (
+ <div
+ role="button"
+ tabIndex={0}
+ onClick={() => onOpen(lead)}
+ onKeyDown={(e) => {
+ if (e.key === "Enter" || e.key === " ") {
+ e.preventDefault();
+ onOpen(lead);
+ }
+ }}
+ style={{
+ display: "flex",
+ alignItems: "center",
+ justifyContent: "space-between",
+ gap: 16,
+ padding: "16px 20px",
+ borderTop: "1px solid var(--cth-command-border)",
+ cursor: "pointer",
+ flexWrap: "wrap",
+ }}
+ >
+ <div style={{ minWidth: 0, flex: "1 1 320px" }}>
+ <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+ <span
+ style={{
+ fontFamily: SERIF,
+ fontSize: 19,
+ fontWeight: 600,
+ color: "var(--cth-command-ink)",
+ }}
+ >
+ {lead.name || "Unnamed lead"}
+ </span>
+ {lead.company ? (
+ <span style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-command-muted)" }}>
+ {lead.company}
+ </span>
+ ) : null}
+ </div>
+
+ <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+ <Chip>{intakeLabel(lead.intake_channel)}</Chip>
+ {score != null ? <Chip tone="muted">{`Scored ${score}/60`}</Chip> : null}
+ {tier ? <Chip tone="muted">{tier}</Chip> : null}
+ {waited ? (
+ <span style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>
+ {waited}
+ </span>
+ ) : null}
+ </div>
+ </div>
+
+ <div
+ style={{ display: "flex", alignItems: "center", gap: 8 }}
+ onClick={(e) => e.stopPropagation()}
+ >
+ <button type="button" onClick={() => onEmail(lead)} style={PRIMARY_BUTTON_STYLE}>
+ <Mail size={14} />
+ Email
+ </button>
+ <button
+ type="button"
+ onClick={() => onDismiss(lead)}
+ disabled={dismissing}
+ style={{ ...SECONDARY_BUTTON_STYLE, opacity: dismissing ? 0.5 : 1 }}
+ >
+ {dismissing ? "Dismissing…" : "Dismiss"}
+ </button>
  </div>
  </div>
  );
@@ -936,9 +1058,32 @@ function Toast({ toast }) {
  fontSize: 14,
  fontWeight: 500,
  color: "var(--cth-command-ink)",
+ display: "flex",
+ alignItems: "center",
+ gap: 14,
  }}
  >
- {toast.message}
+ <span>{toast.message}</span>
+ {toast.action ? (
+ <button
+ type="button"
+ onClick={toast.action.onClick}
+ style={{
+ fontFamily: SANS,
+ fontSize: 13,
+ fontWeight: 700,
+ letterSpacing: "0.04em",
+ textTransform: "uppercase",
+ color: "var(--cth-command-gold)",
+ background: "transparent",
+ border: "none",
+ cursor: "pointer",
+ padding: 0,
+ }}
+ >
+ {toast.action.label}
+ </button>
+ ) : null}
  </div>
  );
 }
@@ -953,6 +1098,8 @@ export default function CRMSuite() {
  const [deals, setDeals] = useState([]);
  const [activities, setActivities] = useState([]);
  const [notes, setNotes] = useState([]);
+ const [needsAttention, setNeedsAttention] = useState([]);
+ const [dismissingId, setDismissingId] = useState(null);
 
  const [contactQuery, setContactQuery] = useState("");
  const [dealQuery, setDealQuery] = useState("");
@@ -1009,12 +1156,14 @@ export default function CRMSuite() {
  setPageError("");
 
  try {
- const [summaryRes, contactsRes, dealsRes, activitiesRes, notesRes] = await Promise.all([
+ const [summaryRes, contactsRes, dealsRes, activitiesRes, notesRes, attentionRes] =
+ await Promise.all([
  apiClient.get(API_PATHS.crm.dashboard),
  apiClient.get(API_PATHS.crm.contacts),
  apiClient.get(API_PATHS.crm.deals),
  apiClient.get(API_PATHS.crm.activities),
  apiClient.get(API_PATHS.crm.notes),
+ apiClient.get(API_PATHS.crm.contactsSearch({ needs_attention: true })),
  ]);
 
  setSummary(summaryRes || EMPTY_SUMMARY);
@@ -1022,6 +1171,7 @@ export default function CRMSuite() {
  setDeals(dealsRes?.deals || []);
  setActivities(activitiesRes?.activities || []);
  setNotes(notesRes?.notes || []);
+ setNeedsAttention(attentionRes?.contacts || []);
  } catch (error) {
  console.error("Failed to load CRM", error);
  setPageError(error?.message || "Failed to load CRM.");
@@ -1037,7 +1187,9 @@ export default function CRMSuite() {
 
  useEffect(() => {
  if (!toast) return undefined;
- const id = setTimeout(() => setToast(null), 2000);
+ // An undoable toast has to outlive the glance that notices it; 2s is not
+ // enough time to read a message and decide to reverse it.
+ const id = setTimeout(() => setToast(null), toast.action ? 8000 : 2000);
  return () => clearTimeout(id);
  }, [toast]);
 
@@ -1306,6 +1458,41 @@ export default function CRMSuite() {
  const openContactDrawer = (contact) => setDrawer({ type: "contact", record: contact });
  const closeDrawer = () => setDrawer(null);
 
+ // Dismiss = "handled, stop showing me". Undoable rather than confirmed: a
+ // confirm dialog on every dismiss would tax the exact workflow this list is
+ // meant to make fast, and dismissal is cheap to reverse.
+ const handleDismiss = async (lead) => {
+ if (!lead?.id) return;
+ setDismissingId(lead.id);
+ try {
+ await apiClient.patch(API_PATHS.crm.contactById(lead.id), {
+ dismissed_at: new Date().toISOString(),
+ });
+ await loadCRM({ silent: true });
+ setToast({
+ message: `Dismissed ${lead.name || "lead"}`,
+ action: { label: "Undo", onClick: () => handleUndoDismiss(lead) },
+ });
+ } catch (error) {
+ console.error("Failed to dismiss lead", error);
+ setToast({ message: error?.message || "Failed to dismiss." });
+ } finally {
+ setDismissingId(null);
+ }
+ };
+
+ const handleUndoDismiss = async (lead) => {
+ setToast(null);
+ try {
+ await apiClient.patch(API_PATHS.crm.contactById(lead.id), { dismissed_at: null });
+ await loadCRM({ silent: true });
+ setToast({ message: `Restored ${lead.name || "lead"}` });
+ } catch (error) {
+ console.error("Failed to restore lead", error);
+ setToast({ message: error?.message || "Failed to restore." });
+ }
+ };
+
  const openCompose = (contact) => {
  if (!contact) return;
  if (!contact.email) {
@@ -1454,6 +1641,75 @@ export default function CRMSuite() {
  </button>
  </div>
  </div>
+
+ {/*
+ The default view. Deliberately not a Panel: Panel is the visual language of
+ the pipeline, the directory, and the notes feed, and this is meant to outrank
+ all of them. Full width, above the metrics, first thing on screen.
+ */}
+ <section
+ style={{
+ ...PANEL_STYLE,
+ padding: 0,
+ borderColor: "var(--cth-command-gold)",
+ overflow: "hidden",
+ }}
+ >
+ <div style={{ padding: "22px 20px 18px" }}>
+ <div style={EYEBROW_STYLE}>Today</div>
+ <h2
+ style={{
+ fontFamily: SERIF,
+ fontSize: 26,
+ fontWeight: 600,
+ color: "var(--cth-command-ink)",
+ margin: "6px 0 0",
+ lineHeight: 1.15,
+ }}
+ >
+ Who needs you
+ {needsAttention.length ? (
+ <span style={{ color: "var(--cth-command-muted)" }}>{` (${needsAttention.length})`}</span>
+ ) : null}
+ </h2>
+ </div>
+
+ {needsAttention.length ? (
+ needsAttention.map((lead) => (
+ <NeedsAttentionRow
+ key={lead.id}
+ lead={lead}
+ onOpen={openContactDrawer}
+ onEmail={openCompose}
+ onDismiss={handleDismiss}
+ dismissing={dismissingId === lead.id}
+ />
+ ))
+ ) : (
+ <div
+ style={{
+ padding: "8px 20px 30px",
+ fontFamily: SANS,
+ }}
+ >
+ <div
+ style={{
+ fontFamily: SERIF,
+ fontSize: 20,
+ fontWeight: 600,
+ color: "var(--cth-command-ink)",
+ marginBottom: 6,
+ }}
+ >
+ You're clear.
+ </div>
+ <div style={{ fontSize: 14, color: "var(--cth-command-muted)", maxWidth: 560 }}>
+ No one is waiting on you. New leads from the diagnostic, contact form, and
+ cohort applications land here automatically.
+ </div>
+ </div>
+ )}
+ </section>
 
  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
  <MetricTile icon={Users} label="Contacts" value={summary.contacts || 0} accent="var(--cth-command-purple)" />
