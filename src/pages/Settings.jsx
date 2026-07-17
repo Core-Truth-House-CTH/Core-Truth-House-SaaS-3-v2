@@ -37,6 +37,7 @@ import { IOSInstallInstructions } from '../pwa/PWAProvider';
 import apiClient from "../lib/apiClient";
 import { toast } from 'sonner';
 import SocialConnectionsSection from "../components/SocialConnectionsSection";
+import PipelineSettings from "./crm/PipelineSettings";
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
@@ -808,6 +809,7 @@ export default function Settings() {
     { id: 'socials', label: 'Social Media', icon: Instagram },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'integrations', label: 'Integrations', icon: Plug },
+    { id: 'pipelines', label: 'Deal Pipelines', icon: Workflow },
     ...(canUseDomain ? [{ id: 'domain', label: 'Custom Domain', icon: Link2 }] : []),
     { id: 'billing', label: 'Billing & Plan', icon: CreditCard },
   ];
@@ -1989,10 +1991,13 @@ export default function Settings() {
                 </div>
               )}
 
+              {activeTab === 'pipelines' && <PipelineSettings />}
+
               {activeTab !== 'billing' &&
                 activeTab !== 'domain' &&
                 activeTab !== 'brand-identity' &&
-                activeTab !== 'integrations' && (
+                activeTab !== 'integrations' &&
+                activeTab !== 'pipelines' && (
                   <div className="flex justify-end pt-2">
                     <button
                       data-testid="settings-save-btn"
