@@ -512,7 +512,9 @@ function buildPipelineStages(workspaceStats, healthData) {
     { id: "launch", label: "Systems", icon: Megaphone, modules: [
       Boolean(s.has_social_planner),
       Boolean(Number(s.total_crm_contacts) > 0),
-      Boolean(s.analytics_active),
+      // analytics_active removed: nothing emits it, so it read false forever and
+      // capped this stage at 2/3. Reporting 2/2 is honest until a real analytics
+      // signal is defined (see Pass 2 note).
     ], route: "/social-media-manager" },
   ];
 
@@ -948,9 +950,10 @@ export default function CommandCenter() {
   const launchHint = launchReady ? "Launch ready" : `${ptsToGo} points to launch-ready`;
   const scoreHint = priorityActions[0]?.title || (launchReady ? "Launch ready" : "Keep building to raise your score");
 
-  const activeProjects =
-    Number(workspaceStats?.active_projects) || Number(workspaceStats?.activeProjects) ||
-    Number(workspaceStats?.campaigns) || Number(workspaceStats?.campaign_count) || 0;
+  // total_campaigns is the only campaign count the stats endpoint emits; the four
+  // prior keys (active_projects/activeProjects/campaigns/campaign_count) are never
+  // emitted, so this card read undefined and sat at 0 permanently.
+  const activeProjects = Number(workspaceStats?.total_campaigns) || 0;
   const tasksCompleted = [
     progress?.audit_complete, progress?.brand_memory_complete, progress?.foundation_complete,
     progress?.strategic_os_started, progress?.first_campaign_created,
