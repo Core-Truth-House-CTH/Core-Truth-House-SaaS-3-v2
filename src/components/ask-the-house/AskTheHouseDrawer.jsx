@@ -163,6 +163,11 @@ export default function AskTheHouseDrawer({
   surface,
   sectionId,
   currentDraft,
+  // Optional. When provided, assistant messages gain an "Insert into post"
+  // action that hands the reply text back to the caller via onInsert(text).
+  // When omitted, the drawer behaves exactly as before (all existing callers
+  // pass no onInsert and are unaffected).
+  onInsert,
 }) {
   const { activeWorkspace, activeWorkspaceId } = useWorkspace();
   const wsId = activeWorkspace?.id || activeWorkspaceId;
@@ -843,7 +848,11 @@ export default function AskTheHouseDrawer({
             </div>
           ) : (
             messages.map((m, idx) => {
-              const showUse = canUseThis(m, mode);
+              // When a caller provides onInsert (the post composer), Zuri drafts
+              // straight into the caller's field. On that surface the brand-field
+              // "Use this" picker is the wrong action, so suppress it there.
+              const canInsert = typeof onInsert === "function" && m.role === "assistant";
+              const showUse = canUseThis(m, mode) && !canInsert;
               return (
                 <div
                   key={idx}
@@ -870,6 +879,24 @@ export default function AskTheHouseDrawer({
                   >
                     {m.content}
                   </div>
+
+                  {canInsert && (
+                    <div style={{ marginTop: 4 }}>
+                      <button
+                        onClick={() => onInsert(m.content)}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 4,
+                          background: "var(--cth-command-purple)",
+                          border: "1px solid var(--cth-command-purple)",
+                          color: "var(--cth-command-gold)",
+                          cursor: "pointer", padding: "5px 12px", borderRadius: 4,
+                          fontSize: 11, fontFamily: SANS, fontWeight: 600,
+                        }}
+                      >
+                        <ArrowDownToLine size={11} /> Insert into post
+                      </button>
+                    </div>
+                  )}
 
                   {showUse && (
                     <div style={{ marginTop: 4 }}>

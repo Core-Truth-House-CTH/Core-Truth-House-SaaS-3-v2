@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "../components/Layout";
+import AskTheHouseDrawer from "../components/ask-the-house/AskTheHouseDrawer";
 import { useWorkspace } from "../context/WorkspaceContext";
 import apiClient from "../lib/apiClient";
 import {
@@ -645,6 +646,7 @@ export default function SocialMediaManager() {
  const [selectedPlatforms, setSelectedPlatforms] = useState([]);
  const [activePlatformTab, setActivePlatformTab] = useState("instagram");
  const [platformContent, setPlatformContent] = useState({});
+ const [zuriChatOpen, setZuriChatOpen] = useState(false);
  const [generating, setGenerating] = useState(false);
  const [savingPost, setSavingPost] = useState(false);
  const [activeView, setActiveView] = useState("publish");
@@ -705,6 +707,7 @@ export default function SocialMediaManager() {
  const closePostModal = () => {
  setShowModal(null);
  setSelectedBrandAsset(null);
+ setZuriChatOpen(false);
  if (surfaceParam === "create") {
  navigate("/social-media-manager?surface=publish", { replace: true });
  }
@@ -1867,6 +1870,47 @@ export default function SocialMediaManager() {
  } finally {
  setPublishingId(null);
  }
+ }
+
+ // ── Ask the House (Zuri) chat in the composer ───────────────────────────────
+ // A plain-text snapshot of the post being composed, so Zuri can see what you're
+ // writing. Effective caption mirrors the textarea: active platform's content,
+ // else the shared form field. current_draft is Optional[str] on the backend.
+ function buildZuriDraft() {
+ const effectiveCaption = (activePlatformData.content || formData.content || "").trim();
+ const platforms = selectedPlatforms.length ? selectedPlatforms.join(", ") : activePlatformKey;
+ const mediaCount = mediaPreview.length + (selectedBrandAsset ? 1 : 0);
+ const parts = [`Platform(s): ${platforms}`];
+ if (mediaCount) parts.push(`Media attached: ${mediaCount} item(s)`);
+ parts.push(`Current caption:\n${effectiveCaption || "(nothing written yet)"}`);
+ return parts.join("\n");
+ }
+
+ // "Insert into post" writes Zuri's reply into the ACTIVE platform's content and
+ // mirrors the shared form field — the exact dual-write the textarea (:3373) and
+ // the caption-from-asset path (:1900) use. Replaces the caption (you asked Zuri
+ // to draft it), targets only the active platform, then closes the chat so the
+ // updated post is visible.
+ function handleZuriInsert(text) {
+ const nextValue = (text || "").trim();
+ if (!nextValue) return;
+ setPlatformContent((prev) => ({
+ ...prev,
+ [activePlatformKey]: {
+ ...(prev[activePlatformKey] || {}),
+ content: nextValue,
+ hashtags: (prev[activePlatformKey] || {}).hashtags || formData.hashtags || [],
+ },
+ }));
+ setFormData((d) => ({
+ ...d,
+ content:
+ activePlatformKey === (d.platform || selectedPlatforms[0] || "instagram")
+ ? nextValue
+ : d.content,
+ }));
+ setZuriChatOpen(false);
+ showToast("Zuri's draft inserted into your post.", "success");
  }
 
  // Vision-based copy: send the selected brand asset + the composer's active
@@ -3423,6 +3467,25 @@ export default function SocialMediaManager() {
  Topic + tone → draft caption and hashtags for the active platform.
  </div>
  </div>
+ <button
+ type="button"
+ data-testid="zuri-chat-btn"
+ onClick={() => setZuriChatOpen(true)}
+ disabled={editingLocked}
+ title="Chat with Zuri about this post"
+ style={{
+ display: "inline-flex", alignItems: "center", gap: 6,
+ flexShrink: 0, padding: "8px 12px", borderRadius: 4,
+ background: "var(--cth-command-purple)",
+ border: "1px solid var(--cth-command-purple)",
+ color: "var(--cth-command-gold)",
+ fontFamily: SANS, fontSize: 12, fontWeight: 600,
+ cursor: editingLocked ? "default" : "pointer",
+ opacity: editingLocked ? 0.4 : 1,
+ }}
+ >
+ <Sparkles size={14} /> Chat with Zuri
+ </button>
  </div>
  <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
  <input
@@ -4053,6 +4116,16 @@ export default function SocialMediaManager() {
  ) : null}
  </div>
  </>
+ ) : null}
+
+ {showModal === "post" ? (
+ <AskTheHouseDrawer
+ open={zuriChatOpen}
+ onClose={() => setZuriChatOpen(false)}
+ surface="social_composer"
+ currentDraft={buildZuriDraft()}
+ onInsert={handleZuriInsert}
+ />
  ) : null}
 
  <ConfirmModal confirm={confirm} busy={confirmBusy} onCancel={cancelConfirm} onConfirm={performConfirm} />

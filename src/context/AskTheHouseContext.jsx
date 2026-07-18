@@ -25,6 +25,7 @@ const PATH_TO_SURFACE = {
   "/content-studio": "content_studio",
   "/prompt-generator": "content_studio",
   "/customer-journey": "customer_journey",
+  "/social-media-manager": "social_composer",
 };
 
 const FALLBACK_SURFACE = "command_center";
@@ -53,6 +54,7 @@ const PATH_TO_LABEL = {
   "/prompt-generator": "Content Studio",
   "/customer-journey": "Customer Journey",
   "/signal-inbox": "Signal Inbox",
+  "/social-media-manager": "Social Planner",
 };
 
 const FALLBACK_LABEL = "Command Center";
