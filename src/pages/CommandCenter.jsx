@@ -950,10 +950,10 @@ export default function CommandCenter() {
   const launchHint = launchReady ? "Launch ready" : `${ptsToGo} points to launch-ready`;
   const scoreHint = priorityActions[0]?.title || (launchReady ? "Launch ready" : "Keep building to raise your score");
 
-  // total_campaigns is the only campaign count the stats endpoint emits; the four
-  // prior keys (active_projects/activeProjects/campaigns/campaign_count) are never
-  // emitted, so this card read undefined and sat at 0 permanently.
-  const activeProjects = Number(workspaceStats?.total_campaigns) || 0;
+  // "Active projects" = campaigns actually in flight, which the stats endpoint emits
+  // as active_campaigns (status active/in_progress/live). total_campaigns would also
+  // count drafts and archived campaigns, mislabeling the card.
+  const activeProjects = Number(workspaceStats?.active_campaigns) || 0;
   const tasksCompleted = [
     progress?.audit_complete, progress?.brand_memory_complete, progress?.foundation_complete,
     progress?.strategic_os_started, progress?.first_campaign_created,
