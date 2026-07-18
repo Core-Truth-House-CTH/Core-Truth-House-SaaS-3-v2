@@ -270,11 +270,14 @@ export default function AskTheHouseDrawer({
       setCaps(ctxRes?.capabilities || null);
       setNextRoom(ctxRes?.next_room || null);
       const list = Array.isArray(sessRes) ? sessRes : [];
-      setSessions(list.filter((s) => s.surface === surface));
-      // Auto-resume the most recent session; otherwise show an alert opening.
+      const surfaceSessions = list.filter((s) => s.surface === surface);
+      setSessions(surfaceSessions);
+      // Auto-resume the most recent session FOR THIS SURFACE; otherwise show an
+      // alert opening. Using the surface-filtered list (not the globally
+      // most-recent session) prevents another surface's history bleeding in.
       if (!resumeHandledRef.current) {
         resumeHandledRef.current = true;
-        const mostRecent = list[0];
+        const mostRecent = surfaceSessions[0];
         if (mostRecent?.session_id) {
           await loadSession(mostRecent.session_id);
           setResumedFrom(relativeTime(mostRecent.updated_at));
