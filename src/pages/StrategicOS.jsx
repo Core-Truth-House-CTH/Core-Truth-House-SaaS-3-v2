@@ -1074,6 +1074,10 @@ export default function StrategicOS() {
         user_id: userId,
         workspace_id: activeWorkspaceId || undefined,
         step_inputs: inputs,
+        // Persist per-step completeness on the SAME autosave call. Computed by the
+        // single-source validator (os-step-inputs.js) that isStepComplete uses, so
+        // the required-field rule is never re-encoded on the backend.
+        is_complete: validateStepInputs(stepNumber, inputs).length === 0,
       });
 
       setWorkflow((current) => ({
