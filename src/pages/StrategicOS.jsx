@@ -19,6 +19,7 @@ import { useAuth } from "@clerk/react";
 import { DashboardLayout } from "../components/Layout";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { usePlan } from "../context/PlanContext";
+import { useBrandHealth } from "../context/BrandHealthContext";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 import { StrategicOSExportButton } from "../components/shared/StrategicOSExport";
@@ -890,6 +891,7 @@ function ReportPanel({
 export default function StrategicOS() {
   const { activeWorkspaceId, activeWorkspace } = useWorkspace();
   const { plan } = usePlan();
+  const { refresh: refreshBrandHealth } = useBrandHealth();
   const nextStep = getNextStep("/strategic-os", plan);
   const nextStepHref = nextStep?.upgradeTo ? "/billing" : nextStep?.href;
   const nextStepLabel = nextStep?.upgradeTo ? nextStep.ctaLabel : nextStep?.label;
@@ -1204,6 +1206,11 @@ export default function StrategicOS() {
 
       await loadWorkflow(targetWorkflowId);
       setReportDrawerOpen(true);
+      // Report generation is the meaningful "Strategic OS progress committed"
+      // event (all required steps answered). Refresh brand health so the pipeline
+      // Structure stage and guidance reflect it without a reload. Autosave fires
+      // per keystroke, so we deliberately do NOT refresh there.
+      refreshBrandHealth();
     } catch (err) {
       console.error("Failed to generate Strategic OS report", err);
       setError(err?.message || "Failed to generate Strategic OS report.");
