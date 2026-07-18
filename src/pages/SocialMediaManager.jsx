@@ -2726,7 +2726,10 @@ export default function SocialMediaManager() {
  <span style={{ ...EYEBROW_STYLE, fontSize: 9, letterSpacing: "0.16em" }}>
  Slot {index + 1}
  </span>
+ <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+ {post.content_item_id ? <Chip tone="gold">Reviewed</Chip> : null}
  <Chip tone={statusCfg.tone}>{statusCfg.label}</Chip>
+ </span>
  </div>
  <p style={{
  margin: 0,
@@ -2978,7 +2981,7 @@ export default function SocialMediaManager() {
  <PlatformBadge platform={post.platform} />
  <Chip tone={statusCfg.tone}>{statusCfg.label}</Chip>
  {post.campaign_id ? <Chip tone="purple">Campaign</Chip> : null}
- {post.content_item_id ? <Chip tone="muted">Content</Chip> : null}
+ {post.content_item_id ? <Chip tone="gold">Reviewed</Chip> : null}
  </div>
 
  {statusCfg.hint ? (

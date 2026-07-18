@@ -234,6 +234,7 @@ function QueueItemCard({
   onPush,
   onGenerateVisual,
   onDeleteVisual,
+  onDelete,
   busy,
   higgsfieldConnected,
   selectedModel,
@@ -244,6 +245,7 @@ function QueueItemCard({
   const [draft, setDraft] = useState(item.generated_text || "");
   const [lightboxUrl, setLightboxUrl] = useState(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingItemDelete, setConfirmingItemDelete] = useState(false);
   const status = item.status || "pending";
 
   useEffect(() => {
@@ -553,6 +555,60 @@ function QueueItemCard({
                 <Send size={14} /> Push to Social Planner
               </ActionButton>
             ) : null}
+
+            {/* Permanent delete — set apart from Reject (a status change) on the
+                far right, with its own destructive two-step confirm. */}
+            {confirmingItemDelete ? (
+              <span
+                style={{
+                  marginLeft: "auto",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <span style={{ fontSize: 12, color: "var(--cth-command-muted)" }}>
+                  Delete permanently?
+                </span>
+                <ActionButton
+                  onClick={() => {
+                    onDelete(item);
+                    setConfirmingItemDelete(false);
+                  }}
+                  variant="solid"
+                >
+                  Delete
+                </ActionButton>
+                <ActionButton
+                  onClick={() => setConfirmingItemDelete(false)}
+                  variant="ghost"
+                >
+                  Cancel
+                </ActionButton>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingItemDelete(true)}
+                title="Delete item permanently"
+                style={{
+                  marginLeft: "auto",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "7px 12px",
+                  borderRadius: 9,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  background: "transparent",
+                  color: "var(--cth-command-error)",
+                  border: "1px solid var(--cth-command-error)",
+                }}
+              >
+                <Trash2 size={14} /> Delete
+              </button>
+            )}
           </>
         )}
       </div>
@@ -1128,6 +1184,18 @@ export default function ContentQueue() {
     }
   };
 
+  // Permanent delete. Awaited, then remove the row — the backend refuses (409)
+  // if a genuinely-live social post is attached, which surfaces in the banner.
+  const deleteItem = async (item) => {
+    setError("");
+    try {
+      await apiClient.delete(`/api/content-automation/queue/${item.item_id}`);
+      setItems((list) => list.filter((it) => it.item_id !== item.item_id));
+    } catch (e) {
+      setError(e?.payload?.detail || e?.message || "Failed to delete item.");
+    }
+  };
+
   const saveSettings = async (next) => {
     setSavingSettings(true);
     try {
@@ -1480,6 +1548,7 @@ export default function ContentQueue() {
                   onPush={pushItem}
                   onGenerateVisual={generateVisual}
                   onDeleteVisual={deleteVisual}
+                  onDelete={deleteItem}
                   busy={busyItem}
                   higgsfieldConnected={higgsfieldConnected}
                   selectedModel={modelByItem[it.item_id] || DEFAULT_VISUAL_MODEL}
