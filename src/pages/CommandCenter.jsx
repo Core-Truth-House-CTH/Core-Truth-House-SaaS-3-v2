@@ -318,29 +318,84 @@ const COMMAND_CENTER_CSS = `
 `;
 
 // ---------------------------------------------------------------------------
-// Score / audit helpers (retained from prior version, trimmed to what's used)
+// Guidance helpers — read LIVE brand-health modules (healthData.modules), not the
+// frozen diagnostic audit, so Today's Focus and Zuri's next move respond to work as
+// it lands. Each guidance module maps a brand-health module key to the copy Zuri
+// speaks and the route the action opens. Five keys are renamed from the audit's
+// names (visual_identity->identity_studio, offer_suite->offer_builder,
+// systems_and_sops->systems_builder, content_library->content_studio,
+// launch_readiness->launch_planner); brand_foundation is already the same key.
 // ---------------------------------------------------------------------------
 
-function clampCommandScore(value, fallback = 0) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return fallback;
-  return Math.max(0, Math.min(100, Math.round(numeric)));
+const GUIDANCE_MODULES = [
+  {
+    key: "brand_foundation",
+    focusTitle: "Strengthen Brand Foundation",
+    zuriTitle: "Strengthen your Brand Foundation",
+    body: "Your clarity layer is asking for attention. Tighten the truth, audience, promise, and voice before adding more execution.",
+    cta: "Open Brand Foundation",
+    route: "/brand-foundation",
+  },
+  {
+    key: "identity_studio",
+    focusTitle: "Review Identity Studio",
+    zuriTitle: "Give your brand a visual system",
+    body: "Lock in your colors, type, and brand assets so every surface reads as the same brand.",
+    cta: "Open Identity Studio",
+    route: "/identity-studio",
+  },
+  {
+    key: "offer_builder",
+    focusTitle: "Clarify Offer Architecture",
+    zuriTitle: "Clarify your offer architecture",
+    body: "Define the offers buyers actually choose between — packaging, outcome, and pricing logic.",
+    cta: "Open Offer Builder",
+    route: "/offer-builder",
+  },
+  {
+    key: "systems_builder",
+    focusTitle: "Build One Repeatable System",
+    zuriTitle: "Turn delivery into a repeatable system",
+    body: "Document one process so the brand can run without you remembering every step.",
+    cta: "Open Systems Builder",
+    route: "/systems-builder",
+  },
+  {
+    key: "content_studio",
+    focusTitle: "Create One Aligned Content Pillar",
+    zuriTitle: "Build one aligned content pillar",
+    body: "Give your content a clear job. Choose one pillar and turn it into a focused content direction.",
+    cta: "Open Content Studio",
+    route: "/content-studio",
+  },
+  {
+    key: "launch_planner",
+    focusTitle: "Clarify Your Next Campaign Path",
+    zuriTitle: "Clarify your next campaign path",
+    body: "Define the campaign direction before creating more disconnected content, so each launch teaches you something.",
+    cta: "Open Campaign Builder",
+    route: "/campaign-builder",
+  },
+];
+
+// A brand-health module reports {score, completed, total}. Guidance keys off the raw
+// completed/total, NOT the score: those scores are quantized artifact counts
+// (offers*25, launches*33), so a <70/<75/<85 band collapses to the same test. "2 of
+// 4" is the honest, actionable signal. Returns null when the module is absent or
+// malformed so callers can skip it.
+function moduleProgress(modules, key) {
+  const m = modules?.[key];
+  const total = Number(m?.total);
+  if (!Number.isFinite(total) || total <= 0) return null;
+  const completedRaw = Number(m?.completed);
+  const completed = Number.isFinite(completedRaw) ? Math.max(0, Math.min(completedRaw, total)) : 0;
+  return { completed, total, remaining: total - completed };
 }
 
-function firstAuditScore(scoreBag, keys) {
-  for (const key of keys) {
-    const value = scoreBag?.[key];
-    if (value !== undefined && value !== null && value !== "") {
-      return clampCommandScore(value, null);
-    }
-  }
-  return null;
-}
-
-function averageAuditScores(values) {
-  const valid = values.filter((value) => Number.isFinite(Number(value)));
-  if (!valid.length) return null;
-  return clampCommandScore(valid.reduce((sum, value) => sum + Number(value), 0) / valid.length, null);
+// Urgency in [0,1]: 1 when a module is untouched, -> 0 as it nears complete. Keeps
+// the milestone/fallback constants below on the same scale so everything sorts together.
+function moduleUrgency({ completed, total }) {
+  return 1 - completed / total;
 }
 
 function cthBestMoveDayIndex(length) {
@@ -351,102 +406,71 @@ function cthBestMoveDayIndex(length) {
   return day % length;
 }
 
-function buildDailyBestMove({ latestAudit, progress }) {
-  const scoreBag = latestAudit?.module_scores || latestAudit?.scores || {};
-  const overall = clampCommandScore(
-    latestAudit?.overall_score ?? latestAudit?.overallScore ?? latestAudit?.score ?? scoreBag?.overall,
-    null
-  );
-  const clarity = averageAuditScores([
-    firstAuditScore(scoreBag, ["brand_foundation", "foundation"]),
-    firstAuditScore(scoreBag, ["visual_identity", "identity"]),
-  ]);
-  const structure = averageAuditScores([
-    firstAuditScore(scoreBag, ["offer_suite", "offers"]),
-    firstAuditScore(scoreBag, ["systems_and_sops", "systems"]),
-  ]);
-  const execution = averageAuditScores([
-    firstAuditScore(scoreBag, ["content_library", "content"]),
-    firstAuditScore(scoreBag, ["launch_readiness", "launch"]),
-  ]);
-
+function buildDailyBestMove({ healthData, latestAudit, progress }) {
+  const modules = healthData?.modules || {};
   const candidates = [];
-  if (!overall || overall <= 0) {
-    candidates.push({ key: "complete-diagnostic", priority: 100, title: "Complete your Brand Diagnostic", body: "I need a current score before I can recommend the most accurate next move.", cta: "Start diagnostic", route: "/brand-audit" });
+
+  // Diagnostic nudge is keyed to whether the user has EVER taken the audit, not to a
+  // score: brand-health overall is > 0 the moment any artifact exists, so a score
+  // gate would silently stop prompting the diagnostic for anyone who's built anything.
+  if (!latestAudit) {
+    candidates.push({ key: "complete-diagnostic", urgency: 1, title: "Complete your Brand Diagnostic", body: "Take the diagnostic so I can benchmark where your brand stands and tailor the next move.", cta: "Start diagnostic", route: "/brand-audit" });
   }
-  if (Number.isFinite(clarity) && clarity < 75) {
-    candidates.push({ key: "strengthen-clarity", priority: 100 - clarity, title: "Strengthen your Brand Foundation", body: "Your clarity layer is asking for attention. Tighten the truth, audience, promise, and voice before adding more execution.", cta: "Open Brand Foundation", route: "/brand-foundation" });
-  }
-  if (Number.isFinite(structure) && structure < 75) {
-    candidates.push({ key: "review-structure", priority: 100 - structure, title: "Review your Offer and System structure", body: "The brand has momentum, but the structure needs stronger rules. Clarify the path between offers, systems, and decisions.", cta: "Open Offer Builder", route: "/offer-builder" });
-  }
-  if (Number.isFinite(execution) && execution < 75) {
-    const launchScore = firstAuditScore(scoreBag, ["launch_readiness", "launch"]);
+
+  // One candidate per incomplete brand-health module, ranked by how far from done.
+  GUIDANCE_MODULES.forEach((mod) => {
+    const p = moduleProgress(modules, mod.key);
+    if (!p || p.remaining <= 0) return;
     candidates.push({
-      key: "tighten-execution",
-      priority: 100 - execution,
-      title: launchScore !== null && launchScore < 70 ? "Clarify your next campaign path" : "Build one aligned content pillar",
-      body: launchScore !== null && launchScore < 70 ? "Your launch readiness is the pressure point. Define the campaign direction before creating more disconnected content." : "Execution gets easier when content has a clear job. Choose one pillar and turn it into a focused content direction.",
-      cta: launchScore !== null && launchScore < 70 ? "Open Campaign Builder" : "Open Content Studio",
-      route: launchScore !== null && launchScore < 70 ? "/campaign-builder" : "/content-studio",
+      key: mod.key,
+      urgency: moduleUrgency(p),
+      title: mod.zuriTitle,
+      body: `${mod.body} You're ${p.completed} of ${p.total} here.`,
+      cta: mod.cta,
+      route: mod.route,
     });
-  }
+  });
+
+  // Milestone moves (live onboarding progress), below any incomplete module.
   if (progress && !progress.strategic_os_started) {
-    candidates.push({ key: "start-strategic-os", priority: 32, title: "Turn your strategy into an operating system", body: "Your brand needs a decision layer. Use Strategic OS to connect positioning, offers, content, and execution.", cta: "Open Strategic OS", route: "/strategic-os" });
+    candidates.push({ key: "start-strategic-os", urgency: 0.32, title: "Turn your strategy into an operating system", body: "Your brand needs a decision layer. Use Strategic OS to connect positioning, offers, content, and execution.", cta: "Open Strategic OS", route: "/strategic-os" });
   }
   if (progress && !progress.first_campaign_created) {
-    candidates.push({ key: "create-first-campaign", priority: 26, title: "Create your next aligned campaign", body: "A clear campaign turns brand truth into visible movement. Build one campaign that connects message, offer, and action.", cta: "Open Campaign Builder", route: "/campaign-builder" });
+    candidates.push({ key: "create-first-campaign", urgency: 0.26, title: "Create your next aligned campaign", body: "A clear campaign turns brand truth into visible movement. Build one campaign that connects message, offer, and action.", cta: "Open Campaign Builder", route: "/campaign-builder" });
   }
   if (!candidates.length) {
-    candidates.push({ key: "optimize-conversion-path", priority: 20, title: "Optimize one conversion path", body: "Your foundation is strong enough to refine the path from attention to action. Choose one page, offer, or funnel to sharpen today.", cta: "Open Insights", route: "/analytics" });
+    candidates.push({ key: "optimize-conversion-path", urgency: 0.2, title: "Optimize one conversion path", body: "Your foundation is strong enough to refine the path from attention to action. Choose one page, offer, or funnel to sharpen today.", cta: "Open Insights", route: "/analytics" });
   }
 
-  const sorted = [...candidates].sort((a, b) => b.priority - a.priority);
-  const urgent = sorted.filter((item) => item.priority >= 35);
+  const sorted = [...candidates].sort((a, b) => b.urgency - a.urgency);
+  const urgent = sorted.filter((item) => item.urgency >= 0.35);
   const pool = urgent.length > 1 ? urgent.slice(0, 2) : sorted.slice(0, 1);
   return pool[cthBestMoveDayIndex(pool.length)] || sorted[0];
 }
 
-function getPriorityScore(scoreBag, keys) {
-  for (const key of keys) {
-    const value = scoreBag?.[key];
-    const numeric = Number(value);
-    if (Number.isFinite(numeric)) return Math.max(0, Math.min(100, Math.round(numeric)));
-  }
-  return null;
-}
-
-function buildPriorityActions({ latestAudit, milestones }) {
-  const scoreBag = latestAudit?.module_scores || latestAudit?.scores || {};
-  const overall = getPriorityScore(scoreBag, ["overall"]) ??
-    (Number.isFinite(Number(latestAudit?.overall_score)) ? Math.round(Number(latestAudit.overall_score)) : null);
-
+function buildPriorityActions({ healthData, latestAudit, milestones }) {
+  const modules = healthData?.modules || {};
   const actions = [];
-  if (!overall || overall <= 0) {
-    actions.push({ key: "brand-audit", title: "Complete Brand Diagnostic", status: "Start here", route: "/brand-audit", urgency: 100 });
+
+  // Same diagnostic gate as buildDailyBestMove: presence of an audit, not a score.
+  if (!latestAudit) {
+    actions.push({ key: "brand-audit", title: "Complete Brand Diagnostic", status: "Start here", route: "/brand-audit", urgency: 1 });
   }
 
-  const scoreActions = [
-    { key: "brand-foundation", title: "Strengthen Brand Foundation", score: getPriorityScore(scoreBag, ["brand_foundation", "foundation"]), route: "/brand-foundation" },
-    { key: "visual-identity", title: "Review Identity Studio", score: getPriorityScore(scoreBag, ["visual_identity", "identity"]), route: "/identity-studio" },
-    { key: "offer-suite", title: "Clarify Offer Architecture", score: getPriorityScore(scoreBag, ["offer_suite", "offers"]), route: "/offer-builder" },
-    { key: "systems", title: "Build One Repeatable System", score: getPriorityScore(scoreBag, ["systems_and_sops", "systems"]), route: "/systems-builder" },
-    { key: "content-library", title: "Create One Aligned Content Pillar", score: getPriorityScore(scoreBag, ["content_library", "content"]), route: "/content-studio" },
-    { key: "launch-readiness", title: "Clarify Your Next Campaign Path", score: getPriorityScore(scoreBag, ["launch_readiness", "launch"]), route: "/campaign-builder" },
-  ];
-  scoreActions.forEach((item) => {
-    if (!Number.isFinite(Number(item.score))) return;
-    if (item.score < 70) actions.push({ ...item, status: `${item.score}/100`, urgency: 100 - item.score });
-    else if (item.score < 85) actions.push({ ...item, status: `${item.score}/100`, urgency: 85 - item.score });
+  // One action per incomplete module; status is the honest "2/4", ranked by remaining.
+  GUIDANCE_MODULES.forEach((mod) => {
+    const p = moduleProgress(modules, mod.key);
+    if (!p || p.remaining <= 0) return;
+    actions.push({ key: mod.key, title: mod.focusTitle, status: `${p.completed}/${p.total}`, route: mod.route, urgency: moduleUrgency(p) });
   });
 
-  if (milestones && !milestones.strategic_os_started) actions.push({ key: "strategic-os", title: "Start Strategic OS", status: "Next layer", route: "/strategic-os", urgency: 34 });
-  if (milestones && !milestones.first_campaign_created) actions.push({ key: "first-campaign", title: "Create First Campaign", status: "Growth move", route: "/campaign-builder", urgency: 28 });
+  if (milestones && !milestones.strategic_os_started) actions.push({ key: "strategic-os", title: "Start Strategic OS", status: "Next layer", route: "/strategic-os", urgency: 0.34 });
+  if (milestones && !milestones.first_campaign_created) actions.push({ key: "first-campaign", title: "Create First Campaign", status: "Growth move", route: "/campaign-builder", urgency: 0.28 });
 
   if (!actions.length) {
     actions.push(
-      { key: "optimize-path", title: "Optimize One Conversion Path", status: "Ready", route: "/analytics", urgency: 20 },
-      { key: "review-library", title: "Review Workspace Library", status: "Maintain", route: "/workspace-library", urgency: 12 }
+      { key: "optimize-path", title: "Optimize One Conversion Path", status: "Ready", route: "/analytics", urgency: 0.2 },
+      { key: "review-library", title: "Review Workspace Library", status: "Maintain", route: "/workspace-library", urgency: 0.12 }
     );
   }
   return actions.sort((a, b) => b.urgency - a.urgency).slice(0, 5);
@@ -940,8 +964,8 @@ export default function CommandCenter() {
   const displayScore = Number.isFinite(Number(healthData?.overall_score)) ? Number(healthData.overall_score) : overallScore;
   const displayRating = healthData?.rating || rating;
 
-  const bestMove = useMemo(() => buildDailyBestMove({ latestAudit, progress }), [latestAudit, progress]);
-  const priorityActions = useMemo(() => buildPriorityActions({ latestAudit, milestones: progress }), [latestAudit, progress]);
+  const bestMove = useMemo(() => buildDailyBestMove({ healthData, latestAudit, progress }), [healthData, latestAudit, progress]);
+  const priorityActions = useMemo(() => buildPriorityActions({ healthData, latestAudit, milestones: progress }), [healthData, latestAudit, progress]);
   const pipelineStages = useMemo(() => buildPipelineStages(workspaceStats, healthData), [workspaceStats, healthData]);
 
   const launchReady = Boolean(healthData?.launch_ready);
