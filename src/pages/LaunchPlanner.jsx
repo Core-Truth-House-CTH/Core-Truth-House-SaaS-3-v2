@@ -15,6 +15,7 @@ import {
  Loader2,
 } from 'lucide-react';
 import apiClient from '../lib/apiClient';
+import { useBrandHealth } from '../context/BrandHealthContext';
 
 const CTH_PAGE_COLORS = {
  darkest: "var(--cth-command-blush)",
@@ -98,6 +99,7 @@ function LaunchPlannerContent() {
  const colors = CTH_PAGE_COLORS;
  const { currentWorkspace } = useWorkspace();
  const { userId } = useAuth();
+ const { refresh: refreshBrandHealth } = useBrandHealth();
 
  const workspaceId =
  currentWorkspace?.id ||
@@ -170,6 +172,9 @@ function LaunchPlannerContent() {
  setShowNewLaunchModal(false);
  setNewLaunchName('');
  setNewLaunchDate('');
+ // A new launch changes the planning/active count behind the launch_planner
+ // brand-health module, which Command Center guidance now reads.
+ refreshBrandHealth();
  } catch (err) {
  console.error('Failed to create launch:', err);
  setError(err?.message || 'Failed to create launch.');
@@ -259,6 +264,8 @@ function LaunchPlannerContent() {
  const remaining = launches.filter((item) => item.id !== launchId);
  setLaunches(remaining);
  setActiveLaunchId(remaining[0]?.id || '');
+ // Deleting a launch changes the count feeding the launch_planner module.
+ refreshBrandHealth();
  } catch (err) {
  console.error('Failed to delete launch:', err);
  setError(err?.message || 'Failed to delete launch.');
