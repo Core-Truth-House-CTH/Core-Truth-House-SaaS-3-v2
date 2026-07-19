@@ -19,9 +19,9 @@ const defaultImage = `${SITE}/og-image.png`;
 const routes = [
   {
     route: "/",
-    title: "Core Truth House | Where Serious Brands Are Built",
+    title: "Brand Operating System for Solo Founders | Core Truth House",
     description:
-      "Core Truth House helps serious solo service-based founders uncover the structural gaps in their brand, stop guessing, and start with the Brand Diagnostic.",
+      "A brand operating system for solo service-based founders. Uncover the structural gaps in your brand, stop guessing, and start with the Brand Diagnostic.",
     ogTitle: "Where serious brands are built",
     ogDescription:
       "A Brand Operating System for founders who are consistent but not converting and need structure behind their message, offers, content, and sales path.",
@@ -31,9 +31,9 @@ const routes = [
   },
   {
     route: "/brand-diagnostic/",
-    title: "Brand Diagnostic | Core Truth House",
+    title: "Brand Diagnostic for Solo Founders | Core Truth House",
     description:
-      "Take the Core Truth House Brand Diagnostic to uncover the structural gaps keeping your brand from converting.",
+      "Take the free Core Truth House Brand Diagnostic to uncover the structural gaps keeping your brand from converting, and find the right system for your stage.",
     ogTitle: "Find the gaps in your brand structure | Core Truth House",
     ogDescription:
       "A 3 to 5 minute diagnostic for serious founders who are consistent but not converting.",
@@ -43,7 +43,7 @@ const routes = [
   },
   {
     route: "/methodology",
-    title: "Methodology | Core Truth House",
+    title: "The Core Truth Method for Solo Founders | Core Truth House",
     description:
       "Explore the Core Truth House methodology for turning scattered brand decisions into clarity, structure, execution, and optimization.",
     ogTitle: "The Core Truth House Method",
@@ -79,7 +79,7 @@ const routes = [
   },
   {
     route: "/blog",
-    title: "Field Notes | Core Truth House",
+    title: "Field Notes: Brand Strategy for Founders | Core Truth House",
     description:
       "Read Core Truth House field notes on brand clarity, positioning, messaging, offers, content systems, and founder strategy.",
     ogTitle: "Core Truth House Field Notes",
@@ -91,7 +91,7 @@ const routes = [
   },
   {
     route: "/store",
-    title: "Store | Core Truth House",
+    title: "Brand Tools & Resources for Founders | Core Truth House",
     description:
       "Explore Core Truth House offers, tools, and resources designed to help founders strengthen brand structure and presence.",
     ogTitle: "Core Truth House Store",
@@ -103,7 +103,7 @@ const routes = [
   },
   {
     route: "/cohort",
-    title: "The Core Truth Cohort | Core Truth House",
+    title: "Brand Positioning Sprint for Solo Founders | Core Truth House",
     description:
       "A 14-day positioning sprint for solo founders who are consistent but not converting. Four live sessions, async work inside Core Truth House OS, a Core Truth Profile, and a 90-day Brand Operations Plan.",
     ogTitle: "The Core Truth Cohort",
@@ -203,51 +203,49 @@ function buildSchema(meta) {
 }
 
 
+// Homepage FAQ — verbatim from the on-page FAQ section (LandingPage.jsx
+// `homepageFaqs`). Keep in sync with the page; do not paraphrase.
+const homepageFaqs = [
+  {
+    question: "What is a brand operating system?",
+    answer:
+      "A brand operating system is the connected structure behind your brand. It organizes your positioning, message, audience, offers, content, sales pages, funnels, and decision rules so your brand does not depend on scattered notes or one-off prompts.",
+  },
+  {
+    question: "Who is Core Truth House for?",
+    answer:
+      "Core Truth House is designed for solo service-based founders who already have content, offers, experience, and some visibility, but need stronger structure so the brand is clearer, more consistent, and easier to sell.",
+  },
+  {
+    question: "How is Core Truth House different from Jasper, ChatGPT prompts, Canva, or StoryBrand?",
+    answer:
+      "Those tools can help you create individual pieces. Core Truth House is built to hold the structure behind the pieces. It connects your brand foundation, Brand Memory, content, offers, sales assets, and execution path so you are not rebuilding from scratch every time.",
+  },
+  {
+    question: "What is Brand Memory?",
+    answer:
+      "Brand Memory is the persistent context layer that stores your strategy, voice, audience, offers, and visual identity, so every AI generation across the platform sounds like your brand and not generic GPT output.",
+  },
+  {
+    question: "Why should I start with the Brand Diagnostic?",
+    answer:
+      "The Brand Diagnostic shows where the structural gaps are before you buy into the system. It helps you see whether the problem is positioning, messaging, offer clarity, audience fit, trust, content consistency, or conversion path.",
+  },
+  {
+    question: "Does Core Truth House replace my strategy, or help me use it better?",
+    answer:
+      "It helps you use it better. The founder still brings the judgment, taste, proof, and point of view. Core Truth House gives those decisions a structured home so they can guide every asset and action.",
+  },
+];
+
 const homepageFaqSchema = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "What is a brand operating system?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "A brand operating system is the connected structure behind your brand. It organizes positioning, messaging, audience, offers, content, sales pages, funnels, and decision rules so your brand does not depend on scattered notes or one-off prompts."
-      }
-    },
-    {
-      "@type": "Question",
-      name: "Who is Core Truth House for?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Core Truth House is designed for solo service-based founders who already have content, offers, experience, and visibility, but need stronger structure so the brand is clearer, more consistent, and easier to sell."
-      }
-    },
-    {
-      "@type": "Question",
-      name: "How is Core Truth House different from Jasper, ChatGPT prompts, Canva, or StoryBrand?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Those tools can help create individual pieces. Core Truth House is built to hold the structure behind the pieces by connecting brand foundation, Brand Memory, content, offers, sales assets, and execution path."
-      }
-    },
-    {
-      "@type": "Question",
-      name: "What is Brand Memory?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Brand Memory is the persistent context layer that stores strategy, voice, audience, offers, and visual identity, so AI generation across the platform sounds like the brand and not generic GPT output."
-      }
-    },
-    {
-      "@type": "Question",
-      name: "Why should I start with the Brand Diagnostic?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "The Brand Diagnostic shows where the structural gaps are before buying into the system. It helps identify whether the problem is positioning, messaging, offer clarity, audience fit, trust, content consistency, or conversion path."
-      }
-    }
-  ]
+  mainEntity: homepageFaqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: { "@type": "Answer", text: faq.answer },
+  })),
 };
 
 function injectHomepageFaqSchema(html, meta) {
@@ -478,9 +476,9 @@ function addHomepageOrganizationSchemaDirect(html, meta) {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Core Truth House",
-    "url": "https://coretruthhouse.com/",
+    "url": `${SITE}/`,
     "description": "Core Truth House is a brand operating system for solo service-based founders who need structure behind their message, offers, content, sales pages, funnels, and brand decisions.",
-    "logo": "https://coretruthhouse.com/brand-assets/logo/cth-logo-seal.png",
+    "logo": `${SITE}/brand-assets/logo/cth-logo-seal.png`,
     "sameAs": []
   };
 
@@ -493,54 +491,8 @@ function addHomepageFaqSchemaDirect(html, meta) {
   if (!meta || meta.route !== "/") return html;
   if (html.includes('"@type":"FAQPage"') || html.includes('"@type": "FAQPage"')) return html;
 
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "What is a brand operating system?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A brand operating system is the connected structure behind your brand. It organizes positioning, messaging, audience, offers, content, sales pages, funnels, and decision rules so your brand does not depend on scattered notes or one-off prompts."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Who is Core Truth House for?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Core Truth House is designed for solo service-based founders who already have content, offers, experience, and visibility, but need stronger structure so the brand is clearer, more consistent, and easier to sell."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How is Core Truth House different from Jasper, ChatGPT prompts, Canva, or StoryBrand?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Those tools can help create individual pieces. Core Truth House is built to hold the structure behind the pieces by connecting brand foundation, Brand Memory, content, offers, sales assets, and execution path."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What is Brand Memory?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Brand Memory is the persistent context layer that stores strategy, voice, audience, offers, and visual identity, so AI generation across the platform sounds like the brand and not generic GPT output."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Why should I start with the Brand Diagnostic?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "The Brand Diagnostic shows where the structural gaps are before buying into the system. It helps identify whether the problem is positioning, messaging, offer clarity, audience fit, trust, content consistency, or conversion path."
-        }
-      }
-    ]
-  };
-
-  const schemaTag = `\n        <script type="application/ld+json">${JSON.stringify(faqSchema)}</script>`;
+  // Single source of truth: homepageFaqSchema (built from homepageFaqs above).
+  const schemaTag = `\n        <script type="application/ld+json">${JSON.stringify(homepageFaqSchema)}</script>`;
   return html.replace(/<\/head>/i, schemaTag + "\n      </head>");
 }
 
@@ -662,10 +614,15 @@ for (const article of articles) {
   const slug = article.slug;
   const canonical = `${SITE}/blog/${slug}/`;
   const description = truncate(article.excerpt, 155);
-  const image =
-    typeof article.img === "string" && /^https?:\/\//i.test(article.img)
-      ? article.img
-      : defaultImage;
+  // Per-article social image: absolute URL from the img filename when the file
+  // exists in the build output; otherwise keep the default OG image.
+  const imgFile = typeof article.img === "string" ? article.img.trim() : "";
+  let image = defaultImage;
+  if (/^https?:\/\//i.test(imgFile)) {
+    image = imgFile;
+  } else if (imgFile && fs.existsSync(path.join(distDir, "field-notes-assets", imgFile))) {
+    image = `${SITE}/field-notes-assets/${imgFile}`;
+  }
 
   const meta = {
     route: `/blog/${slug}`,
@@ -682,7 +639,7 @@ for (const article of articles) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, applyArticleMeta(baseHtml, meta));
 
-  console.log(`Wrote article metadata: /blog/${slug}/ -> ${path.relative(process.cwd(), filePath)}`);
+  console.log(`Wrote article metadata: /blog/${slug}/ [og:image ${image === defaultImage ? "FALLBACK og-image.png" : "per-article"}] -> ${path.relative(process.cwd(), filePath)}`);
 }
 
 console.log("Static route metadata injection complete.");
