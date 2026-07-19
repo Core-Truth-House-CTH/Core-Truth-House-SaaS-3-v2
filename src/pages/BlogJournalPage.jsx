@@ -20,6 +20,26 @@ const categories = [
 
 const featuredArticle = notes[0];
 
+// Long-form (pillar) articles carry an ordered `blocks` array instead of the
+// fixed sections/paragraphs shape. These helpers render that generic body.
+function blockHeadingId(text) {
+ return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+function renderBlock(block, key) {
+ if (block.t === "h2") {
+ return <h2 key={key} id={blockHeadingId(block.text)}>{block.text}</h2>;
+ }
+ if (block.t === "ul") {
+ return (
+ <ul key={key}>
+ {block.items.map((item, i) => <li key={i}>{item}</li>)}
+ </ul>
+ );
+ }
+ return <p key={key}>{block.text}</p>;
+}
+
 function FieldNotesIndex() {
  return (
  <main className="fn-page">
@@ -298,18 +318,47 @@ function ArticlePage({ article: currentArticle }) {
  <aside className="article-toc">
  <p className="fn-section-label">In This Article</p>
  <ul>
- {currentArticle.sections.map((section) => (
+ {currentArticle.blocks ? (
+ currentArticle.blocks.filter((b) => b.t === "h2").map((b) => (
+ <li key={b.text}>
+ <span />
+ <a href={`#${blockHeadingId(b.text)}`}>{b.text}</a>
+ </li>
+ ))
+ ) : (
+ currentArticle.sections.map((section) => (
  <li key={section}>
  <span />
  <a href={`#${section.toLowerCase().replaceAll(" ", "-")}`}>{section}</a>
  </li>
- ))}
+ ))
+ )}
  </ul>
 
  <div className="toc-column-art" />
  </aside>
 
  <article className="article-content">
+ {currentArticle.blocks ? (
+ (() => {
+ const firstH2 = currentArticle.blocks.findIndex((b) => b.t === "h2");
+ const intro = firstH2 === -1 ? currentArticle.blocks : currentArticle.blocks.slice(0, firstH2);
+ const rest = firstH2 === -1 ? [] : currentArticle.blocks.slice(firstH2);
+ return (
+ <>
+ {intro.map((b, i) => renderBlock(b, `intro-${i}`))}
+ {currentArticle.quote && (
+ <blockquote>
+ <span>“</span>
+ <p>{currentArticle.quote}</p>
+ </blockquote>
+ )}
+ {rest.map((b, i) => renderBlock(b, `b-${i}`))}
+ </>
+ );
+ })()
+ ) : (
+ <>
  {currentArticle.paragraphs.slice(0, 2).map((paragraph, index) => (
  <p key={`intro-${index}`}>{paragraph}</p>
  ))}
@@ -349,6 +398,8 @@ function ArticlePage({ article: currentArticle }) {
  </div>
 
  <p id="final-thoughts">{currentArticle.paragraphs[currentArticle.paragraphs.length - 1]}</p>
+ </>
+ )}
  </article>
 
  <aside className="article-side-rail">
