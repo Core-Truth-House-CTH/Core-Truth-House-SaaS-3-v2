@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
+import { notes as articles } from "../src/data/fieldNotes.mjs";
 
-const distDir = path.resolve("dist");
+const distDir = path.resolve(process.env.DIST_DIR || "dist");
 const templatePath = path.join(distDir, "index.html");
 
 if (!fs.existsSync(templatePath)) {
@@ -281,7 +282,7 @@ function buildFallbackBody(meta) {
   const bodies = {
     "/": {
       eyebrow: "Core Truth House",
-      headline: "Build the brand behind the business before you build the brand the world sees.",
+      headline: "Where serious brands are built.",
       intro:
         "Core Truth House helps solo service-based founders uncover the structural gaps in their brand, stop guessing, and start with the Brand Diagnostic.",
       points: [
@@ -623,6 +624,65 @@ for (const meta of routes) {
   fs.writeFileSync(filePath, html);
 
   console.log(`Wrote static metadata: ${meta.route} -> ${path.relative(process.cwd(), filePath)}`);
+}
+
+// --- Per-article Field Notes metadata (Layer 2 SEO) ------------------------
+// Generated from the shared fieldNotes data so it can never drift from the
+// page. Self-referencing canonical + article-specific title/description/OG/
+// Twitter. Metadata only — no homepage fallback body is injected here.
+
+function truncate(value, max) {
+  const s = String(value || "").trim();
+  if (s.length <= max) return s;
+  return s.slice(0, max - 1).replace(/\s+\S*$/, "").trim() + "…";
+}
+
+function applyArticleMeta(html, meta) {
+  let out = removePublicOnlyPreloads(html);
+
+  out = out.replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeAttr(meta.title)}</title>`);
+  out = upsertTag(out, /<meta name="description" content="[^"]*"\s*\/?>/, `<meta name="description" content="${escapeAttr(meta.description)}" />`);
+  out = upsertTag(out, /<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${escapeAttr(meta.canonical)}" />`);
+  out = upsertTag(out, /<meta property="og:title" content="[^"]*"\s*\/?>/, `<meta property="og:title" content="${escapeAttr(meta.ogTitle)}" />`);
+  out = upsertTag(out, /<meta property="og:description" content="[^"]*"\s*\/?>/, `<meta property="og:description" content="${escapeAttr(meta.ogDescription)}" />`);
+  out = upsertTag(out, /<meta property="og:url" content="[^"]*"\s*\/?>/, `<meta property="og:url" content="${escapeAttr(meta.canonical)}" />`);
+  out = upsertTag(out, /<meta property="og:type" content="[^"]*"\s*\/?>/, `<meta property="og:type" content="article" />`);
+  out = upsertTag(out, /<meta property="og:image" content="[^"]*"\s*\/?>/, `<meta property="og:image" content="${escapeAttr(meta.image)}" />`);
+  out = upsertTag(out, /<meta name="twitter:card" content="[^"]*"\s*\/?>/, `<meta name="twitter:card" content="summary_large_image" />`);
+  out = upsertTag(out, /<meta name="twitter:title" content="[^"]*"\s*\/?>/, `<meta name="twitter:title" content="${escapeAttr(meta.ogTitle)}" />`);
+  out = upsertTag(out, /<meta name="twitter:description" content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${escapeAttr(meta.ogDescription)}" />`);
+  out = upsertTag(out, /<meta name="twitter:image" content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${escapeAttr(meta.image)}" />`);
+
+  out = removeExistingJsonLd(out);
+  out = out.replace("</head>", `        ${buildSchema(meta)}\n</head>`);
+  return out;
+}
+
+for (const article of articles) {
+  const slug = article.slug;
+  const canonical = `${SITE}/blog/${slug}/`;
+  const description = truncate(article.excerpt, 155);
+  const image =
+    typeof article.img === "string" && /^https?:\/\//i.test(article.img)
+      ? article.img
+      : defaultImage;
+
+  const meta = {
+    route: `/blog/${slug}`,
+    title: `${article.title} | Core Truth House`,
+    description,
+    ogTitle: article.title,
+    ogDescription: article.excerpt,
+    image,
+    canonical,
+    schemaType: "Article",
+  };
+
+  const filePath = path.join(distDir, "blog", slug, "index.html");
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, applyArticleMeta(baseHtml, meta));
+
+  console.log(`Wrote article metadata: /blog/${slug}/ -> ${path.relative(process.cwd(), filePath)}`);
 }
 
 console.log("Static route metadata injection complete.");
