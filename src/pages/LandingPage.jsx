@@ -419,33 +419,20 @@ function Pillars() {
  {pillars.map((pillar, index) => (
  <article
  key={pillar.title}
- className={[
- "flex gap-4 border-[var(--cth-border)] px-4 py-8 sm:px-6 xl:px-8",
- index !== pillars.length - 1 ? "xl:border-r" : "",
- index < 2 ? "md:border-b xl:border-b-0" : "",
- ].join(" ")}
+ className="flex flex-col border-l border-[var(--cth-gold)] px-5 py-10 sm:px-6 md:border-l-0 md:border-t xl:px-8"
  >
- <div className="cth-home-card-asset-frame flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-[16px] border border-[var(--cth-border-gold)] bg-[var(--cth-panel-soft)] p-2 text-xl text-[var(--cth-crimson)]">
- {pillar.asset ? (
- <img
- src={pillar.asset}
- alt=""
+ <span
  aria-hidden="true"
- className="cth-home-card-asset h-full w-full object-contain"
- />
- ) : (
- pillar.icon
- )}
- </div>
-
- <div>
- <h3 className="text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--cth-ruby)]">
+ className="font-serif text-[clamp(2.5rem,4vw,3.75rem)] font-semibold leading-none text-[var(--cth-purple-deep)]"
+ >
+ {String(index + 1).padStart(2, "0")}
+ </span>
+ <h3 className="mt-5 font-serif text-[15px] font-bold uppercase tracking-[0.14em] text-[var(--cth-purple-deep)]">
  {pillar.title}
  </h3>
  <p className="mt-3 text-sm leading-7 text-[var(--cth-ink-soft)]">
  {pillar.body}
  </p>
- </div>
  </article>
  ))}
  </div>
