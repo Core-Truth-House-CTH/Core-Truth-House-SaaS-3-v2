@@ -278,25 +278,26 @@ function ProblemTransformationArc() {
 
 function BrandMemorySection() {
  return (
- <section className="relative overflow-hidden bg-[var(--cth-ivory)] px-5 py-20 sm:px-8 lg:py-28 xl:px-12">
+ <section className="relative overflow-hidden bg-[linear-gradient(160deg,var(--cth-purple-black),var(--cth-purple-deep))] px-5 py-24 sm:px-8 lg:py-32 xl:px-12">
  <div className="mx-auto grid max-w-[1500px] gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-center">
  <div>
- <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-[var(--cth-crimson)]">
+ <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-[var(--cth-gold)]">
  Brand Memory
  </p>
- <h2 className="mt-5 max-w-[760px] font-serif text-[clamp(2.5rem,5vw,5.25rem)] leading-[0.95] tracking-[-0.05em] text-[var(--cth-purple-deep)]">
+ <div className="mt-4 h-px w-16 bg-[var(--cth-gold)]/50" />
+ <h2 className="mt-5 max-w-[760px] font-serif text-[clamp(2.5rem,5vw,5.25rem)] leading-[0.95] tracking-[-0.05em] text-[var(--cth-ivory)]">
  The system remembers what your brand is supposed to sound like.
  </h2>
- <p className="mt-6 max-w-[760px] text-[18px] font-medium leading-9 text-[var(--cth-muted)]">
+ <p className="mt-6 max-w-[760px] text-[18px] font-medium leading-9 text-[var(--cth-ivory)] opacity-80">
  {brandMemoryDefinition}
  </p>
  </div>
 
- <div className="rounded-[32px] border border-[var(--cth-border)] bg-white/60 p-7 shadow-[0_30px_80px_rgba(51,3,60,0.08)]">
- <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--cth-ruby)]">
+ <div className="rounded-[32px] border border-[var(--cth-gold)]/25 bg-transparent p-7">
+ <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--cth-gold)]">
  What it holds
  </p>
- <ul className="mt-6 grid gap-4 text-[16px] leading-8 text-[var(--cth-muted)]">
+ <ul className="mt-6 grid gap-4 text-[16px] leading-8 text-[var(--cth-ivory)]">
  <li>Strategy, positioning, and brand promise</li>
  <li>Audience language, pain points, and buying triggers</li>
  <li>Voice, tone, messaging rules, and decision standards</li>
@@ -380,7 +381,7 @@ function Hero({ scrollOffset = 0 }) {
 
 
 
- <div className="mt-8 flex flex-wrap items-center gap-4">
+ <div className="mt-10 mb-12 flex flex-wrap items-center gap-4">
  <a href="/brand-diagnostic/"
  className="inline-flex w-full sm:w-auto items-center justify-center rounded-md bg-[var(--cth-crimson)] px-7 py-4 text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--cth-ivory)] shadow-[0_18px_35px_rgba(13,0,16,0.18)] transition hover:bg-[var(--cth-cinnabar)]"
  >
