@@ -80,7 +80,7 @@ function Hero() {
  Shop Digital Products <span>→</span>
  </a>
  <a href="/brand-diagnostic/" className="cth-store-btn cth-store-btn-secondary">
- Start Brand Diagnostic
+ Start the Brand Diagnostic
  </a>
  </div>
 

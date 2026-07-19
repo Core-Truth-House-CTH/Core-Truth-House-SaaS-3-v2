@@ -105,7 +105,7 @@ export default function PublicDiagnosticResults() {
  incorrect.
  </p>
  <a className="pdr-primary-btn" href="/brand-diagnostic">
- Take the Brand Diagnostic
+ Start the Brand Diagnostic
  <ArrowRight size={16} />
  </a>
  </div>

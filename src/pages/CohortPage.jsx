@@ -782,7 +782,7 @@ export default function CoreTruthCohortPage() {
                   than losing. btnSecondary (translucent) keeps Apply dominant. */}
               <p style={styles.ctaAside}>Not sure the cohort is right for you?</p>
               <Link to="/brand-diagnostic/" style={{ ...styles.btn, ...styles.btnSecondary }}>
-                Take the Brand Diagnostic
+                Start the Brand Diagnostic
               </Link>
             </div>
           </div>

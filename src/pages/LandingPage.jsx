@@ -363,16 +363,15 @@ function Hero({ scrollOffset = 0 }) {
  <div className="mx-auto grid max-w-[1760px] items-center gap-8 px-5 py-12 sm:px-8 lg:grid-cols-[0.84fr_1.16fr] lg:py-16 xl:px-12">
  <div className="relative z-10 max-w-[760px]">
  <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-[var(--cth-crimson)]">
- Where serious brands are built
+ Brand Architecture
  </p>
 
- <h1 className="mt-5 font-serif text-[clamp(3.1rem,6.4vw,6.5rem)] font-semibold leading-[0.9] tracking-[-0.065em] text-[var(--cth-purple-deep)]">
- <span className="block">Build the brand behind the business</span>
- <span className="block italic font-normal">before you build the brand the world sees.</span>
+ <h1 className="mt-5 font-serif text-[clamp(2.5rem,4.4vw,4.25rem)] font-semibold leading-[1.02] tracking-[-0.03em] text-[var(--cth-purple-deep)]">
+ Where serious brands are built.
  </h1>
 
  <p className="mt-6 max-w-[640px] text-[19px] font-medium leading-9 text-[var(--cth-muted)]">
- Core Truth House gives solo service-based founders one connected system for brand decisions, messaging, offers, content, sales pages, and funnels. So the work you are already doing can finally move the pipeline.
+ Core Truth House helps solo service-based founders uncover the structural gaps in their brand, stop guessing, and start with the Brand Diagnostic.
  </p>
 
  <p className="mt-3 max-w-[620px] rounded-2xl border border-[var(--cth-gold)]/50 bg-[var(--cth-ivory)]/80 px-5 py-4 text-[14px] font-semibold leading-7 text-[var(--cth-ruby)] shadow-[0_18px_45px_rgba(51,3,60,0.05)]">
@@ -383,10 +382,25 @@ function Hero({ scrollOffset = 0 }) {
 
  <div className="mt-8 flex flex-wrap items-center gap-4">
  <a href="/brand-diagnostic/"
- className="inline-flex items-center justify-center rounded-md bg-[var(--cth-crimson)] px-7 py-4 text-[12px] font-bold uppercase tracking-[0.18em] text-white shadow-[0_18px_35px_rgba(175,0,36,0.18)] transition hover:bg-[var(--cth-action-hover)]"
+ className="inline-flex w-full sm:w-auto items-center justify-center rounded-md bg-[var(--cth-crimson)] px-7 py-4 text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--cth-ivory)] shadow-[0_18px_35px_rgba(13,0,16,0.18)] transition hover:bg-[var(--cth-cinnabar)]"
  >
  Start the Brand Diagnostic
  </a>
+ </div>
+
+ {/* CREDIBILITY STRIP — real testimonial (Anika). No photo or result number was
+     provided, so the avatar is a brand-palette monogram and the quote itself is
+     the credibility. */}
+ <div className="mt-8 flex items-center gap-4 rounded-2xl border border-[var(--cth-border)] bg-[var(--cth-ivory)]/80 px-5 py-4 shadow-[0_18px_45px_rgba(51,3,60,0.05)]">
+ <img
+ src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'56'%20height%3D'56'%3E%3Crect%20width%3D'56'%20height%3D'56'%20fill%3D'%23f8f1ec'%2F%3E%3Ctext%20x%3D'50%25'%20y%3D'50%25'%20dy%3D'.35em'%20text-anchor%3D'middle'%20font-family%3D'Georgia%2Cserif'%20font-size%3D'30'%20font-weight%3D'700'%20fill%3D'%23af0024'%3EA%3C%2Ftext%3E%3C%2Fsvg%3E"
+ alt="Anika"
+ className="h-14 w-14 flex-shrink-0 rounded-full border border-[var(--cth-gold)]/50 object-cover"
+ />
+ <div className="text-[14px] leading-6 text-[var(--cth-muted)]">
+ <p className="italic text-[var(--cth-purple-deep)]">&ldquo;This makes so much sense, especially why the core exists. That's so true about how life works with building a business. I like the house reference, it breaks it down so clear, and the visual is giving.&rdquo;</p>
+ <p className="mt-1 font-semibold text-[var(--cth-purple-deep)]">Anika</p>
+ </div>
  </div>
  </div>
 
