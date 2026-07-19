@@ -595,7 +595,6 @@ function ArticlePage({ article: currentArticle }) {
  </div>
  </section>
 
- <TrustedStrip />
  <PublicFooter />
  <FieldNotesStyles />
  </main>
