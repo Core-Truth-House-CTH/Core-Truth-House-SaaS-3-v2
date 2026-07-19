@@ -7,12 +7,13 @@ export const notes = [
  slug: "strategic-consistency",
  category: "Brand Strategy",
  title: "The Quiet Power of Strategic Consistency.",
+ seoTitle: "Brand Consistency for Founders | Core Truth House",
  excerpt:
- "Consistency is not repetition. It is alignment. The brands that endure are the clearest.",
+ "Brand consistency for founders is not repetition. It is alignment. Clear, aligned messaging is how recognition compounds and trust endures over time.",
  read: "6 min read",
  img: "cth-field-notes-article-strategic-consistency-hero.webp",
  sections: [
- "Consistency Is Not Repetition",
+ "Brand Consistency Is Not Repetition",
  "Clarity Builds Recognition",
  "Repetition Builds Trust",
  "Systems Protect Brand Integrity",
@@ -21,7 +22,7 @@ export const notes = [
  "Final Thoughts",
  ],
  paragraphs: [
- "In a world of constant noise, consistency is your brand’s quiet advantage. It does not demand attention. It earns it. It is the throughline that turns first impressions into lasting relationships and fleeting attention into enduring trust.",
+ "In a world of constant noise, brand consistency is your quiet advantage. It does not demand attention. It earns it. It is the throughline that turns first impressions into lasting relationships and fleeting attention into enduring trust.",
  "Repetition is saying the same thing over and over. Consistency is saying the right things, in the right ways, across every touchpoint.",
  "When your message is clear and your identity is aligned, your audience recognizes you instantly. Whether they are seeing you for the first time or the tenth, the brand feels familiar, grounded, and trustworthy.",
  "Trust is built in the ordinary moments. Every consistent interaction reinforces a promise and deepens confidence.",
@@ -35,8 +36,9 @@ export const notes = [
  slug: "say-fewer-things",
  category: "Messaging",
  title: "Say Fewer Things. Say Them Better.",
+ seoTitle: "How to Simplify Your Brand Message | Core Truth House",
  excerpt:
- "Your message is not what you say about your business. It is what changes in your client's mind.",
+ "How to simplify your brand message is not about saying less. It is about choosing sharper words your audience can repeat back without decoding them.",
  read: "5 min read",
  img: "cth-field-notes-article-say-fewer-things-hero.webp",
  sections: [
@@ -47,7 +49,7 @@ export const notes = [
  "Final Thoughts",
  ],
  paragraphs: [
- "Most founders do not need more words. They need sharper words. A message becomes powerful when the audience can repeat it back without having to decode it.",
+ "Most founders do not need more words to simplify the brand message. They need sharper ones. A message becomes powerful when the audience can repeat it back without having to decode it.",
  "The cost of saying too much is not just confusion. It is hesitation. When every idea competes for attention, the buyer cannot tell which truth matters most.",
  "Clarity creates movement because it removes the mental work from the reader. They do not have to guess what you do, why it matters, or what step to take next.",
  "One message must lead. Your content, offers, sales pages, and calls to action should all point back to a clear central idea.",
@@ -60,19 +62,20 @@ export const notes = [
  slug: "systems-create-freedom",
  category: "Systems",
  title: "Systems Create Freedom. Not Just Efficiency.",
+ seoTitle: "Brand Systems for Solo Founders | Core Truth House",
  excerpt:
- "The right systems do not just save time. They create space for vision, creativity, and scale.",
+ "Brand systems for solo founders do not just save time. They create space for vision and scale while protecting your standards, voice, and direction.",
  read: "6 min read",
  img: "cth-field-notes-article-systems-create-freedom-hero.webp",
  sections: [
- "Systems Are Not Restriction",
+ "Brand Systems Are Not Restriction",
  "Structure Protects Creativity",
  "Repeatable Does Not Mean Generic",
  "The Founder Gets Space Back",
  "Final Thoughts",
  ],
  paragraphs: [
- "Systems are often misunderstood as rigid, cold, or limiting. But the right system is not a cage. It is a container that protects what matters.",
+ "Brand systems are often misunderstood as rigid, cold, or limiting. But the right system is not a cage. It is a container that protects what matters.",
  "When your brand decisions are scattered, every new task becomes heavier than it should be. You are not just creating. You are searching, deciding, and rebuilding at the same time.",
  "Structure protects creativity because it removes unnecessary decisions. It gives your energy somewhere productive to go.",
  "Repeatable does not mean generic. A strong system preserves the brand’s standards, voice, promise, and direction so every new asset feels connected.",
@@ -85,8 +88,9 @@ export const notes = [
  slug: "inner-work-outer-results",
  category: "Founder Growth",
  title: "The Inner Work Behind Outer Results.",
+ seoTitle: "Founder Mindset and Brand Growth | Core Truth House",
  excerpt:
- "Sustainable growth starts with your state, your standards, and your self-leadership.",
+ "Founder mindset and brand growth move together. Sustainable growth starts with your state, your standards, and the self-leadership the brand runs on.",
  read: "5 min read",
  img: "cth-field-notes-article-inner-work-outer-results-hero.webp",
  sections: [
@@ -97,7 +101,7 @@ export const notes = [
  "Final Thoughts",
  ],
  paragraphs: [
- "A founder does not just build the business. The founder sets the weather inside it.",
+ "A founder does not just build the business. The founder sets the weather inside it. Founder mindset and brand growth begin from the inside.",
  "When the founder is scattered, the brand often becomes scattered too. When the founder is clear, the business has a better chance of moving with discipline.",
  "Standards shape the brand long before the audience sees the final asset. What you tolerate, repeat, refine, and protect becomes part of the customer experience.",
  "Calm is a strategic advantage. It allows you to make cleaner decisions, hold a stronger line, and stop overcorrecting every time the market shifts.",
@@ -110,19 +114,20 @@ export const notes = [
  slug: "execution-is-intentional",
  category: "Execution",
  title: "Execution Is Not Intense. It Is Intentional.",
+ seoTitle: "Intentional Brand Execution for Founders | Core Truth House",
  excerpt:
- "Small, consistent actions compound into category-defining results over time.",
+ "Intentional brand execution is not intensity or more hours. It is small, connected actions that compound into category-defining results over time.",
  read: "4 min read",
  img: "cth-field-notes-article-execution-is-intentional-hero.webp",
  sections: [
  "Intensity Is Not the Same as Progress",
- "Execution Needs Direction",
+ "Intentional Execution Needs Direction",
  "Small Moves Compound",
  "Consistency Beats Bursts",
  "Final Thoughts",
  ],
  paragraphs: [
- "Execution is often mistaken for intensity. More hours. More pressure. More urgency. But intensity without direction creates motion, not momentum.",
+ "Execution is often mistaken for intensity. More hours. More pressure. More urgency. But intensity without direction creates motion, not momentum. Intentional brand execution is the opposite.",
  "Intentional execution starts with knowing what matters now. The next right action becomes clearer when the brand has a real operating system behind it.",
  "Small moves compound when they are connected. A single post, email, offer update, or sales page revision becomes more powerful when it strengthens the same direction.",
  "Consistency beats bursts because trust is built through repeated evidence. Your audience needs to see that the brand can hold its promise over time.",
@@ -135,8 +140,9 @@ export const notes = [
  slug: "offers-that-align",
  category: "Offers",
  title: "Offers That Align Convert With Ease.",
+ seoTitle: "Offers That Convert for Service Businesses | Core Truth House",
  excerpt:
- "When your offer meets the real need, in the right way, at the right time, it sells.",
+ "Offers that convert for service businesses are not forced. They feel aligned, so the buyer sees the problem, the promise, the path, and the next step.",
  read: "5 min read",
  img: "cth-field-notes-article-offers-that-align-hero.webp",
  sections: [
@@ -147,7 +153,7 @@ export const notes = [
  "Final Thoughts",
  ],
  paragraphs: [
- "A strong offer does not feel forced. It feels aligned. The audience can see the problem, the promise, the path, and the reason to act.",
+ "Offers that convert do not feel forced. They feel aligned. The audience can see the problem, the promise, the path, and the reason to act.",
  "Many offers struggle because they are built from what the founder wants to sell, not from what the buyer is ready to understand.",
  "The offer must meet the moment. It should speak to the real problem your audience is carrying now, not the problem you wish they were ready to solve.",
  "Value needs translation. Deliverables matter, but buyers make decisions based on outcomes, belief, timing, and trust.",
@@ -160,8 +166,9 @@ export const notes = [
  slug: "ai-will-multiply-you",
  category: "AI + Workflows",
  title: "AI Will Not Replace You. But It Will Multiply You.",
+ seoTitle: "Using AI for Your Brand Voice | Core Truth House",
  excerpt:
- "Use AI to remove friction, accelerate output, and elevate your creative edge.",
+ "Using AI for your brand voice will not replace you. It multiplies your structure: a clear brand gains leverage, a scattered one just makes faster noise.",
  read: "6 min read",
  img: "cth-field-notes-article-ai-will-multiply-you-hero.webp",
  sections: [
@@ -172,7 +179,7 @@ export const notes = [
  "Final Thoughts",
  ],
  paragraphs: [
- "AI will not fix a scattered brand by itself. It will usually multiply whatever structure already exists.",
+ "Using AI for your brand voice will not fix a scattered brand by itself. It will usually multiply whatever structure already exists.",
  "If the brand is unclear, AI creates more unclear output faster. If the brand is structured, AI becomes a powerful amplifier.",
  "The founder remains the source. Your perspective, standards, proof, audience understanding, and strategic decisions are still the raw material.",
  "Workflows create leverage because they turn repeated tasks into guided systems. They help you move faster without losing the brand’s center.",
@@ -185,19 +192,20 @@ export const notes = [
  slug: "authority-is-earned",
  category: "Brand Strategy",
  title: "Authority Is Earned. Not Announced.",
+ seoTitle: "How to Build Founder Authority | Core Truth House",
  excerpt:
- "You build authority through proof, presence, and perspective, not promotion.",
+ "How to build founder authority: you do not announce it, you earn it through proof, a clear perspective, and a presence people come to remember.",
  read: "4 min read",
  img: "cth-field-notes-article-authority-is-earned-hero.webp",
  sections: [
- "Authority Is Evidence",
+ "Founder Authority Is Evidence",
  "Perspective Creates Position",
  "Proof Must Be Visible",
  "Presence Builds Memory",
  "Final Thoughts",
  ],
  paragraphs: [
- "Authority is not something a brand can simply claim. It is something the audience comes to believe after repeated evidence.",
+ "Founder authority is not something a brand can simply claim. It is something the audience comes to believe after repeated evidence.",
  "You earn authority through the clarity of your perspective, the usefulness of your ideas, the consistency of your presence, and the proof behind your promise.",
  "Perspective creates position. When your brand has a clear point of view, people understand what you stand for and why your work matters.",
  "Proof must be visible. Case studies, examples, frameworks, process, results, and standards all help the audience trust what you say.",

@@ -626,9 +626,11 @@ for (const article of articles) {
 
   const meta = {
     route: `/blog/${slug}`,
-    title: `${article.title} | Core Truth House`,
+    // Optional per-article SEO title (metadata only — the visible H1 uses
+    // article.title). Falls back to the standard "<title> | Core Truth House".
+    title: article.seoTitle || `${article.title} | Core Truth House`,
     description,
-    ogTitle: article.title,
+    ogTitle: article.seoTitle || article.title,
     ogDescription: article.excerpt,
     image,
     canonical,
