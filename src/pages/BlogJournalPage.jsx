@@ -37,6 +37,19 @@ function renderBlock(block, key) {
  </ul>
  );
  }
+ if (block.spans) {
+ return (
+ <p key={key}>
+ {block.spans.map((s, i) =>
+ s.href ? (
+ <Link key={i} to={s.href}>{s.text}</Link>
+ ) : (
+ <React.Fragment key={i}>{s.text}</React.Fragment>
+ )
+ )}
+ </p>
+ );
+ }
  return <p key={key}>{block.text}</p>;
 }
 
@@ -399,6 +412,18 @@ function ArticlePage({ article: currentArticle }) {
 
  <p id="final-thoughts">{currentArticle.paragraphs[currentArticle.paragraphs.length - 1]}</p>
  </>
+ )}
+ {currentArticle.related && currentArticle.related.length > 0 && (
+ <div className="article-related">
+ <p className="fn-section-label">Related</p>
+ <ul>
+ {currentArticle.related.map((r) => (
+ <li key={r.href}>
+ <Link to={r.href}>{r.label}</Link>
+ </li>
+ ))}
+ </ul>
+ </div>
  )}
  </article>
 
@@ -1369,6 +1394,44 @@ function FieldNotesStyles() {
  margin: 0;
  font-size: 20px;
  line-height: 1.35;
+ }
+
+ .article-content > p a,
+ .article-related a {
+ color: #af0024;
+ text-decoration: underline;
+ text-underline-offset: 2px;
+ text-decoration-thickness: 1px;
+ font-weight: 600;
+ transition: color .15s ease;
+ }
+
+ .article-content > p a:hover,
+ .article-related a:hover {
+ color: #e04e35;
+ }
+
+ .article-related {
+ margin-top: 40px;
+ padding-top: 22px;
+ border-top: 1px solid #ead9ca;
+ }
+
+ .article-related .fn-section-label {
+ margin: 0 0 12px;
+ }
+
+ .article-related ul {
+ list-style: none;
+ padding: 0;
+ margin: 0;
+ display: grid;
+ gap: 8px;
+ }
+
+ .article-related li {
+ font-size: 16px;
+ line-height: 1.5;
  }
 
  .framework-box {

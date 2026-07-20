@@ -31,6 +31,7 @@ export const notes = [
  "Consistency will not always be the loudest choice, but it will always be the strongest. When your brand is built on clarity, alignment, and discipline, you create something rare: a brand that lasts.",
  ],
  quote: "Consistency is not about being the same. It is about being unmistakably you.",
+ related: [{ label: "What Is a Brand Operating System?", href: "/blog/what-is-a-brand-operating-system" }],
  },
  {
  slug: "say-fewer-things",
@@ -57,6 +58,7 @@ export const notes = [
  "Say fewer things. Say them with more discipline. Let your strongest message become easier to recognize every time someone meets your brand.",
  ],
  quote: "The sharper the message, the less your audience has to work to trust it.",
+ related: [{ label: "What Is a Brand Operating System?", href: "/blog/what-is-a-brand-operating-system" }],
  },
  {
  slug: "systems-create-freedom",
@@ -83,6 +85,7 @@ export const notes = [
  "A system is not the opposite of freedom. For a serious brand, it is how freedom becomes sustainable.",
  ],
  quote: "The right system does not make your brand smaller. It gives your best thinking somewhere to live.",
+ related: [{ label: "What Is a Brand Operating System?", href: "/blog/what-is-a-brand-operating-system" }],
  },
  {
  slug: "inner-work-outer-results",
@@ -109,6 +112,7 @@ export const notes = [
  "The work behind the work matters. Your systems, state, and standards decide how much growth your brand can actually carry.",
  ],
  quote: "The brand can only hold what the founder is willing to lead.",
+ related: [{ label: "What Is a Brand Operating System?", href: "/blog/what-is-a-brand-operating-system" }],
  },
  {
  slug: "execution-is-intentional",
@@ -135,6 +139,7 @@ export const notes = [
  "Execution becomes easier when the brand is clear enough to tell you what deserves attention.",
  ],
  quote: "Execution is not about doing more. It is about doing what compounds.",
+ related: [{ label: "What Is a Brand Operating System?", href: "/blog/what-is-a-brand-operating-system" }],
  },
  {
  slug: "offers-that-align",
@@ -161,6 +166,7 @@ export const notes = [
  "Aligned offers convert with more ease because they remove confusion before the sale ever begins.",
  ],
  quote: "An offer converts when the buyer can see themselves moving through it.",
+ related: [{ label: "What Is a Brand Operating System?", href: "/blog/what-is-a-brand-operating-system" }],
  },
  {
  slug: "ai-will-multiply-you",
@@ -187,6 +193,7 @@ export const notes = [
  "The goal is not to hand the brand over to AI. The goal is to build enough clarity that AI can support the brand without diluting it.",
  ],
  quote: "AI is not the strategy. It is leverage for a strategy that already knows where it is going.",
+ related: [{ label: "What Is a Brand Operating System?", href: "/blog/what-is-a-brand-operating-system" }],
  },
  {
  slug: "authority-is-earned",
@@ -213,6 +220,7 @@ export const notes = [
  "Authority is earned quietly before it is recognized publicly.",
  ],
  quote: "Authority is not volume. It is repeated evidence that your brand can be trusted.",
+ related: [{ label: "What Is a Brand Operating System?", href: "/blog/what-is-a-brand-operating-system" }],
  },
  {
  slug: "what-is-a-brand-operating-system",
@@ -240,10 +248,22 @@ export const notes = [
  { t: "h2", text: `The four layers of a brand operating system` },
  { t: "p", text: `A working brand operating system has four load-bearing layers. When a brand is not converting, the gap is almost always in one of them, and you can usually feel which.` },
  { t: "p", text: `Positioning. This is the decision that makes every other decision easier: who you are for, what you do better than the obvious alternative, and why it matters now. When positioning is unclear, everything downstream gets harder, because you are re-deciding your angle every time you write. Symptom: you sound slightly different every week.` },
- { t: "p", text: `Messaging. This is how the positioning becomes words your audience can repeat back without decoding them. Not more words. Sharper ones. When messaging is weak, people nod politely and forget you by dinner. Symptom: you explain what you do and watch their eyes glaze.` },
- { t: "p", text: `Offers. This is where the promise becomes a path someone can buy. A strong offer does not feel forced. It feels aligned, so the buyer sees the problem, the promise, the path, and the next step without friction. When the offer is misaligned, traffic is not your problem, structure is. Symptom: interest that never quite becomes purchase.` },
+ { t: "p", spans: [
+ { text: `Messaging. This is how the positioning becomes ` },
+ { text: `words your audience can repeat back`, href: `/blog/say-fewer-things` },
+ { text: ` without decoding them. Not more words. Sharper ones. When messaging is weak, people nod politely and forget you by dinner. Symptom: you explain what you do and watch their eyes glaze.` },
+ ] },
+ { t: "p", spans: [
+ { text: `Offers. This is where the promise becomes a path someone can buy. ` },
+ { text: `A strong offer does not feel forced`, href: `/blog/offers-that-align` },
+ { text: `. It feels aligned, so the buyer sees the problem, the promise, the path, and the next step without friction. When the offer is misaligned, traffic is not your problem, structure is. Symptom: interest that never quite becomes purchase.` },
+ ] },
  { t: "p", text: `Sales path. This is the connected route from stranger to customer, so that attention has somewhere to go. When it is missing, you generate interest and then leak it, because there is no next step built to catch it. Symptom: good months and dead months with no idea why.` },
- { t: "p", text: `These four layers are not a checklist you complete once. They are a system that has to stay aligned as you grow, which is exactly why consistency compounds when the structure holds.` },
+ { t: "p", spans: [
+ { text: `These four layers are not a checklist you complete once. They are ` },
+ { text: `a system that has to stay aligned as you grow`, href: `/blog/systems-create-freedom` },
+ { text: `, which is exactly why consistency compounds when the structure holds.` },
+ ] },
  { t: "h2", text: `What a brand operating system is not` },
  { t: "p", text: `This is worth saying plainly, because the term is starting to get used loosely, and because you have probably been sold three of these already.` },
  { t: "p", text: `A brand operating system is not a logo or a style guide. Those describe how the brand looks. Useful, but they are the paint, not the framing. A style guide tells a designer which blue to use. It does not tell a buyer why they should trust you.` },
@@ -255,7 +275,11 @@ export const notes = [
  { t: "p", text: `Here is the piece almost no framework accounts for, and the reason most brands drift back into scatter even after a good strategy session.` },
  { t: "p", text: `Your brand makes decisions constantly. Voice, positioning, which words are yours and which are off-brand, what your offer actually promises, how you show up. In most businesses, those decisions live in one place: the founder's head. Which means every new piece of content, every contractor, every AI tool starts from zero and guesses.` },
  { t: "p", text: `Brand Memory is the persistent layer that stores those decisions so the whole system can draw on them. Your strategy, your voice, your audience language, your standards, held in one place instead of re-invented every Tuesday. It is what lets consistency stop depending on your mood and your memory.` },
- { t: "p", text: `This is also where the future of brand is heading, and where it gets genuinely exciting. As more of your output runs through AI, the brands that win are not the ones with the best prompts. They are the ones whose structure is clear enough that AI amplifies their voice instead of averaging it into generic. A brand operating system with a real memory layer means every generation, human or machine, sounds like you and not like everyone. Structure is what turns AI from a threat into leverage.` },
+ { t: "p", spans: [
+ { text: `This is also where the future of brand is heading, and where it gets genuinely exciting. As more of your output runs through AI, the brands that win are not the ones with the best prompts. They are the ones whose structure is clear enough that ` },
+ { text: `AI amplifies their voice instead of averaging it into generic`, href: `/blog/ai-will-multiply-you` },
+ { text: `. A brand operating system with a real memory layer means every generation, human or machine, sounds like you and not like everyone. Structure is what turns AI from a threat into leverage.` },
+ ] },
  { t: "h2", text: `How to tell if your brand is missing its operating system` },
  { t: "p", text: `You do not need an audit to feel it, but naming the symptoms helps. Any of these tend to mean the structure, not the effort, is the gap:` },
  { t: "ul", items: [
