@@ -26,29 +26,34 @@ function blockHeadingId(text) {
  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-function renderBlock(block, key) {
- if (block.t === "h2") {
- return <h2 key={key} id={blockHeadingId(block.text)}>{block.text}</h2>;
- }
- if (block.t === "ul") {
- return (
- <ul key={key}>
- {block.items.map((item, i) => <li key={i}>{item}</li>)}
- </ul>
- );
- }
- if (block.spans) {
- return (
- <p key={key}>
- {block.spans.map((s, i) =>
+// Inline link spans — shared by paragraph blocks and list items. A span with an
+// href renders as a router Link; everything else is plain text.
+function renderSpans(spans) {
+ return spans.map((s, i) =>
  s.href ? (
  <Link key={i} to={s.href}>{s.text}</Link>
  ) : (
  <React.Fragment key={i}>{s.text}</React.Fragment>
  )
- )}
- </p>
  );
+}
+
+function renderBlock(block, key) {
+ if (block.t === "h2") {
+ return <h2 key={key} id={blockHeadingId(block.text)}>{block.text}</h2>;
+ }
+ if (block.t === "ul") {
+ // Items are plain strings, or { spans } when the line carries an inline link.
+ return (
+ <ul key={key}>
+ {block.items.map((item, i) => (
+ <li key={i}>{item.spans ? renderSpans(item.spans) : item}</li>
+ ))}
+ </ul>
+ );
+ }
+ if (block.spans) {
+ return <p key={key}>{renderSpans(block.spans)}</p>;
  }
  return <p key={key}>{block.text}</p>;
 }
