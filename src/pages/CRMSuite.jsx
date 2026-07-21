@@ -2283,6 +2283,7 @@ export default function CRMSuite() {
  stageIndex={stageIndex}
  onClose={closeDrawer}
  onRequestDelete={requestDelete}
+ onSaved={() => loadCRM({ silent: true })}
  />
  <ComposeEmailModal compose={compose} />
  <ConfirmDeleteModal
