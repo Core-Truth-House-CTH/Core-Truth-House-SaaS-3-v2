@@ -963,14 +963,15 @@ export default function BrandDiagnosticPage() {
 
  .bdx-pathway {
  display: flex;
+ flex-wrap: wrap;
  justify-content: center;
- gap: 12px;
+ gap: 14px 8px;
  position: relative;
  z-index: 2;
  }
 
  .bdx-pathway article {
- width: 65px;
+ width: 58px;
  display: grid;
  justify-items: center;
  gap: 6px;
