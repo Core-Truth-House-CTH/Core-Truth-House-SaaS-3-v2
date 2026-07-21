@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import { useColors } from "../context/ThemeContext";
-import { Layers, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useUser, useClerk, HAS_CLERK } from "../hooks/useAuth";
 import { SignIn as ClerkSignIn, SignUp as ClerkSignUp } from "@clerk/react";
 
@@ -13,49 +13,63 @@ if (HAS_CLERK) {
   SignUp = ClerkSignUp;
 }
 
-// CTH crimson — primary accent used across the auth experience.
-const CTH_CRIMSON = "#e04e35";
+// Estate gold — accent used on the dark story panel (tier badge, eyebrow).
+const CTH_GOLD = "#c4a95b";
 
-// Shared Clerk appearance so SignUp and SignIn render identically.
+// Shared Clerk appearance so SignUp and SignIn — and every Clerk sub-screen
+// (password reset, email/phone verification) — render in the estate system.
+// Purely visual: no Clerk behaviour is configured here.
 const CLERK_APPEARANCE = {
   variables: {
-    colorPrimary: "#e04e35",
+    colorPrimary: "#af0024",
     colorText: "#2b1040",
-    colorTextSecondary: "#763b5b",
-    colorBackground: "#ffffff",
+    colorTextSecondary: "#6b4a63",
+    colorBackground: "#fbf7f1",
     colorInputBackground: "#ffffff",
     colorInputText: "#2b1040",
-    borderRadius: "18px",
+    borderRadius: "4px",
     fontFamily: '"DM Sans", system-ui, sans-serif',
   },
   elements: {
     card: {
-      boxShadow: "0 20px 70px rgba(20,15,43,0.10)",
-      border: "1px solid #d8c5c3",
-      borderRadius: "28px",
+      background: "#fbf7f1",
+      boxShadow: "0 18px 50px rgba(28,1,34,0.08)",
+      border: "1px solid rgba(216,197,195,0.6)",
+      borderRadius: "6px",
     },
     headerTitle: {
-      fontFamily: "Georgia, serif",
-      letterSpacing: "-0.045em",
-      color: "#2b1040",
+      fontFamily: '"Playfair Display", Georgia, serif',
+      fontWeight: 600,
+      letterSpacing: "-0.02em",
+      color: "#33033c",
     },
     headerSubtitle: {
-      color: "#763b5b",
+      color: "#6b4a63",
+    },
+    socialButtonsBlockButton: {
+      borderRadius: "4px",
+      border: "1px solid rgba(51,3,60,0.18)",
+    },
+    dividerLine: {
+      backgroundColor: "rgba(51,3,60,0.12)",
     },
     formButtonPrimary: {
-      backgroundColor: "#e04e35",
-      boxShadow: "0 18px 40px rgba(224,78,53,0.22)",
-      borderRadius: "999px",
-      fontWeight: 800,
+      backgroundColor: "#af0024",
+      color: "#fff7ec",
+      boxShadow: "none",
+      borderRadius: "4px",
+      fontWeight: 600,
+      letterSpacing: "0.02em",
+      textTransform: "none",
     },
     formFieldInput: {
-      borderColor: "#d8c5c3",
-      borderRadius: "18px",
+      borderColor: "rgba(51,3,60,0.18)",
+      borderRadius: "4px",
       minHeight: "48px",
     },
     footerActionLink: {
-      color: "#e04e35",
-      fontWeight: 800,
+      color: "#af0024",
+      fontWeight: 700,
     },
   },
 };
@@ -91,25 +105,25 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
     <main className="cth-auth-page">
       <section className="cth-auth-shell">
         <div className="cth-auth-story">
-          <button onClick={() => navigate("/")} className="cth-auth-back">
-            <ArrowLeft size={16} />
-            Back to home
-          </button>
+          <div className="cth-auth-story-top">
+            <button onClick={() => navigate("/")} className="cth-auth-back">
+              <ArrowLeft size={16} />
+              Back to home
+            </button>
 
-          <div className="cth-auth-brand">
-            <div className="cth-auth-mark">
-              <Layers size={24} color="white" />
-            </div>
-            <div>
-              <strong>Core Truth House</strong>
-              <span>Brand OS</span>
+            <div className="cth-auth-brand">
+              <img src="/estate-assets/cth-seal.webp" alt="" className="cth-auth-mark" />
+              <div>
+                <strong>Core Truth House</strong>
+                <span>Brand Operating System</span>
+              </div>
             </div>
           </div>
 
           <div className="cth-auth-message">
-            <p>Secure workspace access</p>
+            <span className="cth-auth-eyebrow">Secure workspace access</span>
             <h1>{title}</h1>
-            <span>{subtitle}</span>
+            <span className="cth-auth-sub">{subtitle}</span>
           </div>
 
           {dc ? (
@@ -151,7 +165,7 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
 
       <style>{`
         body {
-          background: #efe7e3 !important;
+          background: #1c0122 !important;
           color: #2b1040 !important;
         }
 
@@ -161,25 +175,10 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
           align-items: center;
           justify-content: center;
           padding: 0;
-          background:
-            radial-gradient(circle at 16% 18%, rgba(224,78,53,0.14), transparent 28%),
-            radial-gradient(circle at 82% 8%, rgba(118,59,91,0.12), transparent 26%),
-            linear-gradient(180deg, #efe7e3, #f2e9e5);
+          background: #fbf7f1;
           font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           position: relative;
           overflow: hidden;
-        }
-
-        .cth-auth-page::before {
-          content: "";
-          position: fixed;
-          inset: 0;
-          background-image:
-            linear-gradient(rgba(43,16,64,0.045) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(43,16,64,0.045) 1px, transparent 1px);
-          background-size: 64px 64px;
-          pointer-events: none;
-          opacity: 0.72;
         }
 
         .cth-auth-shell {
@@ -188,24 +187,44 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
           width: 100vw;
           min-height: 100vh;
           display: grid;
-          grid-template-columns: 0.92fr 1.08fr;
-          background: #f8f4f2;
-          border: 1px solid #d8c5c3;
-          border-radius: 0;
+          grid-template-columns: 0.94fr 1.06fr;
+          background: #fbf7f1;
           overflow: hidden;
-          box-shadow: none;
         }
 
+        /* ---- story panel: the estate at night ---- */
         .cth-auth-story {
-          background:
-            radial-gradient(circle at 24% 20%, rgba(224,78,53,0.22), transparent 32%),
-            linear-gradient(145deg, #140f2b, #120717);
-          color: #fff;
-          padding: 48px;
+          position: relative;
+          isolation: isolate;
+          color: #f4ecdf;
+          padding: 52px 52px 56px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
+          gap: 40px;
           min-height: 100vh;
+          background:
+            linear-gradient(180deg, rgba(28,1,34,0.66) 0%, rgba(28,1,34,0.34) 42%, rgba(13,0,16,0.86) 100%),
+            url("/estate-assets/login-building.webp") center/cover no-repeat;
+        }
+
+        .cth-auth-story::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: -1;
+          background-image:
+            linear-gradient(rgba(196,169,91,0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(196,169,91,0.08) 1px, transparent 1px);
+          background-size: 72px 72px;
+          mix-blend-mode: overlay;
+          pointer-events: none;
+        }
+
+        .cth-auth-story-top {
+          display: flex;
+          flex-direction: column;
+          gap: 34px;
         }
 
         .cth-auth-back {
@@ -215,68 +234,82 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
           gap: 8px;
           border: none;
           background: transparent;
-          color: #c7a09d;
+          color: rgba(244,236,223,0.72);
           cursor: pointer;
           padding: 0;
-          font-weight: 850;
+          font-family: "DM Sans", sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          transition: color 0.2s ease;
         }
+        .cth-auth-back:hover { color: #c4a95b; }
 
         .cth-auth-brand {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 14px;
         }
 
         .cth-auth-mark {
-          width: 48px;
-          height: 48px;
-          border-radius: 18px;
-          display: grid;
-          place-items: center;
-          background: rgba(248,244,242,0.10);
-          border: 1px solid rgba(248,244,242,0.16);
+          width: 46px;
+          height: 46px;
+          object-fit: contain;
+          filter: drop-shadow(0 4px 14px rgba(0,0,0,0.4));
         }
 
         .cth-auth-brand strong {
           display: block;
           color: #fff;
-          font-family: Georgia, serif;
-          font-size: 18px;
+          font-family: "Playfair Display", Georgia, serif;
+          font-weight: 600;
+          font-size: 19px;
           line-height: 1.1;
+          letter-spacing: -0.01em;
         }
 
         .cth-auth-brand span {
           display: block;
-          margin-top: 4px;
-          color: rgba(248,244,242,0.58);
-          font-size: 12px;
-          font-weight: 800;
+          margin-top: 5px;
+          color: rgba(244,236,223,0.62);
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
         }
 
-        .cth-auth-message p {
-          margin: 0 0 14px;
-          color: #c7a09d;
-          font-size: 12px;
-          font-weight: 950;
-          letter-spacing: 0.16em;
+        .cth-auth-eyebrow {
+          display: inline-flex;
+          align-items: center;
+          align-self: flex-start;
+          border: 1px solid #c4a95b;
+          border-radius: 999px;
+          color: #c4a95b;
+          padding: 7px 15px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.18em;
           text-transform: uppercase;
         }
 
         .cth-auth-message h1 {
-          margin: 0;
-          max-width: 440px;
+          margin: 20px 0 0;
+          max-width: 460px;
           color: #fff;
-          font-family: Georgia, serif;
-          font-size: clamp(3rem, 6vw, 5.4rem);
-          line-height: 0.96;
-          letter-spacing: -0.065em;
+          font-family: "Playfair Display", Georgia, serif;
+          font-weight: 600;
+          font-size: clamp(2.8rem, 5vw, 4.6rem);
+          line-height: 1.0;
+          letter-spacing: -0.03em;
         }
 
-        .cth-auth-message span {
+        .cth-auth-sub {
           display: block;
-          margin-top: 18px;
-          color: rgba(248,244,242,0.72);
-          font-weight: 750;
+          margin-top: 20px;
+          max-width: 420px;
+          color: rgba(244,236,223,0.82);
+          font-weight: 500;
+          font-size: 16px;
           line-height: 1.6;
         }
 
@@ -287,13 +320,14 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
         }
 
         .cth-auth-proof span {
-          border: 1px solid rgba(248,244,242,0.14);
-          background: rgba(248,244,242,0.08);
-          color: rgba(248,244,242,0.74);
+          border: 1px solid rgba(196,169,91,0.4);
+          background: rgba(28,1,34,0.3);
+          color: rgba(244,236,223,0.86);
           border-radius: 999px;
-          padding: 9px 12px;
+          padding: 9px 16px;
           font-size: 12px;
-          font-weight: 850;
+          font-weight: 600;
+          letter-spacing: 0.06em;
         }
 
         .cth-auth-diagnostic {
@@ -303,10 +337,10 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
         }
 
         .cth-auth-diag-greeting {
-          color: #c7a09d;
+          color: #c4a95b;
           font-size: 13px;
-          font-weight: 850;
-          letter-spacing: 0.04em;
+          font-weight: 600;
+          letter-spacing: 0.06em;
         }
 
         .cth-auth-diag-score {
@@ -317,8 +351,8 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
         }
 
         .cth-auth-diag-score-num {
-          font-family: "Cormorant Garamond", Georgia, serif;
-          font-size: clamp(3rem, 6vw, 4.6rem);
+          font-family: "Playfair Display", Georgia, serif;
+          font-size: clamp(3rem, 6vw, 4.4rem);
           font-weight: 600;
           line-height: 0.9;
           color: #fff;
@@ -326,36 +360,37 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
         }
 
         .cth-auth-diag-tier {
-          font-size: 13px;
-          font-weight: 950;
-          letter-spacing: 0.12em;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: ${CTH_CRIMSON};
+          color: ${CTH_GOLD};
         }
 
         .cth-auth-diag-challenge {
-          color: rgba(248,244,242,0.86);
+          color: rgba(244,236,223,0.9);
           font-size: 15px;
-          font-weight: 700;
+          font-weight: 500;
           line-height: 1.5;
         }
 
         .cth-auth-diag-challenge-label {
-          color: rgba(248,244,242,0.58);
-          font-weight: 850;
+          color: rgba(244,236,223,0.6);
+          font-weight: 600;
         }
 
         .cth-auth-diag-motivation {
           margin: 0;
-          color: rgba(248,244,242,0.78);
+          color: rgba(244,236,223,0.82);
           font-size: 15px;
-          font-weight: 750;
+          font-weight: 500;
           line-height: 1.55;
           max-width: 380px;
         }
 
+        /* ---- form panel: cream sheet ---- */
         .cth-auth-form-panel {
-          background: linear-gradient(180deg, #f8f4f2, #ffffff);
+          background: #fbf7f1;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -371,9 +406,9 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
         .cth-auth-form-panel .cl-card {
           width: 100%;
           max-width: 430px;
-          border-radius: 28px;
-          box-shadow: 0 20px 70px rgba(20,15,43,0.10);
-          border: 1px solid #d8c5c3;
+          border-radius: 6px;
+          box-shadow: 0 18px 50px rgba(28,1,34,0.08);
+          border: 1px solid rgba(216,197,195,0.6);
         }
 
         @media (max-width: 900px) {
@@ -384,13 +419,17 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
 
           .cth-auth-story {
             min-height: auto;
-            gap: 34px;
-            padding: 34px 24px;
+            gap: 30px;
+            padding: 34px 24px 40px;
+          }
+
+          .cth-auth-message h1 {
+            font-size: clamp(2.4rem, 9vw, 3.4rem);
           }
 
           .cth-auth-form-panel {
             min-height: 58vh;
-            padding: 34px 18px;
+            padding: 40px 18px;
           }
         }
       `}</style>
