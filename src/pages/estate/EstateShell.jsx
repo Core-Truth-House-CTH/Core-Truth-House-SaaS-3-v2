@@ -125,7 +125,7 @@ export default function EstateShell() {
       <div className="ec-root">
         <header className="ec-nav">
           <SheetLink to="/" className="ec-nav-brand">
-            <img src={ASSET("cth-seal.png")} alt="" />
+            <img src={ASSET("cth-seal.webp")} alt="" />
             <span className="ec-nav-wordmark">
               Core Truth
               <br />
@@ -188,7 +188,7 @@ export default function EstateShell() {
             <footer className="ec-bigfooter">
               <div className="ec-bigfooter-inner">
                 <div className="ec-bigfooter-brand">
-                  <img src={ASSET("cth-seal.png")} alt="" />
+                  <img src={ASSET("cth-seal.webp")} alt="" />
                   <span className="ec-bigfooter-tagline">Where serious brands are built.</span>
                   <h4 style={{ marginTop: 18 }}>Newsletter</h4>
                   <form className="ec-newsletter" onSubmit={(e) => e.preventDefault()}>
@@ -231,13 +231,13 @@ export default function EstateShell() {
                   <h4 style={{ marginTop: 26 }}>Social handles</h4>
                   <div className="ec-social-row">
                     <a href="https://www.instagram.com/coretruthhouse/" target="_blank" rel="noopener noreferrer" aria-label="Core Truth House on Instagram">
-                      <img src={ASSET("social-instagram.png")} alt="" />
+                      <img src={ASSET("social-instagram.webp")} alt="" />
                     </a>
                     <a href="https://www.facebook.com/profile.php?id=61589383311165" target="_blank" rel="noopener noreferrer" aria-label="Core Truth House on Facebook">
-                      <img src={ASSET("social-facebook.png")} alt="" />
+                      <img src={ASSET("social-facebook.webp")} alt="" />
                     </a>
                     <a href="https://www.tiktok.com/@coretruthhouse" target="_blank" rel="noopener noreferrer" aria-label="Core Truth House on TikTok">
-                      <img src={ASSET("social-tiktok.png")} alt="" />
+                      <img src={ASSET("social-tiktok.webp")} alt="" />
                     </a>
                   </div>
                 </div>
@@ -257,7 +257,7 @@ export default function EstateShell() {
 
         {/* ---------- page transition: turning the sheet ---------- */}
         <div className="ec-turnsheet" ref={overlayRef} aria-hidden="true">
-          <img src={ASSET("cth-seal.png")} alt="" />
+          <img src={ASSET("cth-seal.webp")} alt="" />
           <span>turning the sheet…</span>
         </div>
       </div>

@@ -114,7 +114,7 @@ export default function EstateTiersPage() {
     <div ref={rootRef}>
       <section className="ec-subhero is-dark" aria-label="Choose the house your brand is ready for">
         <div className="ec-subhero-bg">
-          <img src={ASSET("room-estate.png")} alt="" />
+          <img src={ASSET("room-estate.webp")} alt="" />
         </div>
         <div className="ec-subhero-copy">
           <span className="ec-eyebrow">Tiers</span>
@@ -318,7 +318,7 @@ export default function EstateTiersPage() {
 
       <section className="ec-commission" aria-label="Ready to choose your next level">
         <div className="ec-commission-bg" aria-hidden="true">
-          <img src={ASSET("estate-exterior.png")} alt="" />
+          <img src={ASSET("estate-exterior.webp")} alt="" />
         </div>
         <div className="ec-commission-copy ec-reveal">
           <span className="ec-commission-handnote">ready to choose your next level?</span>

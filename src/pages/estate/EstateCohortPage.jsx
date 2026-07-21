@@ -215,7 +215,7 @@ export default function EstateCohortPage() {
 
           <div className="ec-cohort-media">
             <img
-              src="/estate-assets/cohort-hero.png"
+              src="/estate-assets/cohort-hero.webp"
               alt="Cross-section of the Core Truth House estate — Estate, Systems, House, Structure, and Foundation floors labelled"
             />
           </div>
@@ -270,7 +270,7 @@ export default function EstateCohortPage() {
             ))}
             <img
               className="ec-twelve-sketch"
-              src="/estate-assets/cohort-sketch.png"
+              src="/estate-assets/cohort-sketch.webp"
               alt=""
               aria-hidden="true"
             />
@@ -310,7 +310,7 @@ export default function EstateCohortPage() {
       <section className="ec-cohort-final ec-sheet" aria-label="Your legacy starts with a decision">
         <img
           className="ec-cohort-final-ghost"
-          src="/estate-assets/cohort-door.png"
+          src="/estate-assets/cohort-door.webp"
           alt=""
           aria-hidden="true"
         />

@@ -151,7 +151,7 @@ export default function EstateContactPage() {
     <div ref={rootRef}>
       <section className="ec-subhero" aria-label="Contact Core Truth House">
         <div className="ec-subhero-bg">
-          <img src="/estate-assets/contact-hero.png" alt="" style={{ objectPosition: "right center" }} />
+          <img src="/estate-assets/contact-hero.webp" alt="" style={{ objectPosition: "right center" }} />
         </div>
         <div className="ec-subhero-copy">
           <span className="ec-eyebrow">Contact</span>

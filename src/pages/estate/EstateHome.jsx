@@ -34,7 +34,7 @@ const ROOMS = [
       "Positioning Generator",
       "Content Studio Basics",
     ],
-    img: "room-foundation.png",
+    img: "room-foundation.webp",
     alt: "The Foundation Room — brand principles mounted on a marble wall above a drafting desk",
   },
   {
@@ -51,7 +51,7 @@ const ROOMS = [
       "Saved Brand Memory",
       "Decision Rules Framework",
     ],
-    img: "room-structure.png",
+    img: "room-structure.webp",
     alt: "The Structure Room — blueprints, brand pillars, and material samples across a drafting table",
   },
   {
@@ -62,7 +62,7 @@ const ROOMS = [
     price: "$297",
     desc: "The visible brand, finished and furnished. Package the identity, plan the launches, and walk clients through a brand that holds together.",
     specs: ["Identity Studio Guide", "Launch Planner", "Brand Kit Export"],
-    img: "room-house.png",
+    img: "room-house.webp",
     alt: "The House lobby — marble reception with the Core Truth House wordmark in brass",
   },
   {
@@ -73,7 +73,7 @@ const ROOMS = [
     price: "$697",
     desc: "Legacy. Influence. Generations. A larger ecosystem with your team at the table, client vaults in the archive, and your name over the door.",
     specs: ["Team Seats Setup", "Client Brand Vaults", "White-Label Exports"],
-    img: "room-estate.png",
+    img: "room-estate.webp",
     alt: "The Estate boardroom — marble table before a fireplace and the Core Truth House seal",
   },
 ];
@@ -441,11 +441,11 @@ export default function EstateHome() {
       {/* ============ SCENE 1 — THE BUILD ============ */}
       <section className="ec-scene-build" ref={buildSceneRef} aria-label="The estate, built from the ground up">
         <div className="ec-build-film">
-          <img className="ec-film-ghost" src={ASSET("hero-blueprint.png")} alt="" aria-hidden="true" />
-          <img className="ec-film-mono" src={ASSET("hero-blueprint.png")} alt="" aria-hidden="true" />
+          <img className="ec-film-ghost" src={ASSET("hero-blueprint.webp")} alt="" aria-hidden="true" />
+          <img className="ec-film-mono" src={ASSET("hero-blueprint.webp")} alt="" aria-hidden="true" />
           <img
             className="ec-film-color"
-            src={ASSET("hero-blueprint.png")}
+            src={ASSET("hero-blueprint.webp")}
             alt="The Core Truth House estate, drawn in blueprint and rising into finished form"
           />
           <div className="ec-film-grid" aria-hidden="true" />
@@ -496,7 +496,7 @@ export default function EstateHome() {
         </div>
 
         <div className="ec-build-card">
-          <img src={ASSET("cth-seal.png")} alt="" />
+          <img src={ASSET("cth-seal.webp")} alt="" />
           <div className="ec-build-card-title">The estate stands.</div>
           <div className="ec-build-card-note">issued for walkthrough — proceed inside</div>
         </div>
@@ -782,7 +782,7 @@ export default function EstateHome() {
       {/* ============ SCENE 8 — COMMISSION ============ */}
       <section className="ec-commission" aria-label="Commission your build">
         <div className="ec-commission-bg" aria-hidden="true">
-          <img src={ASSET("estate-exterior.png")} alt="" />
+          <img src={ASSET("estate-exterior.webp")} alt="" />
         </div>
         <div className="ec-commission-copy">
           <span className="ec-commission-handnote">final sheet — issued for construction</span>

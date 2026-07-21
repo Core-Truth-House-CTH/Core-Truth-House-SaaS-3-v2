@@ -36,25 +36,25 @@ const PRODUCTS = [
     title: "Brand Blueprint System",
     desc: "The foundational framework for building an unforgettable brand from the inside out.",
     price: "$97",
-    img: "product-blueprint.png",
+    img: "product-blueprint.webp",
   },
   {
     title: "The Brand Architect Playbook",
     desc: "Step-by-step guidance to clarify your message, position your offer, and attract the right people.",
     price: "$67",
-    img: "product-playbook.png",
+    img: "product-playbook.webp",
   },
   {
     title: "Brand Strategy Templates",
     desc: "Done-for-you templates to streamline your strategy and execute with confidence.",
     price: "$47",
-    img: "product-templates.png",
+    img: "product-templates.webp",
   },
   {
     title: "CTH Signature Mug",
     desc: "A daily reminder that you're building legacy. Sip with intention.",
     price: "$27",
-    img: "product-mug.png",
+    img: "product-mug.webp",
   },
 ];
 
@@ -119,7 +119,7 @@ export default function EstateStorePage() {
             </div>
           </div>
           <div className="ec-shop-hero-media">
-            <img src={ASSET("store-hero.png")} alt="Brand Blueprint System book, Brand Architect Playbook on a tablet, and a Core Truth House mug on a marble tray" />
+            <img src={ASSET("store-hero.webp")} alt="Brand Blueprint System book, Brand Architect Playbook on a tablet, and a Core Truth House mug on a marble tray" />
           </div>
         </div>
       </section>
@@ -193,7 +193,7 @@ export default function EstateStorePage() {
                 </Link>
               </div>
               <div className="ec-bundle-media">
-                <img src={ASSET("store-bundle.png")} alt="The Founder's Foundation Kit — book, playbook, templates, and mug" />
+                <img src={ASSET("store-bundle.webp")} alt="The Founder's Foundation Kit — book, playbook, templates, and mug" />
               </div>
               <div className="ec-bundle-badge">Best Value</div>
             </div>

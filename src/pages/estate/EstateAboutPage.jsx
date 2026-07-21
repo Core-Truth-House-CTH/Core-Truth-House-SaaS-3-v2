@@ -206,7 +206,7 @@ export default function EstateAboutPage() {
 
       <section className="ec-commission" aria-label="Start with structure">
         <div className="ec-commission-bg" aria-hidden="true">
-          <img src="/estate-assets/interior-lobby.png" alt="" />
+          <img src="/estate-assets/interior-lobby.webp" alt="" />
         </div>
         <div className="ec-commission-copy ec-reveal">
           <span className="ec-commission-handnote">start with structure</span>

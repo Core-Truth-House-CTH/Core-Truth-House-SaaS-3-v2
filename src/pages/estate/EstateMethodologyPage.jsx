@@ -92,17 +92,17 @@ export default function EstateMethodologyPage() {
     <div ref={rootRef}>
       <section className="ec-subhero" aria-label="The Core Truth Method">
         <div className="ec-subhero-bg ec-electric" style={{ objectPosition: "right center" }}>
-          <img src="/estate-assets/systems-hero.png" alt="" style={{ objectPosition: "right center" }} />
+          <img src="/estate-assets/systems-hero.webp" alt="" style={{ objectPosition: "right center" }} />
           <img
             className="ec-glow-pulse"
-            src="/estate-assets/systems-hero.png"
+            src="/estate-assets/systems-hero.webp"
             alt=""
             aria-hidden="true"
             style={{ objectPosition: "right center" }}
           />
           <img
             className="ec-glow-sweep"
-            src="/estate-assets/systems-hero.png"
+            src="/estate-assets/systems-hero.webp"
             alt=""
             aria-hidden="true"
             style={{ objectPosition: "right center" }}
