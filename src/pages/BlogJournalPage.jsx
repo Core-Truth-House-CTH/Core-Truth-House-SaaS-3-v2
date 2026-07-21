@@ -6,16 +6,6 @@ import { notes } from "../data/fieldNotes.mjs";
 
 const A = "/field-notes-assets/";
 
-const categories = [
- "All Notes",
- "Brand Strategy",
- "Messaging",
- "Systems",
- "Founder Growth",
- "Execution",
- "Offers",
- "AI + Workflows",
-];
 
 
 const featuredArticle = notes[0];
@@ -58,127 +48,418 @@ function renderBlock(block, key) {
  return <p key={key}>{block.text}</p>;
 }
 
+// Field Notes index — architectural-editorial estate design. Article data comes
+// from fieldNotes.mjs; the article detail view (ArticlePage) and its SEO are
+// unchanged. Self-contained styles under .fnx-* so nothing collides with the
+// article-page FieldNotesStyles.
+const fnxCategories = [
+  "All Notes",
+  "Brand Strategy",
+  "Messaging",
+  "Systems",
+  "Founder Growth",
+  "Execution",
+  "Offers",
+  "AI + Workflows",
+];
+
 function FieldNotesIndex() {
- return (
- <main className="fn-page">
- <PublicHeader active="journal" />
+  const [activeCategory, setActiveCategory] = React.useState("All Notes");
+  const [query, setQuery] = React.useState("");
 
- <section className="fn-hero">
- <div className="fn-hero-column" />
+  const featured =
+    notes.find((note) => note.slug === "what-is-a-brand-operating-system") || notes[0];
 
- <div className="fn-shell fn-hero-grid">
- <div className="fn-hero-copy">
- <p className="fn-eyebrow">Field Notes</p>
- <h1>Strategic Notes From the House.</h1>
- <div className="fn-line" />
- <p>
- Field Notes is where founders find short-form insights, reflections, strategy notes,
- and sharp observations on brand clarity, systems, messaging, growth, and execution.
- </p>
+  const visibleNotes = React.useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return notes.filter((note) => {
+      const categoryMatch = activeCategory === "All Notes" || note.category === activeCategory;
+      const searchMatch =
+        !normalized ||
+        `${note.title} ${note.excerpt} ${note.category}`.toLowerCase().includes(normalized);
+      return categoryMatch && searchMatch;
+    });
+  }, [activeCategory, query]);
 
- <div className="fn-proof-row">
- <div>
- <span>▧</span>
- <strong>Founder-Written Insights</strong>
- </div>
- <div>
- <span>◎</span>
- <strong>Real-World Strategy & Observations</strong>
- </div>
- <div>
- <span>△</span>
- <strong>Clarity for the Build Ahead</strong>
- </div>
- </div>
- </div>
+  return (
+    <main className="fnx-page">
+      <PublicHeader active="journal" />
 
- <div className="fn-hero-art">
- <img src={`${A}cth-field-notes-hero-book-architecture.png`} alt="Core Truth House field notes book and architecture" />
- </div>
- </div>
- </section>
+      {/* ---------- hero ---------- */}
+      <section className="fnx-hero">
+        <div className="fnx-blueprint" aria-hidden="true" />
+        <div className="fnx-shell fnx-hero-grid">
+          <div className="fnx-hero-copy">
+            <p className="fnx-kicker">Field Notes · From the House</p>
+            <h1>
+              Strategic thinking for founders
+              <em> building what lasts.</em>
+            </h1>
+            <p className="fnx-lead">
+              Clear observations on brand structure, messaging, offers, founder systems,
+              and the decisions that make growth easier to hold.
+            </p>
+            <div className="fnx-actions">
+              <a href="#fnx-archive" className="fnx-btn fnx-btn-crimson">
+                Explore the Notes <span aria-hidden="true">↓</span>
+              </a>
+              <Link to="/brand-diagnostic/" className="fnx-textlink">
+                Start the Brand Diagnostic <span aria-hidden="true">↗</span>
+              </Link>
+            </div>
+            <div className="fnx-metrics">
+              <div>
+                <strong>{notes.length}</strong>
+                <span>Active field notes</span>
+              </div>
+              <div>
+                <strong>{fnxCategories.length - 1}</strong>
+                <span>Strategic themes</span>
+              </div>
+              <div>
+                <strong>100%</strong>
+                <span>Founder focused</span>
+              </div>
+            </div>
+          </div>
 
- <section className="fn-tabs-wrap">
- <div className="fn-shell fn-tabs">
- {categories.map((cat, index) => (
- <button key={cat} className={index === 0 ? "active" : ""}>{cat}</button>
- ))}
- </div>
- </section>
+          <div className="fnx-hero-art">
+            <img
+              src={`${A}field-notes-hero-architecture.webp`}
+              alt="Architectural rendering of the Core Truth House"
+            />
+            <div className="fnx-hero-caption">Editorial archive · Core Truth House</div>
+          </div>
+        </div>
+      </section>
 
- <section className="fn-main-section">
- <div className="fn-shell">
- <div className="fn-featured">
- <div className="fn-featured-img">
- <img src={`${A}cth-field-notes-column-architecture-card.webp`} alt="Core Truth House column architecture" />
- <img className="fn-image-watermark" src={`${A}cth-field-notes-logo-image.png`} alt="" aria-hidden="true" />
- </div>
+      {/* ---------- principle band ---------- */}
+      <section className="fnx-band">
+        <div className="fnx-shell fnx-band-grid">
+          <div>
+            <span>01</span>
+            <p>Clarity before content.</p>
+          </div>
+          <div>
+            <span>02</span>
+            <p>Structure before scale.</p>
+          </div>
+          <div>
+            <span>03</span>
+            <p>Truth before tactics.</p>
+          </div>
+          <div className="fnx-band-copy">
+            Notes for the founder who is done collecting ideas and ready to build a brand
+            that holds.
+          </div>
+        </div>
+      </section>
 
- <div className="fn-featured-copy">
- <p className="fn-section-label">Featured Note</p>
- <h2>{featuredArticle.title}</h2>
- <p>
- Consistency is not repetition. It is alignment. The brands that endure are not the loudest.
- They are the clearest. Here is how to build a brand that holds its line, compounds trust,
- and wins without chasing trends.
- </p>
+      {/* ---------- featured / load-bearing note ---------- */}
+      <section className="fnx-featured-section">
+        <div className="fnx-shell">
+          <div className="fnx-intro">
+            <p className="fnx-kicker crimson">Start here</p>
+            <h2>The load-bearing note.</h2>
+          </div>
 
- <div className="fn-note-meta">
- <span>May 20, 2026</span>
- <span>•</span>
- <span>{featuredArticle.read}</span>
- <span>•</span>
- <span>Brand Strategy</span>
- </div>
+          <article className="fnx-featured">
+            <div className="fnx-featured-img">
+              <img src={`${A}field-notes-light-sketch.webp`} alt="" />
+              <div className="fnx-featured-tag">Field Note 001</div>
+            </div>
+            <div className="fnx-featured-body">
+              <p className="fnx-note-cat">{featured.category}</p>
+              <h3>{featured.title}</h3>
+              <p className="fnx-featured-excerpt">{featured.excerpt}</p>
+              <div className="fnx-note-meta">
+                <span>{featured.read}</span>
+                <span>Core Truth House Editorial</span>
+              </div>
+              <Link to={`/blog/${featured.slug}`} className="fnx-btn fnx-btn-crimson">
+                Read the Field Note <span aria-hidden="true">↗</span>
+              </Link>
+            </div>
+          </article>
+        </div>
+      </section>
 
- <Link to="/blog/strategic-consistency" className="fn-red-btn">Read Note <span>→</span></Link>
- </div>
-</div>
+      {/* ---------- the active archive ---------- */}
+      <section className="fnx-library" id="fnx-archive">
+        <div className="fnx-shell">
+          <div className="fnx-library-head">
+            <div>
+              <p className="fnx-kicker crimson">The active archive</p>
+              <h2>Notes for every room in the House.</h2>
+            </div>
+            <label className="fnx-search">
+              <span>Search</span>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Positioning, systems, offers…"
+              />
+            </label>
+          </div>
 
- <div className="fn-content-grid">
- <div>
- <div className="fn-section-head">
- <p className="fn-section-label">Recent Notes</p>
- <span />
- </div>
+          <div className="fnx-tabs" role="tablist" aria-label="Field Note categories">
+            {fnxCategories.map((category) => (
+              <button
+                type="button"
+                key={category}
+                role="tab"
+                aria-selected={activeCategory === category}
+                className={activeCategory === category ? "active" : ""}
+                onClick={() => setActiveCategory(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
 
- <div className="fn-card-grid">
- {notes.map((note, index) => (
- <article className="fn-card" key={`${note.slug}-${index}`}>
- <div className="fn-card-img">
- <img src={`${A}${note.img}`} alt="" />
- <img className="fn-image-watermark small" src={`${A}cth-field-notes-logo-image.png`} alt="" aria-hidden="true" />
- </div>
+          <div className="fnx-grid">
+            {visibleNotes.map((note, index) => (
+              <article className="fnx-card" key={note.slug}>
+                <Link
+                  to={`/blog/${note.slug}`}
+                  className="fnx-card-img"
+                  aria-label={`Read ${note.title}`}
+                >
+                  <img
+                    src={`${A}${index % 2 === 0 ? "field-notes-gold-sketch.webp" : "field-notes-light-sketch.webp"}`}
+                    alt=""
+                    loading="lazy"
+                  />
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                </Link>
+                <div className="fnx-card-body">
+                  <p className="fnx-note-cat">{note.category}</p>
+                  <h3>
+                    <Link to={`/blog/${note.slug}`}>{note.title}</Link>
+                  </h3>
+                  <p className="fnx-card-excerpt">{note.excerpt}</p>
+                  <div className="fnx-card-foot">
+                    <span>{note.read}</span>
+                    <Link to={`/blog/${note.slug}`}>
+                      Read note <span aria-hidden="true">↗</span>
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
 
- <div className="fn-card-body">
- <p className="fn-card-category">{note.category}</p>
- <h3>{note.title}</h3>
- <p>{note.excerpt}</p>
+          {visibleNotes.length === 0 && (
+            <div className="fnx-empty">
+              <h3>No notes match that search.</h3>
+              <button
+                type="button"
+                className="fnx-btn fnx-btn-ghost"
+                onClick={() => {
+                  setQuery("");
+                  setActiveCategory("All Notes");
+                }}
+              >
+                Reset the archive
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
 
- <div className="fn-card-meta">
- <span>May 19, 2026</span>
- <span>•</span>
- <span>{note.read}</span>
- </div>
+      {/* ---------- editorial quote ---------- */}
+      <section className="fnx-quote">
+        <div className="fnx-quote-bg" aria-hidden="true">
+          <img src={`${A}field-notes-dark-blueprint.webp`} alt="" />
+        </div>
+        <div className="fnx-shell fnx-quote-inner">
+          <blockquote>
+            A serious brand does not need more noise. It needs a clearer structure for the
+            truth it already carries.
+          </blockquote>
+          <p>Core Truth House Field Notes</p>
+        </div>
+      </section>
 
- <Link to={`/blog/${note.slug}`}>Read More <span>→</span></Link>
- </div>
- </article>
- ))}
- </div>
- </div>
+      {/* ---------- subscribe ---------- */}
+      <section className="fnx-subscribe">
+        <div className="fnx-shell fnx-subscribe-grid">
+          <div>
+            <p className="fnx-kicker gold">Notes from the architect</p>
+            <h2>Get the next Field Note when it leaves the House.</h2>
+            <p className="fnx-subscribe-note">One useful strategic note at a time. No content flood.</p>
+          </div>
+          <form className="fnx-subscribe-form" onSubmit={(event) => event.preventDefault()}>
+            <label>
+              <span>Email address</span>
+              <input type="email" placeholder="you@yourbrand.com" aria-label="Email address" />
+            </label>
+            <button type="submit" className="fnx-btn fnx-btn-gold">
+              Enter the Archive <span aria-hidden="true">↗</span>
+            </button>
+          </form>
+        </div>
+      </section>
 
- <SubscribeCard />
- </div>
- </div>
- </section>
+      <PublicFooter />
+      <FieldNotesIndexStyles />
+    </main>
+  );
+}
 
- <InsideNotebook />
- <DiagnosticCTA />
- <PublicFooter />
- <FieldNotesStyles />
- </main>
- );
+function FieldNotesIndexStyles() {
+  return (
+    <style>{`
+      .fnx-page {
+        --fnx-ink: #33033c;
+        --fnx-night: #0d0010;
+        --fnx-crimson: #af0024;
+        --fnx-gold: #c4a95b;
+        --fnx-ivory: #f8f1ec;
+        --fnx-blush: #efe3df;
+        --fnx-panel: #fffaf5;
+        --fnx-line: rgba(51, 3, 60, 0.15);
+        --fnx-serif: "Playfair Display", Georgia, serif;
+        --fnx-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+        background: var(--fnx-ivory);
+        color: var(--fnx-ink);
+        font-family: var(--fnx-sans);
+        overflow-x: hidden;
+      }
+      .fnx-page *, .fnx-page *::before, .fnx-page *::after { box-sizing: border-box; }
+      .fnx-shell { width: min(1240px, calc(100% - 48px)); margin: 0 auto; position: relative; z-index: 2; }
+
+      .fnx-page h1, .fnx-page h2, .fnx-page h3, .fnx-page blockquote {
+        font-family: var(--fnx-serif); font-weight: 600; letter-spacing: -0.02em;
+        text-wrap: balance;
+      }
+
+      .fnx-kicker { margin: 0 0 18px; color: var(--fnx-gold); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.19em; text-transform: uppercase; }
+      .fnx-kicker.crimson { color: var(--fnx-crimson); }
+      .fnx-kicker.gold { color: var(--fnx-gold); }
+
+      /* buttons */
+      .fnx-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 24px; border: 1px solid transparent; border-radius: 4px; font-family: var(--fnx-sans); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.11em; text-transform: uppercase; text-decoration: none; cursor: pointer; transition: transform 0.15s ease; }
+      .fnx-btn:hover { transform: translateY(-1px); }
+      .fnx-btn-crimson { background: var(--fnx-crimson); color: #fff7ec; }
+      .fnx-btn-gold { background: var(--fnx-gold); color: var(--fnx-night); }
+      .fnx-btn-ghost { background: transparent; border-color: var(--fnx-line); color: var(--fnx-ink); }
+      .fnx-textlink { color: var(--fnx-ink); text-decoration: none; font-size: 0.74rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+      .fnx-textlink:hover { color: var(--fnx-crimson); }
+
+      /* hero */
+      .fnx-hero { position: relative; background: linear-gradient(180deg, #fffaf5, #f8f1ec); border-bottom: 1px solid var(--fnx-line); }
+      .fnx-blueprint { position: absolute; inset: 0; opacity: 0.28; pointer-events: none; background-image: linear-gradient(rgba(51,3,60,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(51,3,60,0.08) 1px, transparent 1px); background-size: 56px 56px; mask-image: linear-gradient(to right, transparent, black 36%, black); -webkit-mask-image: linear-gradient(to right, transparent, black 36%, black); }
+      .fnx-hero-grid { display: grid; grid-template-columns: 0.92fr 1.08fr; align-items: center; gap: 54px; padding: 72px 0 48px; }
+      .fnx-hero h1 { margin: 0; max-width: 640px; font-size: clamp(2.9rem, 5.4vw, 5rem); line-height: 0.98; color: var(--fnx-ink); }
+      .fnx-hero h1 em { display: block; color: var(--fnx-crimson); font-style: italic; }
+      .fnx-lead { max-width: 540px; margin: 26px 0 0; color: #6d5866; font-size: 1.08rem; line-height: 1.6; }
+      .fnx-actions { display: flex; flex-wrap: wrap; gap: 22px; align-items: center; margin-top: 30px; }
+      .fnx-metrics { display: flex; flex-wrap: wrap; margin-top: 44px; border-top: 1px solid var(--fnx-line); border-bottom: 1px solid var(--fnx-line); }
+      .fnx-metrics div { padding: 18px 24px 18px 0; margin-right: 24px; border-right: 1px solid var(--fnx-line); }
+      .fnx-metrics div:last-child { border-right: 0; margin-right: 0; }
+      .fnx-metrics strong { display: block; color: var(--fnx-crimson); font-family: var(--fnx-serif); font-weight: 600; font-size: 2rem; line-height: 1; }
+      .fnx-metrics span { color: #77626f; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; }
+      .fnx-hero-art img { width: 100%; max-height: 620px; object-fit: contain; }
+      .fnx-hero-caption { margin-top: 6px; color: #866f7c; text-align: center; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; }
+
+      /* principle band */
+      .fnx-band { background: var(--fnx-night); color: #fff; }
+      .fnx-band-grid { display: grid; grid-template-columns: repeat(3, 0.65fr) 1.55fr; }
+      .fnx-band-grid > div { min-height: 128px; padding: 28px 24px; border-right: 1px solid rgba(196,169,91,0.23); display: flex; flex-direction: column; justify-content: center; }
+      .fnx-band-grid > div:last-child { border-right: 0; }
+      .fnx-band span { color: var(--fnx-gold); font-family: var(--fnx-serif); font-weight: 600; font-size: 1.7rem; }
+      .fnx-band p { margin: 5px 0 0; color: rgba(255,255,255,0.75); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+      .fnx-band-copy { color: rgba(255,255,255,0.7); font-family: var(--fnx-serif); font-weight: 400; font-size: 1.2rem; line-height: 1.45; letter-spacing: -0.01em; }
+
+      /* featured */
+      .fnx-featured-section, .fnx-library { padding: 104px 0; }
+      .fnx-intro { margin-bottom: 44px; }
+      .fnx-intro h2, .fnx-library-head h2, .fnx-subscribe h2 { margin: 0; font-size: clamp(2.6rem, 4.6vw, 4.4rem); line-height: 0.96; }
+      .fnx-featured { display: grid; grid-template-columns: 1.05fr 0.95fr; min-height: 480px; border: 1px solid var(--fnx-line); background: var(--fnx-panel); border-radius: 6px; overflow: hidden; }
+      .fnx-featured-img { position: relative; overflow: hidden; background: var(--fnx-blush); }
+      .fnx-featured-img img { width: 100%; height: 100%; object-fit: cover; }
+      .fnx-featured-tag { position: absolute; left: 22px; bottom: 20px; padding: 9px 12px; background: var(--fnx-night); color: var(--fnx-gold); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+      .fnx-featured-body { padding: 52px; display: flex; flex-direction: column; justify-content: center; }
+      .fnx-note-cat { margin: 0 0 14px; color: var(--fnx-crimson); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+      .fnx-featured-body h3 { margin: 0; font-size: clamp(2.2rem, 3.4vw, 3.4rem); line-height: 1.0; }
+      .fnx-featured-excerpt { color: #715c69; line-height: 1.7; margin: 16px 0 0; }
+      .fnx-note-meta { display: flex; flex-wrap: wrap; gap: 18px; margin: 20px 0 28px; color: #8a7480; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+      /* library */
+      .fnx-library { background: var(--fnx-blush); }
+      .fnx-library-head { display: flex; justify-content: space-between; gap: 50px; align-items: end; }
+      .fnx-search { width: min(340px, 100%); }
+      .fnx-search span { display: block; margin-bottom: 8px; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+      .fnx-search input { width: 100%; height: 50px; padding: 0 15px; border: 1px solid var(--fnx-line); border-radius: 4px; background: rgba(255,255,255,0.7); color: var(--fnx-ink); font-family: var(--fnx-sans); font-size: 0.95rem; }
+      .fnx-search input:focus { outline: none; border-color: var(--fnx-crimson); }
+      .fnx-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 40px 0; }
+      .fnx-tabs button { min-height: 40px; padding: 0 15px; border: 1px solid var(--fnx-line); border-radius: 4px; background: transparent; color: var(--fnx-ink); font-family: var(--fnx-sans); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+      .fnx-tabs button:hover { border-color: var(--fnx-ink); }
+      .fnx-tabs button.active { background: var(--fnx-ink); border-color: var(--fnx-ink); color: #fff; }
+
+      .fnx-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+      .fnx-card { display: flex; flex-direction: column; background: rgba(255,250,245,0.86); border: 1px solid var(--fnx-line); border-radius: 6px; overflow: hidden; }
+      .fnx-card-img { position: relative; display: block; height: 220px; overflow: hidden; background: #fff; }
+      .fnx-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+      .fnx-card:hover .fnx-card-img img { transform: scale(1.03); }
+      .fnx-card-img span { position: absolute; top: 14px; left: 14px; width: 38px; height: 38px; display: grid; place-items: center; background: var(--fnx-night); color: var(--fnx-gold); font-family: var(--fnx-serif); font-weight: 600; }
+      .fnx-card-body { display: flex; flex-direction: column; flex: 1; padding: 26px; }
+      .fnx-card-body h3 { margin: 0; font-size: 1.6rem; line-height: 1.06; }
+      .fnx-card-body h3 a { color: var(--fnx-ink); text-decoration: none; }
+      .fnx-card-body h3 a:hover { color: var(--fnx-crimson); }
+      .fnx-card-excerpt { flex: 1; margin: 12px 0 0; color: #725d69; font-size: 0.92rem; line-height: 1.55; }
+      .fnx-card-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--fnx-line); font-size: 0.66rem; letter-spacing: 0.07em; text-transform: uppercase; color: #8a7480; }
+      .fnx-card-foot a { color: var(--fnx-crimson); text-decoration: none; font-weight: 600; }
+      .fnx-empty { padding: 60px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+      .fnx-empty h3 { font-size: 1.6rem; }
+
+      /* editorial quote */
+      .fnx-quote { position: relative; padding: 104px 0; background: var(--fnx-night); color: #fff; overflow: hidden; }
+      .fnx-quote-bg { position: absolute; inset: 0; opacity: 0.45; }
+      .fnx-quote-bg img { width: 100%; height: 100%; object-fit: cover; }
+      .fnx-quote-inner { text-align: center; }
+      .fnx-quote blockquote { max-width: 900px; margin: 0 auto; font-weight: 500; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.14; color: #fff; }
+      .fnx-quote blockquote::before { content: "\\201C"; }
+      .fnx-quote blockquote::after { content: "\\201D"; }
+      .fnx-quote-inner p { margin-top: 22px; color: var(--fnx-gold); font-size: 0.66rem; letter-spacing: 0.17em; text-transform: uppercase; }
+
+      /* subscribe */
+      .fnx-subscribe { padding: 100px 0; background: var(--fnx-ink); color: #fff; }
+      .fnx-subscribe-grid { display: grid; grid-template-columns: 1fr 0.75fr; gap: 72px; align-items: center; }
+      .fnx-subscribe h2 { color: #fff; }
+      .fnx-subscribe-note { color: rgba(255,255,255,0.68); margin: 14px 0 0; }
+      .fnx-subscribe-form label span { display: block; margin-bottom: 8px; color: rgba(255,255,255,0.7); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; }
+      .fnx-subscribe-form input { width: 100%; height: 52px; padding: 0 15px; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; background: rgba(255,255,255,0.06); color: #fff; font-family: var(--fnx-sans); font-size: 0.95rem; }
+      .fnx-subscribe-form input:focus { outline: none; border-color: var(--fnx-gold); }
+      .fnx-subscribe-form button { width: 100%; margin-top: 12px; }
+
+      @media (max-width: 1050px) {
+        .fnx-hero-grid, .fnx-featured, .fnx-subscribe-grid { grid-template-columns: 1fr; }
+        .fnx-hero-art { max-width: 720px; margin: 0 auto; }
+        .fnx-band-grid { grid-template-columns: repeat(2, 1fr); }
+        .fnx-band-grid > div:nth-child(2) { border-right: 0; }
+        .fnx-grid { grid-template-columns: repeat(2, 1fr); }
+        .fnx-library-head { flex-direction: column; align-items: start; }
+      }
+      @media (max-width: 640px) {
+        .fnx-shell { width: min(100% - 32px, 1240px); }
+        .fnx-hero-grid { padding: 54px 0 34px; gap: 26px; }
+        .fnx-metrics { flex-wrap: wrap; }
+        .fnx-band-grid, .fnx-grid { grid-template-columns: 1fr; }
+        .fnx-band-grid > div { border-right: 0; border-bottom: 1px solid rgba(196,169,91,0.2); }
+        .fnx-featured-section, .fnx-library, .fnx-quote, .fnx-subscribe { padding: 72px 0; }
+        .fnx-featured { min-height: 0; }
+        .fnx-featured-img { min-height: 260px; }
+        .fnx-featured-body { padding: 32px 24px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .fnx-btn, .fnx-card-img img { transition: none; }
+      }
+    `}</style>
+  );
 }
 
 function ArticlePage({ article: currentArticle }) {
@@ -517,53 +798,6 @@ function SubscribeCard() {
  );
 }
 
-function InsideNotebook() {
- const inside = [
- ["cth-field-notes-icon-binoculars.png", "Quick Observations", "Short takes on what we are seeing in the market, in brands, and in the founder journey.", "See Observations"],
- ["cth-field-notes-icon-compass.png", "Frameworks & Models", "Practical tools and strategic frameworks to help you think clearly and build better.", "Explore Frameworks"],
- ["cth-field-notes-icon-open-book.png", "Recurring Themes", "The enduring principles behind strong brands, smart systems, and sustainable growth.", "View Themes"],
- ];
-
- return (
- <section className="fn-inside">
- <div className="fn-shell">
- <div className="fn-inside-title">
- <span />
- <p>Inside the Notebook</p>
- <span />
- </div>
-
- <div className="fn-inside-grid">
- {inside.map(([icon, title, text, cta]) => (
- <article key={title}>
- <img src={`${A}${icon}`} alt="" />
- <div>
- <h3>{title}</h3>
- <p>{text}</p>
- <Link to="/blog">{cta} <span>→</span></Link>
- </div>
- </article>
- ))}
- </div>
- </div>
- </section>
- );
-}
-
-function DiagnosticCTA() {
- return (
- <section className="fn-cta">
- <div className="fn-shell fn-cta-grid">
- <div className="fn-footer-seal">CTH</div>
- <div>
- <h2>Build With Clarity. Lead With Conviction.</h2>
- <p>Get a clear-eyed assessment of your brand, messaging, systems, and growth opportunities.</p>
- </div>
- <a href="/brand-diagnostic/">Start the Brand Diagnostic <span>→</span></a>
- </div>
- </section>
- );
-}
 
 
 export default function BlogJournalPage() {
