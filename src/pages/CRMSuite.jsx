@@ -12,6 +12,7 @@ import {
  BriefcaseBusiness,
  X,
  Mail,
+ Pencil,
 } from "lucide-react";
 
 import { DashboardLayout } from "../components/Layout";
@@ -757,6 +758,12 @@ export default function CRMSuite() {
  const [dealQuery, setDealQuery] = useState("");
  const [contactSortOrder, setContactSortOrder] = useState("newest");
  const [dealSortOrder, setDealSortOrder] = useState("newest");
+ // Inner-page filter pills (new UI state only; loadCRM/handlers untouched).
+ const [contactStatusFilter, setContactStatusFilter] = useState("all");
+ const [contactIndustryFilter, setContactIndustryFilter] = useState("all");
+ const [contactSourceFilter, setContactSourceFilter] = useState("all");
+ const [activityTypeFilter, setActivityTypeFilter] = useState("all");
+ const [activityOutcomeFilter, setActivityOutcomeFilter] = useState("all");
 
  const [contactBusy, setContactBusy] = useState(false);
  const [dealBusy, setDealBusy] = useState(false);
@@ -892,13 +899,20 @@ export default function CRMSuite() {
 
  const filteredContacts = useMemo(() => {
  const q = contactQuery.trim().toLowerCase();
- const base = q
- ? contacts.filter((item) =>
- [item.name, item.email, item.company, item.status]
+ const base = contacts.filter((item) => {
+ if (
+ q &&
+ ![item.name, item.email, item.company, item.status]
  .filter(Boolean)
  .some((value) => String(value).toLowerCase().includes(q))
- )
- : contacts;
+ ) {
+ return false;
+ }
+ if (contactStatusFilter !== "all" && String(item.status || "").toLowerCase() !== contactStatusFilter) return false;
+ if (contactIndustryFilter !== "all" && String(item.industry || "") !== contactIndustryFilter) return false;
+ if (contactSourceFilter !== "all" && String(item.intake_channel || "") !== contactSourceFilter) return false;
+ return true;
+ });
 
  const sorted = [...base];
  switch (contactSortOrder) {
@@ -917,7 +931,49 @@ export default function CRMSuite() {
  break;
  }
  return sorted;
- }, [contacts, contactQuery, contactSortOrder]);
+ }, [contacts, contactQuery, contactSortOrder, contactStatusFilter, contactIndustryFilter, contactSourceFilter]);
+
+ // Distinct filter-pill option lists, derived from the loaded contacts.
+ const contactFilterOptions = useMemo(() => {
+ const industries = new Set();
+ const statuses = new Set();
+ const sources = new Set();
+ contacts.forEach((c) => {
+ if (c.industry) industries.add(String(c.industry));
+ if (c.status) statuses.add(String(c.status).toLowerCase());
+ if (c.intake_channel) sources.add(String(c.intake_channel));
+ });
+ return {
+ industries: [...industries].sort(),
+ statuses: [...statuses].sort(),
+ sources: [...sources].sort(),
+ };
+ }, [contacts]);
+
+ // Resolve contact_id / entity_id to records, for Communication Log + Notes.
+ const contactById = useMemo(() => new Map(contacts.map((c) => [c.id, c])), [contacts]);
+ const dealById = useMemo(() => new Map(deals.map((d) => [d.id, d])), [deals]);
+
+ // Communication Log: activities filtered by Type / Outcome pills.
+ const filteredActivities = useMemo(
+ () =>
+ activities.filter((item) => {
+ if (activityTypeFilter !== "all" && String(item.type || "").toLowerCase() !== activityTypeFilter) return false;
+ if (activityOutcomeFilter !== "all" && String(item.status || "").toLowerCase() !== activityOutcomeFilter) return false;
+ return true;
+ }),
+ [activities, activityTypeFilter, activityOutcomeFilter]
+ );
+
+ const activityFilterOptions = useMemo(() => {
+ const types = new Set();
+ const outcomes = new Set();
+ activities.forEach((a) => {
+ if (a.type) types.add(String(a.type).toLowerCase());
+ if (a.status) outcomes.add(String(a.status).toLowerCase());
+ });
+ return { types: [...types].sort(), outcomes: [...outcomes].sort() };
+ }, [activities]);
 
  const filteredDeals = useMemo(() => {
  const q = dealQuery.trim().toLowerCase();
@@ -1745,11 +1801,44 @@ export default function CRMSuite() {
  ) : null
  }
  >
- <div style={{ fontFamily: SANS, fontSize: 14, color: "var(--cth-command-muted)", lineHeight: 1.6 }}>
- {pipelines.length
- ? `Choose which pipeline the Deals board shows. ${pipelines.length} pipeline${pipelines.length === 1 ? "" : "s"} configured.`
- : "No pipelines yet."}
+ {!boardPipeline ? (
+ <EmptyState text="No pipelines yet." />
+ ) : (
+ <div style={{ display: "grid", gap: 10 }}>
+ {(boardPipeline.stages || []).map((stage) => (
+ <div
+ key={stage.id}
+ style={{
+ ...SOFT_PANEL_STYLE,
+ padding: "12px 14px",
+ display: "flex",
+ alignItems: "center",
+ justifyContent: "space-between",
+ gap: 12,
+ }}
+ >
+ <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+ <span
+ aria-hidden="true"
+ style={{ width: 8, height: 8, borderRadius: "50%", background: stageAccent(stage.type), display: "inline-block", flexShrink: 0 }}
+ />
+ <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: "var(--cth-command-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+ {stage.name}
+ </span>
+ <Chip tone={stage.type === "won" ? "success" : stage.type === "lost" ? "muted" : "default"}>
+ {stage.type === "won" ? "Won" : stage.type === "lost" ? "Lost" : "Open"}
+ </Chip>
  </div>
+ <IconButton label={`Edit ${stage.name} in Settings`} onClick={() => navigate("/settings?tab=pipelines")}>
+ <Pencil size={14} />
+ </IconButton>
+ </div>
+ ))}
+ <div style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)", marginTop: 4 }}>
+ Stages are created and reordered in Settings → Pipelines.
+ </div>
+ </div>
+ )}
  </Section>
  )}
 
@@ -1870,6 +1959,45 @@ export default function CRMSuite() {
  <option value="name-asc">Name A-Z</option>
  <option value="name-desc">Name Z-A</option>
  </select>
+ <select
+ value={contactStatusFilter}
+ onChange={(e) => setContactStatusFilter(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
+ aria-label="Filter by status"
+ >
+ <option value="all">All statuses</option>
+ {contactFilterOptions.statuses.map((s) => (
+ <option key={s} value={s}>
+ {s}
+ </option>
+ ))}
+ </select>
+ <select
+ value={contactIndustryFilter}
+ onChange={(e) => setContactIndustryFilter(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
+ aria-label="Filter by industry"
+ >
+ <option value="all">All industries</option>
+ {contactFilterOptions.industries.map((s) => (
+ <option key={s} value={s}>
+ {s}
+ </option>
+ ))}
+ </select>
+ <select
+ value={contactSourceFilter}
+ onChange={(e) => setContactSourceFilter(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
+ aria-label="Filter by source"
+ >
+ <option value="all">All sources</option>
+ {contactFilterOptions.sources.map((s) => (
+ <option key={s} value={s}>
+ {intakeLabel(s)}
+ </option>
+ ))}
+ </select>
  </div>
  }
  >
@@ -1895,7 +2023,7 @@ export default function CRMSuite() {
  >
  <thead>
  <tr>
- {["Name", "Email", "Company", "Status", "Website", "Industry", "Start date", ""].map((header, idx) => (
+ {["Name", "Business", "Status", "Source", "Website", "Industry", "Start date", ""].map((header, idx) => (
  <th
  key={idx}
  style={{
@@ -1935,17 +2063,28 @@ export default function CRMSuite() {
  e.currentTarget.style.background = "transparent";
  }}
  >
- <td style={{ padding: "12px", fontWeight: 600, color: "var(--cth-command-ink)" }}>
+ <td style={{ padding: "12px" }}>
+ <div style={{ fontWeight: 600, color: "var(--cth-command-ink)" }}>
  {contact.name || "Untitled contact"}
- </td>
- <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
- {contact.email || <EmptyValue />}
+ </div>
+ {contact.email ? (
+ <div style={{ fontSize: 12, color: "var(--cth-command-muted)", marginTop: 2 }}>
+ {contact.email}
+ </div>
+ ) : null}
  </td>
  <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
  {contact.company || <EmptyValue />}
  </td>
  <td style={{ padding: "12px" }}>
  {contact.status ? <Chip>{contact.status}</Chip> : <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px" }}>
+ {contact.intake_channel ? (
+ <Chip tone="muted">{intakeLabel(contact.intake_channel)}</Chip>
+ ) : (
+ <EmptyValue />
+ )}
  </td>
  <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
  {contact.website || <EmptyValue />}
@@ -1991,63 +2130,107 @@ export default function CRMSuite() {
  )}
 
  {activeTab === "activity" && (
- <Section eyebrow="Activity" title="Recent Activity">
- {activities.length === 0 ? (
- <EmptyState text="No activity yet." />
- ) : (
- <div style={{ display: "grid", gap: 10 }}>
- {activities.map((item) => (
- <div
- key={item.id}
- style={{ ...SOFT_PANEL_STYLE, padding: "12px 14px" }}
+ <Section
+ eyebrow="Log"
+ title="Communication Log"
+ flush
+ action={
+ <div className="flex flex-wrap items-center gap-2">
+ <select
+ value={activityTypeFilter}
+ onChange={(e) => setActivityTypeFilter(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
+ aria-label="Filter by type"
  >
- <div
- style={{
- display: "flex",
- alignItems: "flex-start",
- justifyContent: "space-between",
- gap: 12,
- marginBottom: 8,
- }}
+ <option value="all">All types</option>
+ {activityFilterOptions.types.map((t) => (
+ <option key={t} value={t}>
+ {t}
+ </option>
+ ))}
+ </select>
+ <select
+ value={activityOutcomeFilter}
+ onChange={(e) => setActivityOutcomeFilter(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
+ aria-label="Filter by outcome"
  >
- <div
- style={{
- fontFamily: SANS,
- fontSize: 14,
- fontWeight: 600,
- color: "var(--cth-command-ink)",
- }}
- >
- {item.subject || item.title || "Untitled activity"}
+ <option value="all">All outcomes</option>
+ {activityFilterOptions.outcomes.map((o) => (
+ <option key={o} value={o}>
+ {o}
+ </option>
+ ))}
+ </select>
  </div>
- <IconButton
- label="Delete activity"
- onClick={() => requestDelete("activity", item)}
+ }
  >
+ {filteredActivities.length === 0 ? (
+ <EmptyState text={activities.length === 0 ? "No activity yet." : "No entries match these filters."} />
+ ) : (
+ <div style={{ overflowX: "auto" }}>
+ <table style={{ minWidth: "100%", borderCollapse: "collapse", fontFamily: SANS, fontSize: 14, color: "var(--cth-command-ink)", textAlign: "left" }}>
+ <thead>
+ <tr>
+ {["Date", "Contact", "Type", "Outcome", "Summary", ""].map((header, idx) => (
+ <th
+ key={idx}
+ style={{
+ ...EYEBROW_STYLE,
+ padding: "10px 12px",
+ borderBottom: "1px solid var(--cth-command-border)",
+ fontWeight: 600,
+ textAlign: idx === 5 ? "right" : "left",
+ }}
+ >
+ {header}
+ </th>
+ ))}
+ </tr>
+ </thead>
+ <tbody>
+ {filteredActivities.map((item) => {
+ const linked = item.contact_id ? contactById.get(item.contact_id) : null;
+ const when = item.occurred_at || item.due_date || item.created_at;
+ return (
+ <tr key={item.id} style={{ borderTop: "1px solid var(--cth-command-border)" }}>
+ <td style={{ padding: "12px", color: "var(--cth-command-muted)", whiteSpace: "nowrap" }}>
+ {when && formatDate(when) ? formatDate(when) : <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px" }}>
+ {linked ? (
+ <button
+ type="button"
+ onClick={() => openContact(linked)}
+ style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: SANS, fontSize: 14, fontWeight: 600, color: "var(--cth-command-crimson)" }}
+ >
+ {linked.name || "Untitled contact"}
+ </button>
+ ) : (
+ <EmptyValue />
+ )}
+ </td>
+ <td style={{ padding: "12px" }}>{item.type ? <Chip>{item.type}</Chip> : <EmptyValue />}</td>
+ <td style={{ padding: "12px" }}>
+ {item.status ? (
+ <Chip tone={item.status === "completed" ? "success" : "muted"}>{item.status}</Chip>
+ ) : (
+ <EmptyValue />
+ )}
+ </td>
+ <td style={{ padding: "12px", color: "var(--cth-command-muted)", maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+ {item.subject || item.title || item.details || <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px", textAlign: "right" }}>
+ <IconButton label="Delete activity" onClick={() => requestDelete("activity", item)}>
  <Trash2 size={14} />
  </IconButton>
- </div>
- <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
- {item.type ? <Chip>{item.type}</Chip> : null}
- {item.status ? (
- <Chip tone={item.status === "completed" ? "success" : "muted"}>
- {item.status}
- </Chip>
- ) : null}
- {(item.occurred_at || item.due_date) && formatDate(item.occurred_at || item.due_date) ? (
- <span
- style={{
- fontFamily: SANS,
- fontSize: 11,
- color: "var(--cth-command-muted)",
- }}
- >
- {formatDate(item.occurred_at || item.due_date)}
- </span>
- ) : null}
- </div>
- </div>
- ))}
+ </td>
+ </tr>
+ );
+ })}
+ </tbody>
+ </table>
  </div>
  )}
  </Section>
@@ -2090,6 +2273,14 @@ export default function CRMSuite() {
  <Trash2 size={14} />
  </IconButton>
  </div>
+ {note.entity_id ? (
+ <div style={{ ...EYEBROW_STYLE, fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
+ {note.entity_type === "deal" ? "Deal" : "Contact"} ·{" "}
+ {note.entity_type === "deal"
+ ? dealById.get(note.entity_id)?.title || "—"
+ : contactById.get(note.entity_id)?.name || "—"}
+ </div>
+ ) : null}
  <div
  style={{
  fontFamily: SANS,
