@@ -7,6 +7,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import apiClient from "../../lib/apiClient";
+import { getStoredAttribution } from "../../lib/utmCapture";
 
 const EMPTY_FORM = {
   first_name: "",
@@ -98,6 +99,8 @@ export default function EstateContactPage() {
         message: form.message.trim(),
         consent: form.consent,
         source: "contact_page",
+        // First-touch UTM/referrer/landing set captured at app entry.
+        ...getStoredAttribution(),
       });
       setForm(EMPTY_FORM);
       setStatus({
