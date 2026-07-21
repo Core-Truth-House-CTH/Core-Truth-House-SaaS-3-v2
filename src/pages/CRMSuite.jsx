@@ -124,7 +124,7 @@ function SectionHead({ eyebrow, title, action }) {
  alignItems: "center",
  justifyContent: "space-between",
  gap: 10,
- padding: "12px 16px",
+ padding: "16px 22px",
  borderBottom: "1px solid var(--cth-command-border)",
  }}
  >
@@ -132,7 +132,7 @@ function SectionHead({ eyebrow, title, action }) {
  <h2
  style={{
  fontFamily: SERIF,
- fontSize: 17,
+ fontSize: 20,
  fontWeight: 600,
  color: "var(--cth-command-ink)",
  margin: 0,
@@ -152,9 +152,16 @@ function SectionHead({ eyebrow, title, action }) {
 // section must not add a second inset around it.
 function Section({ eyebrow, title, action, flush = false, children }) {
  return (
- <section style={{ ...PANEL_STYLE, borderRadius: 8, overflow: "hidden" }}>
+ <section
+ style={{
+ ...PANEL_STYLE,
+ borderRadius: 16,
+ boxShadow: "0 18px 40px color-mix(in srgb, var(--cth-command-ink) 8%, transparent)",
+ overflow: "hidden",
+ }}
+ >
  <SectionHead eyebrow={eyebrow} title={title} action={action} />
- {flush ? children : <div style={{ padding: 16 }}>{children}</div>}
+ {flush ? children : <div style={{ padding: "20px 22px" }}>{children}</div>}
  </section>
  );
 }
@@ -659,10 +666,10 @@ function Toast({ toast }) {
 
 const CRM_TABS = [
  { key: "dashboard", label: "Dashboard" },
- { key: "contacts", label: "Contacts" },
+ { key: "contacts", label: "Client Database" },
  { key: "deals", label: "Deals" },
  { key: "pipelines", label: "Pipelines" },
- { key: "activity", label: "Activity" },
+ { key: "activity", label: "Communication Log" },
  { key: "notes", label: "Notes" },
 ];
 
@@ -761,6 +768,9 @@ export default function CRMSuite() {
  email: "",
  company: "",
  status: "lead",
+ website: "",
+ industry: "",
+ start_date: "",
  });
 
  const [dealDraft, setDealDraft] = useState({
@@ -771,6 +781,7 @@ export default function CRMSuite() {
  pipeline_id: "",
  stage_id: "",
  close_date: "",
+ probability: "",
  });
 
  const [activityDraft, setActivityDraft] = useState({
@@ -977,6 +988,9 @@ export default function CRMSuite() {
  email: contactDraft.email.trim() || null,
  company: contactDraft.company.trim() || null,
  status: contactDraft.status || "lead",
+ website: contactDraft.website.trim() || null,
+ industry: contactDraft.industry.trim() || null,
+ start_date: contactDraft.start_date || null,
  });
 
  setAddType(null);
@@ -985,6 +999,9 @@ export default function CRMSuite() {
  email: "",
  company: "",
  status: "lead",
+ website: "",
+ industry: "",
+ start_date: "",
  });
 
  setContactQuery("");
@@ -1021,6 +1038,7 @@ export default function CRMSuite() {
  pipeline_id: dealDraft.pipeline_id || null,
  stage_id: dealDraft.stage_id || null,
  expected_close_date: fromInputDate(dealDraft.close_date),
+ probability: dealDraft.probability === "" ? null : Number(dealDraft.probability),
  });
 
  setAddType(null);
@@ -1032,6 +1050,7 @@ export default function CRMSuite() {
  pipeline_id: "",
  stage_id: "",
  close_date: "",
+ probability: "",
  });
  setDealQuery("");
 
@@ -1405,13 +1424,13 @@ export default function CRMSuite() {
  value={dealQuery}
  onChange={(e) => setDealQuery(e.target.value)}
  placeholder="Search deals"
- style={{ ...SMALL_INPUT_STYLE, paddingLeft: 32, width: 200 }}
+ style={{ ...SMALL_INPUT_STYLE, paddingLeft: 32, width: 200, borderRadius: 999 }}
  />
  </div>
  <select
  value={dealSortOrder}
  onChange={(e) => setDealSortOrder(e.target.value)}
- style={SMALL_INPUT_STYLE}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
  >
  <option value="newest">Newest First</option>
  <option value="oldest">Oldest First</option>
@@ -1713,7 +1732,7 @@ export default function CRMSuite() {
  <select
  value={boardPipelineId}
  onChange={(e) => setBoardPipelineId(e.target.value)}
- style={SMALL_INPUT_STYLE}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
  aria-label="Pipeline"
  >
  {pipelines.map((p) => (
@@ -1818,7 +1837,7 @@ export default function CRMSuite() {
  {activeTab === "contacts" && (
  <Section
  eyebrow="Directory"
- title="Contacts"
+ title="Client Database"
  flush
  action={
  <div className="flex flex-wrap items-center gap-2">
@@ -1838,13 +1857,13 @@ export default function CRMSuite() {
  value={contactQuery}
  onChange={(e) => setContactQuery(e.target.value)}
  placeholder="Search contacts"
- style={{ ...SMALL_INPUT_STYLE, paddingLeft: 32, width: 200 }}
+ style={{ ...SMALL_INPUT_STYLE, paddingLeft: 32, width: 200, borderRadius: 999 }}
  />
  </div>
  <select
  value={contactSortOrder}
  onChange={(e) => setContactSortOrder(e.target.value)}
- style={SMALL_INPUT_STYLE}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
  >
  <option value="newest">Newest First</option>
  <option value="oldest">Oldest First</option>
@@ -1876,7 +1895,7 @@ export default function CRMSuite() {
  >
  <thead>
  <tr>
- {["Name", "Email", "Company", "Status", ""].map((header, idx) => (
+ {["Name", "Email", "Company", "Status", "Website", "Industry", "Start date", ""].map((header, idx) => (
  <th
  key={idx}
  style={{
@@ -1884,7 +1903,7 @@ export default function CRMSuite() {
  padding: "10px 12px",
  borderBottom: "1px solid var(--cth-command-border)",
  fontWeight: 600,
- textAlign: idx === 4 ? "right" : "left",
+ textAlign: idx === 7 ? "right" : "left",
  }}
  >
  {header}
@@ -1927,6 +1946,15 @@ export default function CRMSuite() {
  </td>
  <td style={{ padding: "12px" }}>
  {contact.status ? <Chip>{contact.status}</Chip> : <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
+ {contact.website || <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
+ {contact.industry || <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
+ {contact.start_date ? formatDate(contact.start_date) : <EmptyValue />}
  </td>
  <td style={{ padding: "12px", textAlign: "right" }}>
  <span
@@ -2122,6 +2150,24 @@ export default function CRMSuite() {
  onChange={(e) => setContactDraft((s) => ({ ...s, status: e.target.value }))}
  options={CONTACT_STATUS_OPTIONS}
  />
+ <LabeledInput
+ label="Website"
+ value={contactDraft.website}
+ onChange={(e) => setContactDraft((s) => ({ ...s, website: e.target.value }))}
+ placeholder="example.com"
+ />
+ <LabeledInput
+ label="Industry"
+ value={contactDraft.industry}
+ onChange={(e) => setContactDraft((s) => ({ ...s, industry: e.target.value }))}
+ placeholder="Industry"
+ />
+ <LabeledInput
+ label="Start date"
+ type="date"
+ value={contactDraft.start_date}
+ onChange={(e) => setContactDraft((s) => ({ ...s, start_date: e.target.value }))}
+ />
  <button
  type="submit"
  disabled={contactBusy}
@@ -2157,6 +2203,13 @@ export default function CRMSuite() {
  value={dealDraft.value}
  onChange={(e) => setDealDraft((s) => ({ ...s, value: e.target.value }))}
  placeholder="0"
+ />
+ <LabeledInput
+ label="Probability (0-100)"
+ type="number"
+ value={dealDraft.probability}
+ onChange={(e) => setDealDraft((s) => ({ ...s, probability: e.target.value }))}
+ placeholder="—"
  />
  <LabeledInput
  label="Close date"
