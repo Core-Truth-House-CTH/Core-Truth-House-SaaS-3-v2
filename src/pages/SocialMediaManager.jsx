@@ -41,6 +41,7 @@ import {
  BarChart3,
  Heart,
  Image as ImageIcon,
+ Search,
 } from "lucide-react";
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import CampaignContextBanner from "../components/shared/CampaignContextBanner";
@@ -623,6 +624,9 @@ export default function SocialMediaManager() {
  const [activeView, setActiveView] = useState("publish");
  const [filterPlatform, setFilterPlatform] = useState("all");
  const [filterStatus, setFilterStatus] = useState("all");
+ const [filterContentJob, setFilterContentJob] = useState("all");
+ const [filterCampaign, setFilterCampaign] = useState("all");
+ const [postSearch, setPostSearch] = useState("");
  const [sortBy, setSortBy] = useState("time");
  const [selectedPostIds, setSelectedPostIds] = useState([]);
  const [bulkScheduleDate, setBulkScheduleDate] = useState("");
@@ -2328,6 +2332,16 @@ export default function SocialMediaManager() {
  const filteredPosts = useMemo(() => {
  let next = posts.filter((p) => filterPlatform === "all" || p.platform === filterPlatform);
  if (filterStatus !== "all") next = next.filter((p) => p.status === filterStatus);
+ if (filterContentJob !== "all") next = next.filter((p) => (p.content_job || "") === filterContentJob);
+ if (filterCampaign !== "all") next = next.filter((p) => String(p.campaign_id || "") === filterCampaign);
+ if (postSearch.trim()) {
+ const q = postSearch.trim().toLowerCase();
+ next = next.filter((p) =>
+ [p.topic, p.title, p.content, p.hook]
+ .filter(Boolean)
+ .some((field) => String(field).toLowerCase().includes(q))
+ );
+ }
 
  const metricValue = (post, key) => Number(post?.[key] || 0);
 
@@ -2343,7 +2357,18 @@ export default function SocialMediaManager() {
  });
 
  return next;
- }, [posts, filterPlatform, filterStatus, sortBy]);
+ }, [posts, filterPlatform, filterStatus, filterContentJob, filterCampaign, postSearch, sortBy]);
+
+ // Distinct campaigns present on the loaded posts, for the Posts filter select.
+ const postCampaignOptions = useMemo(() => {
+ const seen = new Map();
+ posts.forEach((p) => {
+ if (p.campaign_id && !seen.has(String(p.campaign_id))) {
+ seen.set(String(p.campaign_id), p.campaign_name || p.campaign_title || "Campaign");
+ }
+ });
+ return Array.from(seen, ([id, name]) => ({ id, name }));
+ }, [posts]);
 
  const instagramGridPosts = useMemo(() => {
  const ranked = [...posts]
@@ -2987,15 +3012,17 @@ export default function SocialMediaManager() {
  )}
 
  {activeView === "posts" && (
- <div data-testid="posts-list" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
- <Panel
- eyebrow="Recycle"
- title="Recycle top-performing posts"
- subtitle="Reopen your strongest content as a fresh draft so you can refine, reschedule, and keep proven ideas working longer."
- action={
+ <div data-testid="posts-list" className="inner-page">
+ <div className="inner-header">
+ <div>
+ <div className="eyebrow">Publishing Queue</div>
+ <h2 className="inner-title">Posts</h2>
+ <p className="inner-subtitle">Review drafts, scheduled posts, approval requests, and published content in one place.</p>
+ </div>
+ <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
  <button
  type="button"
- className="btn btn-primary btn-small"
+ className="btn btn-secondary btn-small"
  onClick={handleRecycleTopPost}
  disabled={recycleBusy}
  style={{ opacity: recycleBusy ? 0.7 : 1 }}
@@ -3003,54 +3030,78 @@ export default function SocialMediaManager() {
  {recycleBusy ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
  Recycle Top Post
  </button>
- }
- />
+ <button type="button" className="btn btn-primary btn-small" onClick={openNewPost}>
+ <Plus size={14} /> Create Post
+ </button>
+ </div>
+ </div>
 
-                <div className="panel" style={{ padding: 16 }}>
-                  <div className="post-filters" style={{ gridTemplateColumns: "repeat(3, minmax(160px, 1fr))" }}>
-                    <div>
-                      <FieldLabel>Status</FieldLabel>
-                      <select
+                <div style={{ marginTop: 4 }}>
+                  <div className="post-filters">
+                    <div className="search-wrap">
+                      <Search size={14} />
+                      <input
                         className="control"
                         style={{ width: "100%" }}
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
-                        data-testid="status-filter"
-                      >
-                        {STATUS_FILTER_OPTIONS.map((opt) => (
-                          <option key={opt.key} value={opt.key}>{opt.label}</option>
-                        ))}
-                      </select>
+                        placeholder="Search posts"
+                        value={postSearch}
+                        onChange={(e) => setPostSearch(e.target.value)}
+                        data-testid="post-search"
+                      />
                     </div>
-                    <div>
-                      <FieldLabel>Platform</FieldLabel>
-                      <select
-                        className="control"
-                        style={{ width: "100%" }}
-                        value={filterPlatform}
-                        onChange={(e) => setFilterPlatform(e.target.value)}
-                        data-testid="platform-filter"
-                      >
-                        <option value="all">All Platforms</option>
-                        {Object.entries(PLATFORM_CFG).map(([id, c]) => (
-                          <option key={id} value={id}>{c.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <FieldLabel>Sort by</FieldLabel>
-                      <select
-                        className="control"
-                        style={{ width: "100%" }}
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        data-testid="sort-posts"
-                      >
-                        {SORT_OPTIONS.map((opt) => (
-                          <option key={opt.key} value={opt.key}>{opt.label}</option>
-                        ))}
-                      </select>
-                    </div>
+                    <select
+                      className="control"
+                      value={filterPlatform}
+                      onChange={(e) => setFilterPlatform(e.target.value)}
+                      data-testid="platform-filter"
+                    >
+                      <option value="all">Platform: All</option>
+                      {Object.entries(PLATFORM_CFG).map(([id, c]) => (
+                        <option key={id} value={id}>{c.label}</option>
+                      ))}
+                    </select>
+                    <select
+                      className="control"
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      data-testid="status-filter"
+                    >
+                      {STATUS_FILTER_OPTIONS.map((opt) => (
+                        <option key={opt.key} value={opt.key}>{opt.key === "all" ? "Status: All" : opt.label}</option>
+                      ))}
+                    </select>
+                    <select
+                      className="control"
+                      value={filterContentJob}
+                      onChange={(e) => setFilterContentJob(e.target.value)}
+                      data-testid="content-job-filter"
+                    >
+                      <option value="all">Content Job: All</option>
+                      <option value="Generate Demand">Generate Demand</option>
+                      <option value="Convert Demand">Convert Demand</option>
+                      <option value="Build Loyalty">Build Loyalty</option>
+                    </select>
+                    <select
+                      className="control"
+                      value={filterCampaign}
+                      onChange={(e) => setFilterCampaign(e.target.value)}
+                      data-testid="campaign-filter"
+                    >
+                      <option value="all">Campaign: All</option>
+                      {postCampaignOptions.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                    <select
+                      className="control"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      data-testid="sort-posts"
+                    >
+                      {SORT_OPTIONS.map((opt) => (
+                        <option key={opt.key} value={opt.key}>{opt.key === "time" ? "Sort: Most Recent" : opt.label}</option>
+                      ))}
+                    </select>
                   </div>
 
                   {filteredPosts.length > 0 ? (
@@ -3100,168 +3151,128 @@ export default function SocialMediaManager() {
                 </div>
 
  {filteredPosts.length > 0 ? (
- filteredPosts.map((post) => {
+ <div className="table-scroll">
+ <table className="posts-table">
+ <thead>
+ <tr>
+ <th style={{ width: 34 }}>
+ <input
+ type="checkbox"
+ aria-label="Select all schedulable posts"
+ checked={selectedPostIds.length >= filteredPosts.filter((p) => !isPublishLocked(p)).length && selectedPostIds.length > 0}
+ onChange={() => {
+ const schedulable = filteredPosts.filter((post) => !isPublishLocked(post));
+ if (selectedPostIds.length >= schedulable.length && schedulable.length > 0) {
+ setSelectedPostIds([]);
+ } else {
+ setSelectedPostIds(schedulable.map((post) => post.id));
+ }
+ }}
+ style={{ accentColor: "var(--cth-crimson)", cursor: "pointer" }}
+ />
+ </th>
+ <th>Post</th>
+ <th>Platform</th>
+ <th>Content Job</th>
+ <th>Campaign</th>
+ <th>Scheduled</th>
+ <th>Status</th>
+ <th>Performance</th>
+ <th aria-label="Actions" />
+ </tr>
+ </thead>
+ <tbody>
+ {filteredPosts.map((post) => {
  const statusCfg = STATUS_CFG[post.status] || STATUS_CFG.draft;
  const checked = selectedPostIds.includes(post.id);
  // Bulk schedule cannot apply to a post that is already live or in flight.
  const locked = isPublishLocked(post);
+ const cfg = PLATFORM_CFG[post.platform] || PLATFORM_CFG.instagram;
+ const thumb = post.media_urls?.[0];
+ const statusPillClass =
+ post.status === "published" ? "status-published"
+ : post.status === "scheduled" ? "status-scheduled"
+ : post.status === "needs_approval" ? "status-approval"
+ : "status-draft";
+ const perf =
+ post.status === "published"
+ ? (Number(post.engagement_rate || 0) > 0 ? `${Number(post.engagement_rate).toFixed(1)}% ER` : "Published")
+ : post.status === "scheduled" ? "Preview"
+ : post.status === "needs_approval" ? "Pending"
+ : "—";
  return (
- <div
- key={post.id}
- data-testid={`post-${post.id}`}
- className="panel"
- style={{
- padding: 20,
- outline: checked ? "2px solid var(--cth-crimson)" : "none",
- outlineOffset: -2,
- }}
- >
- <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
- <div style={{ display: "flex", alignItems: "flex-start", gap: 12, minWidth: 0, flex: 1 }}>
+ <tr key={post.id} data-testid={`post-${post.id}`} style={{ background: checked ? "rgba(175,0,36,0.05)" : "transparent" }}>
+ <td>
  <input
  type="checkbox"
  checked={checked}
  disabled={locked}
  title={locked ? "Already published — cannot be scheduled" : undefined}
- onChange={(e) => {
- setSelectedPostIds((prev) =>
- e.target.checked ? [...prev, post.id] : prev.filter((id) => id !== post.id)
- );
- }}
- style={{
- marginTop: 4,
- width: 16, height: 16,
- accentColor: "var(--cth-crimson)",
- cursor: "pointer",
- }}
+ onChange={(e) => setSelectedPostIds((prev) => (e.target.checked ? [...prev, post.id] : prev.filter((id) => id !== post.id)))}
+ style={{ accentColor: "var(--cth-crimson)", cursor: locked ? "default" : "pointer" }}
  />
-
- <div style={{ minWidth: 0, flex: 1 }}>
- <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 10 }}>
- <PlatformBadge platform={post.platform} />
- <Chip tone={statusCfg.tone}>{statusCfg.label}</Chip>
- {post.campaign_id ? <Chip tone="purple">Campaign</Chip> : null}
- {post.content_item_id ? <Chip tone="gold">Reviewed</Chip> : null}
- </div>
-
- {statusCfg.hint ? (
- <div style={{
- display: "flex", gap: 8, alignItems: "flex-start",
- margin: "0 0 10px", padding: "8px 10px", borderRadius: 4,
- background: post.status === "publish_unknown"
- ? "rgba(196,169,91,0.12)"
- : "var(--cth-blush)",
- border: post.status === "publish_unknown"
- ? "1px solid rgba(196,169,91,0.40)"
- : "1px solid var(--cth-border)",
- }}>
- <AlertCircle size={13} style={{ flexShrink: 0, marginTop: 1, color: "var(--cth-purple-deep)" }} />
- <span style={{ fontFamily: SANS, fontSize: 11.5, lineHeight: 1.5, color: "var(--cth-ink)" }}>
- {statusCfg.hint}
+ </td>
+ <td>
+ <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0 }}>
+ {thumb ? (
+ <img className="thumb" src={backendAssetUrl(thumb)} alt="" onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} />
+ ) : (
+ <span className="thumb" style={{ display: "grid", placeItems: "center", background: "var(--cth-blush)", color: "var(--cth-muted)" }}>
+ <ImageIcon size={16} />
  </span>
+ )}
+ <div style={{ minWidth: 0 }}>
+ <strong style={{ display: "block", color: "var(--cth-ink)" }}>
+ {post.topic || post.title || (post.content ? post.content.slice(0, 40) : "Untitled")}
+ </strong>
+ <div className="muted" style={{ maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+ {post.hook || post.content || ""}
  </div>
- ) : null}
-
- <p style={{
- margin: "0 0 10px",
- fontFamily: SANS, fontSize: 14, lineHeight: 1.55,
- color: "var(--cth-ink)",
- display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical",
- overflow: "hidden",
- }}>
- {post.content}
- </p>
-
- {post.media_urls?.length > 0 ? (
- <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
- {post.media_urls.slice(0, 4).map((url, i) => (
- <img
- key={i}
- src={backendAssetUrl(url)}
- alt=""
- style={{
- width: 48, height: 48, borderRadius: 4, objectFit: "cover",
- border: "1px solid var(--cth-border)",
- }}
- />
- ))}
- {post.media_urls.length > 4 ? (
- <span style={{
- width: 48, height: 48, borderRadius: 4,
- display: "flex", alignItems: "center", justifyContent: "center",
- background: "var(--cth-blush)",
- border: "1px solid var(--cth-border)",
- fontFamily: SANS, fontSize: 12, color: "var(--cth-muted)",
- }}>+{post.media_urls.length - 4}</span>
- ) : null}
  </div>
- ) : null}
-
- {post.hashtags && post.hashtags.length > 0 ? (
- <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
- {post.hashtags.slice(0, 6).map((tag, i) => (
- <span key={i} style={{
- fontFamily: SANS, fontSize: 11,
- padding: "2px 8px", borderRadius: 999,
- background: "var(--cth-blush)",
- color: "var(--cth-muted)",
- border: "1px solid var(--cth-border)",
- }}>#{tag}</span>
- ))}
- {post.hashtags.length > 6 ? (
- <span style={{
- fontFamily: SANS, fontSize: 11, color: "var(--cth-muted)",
- alignSelf: "center",
- }}>+{post.hashtags.length - 6}</span>
- ) : null}
  </div>
- ) : null}
-
- <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14, fontFamily: SANS, fontSize: 11, color: "var(--cth-muted)" }}>
- {post.scheduled_for ? (
- <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
- <Clock size={11} />
- {new Date(post.scheduled_for).toLocaleString("en-US", {
- month: "short", day: "numeric",
- hour: "2-digit", minute: "2-digit",
- })}
+ </td>
+ <td>
+ <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+ {spPlatformMark(post.platform)} {cfg.label}
  </span>
- ) : null}
- {post.content ? <span>{post.content.length} chars</span> : null}
- </div>
- </div>
- </div>
-
- <div style={{ display: "flex", flexShrink: 0, gap: 4 }}>
- <IconButton
- label={isPublishLocked(post) ? "View post (read-only)" : "Edit post"}
- onClick={() => handleEditPost(post)}
- >
- <Wand2 size={14} />
- </IconButton>
- {isPublishLocked(post) ? (
- <IconButton label="Duplicate as draft" onClick={() => openAsDraftCopy(post)}>
- <Copy size={14} />
- </IconButton>
- ) : null}
+ </td>
+ <td style={{ whiteSpace: "nowrap" }}>{post.content_job || "—"}</td>
+ <td style={{ whiteSpace: "nowrap" }}>
+ {post.campaign_name || post.campaign_title || (post.campaign_id ? "Campaign" : "—")}
+ </td>
+ <td style={{ whiteSpace: "nowrap" }}>
+ {post.scheduled_for
+ ? new Date(post.scheduled_for).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+ : "Unscheduled"}
+ </td>
+ <td><span className={`status-pill ${statusPillClass}`}>{statusCfg.label}</span></td>
+ <td style={{ whiteSpace: "nowrap" }}>{perf}</td>
+ <td>
+ <div style={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+ <button type="button" className="icon-btn" aria-label={locked ? "View post" : "Edit post"} onClick={() => handleEditPost(post)}>
+ <Pencil size={14} />
+ </button>
  {post.status === "scheduled" ? (
- <IconButton
- label="Publish now"
- onClick={() => handlePublishPost(post.id)}
- busy={publishingId === post.id}
- hoverColor="#15803d"
- >
- <Send size={14} />
- </IconButton>
+ <button type="button" className="icon-btn" aria-label="Publish now" onClick={() => handlePublishPost(post.id)}>
+ {publishingId === post.id ? <Loader2 size={13} className="animate-spin" /> : <Send size={14} />}
+ </button>
  ) : null}
- <IconButton label="Delete post" onClick={() => requestDeletePost(post)}>
+ {locked ? (
+ <button type="button" className="icon-btn" aria-label="Duplicate as draft" onClick={() => openAsDraftCopy(post)}>
+ <Copy size={14} />
+ </button>
+ ) : null}
+ <button type="button" className="icon-btn" aria-label="Delete post" onClick={() => requestDeletePost(post)}>
  <Trash2 size={14} />
- </IconButton>
+ </button>
  </div>
- </div>
- </div>
+ </td>
+ </tr>
  );
- })
+ })}
+ </tbody>
+ </table>
+ </div>
  ) : (
  <EmptyState
  icon={Share2}
