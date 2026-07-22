@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { DashboardLayout } from "../components/Layout";
 import AskTheHouseDrawer from "../components/ask-the-house/AskTheHouseDrawer";
 import { useWorkspace } from "../context/WorkspaceContext";
 import apiClient from "../lib/apiClient";
@@ -36,6 +35,8 @@ import {
  AlertCircle,
  RefreshCw,
  Copy,
+ BookOpen,
+ Link2,
 } from "lucide-react";
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import CampaignContextBanner from "../components/shared/CampaignContextBanner";
@@ -2435,51 +2436,50 @@ export default function SocialMediaManager() {
  : "Save as Draft";
 
  return (
- <DashboardLayout>
- <div className="cth-social-planner">
- <header className="cth-page-header">
-        <div className="min-w-0 flex-1">
-          <h1
-            className="text-2xl md:text-[32px] leading-tight truncate"
-            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-ink)", margin: 0 }}
-          >
-            Social Media Manager
-          </h1>
-          <p
-            className="text-xs md:text-sm truncate"
-            style={{ margin: "6px 0 0 0", color: "var(--cth-muted)", fontFamily: "'DM Sans', sans-serif" }}
-          >
-            {`${totalPosts} posts / ${totalScheduled} scheduled / ${totalPublished} published`}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
- <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+ <div className="cth-social-planner cth-sp-fullbleed">
+ <main className="app-shell">
  <button
  type="button"
- onClick={() => { setDrawerTab("campaign"); openCampaignDrawer(); }}
- style={{
- ...SECONDARY_BUTTON_STYLE,
- padding: "10px 16px",
- background: "var(--cth-blush)",
- color: "var(--cth-purple-deep)",
- fontWeight: 600,
- }}
+ className="cth-sp-back"
+ onClick={() => navigate("/command-center")}
  >
- <LayoutIcon size={15} /> From Campaign
+ <ChevronLeft size={15} /> Back to Command Center
  </button>
+ <header className="page-header">
+        <div className="header-copy">
+          <div className="eyebrow">Core Truth House</div>
+          <h1>Social Planner</h1>
+          <p className="subtitle">
+            Turn your brand strategy into a clear publishing rhythm. Plan the message, shape it for
+            each platform, and move it from idea to published content.
+          </p>
+        </div>
+        <div className="header-actions">
  <button
  data-testid="create-post-btn"
  type="button"
+ className="btn btn-primary"
  onClick={() => {
  setSelectedPlatforms(["instagram"]);
  setFormData((d) => ({ ...d, platform: d.platform || "instagram" }));
  setShowModal("post");
  }}
- style={PRIMARY_BUTTON_STYLE}
  >
  <Plus size={16} /> Create Post
  </button>
- </div>
+ <button type="button" className="btn btn-secondary" onClick={() => setZuriChatOpen(true)}>
+ <Sparkles size={16} /> Ask the House
+ </button>
+ <button type="button" className="btn btn-secondary" onClick={() => navigate("/content-studio")}>
+ <BookOpen size={16} /> Libraries
+ </button>
+ <button
+ type="button"
+ className="btn btn-secondary"
+ onClick={() => { setDrawerTab("campaign"); openCampaignDrawer(); }}
+ >
+ <LayoutIcon size={16} /> Campaigns
+ </button>
         </div>
       </header>
 
@@ -2501,14 +2501,14 @@ export default function SocialMediaManager() {
  </div>
  ) : (
  <>
- <div style={{ marginBottom: 24, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
- <div>
- <Eyebrow>Social Planner</Eyebrow>
- <p style={{ fontFamily: SANS, fontSize: 14, color: "var(--cth-muted)", margin: "8px 0 0" }}>
- Plan, schedule, and publish across every channel from one workspace.
- </p>
+ <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+ <MetricTile label="Total Posts" value={totalPosts} accent="var(--cth-purple-deep)" />
+ <MetricTile label="Scheduled" value={totalScheduled} accent="var(--cth-gold)" />
+ <MetricTile label="Published" value={totalPublished} accent="#15803d" />
+ <MetricTile label="Drafts" value={totalDrafts} accent="var(--cth-muted)" />
  </div>
- <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+
+ <div style={{ marginBottom: 24, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
  <TabBar value={activeView} onChange={setActiveView} />
  <button
  type="button"
@@ -2519,14 +2519,6 @@ export default function SocialMediaManager() {
  {refreshing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
  Refresh
  </button>
- </div>
- </div>
-
- <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
- <MetricTile label="Total Posts" value={totalPosts} accent="var(--cth-purple-deep)" />
- <MetricTile label="Scheduled" value={totalScheduled} accent="var(--cth-gold)" />
- <MetricTile label="Published" value={totalPublished} accent="#15803d" />
- <MetricTile label="Drafts" value={totalDrafts} accent="var(--cth-muted)" />
  </div>
 
  {activeView === "publish" && (
@@ -4120,7 +4112,7 @@ export default function SocialMediaManager() {
 
  <ConfirmModal confirm={confirm} busy={confirmBusy} onCancel={cancelConfirm} onConfirm={performConfirm} />
  <Toast toast={toast} />
+ </main>
  </div>
- </DashboardLayout>
  );
 }
