@@ -40,6 +40,7 @@ import {
  UserRound,
  BarChart3,
  Heart,
+ Image as ImageIcon,
 } from "lucide-react";
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import CampaignContextBanner from "../components/shared/CampaignContextBanner";
@@ -3295,43 +3296,30 @@ export default function SocialMediaManager() {
  aria-modal="true"
  onClick={(e) => e.stopPropagation()}
  style={{
- width: "100%", maxWidth: 760,
+ width: "100%", maxWidth: 1100,
  maxHeight: "90dvh",
  background: "var(--cth-panel-white)",
  border: "1px solid var(--cth-border)",
- borderRadius: 4,
+ borderRadius: 8,
  boxShadow: "0 30px 60px rgba(13,0,16,0.30)",
  display: "flex", flexDirection: "column",
  overflow: "hidden",
  }}
  >
- <div style={{
- display: "flex", alignItems: "center", justifyContent: "space-between",
- padding: "18px 24px", borderBottom: "1px solid var(--cth-border)",
- }}>
+ <div className="modal-header">
  <div>
- <Eyebrow>
- {formData.recycle_mode
- ? "Recycle"
- : formData.duplicate_mode
- ? "Duplicate"
- : editingLocked
- ? "Read Only"
- : editingPostId
- ? "Edit"
- : "New"}
- </Eyebrow>
- <h3 style={{
- fontFamily: SERIF, fontSize: 20, fontWeight: 600,
- color: "var(--cth-ink)", margin: "4px 0 0",
- }}>{modalTitle}</h3>
+ <div className="eyebrow">Social Planner</div>
+ <h2 className="drawer-title">{modalTitle}</h2>
+ <p className="inner-subtitle">Build one strategic content brief and shape the final version for each platform.</p>
  </div>
  <IconButton label="Close modal" onClick={closePostModal}>
  <X size={16} />
  </IconButton>
  </div>
 
- <div style={{ flex: 1, overflowY: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 18 }}>
+ <div className="modal-body" style={{ flex: 1 }}>
+ <div className="composer-grid">
+ <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
  {editingLocked ? (
  <div style={{
  display: "flex", gap: 10, alignItems: "flex-start",
@@ -3360,6 +3348,74 @@ export default function SocialMediaManager() {
  </div>
  </div>
  ) : null}
+
+ <div>
+ <div className="section-kicker">Content Brief</div>
+ <div className="form-grid" style={{ marginTop: 10 }}>
+ <div className="field">
+ <label>Content Pillar</label>
+ <select
+ disabled={editingLocked}
+ value={formData.content_pillar || ""}
+ onChange={(e) => setFormData((d) => ({ ...d, content_pillar: e.target.value }))}
+ >
+ <option value="">Select pillar</option>
+ <option>Brand Strategy</option>
+ <option>Founder Leadership</option>
+ <option>Client Transformation</option>
+ <option>Systems &amp; Operations</option>
+ <option>Offers &amp; Conversion</option>
+ </select>
+ </div>
+ <div className="field">
+ <label>Content Job</label>
+ <select
+ disabled={editingLocked}
+ value={formData.content_job || ""}
+ onChange={(e) => setFormData((d) => ({ ...d, content_job: e.target.value }))}
+ >
+ <option value="">Select job</option>
+ <option>Generate Demand</option>
+ <option>Convert Demand</option>
+ <option>Build Loyalty</option>
+ </select>
+ </div>
+ <div className="field">
+ <label>Format</label>
+ <select
+ disabled={editingLocked}
+ value={formData.format || ""}
+ onChange={(e) => setFormData((d) => ({ ...d, format: e.target.value }))}
+ >
+ <option value="">Select format</option>
+ <option>Carousel</option>
+ <option>Text Post</option>
+ <option>Short-form Video</option>
+ <option>Static Graphic</option>
+ <option>Story</option>
+ <option>Reel</option>
+ </select>
+ </div>
+ <div className="field">
+ <label>CTA</label>
+ <input
+ disabled={editingLocked}
+ value={formData.cta_text || ""}
+ onChange={(e) => setFormData((d) => ({ ...d, cta_text: e.target.value }))}
+ placeholder="e.g. Start with the Brand Diagnostic"
+ />
+ </div>
+ <div className="field full">
+ <label>Hook</label>
+ <input
+ disabled={editingLocked}
+ value={formData.hook || ""}
+ onChange={(e) => setFormData((d) => ({ ...d, hook: e.target.value }))}
+ placeholder="The first line that stops the scroll"
+ />
+ </div>
+ </div>
+ </div>
 
  <div>
  <FieldLabel>Platforms</FieldLabel>
@@ -3911,11 +3967,79 @@ export default function SocialMediaManager() {
  </div>
  </div>
 
- <div style={{
- display: "flex", justifyContent: "flex-end", gap: 10,
- padding: "16px 24px", borderTop: "1px solid var(--cth-border)",
- background: "var(--cth-panel-white)",
- }}>
+ <div>
+ <div className="section-kicker">Platform Preview</div>
+ <div className="preview-panel">
+ <div className="preview-tabs">
+ {(selectedPlatforms.length ? selectedPlatforms : [activePlatformKey]).map((pid) => {
+ const cfg = PLATFORM_CFG[pid] || PLATFORM_CFG.instagram;
+ return (
+ <button
+ key={pid}
+ type="button"
+ className={`preview-tab${activePlatformKey === pid ? " active" : ""}`}
+ onClick={() => setActivePlatformTab(pid)}
+ >
+ {cfg.label}
+ </button>
+ );
+ })}
+ </div>
+ <div className="preview-content">
+ <div className="social-preview">
+ <div className="social-preview-head">
+ <div className="mini-avatar">CTH</div>
+ <div>
+ <strong>{gridProfile.display_name || "Core Truth House"}</strong>
+ <div className="muted" style={{ fontSize: 9 }}>Preview · {gridProfile.handle || "@coretruthhouse"}</div>
+ </div>
+ </div>
+ <div className="social-preview-media">
+ <span className="preview-size-badge">
+ {({
+ instagram: "1080 × 1350 · 4:5",
+ facebook: "1200 × 630 · 1.91:1",
+ linkedin: "1200 × 627 · 1.91:1",
+ tiktok: "1080 × 1920 · 9:16",
+ pinterest: "1000 × 1500 · 2:3",
+ google_business: "1200 × 900 · 4:3",
+ threads: "1080 × 1350 · 4:5",
+ }[activePlatformKey] || "1080 × 1350 · 4:5")}
+ </span>
+ {mediaPreview[0]?.url && mediaPreview[0]?.type !== "video" ? (
+ <img src={backendAssetUrl(mediaPreview[0].url)} alt="" />
+ ) : (
+ <ImageIcon size={38} />
+ )}
+ </div>
+ <div className="social-preview-copy">
+ {formData.hook ? (
+ <><strong>{formData.hook}</strong>{"\n\n"}</>
+ ) : null}
+ {activePlatformData.content || formData.content ? (
+ activePlatformData.content || formData.content
+ ) : (
+ <span className="muted">Your caption preview appears here as you write.</span>
+ )}
+ {(activePlatformData.hashtags || formData.hashtags || []).length ? (
+ <>
+ {"\n\n"}
+ <span style={{ color: "#666" }}>
+ {(activePlatformData.hashtags || formData.hashtags || [])
+ .map((h) => (String(h).startsWith("#") ? h : `#${h}`))
+ .join(" ")}
+ </span>
+ </>
+ ) : null}
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div className="modal-footer">
  <button type="button" onClick={closePostModal} style={SECONDARY_BUTTON_STYLE}>
  {editingLocked ? "Close" : "Cancel"}
  </button>
