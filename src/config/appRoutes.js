@@ -56,6 +56,27 @@ export const APP_ROUTES = [
       "Upgrade to Foundation to unlock the Command Center.",
   },
 
+  {
+    path: "/command-center-next",
+    label: "Command Center (New)",
+    group: "workspaceCore",
+    requiredPlan: "foundation",
+    gateType: "page",
+    hidden: true,
+    tooltip: "Preview of the rebuilt Command Center shell.",
+    lockedTooltip: "Upgrade to Foundation to unlock the Command Center.",
+  },
+  {
+    path: "/workspace",
+    label: "Workspace",
+    group: "workspaceCore",
+    requiredPlan: "foundation",
+    gateType: "page",
+    hidden: true,
+    tooltip: "Everything the House is building, storing, and organizing for your brand.",
+    lockedTooltip: "Upgrade to Foundation to unlock the Workspace.",
+  },
+
     {
     path: "/brand-audit",
     label: "Brand Audit",

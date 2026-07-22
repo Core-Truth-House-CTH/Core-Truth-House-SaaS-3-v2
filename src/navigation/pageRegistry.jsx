@@ -4,6 +4,8 @@ import PlaceholderPage from "../pages/PlaceholderPage";
 const makePlaceholder = (title) => () => <PlaceholderPage title={title} />;
 
 const CommandCenter = lazy(() => import("../pages/CommandCenter"));
+const CommandCenterNext = lazy(() => import("../pages/CommandCenterNext"));
+const WorkspacePage = lazy(() => import("../pages/WorkspacePage"));
 const Billing = lazy(() => import("../pages/Billing"));
 const BrandIntelligencePage = lazy(() => import("../pages/BrandIntelligencePage"));
 const BrandAudit = lazy(() => import("../pages/BrandAudit"));
@@ -54,6 +56,8 @@ const FirstCampaign = CampaignBuilder;
 const pageRegistry = {
   "/onboarding": OnboardingWorkflow,
   "/command-center": CommandCenter,
+  "/command-center-next": CommandCenterNext,
+  "/workspace": WorkspacePage,
   "/my-data": TenantDataDashboardV2,
 
   "/brand-audit": BrandAudit,
