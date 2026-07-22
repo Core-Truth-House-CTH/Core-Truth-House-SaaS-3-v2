@@ -12,6 +12,9 @@ import {
  Linkedin,
  Facebook,
  Clock,
+ CalendarDays,
+ Lightbulb,
+ Pencil,
  Send,
  Trash2,
  Wand2,
@@ -641,6 +644,7 @@ export default function SocialMediaManager() {
  const [platforms, setPlatforms] = useState([]);
  const [analytics, setAnalytics] = useState(null);
  const [currentDate, setCurrentDate] = useState(new Date());
+ const [calendarMode, setCalendarMode] = useState("month");
  const [showModal, setShowModal] = useState(null);
  const [editingPostId, setEditingPostId] = useState(null);
  const [formData, setFormData] = useState({});
@@ -2065,6 +2069,216 @@ export default function SocialMediaManager() {
  setCurrentDate(d);
  }
 
+ // ----- shared calendar helpers (visual; all fed by real posts/calendarData) -----
+ const openNewPost = () => {
+ setSelectedPlatforms(["instagram"]);
+ setFormData((d) => ({ ...d, platform: d.platform || "instagram" }));
+ setShowModal("post");
+ };
+ const spStatusColor = (status) =>
+ status === "published" ? "#238a57"
+ : status === "scheduled" ? "#7b2ca7"
+ : status === "draft" ? "var(--cth-gold)"
+ : "#9f7d84";
+ const spTime = (raw) => {
+ if (!raw) return "";
+ const d = new Date(raw);
+ return Number.isNaN(d.getTime()) ? "" : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+ };
+ const spPlatformMark = (platform) => {
+ const cfg = PLATFORM_CFG[platform] || PLATFORM_CFG.instagram;
+ const Icon = cfg.icon;
+ return (
+ <span className="platform-mark" style={{ background: cfg.color }}>
+ <Icon size={9} />
+ </span>
+ );
+ };
+ const isoDate = (d) =>
+ `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+ const WEEK_SLOTS = [
+ { label: "8:00 AM", h: 8 }, { label: "10:00 AM", h: 10 }, { label: "12:00 PM", h: 12 },
+ { label: "2:00 PM", h: 14 }, { label: "4:00 PM", h: 16 }, { label: "6:00 PM", h: 18 },
+ ];
+ const weekSlotIndex = (hour) => {
+ let idx = 0;
+ for (let i = 0; i < WEEK_SLOTS.length; i += 1) if (hour >= WEEK_SLOTS[i].h) idx = i;
+ return idx;
+ };
+
+ function renderWeekView() {
+ const today = new Date(); today.setHours(0, 0, 0, 0);
+ const weekStart = new Date(currentDate);
+ weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+ weekStart.setHours(0, 0, 0, 0);
+ const days = Array.from({ length: 7 }, (_, i) => {
+ const d = new Date(weekStart); d.setDate(weekStart.getDate() + i); return d;
+ });
+ const names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+ const isToday = (d) => d.getTime() === today.getTime();
+
+ return (
+ <div className="calendar-card week-view-scroll">
+ <div className="week-calendar">
+ <div className="week-header-spacer"><Clock size={15} /></div>
+ {days.map((d) => (
+ <div className={`week-day-header${isToday(d) ? " today" : ""}`} key={isoDate(d)}>
+ <span className="week-day-name">{names[d.getDay()]}</span>
+ <span className="week-day-number">{d.getDate()}</span>
+ </div>
+ ))}
+ {WEEK_SLOTS.map((slot, si) => (
+ <React.Fragment key={slot.label}>
+ <div className="week-time">{slot.label}</div>
+ {days.map((d) => {
+ const dayPosts = (calendarData[isoDate(d)] || []).filter((p) => {
+ const raw = p.scheduled_for || p.created_at;
+ if (!raw) return si === 0;
+ return weekSlotIndex(new Date(raw).getHours()) === si;
+ });
+ return (
+ <div className={`week-slot${isToday(d) ? " is-today" : ""}`} key={isoDate(d) + si}>
+ {dayPosts.length > 0 ? dayPosts.map((post, pi) => (
+ <div
+ key={pi}
+ className="week-event"
+ role="button"
+ tabIndex={0}
+ onClick={() => handleEditPost(post)}
+ onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleEditPost(post); } }}
+ >
+ <div className="week-event-time">{spPlatformMark(post.platform)}{spTime(post.scheduled_for || post.created_at)}</div>
+ <div className="week-event-title">{post.content?.slice(0, 50) || "Untitled"}</div>
+ </div>
+ )) : (
+ <button type="button" className="week-empty-cta" onClick={openNewPost}>+ Add post</button>
+ )}
+ </div>
+ );
+ })}
+ </React.Fragment>
+ ))}
+ </div>
+ </div>
+ );
+ }
+
+ function renderListView() {
+ const groups = Object.keys(calendarData)
+ .filter((dateStr) => {
+ const [y, mo] = dateStr.split("-").map(Number);
+ return y === currentYear && mo === currentMonth;
+ })
+ .sort();
+ if (groups.length === 0) {
+ return <div className="calendar-card"><div className="list-empty-day">No posts scheduled this month.</div></div>;
+ }
+ return (
+ <div className="calendar-card list-calendar">
+ {groups.map((dateStr) => {
+ const dPosts = [...(calendarData[dateStr] || [])].sort(
+ (a, b) => new Date(a.scheduled_for || a.created_at || 0) - new Date(b.scheduled_for || b.created_at || 0)
+ );
+ const dObj = new Date(`${dateStr}T00:00:00`);
+ return (
+ <section className="list-date-group" key={dateStr}>
+ <div className="list-date-heading">
+ <div className="list-date-day">{dObj.toLocaleDateString([], { weekday: "long" })}</div>
+ <div className="list-date-number">{dObj.toLocaleDateString([], { month: "long", day: "numeric" })}</div>
+ <div className="list-date-count">{dPosts.length} {dPosts.length === 1 ? "post" : "posts"}</div>
+ </div>
+ <div className="list-posts">
+ {dPosts.map((post, pi) => {
+ const st = post.status || "scheduled";
+ const pillClass = st === "published" ? "published" : st === "draft" ? "approval" : "scheduled";
+ const cfg = PLATFORM_CFG[post.platform] || {};
+ return (
+ <article
+ key={pi}
+ className="list-post"
+ role="button"
+ tabIndex={0}
+ onClick={() => handleEditPost(post)}
+ onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleEditPost(post); } }}
+ >
+ <div className="list-time">{spTime(post.scheduled_for || post.created_at)}</div>
+ {spPlatformMark(post.platform)}
+ <div className="list-title">
+ {post.content?.slice(0, 60) || "Untitled"}
+ <span className="list-subtitle">{cfg.label || post.platform}</span>
+ </div>
+ <span className={`status-pill ${pillClass}`}>
+ <span className="status-dot" style={{ background: spStatusColor(st) }} />
+ {st.charAt(0).toUpperCase() + st.slice(1)}
+ </span>
+ <div className="list-actions"><span className="icon-btn" aria-hidden="true"><Pencil size={13} /></span></div>
+ </article>
+ );
+ })}
+ </div>
+ </section>
+ );
+ })}
+ </div>
+ );
+ }
+
+ function renderCalendarRail() {
+ const now = new Date();
+ const all = posts || [];
+ const inMonth = all.filter((p) => {
+ if (!p.scheduled_for) return false;
+ const d = new Date(p.scheduled_for);
+ return d.getFullYear() === currentYear && d.getMonth() + 1 === currentMonth;
+ });
+ const scheduledCount = inMonth.filter((p) => p.status === "scheduled").length;
+ const publishedCount = inMonth.filter((p) => p.status === "published").length;
+ const upcoming = all
+ .filter((p) => p.scheduled_for && new Date(p.scheduled_for) >= now)
+ .sort((a, b) => new Date(a.scheduled_for) - new Date(b.scheduled_for));
+ const nextUp = upcoming[0];
+ const connectedCount = Object.values(connections || {}).filter(Boolean).length;
+ const drafts = all.filter((p) => p.status === "draft" || !p.scheduled_for).slice(0, 5);
+
+ return (
+ <aside className="right-rail">
+ <section className="panel rail-card">
+ <div className="rail-card-title">This Month</div>
+ <div className="focus-list">
+ <div><div className="focus-label">Scheduled</div><div className="focus-value">{scheduledCount} post{scheduledCount === 1 ? "" : "s"}</div></div>
+ <div><div className="focus-label">Published</div><div className="focus-value">{publishedCount} post{publishedCount === 1 ? "" : "s"}</div></div>
+ <div><div className="focus-label">Next up</div><div className="focus-value">{nextUp ? `${new Date(nextUp.scheduled_for).toLocaleDateString([], { month: "short", day: "numeric" })} · ${(PLATFORM_CFG[nextUp.platform] || {}).label || nextUp.platform}` : "Nothing scheduled"}</div></div>
+ <div><div className="focus-label">Connected platforms</div><div className="focus-value">{connectedCount} connected</div></div>
+ </div>
+ </section>
+ <section className="panel rail-card">
+ <div className="rail-card-title">Key Dates <button type="button" className="inline-link" onClick={openNewPost}>+ Add</button></div>
+ {upcoming.length === 0 ? (
+ <div className="focus-value muted">No upcoming scheduled posts.</div>
+ ) : upcoming.slice(0, 5).map((post, i) => (
+ <button type="button" key={i} className="key-date" style={{ border: 0, background: "transparent", width: "100%", textAlign: "left", cursor: "pointer" }} onClick={() => handleEditPost(post)}>
+ <CalendarDays size={13} />
+ <strong>{new Date(post.scheduled_for).toLocaleDateString([], { month: "short", day: "numeric" })}</strong>
+ <span>{post.content?.slice(0, 30) || "Untitled"}</span>
+ </button>
+ ))}
+ </section>
+ <section className="panel rail-card">
+ <div className="rail-card-title">Unscheduled Ideas <button type="button" className="inline-link" onClick={() => setActiveView("posts")}>View All</button></div>
+ {drafts.length === 0 ? (
+ <div className="focus-value muted">No unscheduled drafts.</div>
+ ) : drafts.map((post, i) => (
+ <button type="button" key={i} className="idea-item" style={{ border: 0, background: "transparent", width: "100%", textAlign: "left", cursor: "pointer" }} onClick={() => handleEditPost(post)}>
+ <Lightbulb size={13} />
+ <span>{post.content?.slice(0, 40) || "Untitled draft"}</span>
+ </button>
+ ))}
+ </section>
+ </aside>
+ );
+ }
+
  function renderCalendar() {
  const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
  const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
@@ -2336,6 +2550,11 @@ export default function SocialMediaManager() {
  {activeView === "publish" && (
  <div className="view-pane active">
  <div className="toolbar">
+ <div className="segmented" aria-label="Calendar view mode">
+ <button type="button" className={`segment${calendarMode === "month" ? " active" : ""}`} onClick={() => setCalendarMode("month")}>Month</button>
+ <button type="button" className={`segment${calendarMode === "week" ? " active" : ""}`} onClick={() => setCalendarMode("week")}>Week</button>
+ <button type="button" className={`segment${calendarMode === "list" ? " active" : ""}`} onClick={() => setCalendarMode("list")}>List</button>
+ </div>
  <div className="month-control">
  <button
  type="button"
@@ -2359,6 +2578,9 @@ export default function SocialMediaManager() {
  </div>
  </div>
 
+ <div className="calendar-layout">
+ <div>
+ {calendarMode === "month" && (
  <div className="calendar-card">
  <div className="weekdays">
  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
@@ -2369,8 +2591,11 @@ export default function SocialMediaManager() {
  {renderCalendar()}
  </div>
  </div>
+ )}
+ {calendarMode === "week" && renderWeekView()}
+ {calendarMode === "list" && renderListView()}
 
- {Object.keys(calendarData).length === 0 ? (
+ {calendarMode === "month" && Object.keys(calendarData).length === 0 ? (
  <div style={{ marginTop: 16 }}>
  <EmptyState
  icon={CalendarIcon}
@@ -2379,6 +2604,10 @@ export default function SocialMediaManager() {
  />
  </div>
  ) : null}
+ </div>
+
+ {renderCalendarRail()}
+ </div>
  </div>
  )}
 

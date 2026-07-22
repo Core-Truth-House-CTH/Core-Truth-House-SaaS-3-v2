@@ -865,3 +865,13 @@
       .cth-social-planner .list-post .list-job, .cth-social-planner .list-post .list-campaign { display: none; }
       .cth-social-planner .list-actions { display: none; }
     }
+
+/* ----- reskin adjustments for the real (multi-post) data ----- */
+.cth-social-planner .list-post {
+  grid-template-columns: 74px 34px minmax(160px, 1fr) auto auto;
+}
+.cth-social-planner .week-slot { display: flex; flex-direction: column; gap: 6px; }
+.cth-social-planner .week-event { height: auto; min-height: 64px; }
+.cth-social-planner .week-empty-cta { position: static; opacity: 0; height: 100%; min-height: 40px; }
+.cth-social-planner .week-slot:hover .week-empty-cta { opacity: 1; }
+.cth-social-planner .list-actions .icon-btn { color: var(--cth-ruby); }
