@@ -2071,8 +2071,24 @@ export default function SocialMediaManager() {
  const cells = [];
  const today = new Date().toISOString().slice(0, 10);
 
+ // Status → dot color (visual only; mirrors the prototype's status accents).
+ const statusDot = (status) => {
+ if (status === "published") return "#238a57";
+ if (status === "scheduled") return "#7b2ca7";
+ if (status === "draft") return "var(--cth-gold)";
+ return "#9f7d84";
+ };
+ const postTime = (post) => {
+ const raw = post?.scheduled_for || post?.created_at;
+ if (!raw) return "";
+ const d = new Date(raw);
+ return Number.isNaN(d.getTime())
+ ? ""
+ : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+ };
+
  for (let i = 0; i < firstDay; i += 1) {
- cells.push(<div key={`e-${i}`} style={{ minHeight: 120, background: "transparent" }} />);
+ cells.push(<div key={`e-${i}`} className="day-cell outside" />);
  }
 
  for (let day = 1; day <= daysInMonth; day += 1) {
@@ -2081,97 +2097,47 @@ export default function SocialMediaManager() {
  const isToday = today === dateStr;
 
  cells.push(
- <div
- key={day}
- style={{
- minHeight: 140,
- padding: 10,
- borderRadius: 4,
- background: isToday ? "rgba(175,0,42,0.06)" : "var(--cth-command-panel)",
- border: `1px solid ${isToday ? "var(--cth-command-crimson)" : "var(--cth-command-border)"}`,
- display: "flex",
- flexDirection: "column",
- gap: 8,
- }}
- >
- <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
- <span
- style={{
- display: "inline-flex",
- alignItems: "center",
- justifyContent: "center",
- minWidth: 24,
- height: 24,
- padding: "0 8px",
- borderRadius: 999,
- background: isToday ? "var(--cth-command-crimson)" : "var(--cth-command-panel-soft)",
- color: isToday ? "var(--cth-command-ivory)" : "var(--cth-command-ink)",
- fontFamily: SANS,
- fontSize: 12,
- fontWeight: 600,
- }}
- >
- {day}
- </span>
- {dayPosts.length > 0 ? (
- <span style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)" }}>
- {dayPosts.length}
- </span>
- ) : null}
- </div>
-
- <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+ <div key={day} className={`day-cell${isToday ? " is-today" : ""}`}>
+ <div className="day-number">{day}</div>
  {dayPosts.slice(0, 3).map((post, i) => {
  const cfg = PLATFORM_CFG[post.platform] || PLATFORM_CFG.instagram;
  const Icon = cfg.icon;
+ const time = postTime(post);
  return (
- <button
+ <div
  key={i}
- type="button"
+ className="post-card"
+ role="button"
+ tabIndex={0}
  onClick={() => handleEditPost(post)}
- style={{
- display: "flex",
- alignItems: "center",
- gap: 6,
- width: "100%",
- padding: "5px 8px",
- borderRadius: 4,
- background: `${cfg.color}12`,
- border: `1px solid ${cfg.color}25`,
- color: "var(--cth-command-ink)",
- fontFamily: SANS,
- fontSize: 11,
- textAlign: "left",
- cursor: "pointer",
+ onKeyDown={(e) => {
+ if (e.key === "Enter" || e.key === " ") {
+ e.preventDefault();
+ handleEditPost(post);
+ }
  }}
  >
- <Icon size={11} style={{ color: cfg.color, flexShrink: 0 }} />
- <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
- {post.content?.slice(0, 26) || "Untitled"}
+ <div className="post-top">
+ <span className="platform-mark" style={{ background: cfg.color }}>
+ <Icon size={9} />
  </span>
- </button>
+ {time ? <span>{time}</span> : null}
+ <span className="status-dot" style={{ background: statusDot(post.status) }} />
+ </div>
+ <div className="post-title">{post.content?.slice(0, 40) || "Untitled"}</div>
+ </div>
  );
  })}
  {dayPosts.length > 3 ? (
  <button
  type="button"
+ className="inline-link"
+ style={{ padding: "4px 0 0", fontSize: 10 }}
  onClick={() => handleEditPost(dayPosts[3])}
- style={{
- background: "transparent",
- border: "none",
- padding: "0 0 0 4px",
- fontFamily: SANS,
- fontSize: 11,
- fontWeight: 600,
- color: "var(--cth-command-muted)",
- cursor: "pointer",
- textAlign: "left",
- }}
  >
  +{dayPosts.length - 3} more
  </button>
  ) : null}
- </div>
  </div>
  );
  }
@@ -2368,55 +2334,39 @@ export default function SocialMediaManager() {
  </div>
 
  {activeView === "publish" && (
- <Panel
- eyebrow="Publish Calendar"
- title={currentDate.toLocaleString("default", { month: "long", year: "numeric" })}
- subtitle="View scheduled posts, open drafts, and manage your publishing flow."
- action={
- <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+ <div className="view-pane active">
+ <div className="toolbar">
+ <div className="month-control">
  <button
+ type="button"
+ className="icon-btn"
  data-testid="prev-month"
- type="button"
- onClick={() => navigateMonth(-1)}
  aria-label="Previous month"
- style={{ ...SECONDARY_BUTTON_STYLE, width: 38, height: 38, padding: 0 }}
+ onClick={() => navigateMonth(-1)}
  >
- <ChevronLeft size={16} />
+ <ChevronLeft size={18} />
  </button>
+ <strong>{currentDate.toLocaleString("default", { month: "long", year: "numeric" })}</strong>
  <button
- data-testid="next-month"
  type="button"
- onClick={() => navigateMonth(1)}
+ className="icon-btn"
+ data-testid="next-month"
  aria-label="Next month"
- style={{ ...SECONDARY_BUTTON_STYLE, width: 38, height: 38, padding: 0 }}
+ onClick={() => navigateMonth(1)}
  >
- <ChevronRight size={16} />
+ <ChevronRight size={18} />
  </button>
  </div>
- }
- padding={20}
- >
- <div style={{ overflowX: "auto" }}>
- <div style={{ minWidth: 720 }}>
- <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginBottom: 6 }}>
- {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
- <div
- key={d}
- style={{
- ...EYEBROW_STYLE,
- fontSize: 10,
- letterSpacing: "0.18em",
- textAlign: "center",
- padding: "8px 0",
- }}
- >
- {d}
  </div>
+
+ <div className="calendar-card">
+ <div className="weekdays">
+ {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+ <div className="weekday" key={d}>{d}</div>
  ))}
  </div>
- <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+ <div className="calendar-grid">
  {renderCalendar()}
- </div>
  </div>
  </div>
 
@@ -2429,7 +2379,7 @@ export default function SocialMediaManager() {
  />
  </div>
  ) : null}
- </Panel>
+ </div>
  )}
 
  {activeView === "grid" && (

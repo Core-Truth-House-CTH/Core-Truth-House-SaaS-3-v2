@@ -272,8 +272,10 @@
     .cth-social-planner .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      grid-template-rows: repeat(5, minmax(118px, 1fr));
+      grid-auto-rows: minmax(118px, auto);
     }
+    .cth-social-planner .day-cell.is-today { background: rgba(175,0,36,.05); }
+    .cth-social-planner .day-cell.is-today .day-number { color: var(--cth-crimson); font-weight: 700; }
     .cth-social-planner .day-cell {
       min-width: 0;
       border-right: 1px solid var(--cth-border);
