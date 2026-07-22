@@ -2417,12 +2417,34 @@ export default function SocialMediaManager() {
  const engagementDisplay = `${avgEngagement.toFixed(1)}%`;
 
  // Performance snapshot — aggregated from the real post metrics the API already
- // returns (reach/impressions, likes/comments/shares, clicks). No fabricated
- // numbers and no trend deltas we cannot source.
- const sumPostField = (key) => posts.reduce((acc, p) => acc + Number(p[key] || 0), 0);
- const perfReach = sumPostField("reach") || sumPostField("impressions");
- const perfEngagementCount = sumPostField("likes") + sumPostField("comments") + sumPostField("shares");
- const perfClicks = sumPostField("clicks");
+ // returns (reach/impressions, likes/comments/shares, clicks), scoped to the
+ // month in view with a month-over-month delta for the trend arrows. No
+ // fabricated numbers; arrows are hidden when there is no prior-month baseline.
+ const perfNowY = currentDate.getFullYear();
+ const perfNowM = currentDate.getMonth();
+ const perfPrevDate = new Date(perfNowY, perfNowM - 1, 1);
+ const perfPostMonth = (p) => {
+ const d = new Date(p.scheduled_for || p.created_at || 0);
+ return Number.isNaN(d.getTime()) ? null : { y: d.getFullYear(), m: d.getMonth() };
+ };
+ const sumFieldForMonth = (key, y, m) =>
+ posts.reduce((acc, p) => {
+ const pm = perfPostMonth(p);
+ return acc + (pm && pm.y === y && pm.m === m ? Number(p[key] || 0) : 0);
+ }, 0);
+ const engagementForMonth = (y, m) =>
+ sumFieldForMonth("likes", y, m) + sumFieldForMonth("comments", y, m) + sumFieldForMonth("shares", y, m);
+ const reachField = posts.some((p) => Number(p.reach || 0) > 0) ? "reach" : "impressions";
+ const perfReach = sumFieldForMonth(reachField, perfNowY, perfNowM);
+ const perfEngagementCount = engagementForMonth(perfNowY, perfNowM);
+ const perfClicks = sumFieldForMonth("clicks", perfNowY, perfNowM);
+ const prevReach = sumFieldForMonth(reachField, perfPrevDate.getFullYear(), perfPrevDate.getMonth());
+ const prevEngagement = engagementForMonth(perfPrevDate.getFullYear(), perfPrevDate.getMonth());
+ const prevClicks = sumFieldForMonth("clicks", perfPrevDate.getFullYear(), perfPrevDate.getMonth());
+ const pctDelta = (cur, prev) => (prev > 0 ? Math.round(((cur - prev) / prev) * 100) : null);
+ const reachDelta = pctDelta(perfReach, prevReach);
+ const engagementDelta = pctDelta(perfEngagementCount, prevEngagement);
+ const clicksDelta = pctDelta(perfClicks, prevClicks);
  const formatCompact = (n) => {
  const v = Number(n || 0);
  if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
@@ -2640,14 +2662,23 @@ export default function SocialMediaManager() {
  <div className="performance-item">
  <div className="performance-label">Reach</div>
  <div className="performance-value">{formatCompact(perfReach)}</div>
+ {reachDelta !== null ? (
+ <div className={reachDelta >= 0 ? "trend-up" : "trend-down"}>{reachDelta >= 0 ? "↑" : "↓"} {Math.abs(reachDelta)}%</div>
+ ) : null}
  </div>
  <div className="performance-item">
  <div className="performance-label">Engagement</div>
  <div className="performance-value">{formatCompact(perfEngagementCount)}</div>
+ {engagementDelta !== null ? (
+ <div className={engagementDelta >= 0 ? "trend-up" : "trend-down"}>{engagementDelta >= 0 ? "↑" : "↓"} {Math.abs(engagementDelta)}%</div>
+ ) : null}
  </div>
  <div className="performance-item">
  <div className="performance-label">Clicks</div>
  <div className="performance-value">{formatCompact(perfClicks)}</div>
+ {clicksDelta !== null ? (
+ <div className={clicksDelta >= 0 ? "trend-up" : "trend-down"}>{clicksDelta >= 0 ? "↑" : "↓"} {Math.abs(clicksDelta)}%</div>
+ ) : null}
  </div>
  <div className="performance-item">
  <div className="performance-label">Best Post</div>
@@ -2685,31 +2716,12 @@ export default function SocialMediaManager() {
  )}
 
  {activeView === "grid" && (
- <div data-testid="instagram-grid-planner" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
- <Panel padding={24}>
- <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+ <div data-testid="instagram-grid-planner">
             <div className="inner-header">
               <div>
-                <div className="section-kicker" style={{ color: "var(--cth-crimson)" }}>Profile</div>
-                <p className="muted" style={{ margin: "4px 0 0", fontSize: 12 }}>
-                  Edit by hand or pull live data from a connected Instagram account.
-                </p>
-                {igConnection?.username ? (
-                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                    <span className="status-pill published"><span className="status-dot" style={{ background: "#5bac76" }} />Instagram</span>
-                    <span className="muted" style={{ fontSize: 12 }}>@{igConnection.username}</span>
-                    {linkedFacebookPageName ? (
-                      <>
-                        <span className="status-pill published"><span className="status-dot" style={{ background: "#5bac76" }} />Facebook</span>
-                        <span className="muted" style={{ fontSize: 12 }}>{linkedFacebookPageName}</span>
-                      </>
-                    ) : null}
-                  </div>
-                ) : !igConnectionLoading ? (
-                  <div style={{ marginTop: 8 }}>
-                    <span className="status-pill" style={{ background: "var(--cth-blush)", color: "var(--cth-ruby)" }}>Not connected</span>
-                  </div>
-                ) : null}
+                <div className="eyebrow">Visual Planning</div>
+                <h2 className="inner-title">Instagram Grid</h2>
+                <p className="inner-subtitle">Preview your planned posts as a complete visual story before they publish.</p>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                 {igConnection ? (
@@ -2746,97 +2758,119 @@ export default function SocialMediaManager() {
                   style={{ opacity: (syncingProfile || !igConnection) ? 0.7 : 1 }}
                 >
                   {syncingProfile ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                  {syncingProfile ? "Syncing…" : "Sync from Instagram"}
+                  {syncingProfile ? "Syncing…" : "Sync Profile"}
+                </button>
+                <button type="button" className="btn btn-small btn-primary" onClick={openNewPost}>
+                  <Plus size={14} /> Add Grid Post
                 </button>
               </div>
             </div>
 
-            <div className="profile-top" style={{ alignItems: "flex-start", flexWrap: "wrap", gap: 20, marginTop: 16 }}>
-              <input
-                ref={gridAvatarInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleGridAvatarSelect}
-                style={{ display: "none" }}
-              />
-
-              <button
-                type="button"
-                className="avatar"
-                onClick={() => gridAvatarInputRef.current?.click()}
-                title="Upload avatar"
-                style={{ overflow: "hidden", padding: 0, cursor: "pointer" }}
-              >
-                {gridProfile.avatar_url ? (
-                  <img
-                    src={backendAssetUrl(gridProfile.avatar_url)}
-                    alt=""
-                    style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
-                  />
-                ) : (
-                  <span style={{ fontSize: 12 }}>Upload</span>
-                )}
-              </button>
-
-              <div style={{ flex: 1, minWidth: 240, display: "flex", flexDirection: "column", gap: 6 }}>
+            <div className="ig-layout">
+              <aside className="profile-card">
                 <input
-                  className="profile-name"
-                  value={gridProfile.handle}
-                  onChange={(e) => setGridProfile((p) => ({ ...p, handle: e.target.value }))}
-                  style={{ background: "transparent", border: "none", outline: "none", padding: 0 }}
+                  ref={gridAvatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleGridAvatarSelect}
+                  style={{ display: "none" }}
                 />
-                <input
-                  value={gridProfile.display_name}
-                  onChange={(e) => setGridProfile((p) => ({ ...p, display_name: e.target.value }))}
-                  style={{ background: "transparent", border: "none", outline: "none", padding: 0, fontWeight: 600, color: "var(--cth-ink)" }}
-                />
-                <input
-                  className="muted"
-                  value={gridProfile.category}
-                  onChange={(e) => setGridProfile((p) => ({ ...p, category: e.target.value }))}
-                  style={{ background: "transparent", border: "none", outline: "none", padding: 0, fontSize: 13 }}
-                />
-                {[1, 2, 3].map((n) => (
-                  <input
-                    key={n}
-                    value={gridProfile[`bio_line_${n}`]}
-                    onChange={(e) => setGridProfile((p) => ({ ...p, [`bio_line_${n}`]: e.target.value }))}
-                    style={{ background: "transparent", border: "none", outline: "none", padding: 0, fontSize: 13, color: "var(--cth-ink)" }}
-                  />
-                ))}
-                <input
-                  value={gridProfile.website}
-                  onChange={(e) => setGridProfile((p) => ({ ...p, website: e.target.value }))}
-                  style={{ background: "transparent", border: "none", outline: "none", padding: 0, fontSize: 13, fontWeight: 600, color: "var(--cth-crimson)" }}
-                />
-              </div>
-
-              <div className="profile-stats" style={{ margin: 0, minWidth: 220, alignSelf: "center" }}>
-                {[
-                  { label: "Posts", value: gridProfile.posts_count || gridSlots.filter((p) => !p?.isEmpty).length },
-                  { label: "Followers", value: gridProfile.followers_count || 0 },
-                  { label: "Following", value: gridProfile.following_count || 0 },
-                ].map((stat) => (
-                  <div className="profile-stat" key={stat.label}>
-                    <strong>{stat.value}</strong>
-                    {stat.label}
+                <div className="profile-top">
+                  <button
+                    type="button"
+                    className="avatar"
+                    onClick={() => gridAvatarInputRef.current?.click()}
+                    title="Upload avatar"
+                    style={{ overflow: "hidden", padding: 0, cursor: "pointer", flexShrink: 0 }}
+                  >
+                    {gridProfile.avatar_url ? (
+                      <img
+                        src={backendAssetUrl(gridProfile.avatar_url)}
+                        alt=""
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: 12 }}>Upload</span>
+                    )}
+                  </button>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <input
+                      className="profile-name"
+                      value={gridProfile.display_name}
+                      onChange={(e) => setGridProfile((p) => ({ ...p, display_name: e.target.value }))}
+                      style={{ background: "transparent", border: "none", outline: "none", padding: 0, width: "100%", fontWeight: 600, color: "var(--cth-ink)" }}
+                    />
+                    <input
+                      className="profile-handle"
+                      value={gridProfile.handle}
+                      onChange={(e) => setGridProfile((p) => ({ ...p, handle: e.target.value }))}
+                      style={{ background: "transparent", border: "none", outline: "none", padding: 0, width: "100%" }}
+                    />
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
- <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
- <div>
- <Eyebrow>Instagram Grid Planner</Eyebrow>
- <p style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-muted)", margin: "4px 0 0" }}>
- Plan 18 posts at a glance in a 4:5 feed layout.
- </p>
- </div>
- <span style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-muted)" }}>
- {gridSlots.filter((p) => !p?.isEmpty).length}/18 filled
- </span>
- </div>
+                <div className="profile-stats">
+                  {[
+                    { label: "Posts", value: gridProfile.posts_count || gridSlots.filter((p) => !p?.isEmpty).length },
+                    { label: "Followers", value: gridProfile.followers_count || 0 },
+                    { label: "Following", value: gridProfile.following_count || 0 },
+                  ].map((stat) => (
+                    <div className="profile-stat" key={stat.label}>
+                      <strong>{stat.value}</strong>
+                      <span>{stat.label}</span>
+                    </div>
+                  ))}
+                </div>
 
+                <div className="bio">
+                  <input
+                    value={gridProfile.category}
+                    onChange={(e) => setGridProfile((p) => ({ ...p, category: e.target.value }))}
+                    style={{ background: "transparent", border: "none", outline: "none", padding: 0, width: "100%", fontWeight: 700, color: "var(--cth-ink)" }}
+                  />
+                  {[1, 2, 3].map((n) => (
+                    <input
+                      key={n}
+                      value={gridProfile[`bio_line_${n}`]}
+                      onChange={(e) => setGridProfile((p) => ({ ...p, [`bio_line_${n}`]: e.target.value }))}
+                      style={{ background: "transparent", border: "none", outline: "none", padding: 0, width: "100%", color: "var(--cth-ink)" }}
+                    />
+                  ))}
+                  <input
+                    value={gridProfile.website}
+                    onChange={(e) => setGridProfile((p) => ({ ...p, website: e.target.value }))}
+                    style={{ background: "transparent", border: "none", outline: "none", padding: 0, width: "100%", fontWeight: 600, color: "var(--cth-crimson)" }}
+                  />
+                </div>
+
+                <hr style={{ border: 0, borderTop: "1px solid var(--cth-border)", margin: "18px 0" }} />
+
+                <div className="section-kicker">Grid Controls</div>
+                {igConnection?.username ? (
+                  <div style={{ margin: "10px 0", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <span className="status-pill published"><span className="status-dot" style={{ background: "#5bac76" }} />Instagram</span>
+                    <span className="muted" style={{ fontSize: 12 }}>@{igConnection.username}</span>
+                    {linkedFacebookPageName ? (
+                      <>
+                        <span className="status-pill published"><span className="status-dot" style={{ background: "#5bac76" }} />Facebook</span>
+                        <span className="muted" style={{ fontSize: 12 }}>{linkedFacebookPageName}</span>
+                      </>
+                    ) : null}
+                  </div>
+                ) : !igConnectionLoading ? (
+                  <div style={{ margin: "10px 0" }}>
+                    <span className="status-pill" style={{ background: "var(--cth-blush)", color: "var(--cth-ruby)" }}>Not connected</span>
+                  </div>
+                ) : null}
+                <p className="muted" style={{ fontSize: 10, lineHeight: 1.5, marginTop: 12 }}>
+                  Drag planned tiles to test the visual order. Published posts remain locked.
+                </p>
+                <p className="muted" style={{ fontSize: 11, marginTop: 10 }}>
+                  {gridSlots.filter((p) => !p?.isEmpty).length}/18 planned
+                </p>
+              </aside>
+
+              <div>
               <input
                 ref={gridSlotFileInputRef}
                 type="file"
@@ -2947,7 +2981,7 @@ export default function SocialMediaManager() {
                 </div>
               ) : null}
  </div>
- </Panel>
+ </div>
  </div>
  )}
 

@@ -496,6 +496,7 @@
     .cth-social-planner .performance-label { font-size: 9px; font-weight: 700; margin-bottom: 8px; }
     .cth-social-planner .performance-value { font-family: var(--serif); font-size: 24px; font-weight: 700; }
     .cth-social-planner .trend-up { color: var(--cth-green); font-size: 10px; margin-top: 5px; }
+    .cth-social-planner .trend-down { color: var(--cth-crimson); font-size: 10px; margin-top: 5px; }
     .cth-social-planner .performance-footer { margin-top: 10px; text-align: center; }
 
     
