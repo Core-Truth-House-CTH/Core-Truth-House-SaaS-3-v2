@@ -37,6 +37,9 @@ import {
  Copy,
  BookOpen,
  Link2,
+ UserRound,
+ BarChart3,
+ Heart,
 } from "lucide-react";
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import CampaignContextBanner from "../components/shared/CampaignContextBanner";
@@ -45,9 +48,9 @@ import "../styles/social-planner.css";
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
-// Playfair has clean lining figures — use it for numbers (Cormorant renders 1/0
-// like I/O at display sizes). CLAUDE.md: score numbers use Playfair Display.
-const NUM_SERIF = "'Playfair Display', Georgia, serif";
+// Numbers render in Playfair Display via the .metric-value / *-number CSS rules
+// (Cormorant renders 1/0 like I/O at display sizes; CLAUDE.md: score numbers use
+// Playfair). Kept in the stylesheet so it stays consistent across all number cells.
 
 const PLATFORM_CFG = {
  instagram: { icon: Instagram, color: "#E1306C", limit: 2200, label: "Instagram" },
@@ -323,35 +326,14 @@ function PlatformBadge({ platform, size = "sm" }) {
  );
 }
 
-function MetricTile({ label, value, accent }) {
+function MetricTile({ label, value, note, icon: Icon }) {
  return (
- <div style={{ ...PANEL_STYLE, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
- <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
- <span
- aria-hidden="true"
- style={{
- width: 8,
- height: 8,
- borderRadius: "50%",
- background: accent,
- display: "inline-block",
- }}
- />
- <span style={{ ...EYEBROW_STYLE, fontSize: 10, letterSpacing: "0.2em" }}>{label}</span>
- </div>
- <span
- style={{
- fontFamily: NUM_SERIF,
- fontVariantNumeric: "lining-nums tabular-nums",
- fontSize: 32,
- fontWeight: 600,
- color: "var(--cth-ink)",
- lineHeight: 1,
- }}
- >
- {value}
- </span>
- </div>
+ <article className="metric-card">
+ {Icon ? <Icon size={20} className="metric-icon" aria-hidden="true" /> : null}
+ <span className="metric-label">{label}</span>
+ <strong className="metric-value">{value}</strong>
+ {note ? <span className="metric-note">{note}</span> : null}
+ </article>
  );
 }
 
@@ -2413,6 +2395,54 @@ export default function SocialMediaManager() {
  const totalScheduled = analytics?.total_scheduled || 0;
  const totalPublished = analytics?.total_published || 0;
  const totalDrafts = posts.filter((p) => p.status === "draft").length;
+ const totalNeedsApproval = posts.filter((p) => p.status === "needs_approval").length;
+
+ // Publishing rhythm: published posts averaged over the distinct days that
+ // actually carried a publish (derived from real posts, not fabricated).
+ const publishedPosts = posts.filter((p) => p.status === "published");
+ const activePublishDays = new Set(
+ publishedPosts.map((p) => String(p.scheduled_for || "").slice(0, 10)).filter(Boolean)
+ );
+ const publishingRhythm = activePublishDays.size
+ ? (publishedPosts.length / activePublishDays.size).toFixed(1)
+ : "0.0";
+
+ // Engagement: average of the engagement rates the posts actually report.
+ const engagementSamples = posts
+ .map((p) => Number(p.engagement_rate || 0))
+ .filter((n) => n > 0);
+ const avgEngagement = engagementSamples.length
+ ? engagementSamples.reduce((a, b) => a + b, 0) / engagementSamples.length
+ : 0;
+ const engagementDisplay = `${avgEngagement.toFixed(1)}%`;
+
+ // Performance snapshot — aggregated from the real post metrics the API already
+ // returns (reach/impressions, likes/comments/shares, clicks). No fabricated
+ // numbers and no trend deltas we cannot source.
+ const sumPostField = (key) => posts.reduce((acc, p) => acc + Number(p[key] || 0), 0);
+ const perfReach = sumPostField("reach") || sumPostField("impressions");
+ const perfEngagementCount = sumPostField("likes") + sumPostField("comments") + sumPostField("shares");
+ const perfClicks = sumPostField("clicks");
+ const formatCompact = (n) => {
+ const v = Number(n || 0);
+ if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
+ if (v >= 1000) return `${(v / 1000).toFixed(1)}K`;
+ return String(Math.round(v));
+ };
+ const perfRankScore = (p) =>
+ Number(p.engagement_rate || 0) + Number(p.clicks || 0) +
+ Number(p.likes || 0) + Number(p.comments || 0) + Number(p.shares || 0);
+ const bestPost = [...publishedPosts].sort((a, b) => perfRankScore(b) - perfRankScore(a))[0] || null;
+ const platformStats = posts.reduce((acc, p) => {
+ const key = p.platform || "instagram";
+ if (!acc[key]) acc[key] = { sum: 0, count: 0 };
+ acc[key].sum += Number(p.engagement_rate || 0);
+ acc[key].count += 1;
+ return acc;
+ }, {});
+ const topPlatformEntry = Object.entries(platformStats)
+ .map(([key, v]) => ({ key, avg: v.count ? v.sum / v.count : 0 }))
+ .sort((a, b) => b.avg - a.avg)[0] || null;
 
  // A post already published (or mid-publish, or unresolved) opens read-only:
  // nothing typed here can change what is already on the platform, so offering
@@ -2501,12 +2531,15 @@ export default function SocialMediaManager() {
  </div>
  ) : (
  <>
- <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
- <MetricTile label="Total Posts" value={totalPosts} accent="var(--cth-purple-deep)" />
- <MetricTile label="Scheduled" value={totalScheduled} accent="var(--cth-gold)" />
- <MetricTile label="Published" value={totalPublished} accent="#15803d" />
- <MetricTile label="Drafts" value={totalDrafts} accent="var(--cth-muted)" />
- </div>
+ <section className="metrics" aria-label="Social planner metrics">
+ <MetricTile icon={CalendarDays} label="Planned" value={totalPosts} note="Posts this month" />
+ <MetricTile icon={Clock} label="Scheduled" value={totalScheduled} note="Posts" />
+ <MetricTile icon={Send} label="Published" value={totalPublished} note="Posts" />
+ <MetricTile icon={Pencil} label="Drafts" value={totalDrafts} note="Posts" />
+ <MetricTile icon={UserRound} label="Needs Approval" value={totalNeedsApproval} note="Posts" />
+ <MetricTile icon={BarChart3} label="Publishing Rhythm" value={publishingRhythm} note="Posts per active day" />
+ <MetricTile icon={Heart} label="Engagement" value={engagementDisplay} note="This month" />
+ </section>
 
  <div style={{ marginBottom: 24, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
  <TabBar value={activeView} onChange={setActiveView} />
@@ -2578,6 +2611,72 @@ export default function SocialMediaManager() {
  />
  </div>
  ) : null}
+
+ <div className="lower-grid">
+ <section className="panel content-guide">
+ <div className="section-kicker">Content Job Guide</div>
+ <div className="guide-grid">
+ <article className="guide-card purple">
+ <div className="guide-head"><Sparkles size={22} style={{ color: "#9a2de4" }} />Generate Demand</div>
+ <p>Create recognition, relevance, curiosity, and problem ownership.</p>
+ <div className="examples">Examples: Tips, education, stories, insights, awareness content.</div>
+ </article>
+ <article className="guide-card red">
+ <div className="guide-head"><Send size={22} style={{ color: "#f0472e" }} />Convert Demand</div>
+ <p>Move people toward an offer, inquiry, registration, purchase, or next step.</p>
+ <div className="examples">Examples: Case studies, demos, offers, testimonials, objections.</div>
+ </article>
+ <article className="guide-card gold">
+ <div className="guide-head"><Heart size={22} style={{ color: "#d99d1e" }} />Build Loyalty</div>
+ <p>Strengthen trust, community, retention, advocacy, and client relationships.</p>
+ <div className="examples">Examples: Behind the scenes, values, client wins, Q&amp;A, loyalty content.</div>
+ </article>
+ </div>
+ </section>
+
+ <section className="panel performance-card">
+ <div className="section-kicker">Performance Snapshot <span className="muted">(This Month)</span></div>
+ <div className="performance-grid">
+ <div className="performance-item">
+ <div className="performance-label">Reach</div>
+ <div className="performance-value">{formatCompact(perfReach)}</div>
+ </div>
+ <div className="performance-item">
+ <div className="performance-label">Engagement</div>
+ <div className="performance-value">{formatCompact(perfEngagementCount)}</div>
+ </div>
+ <div className="performance-item">
+ <div className="performance-label">Clicks</div>
+ <div className="performance-value">{formatCompact(perfClicks)}</div>
+ </div>
+ <div className="performance-item">
+ <div className="performance-label">Best Post</div>
+ <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+ {bestPost ? spPlatformMark(bestPost.platform) : null}
+ <span style={{ fontSize: 10 }}>
+ {bestPost ? (bestPost.content?.slice(0, 40) || "Untitled") : "No data yet"}
+ </span>
+ </div>
+ </div>
+ <div className="performance-item">
+ <div className="performance-label">Top Platform</div>
+ <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+ {topPlatformEntry ? spPlatformMark(topPlatformEntry.key) : null}
+ <span style={{ fontSize: 10 }}>
+ {topPlatformEntry
+ ? `${PLATFORM_CFG[topPlatformEntry.key]?.label || topPlatformEntry.key} ${topPlatformEntry.avg.toFixed(1)}%`
+ : "No data yet"}
+ </span>
+ </div>
+ </div>
+ </div>
+ <div className="performance-footer">
+ <button type="button" className="btn btn-secondary btn-small" onClick={() => setActiveView("times")}>
+ Open Full Social Analytics <ChevronRight size={13} />
+ </button>
+ </div>
+ </section>
+ </div>
  </div>
 
  {renderCalendarRail()}
