@@ -875,3 +875,12 @@
 .cth-social-planner .week-empty-cta { position: static; opacity: 0; height: 100%; min-height: 40px; }
 .cth-social-planner .week-slot:hover .week-empty-cta { opacity: 1; }
 .cth-social-planner .list-actions .icon-btn { color: var(--cth-ruby); }
+
+/* Numbers: Playfair has clean lining figures — Cormorant renders 1/0 like I/O. */
+.cth-social-planner .week-day-number,
+.cth-social-planner .list-date-number,
+.cth-social-planner .metric-value,
+.cth-social-planner .profile-stat strong {
+  font-family: "Playfair Display", Georgia, serif;
+  font-variant-numeric: lining-nums tabular-nums;
+}

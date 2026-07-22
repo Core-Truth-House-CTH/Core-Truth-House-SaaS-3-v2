@@ -44,6 +44,9 @@ import "../styles/social-planner.css";
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
+// Playfair has clean lining figures — use it for numbers (Cormorant renders 1/0
+// like I/O at display sizes). CLAUDE.md: score numbers use Playfair Display.
+const NUM_SERIF = "'Playfair Display', Georgia, serif";
 
 const PLATFORM_CFG = {
  instagram: { icon: Instagram, color: "#E1306C", limit: 2200, label: "Instagram" },
@@ -337,7 +340,8 @@ function MetricTile({ label, value, accent }) {
  </div>
  <span
  style={{
- fontFamily: SERIF,
+ fontFamily: NUM_SERIF,
+ fontVariantNumeric: "lining-nums tabular-nums",
  fontSize: 32,
  fontWeight: 600,
  color: "var(--cth-ink)",
@@ -469,16 +473,7 @@ function IconButton({ onClick, label, hoverColor = "var(--cth-crimson)", disable
 
 function TabBar({ value, onChange }) {
  return (
- <div
- style={{
- display: "inline-flex",
- gap: 4,
- padding: 4,
- borderRadius: 4,
- background: "var(--cth-blush)",
- border: "1px solid var(--cth-border)",
- }}
- >
+ <div className="primary-tabs">
  {SURFACES.map((tab) => {
  const Icon = tab.icon;
  const active = value === tab.key;
@@ -486,22 +481,9 @@ function TabBar({ value, onChange }) {
  <button
  key={tab.key}
  type="button"
+ className={`primary-tab${active ? " active" : ""}`}
  onClick={() => onChange(tab.key)}
- style={{
- display: "inline-flex",
- alignItems: "center",
- gap: 8,
- padding: "8px 14px",
- borderRadius: 4,
- background: active ? "var(--cth-purple-deep)" : "transparent",
- color: active ? "var(--cth-gold)" : "var(--cth-ink)",
- fontFamily: SANS,
- fontSize: 13,
- fontWeight: 600,
- border: "none",
- cursor: "pointer",
- transition: "background 150ms ease, color 150ms ease",
- }}
+ style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
  >
  <Icon size={14} /> {tab.label}
  </button>
