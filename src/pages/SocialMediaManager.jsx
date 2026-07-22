@@ -628,6 +628,15 @@ export default function SocialMediaManager() {
  const [filterCampaign, setFilterCampaign] = useState("all");
  const [postSearch, setPostSearch] = useState("");
  const [sortBy, setSortBy] = useState("time");
+ // Calendar view filters (independent from the Posts view filters).
+ const [calPlatform, setCalPlatform] = useState("all");
+ const [calStatus, setCalStatus] = useState("all");
+ const [calContentJob, setCalContentJob] = useState("all");
+ const [calCampaign, setCalCampaign] = useState("all");
+ const [calPillar, setCalPillar] = useState("all");
+ // Instagram Grid controls.
+ const [gridPreviewFrom, setGridPreviewFrom] = useState("");
+ const [gridCampaign, setGridCampaign] = useState("all");
  const [selectedPostIds, setSelectedPostIds] = useState([]);
  const [bulkScheduleDate, setBulkScheduleDate] = useState("");
  const [bulkScheduling, setBulkScheduling] = useState(false);
@@ -2045,6 +2054,17 @@ export default function SocialMediaManager() {
  setFormData((d) => ({ ...d, platform: d.platform || "instagram" }));
  setShowModal("post");
  };
+ // Shared predicate for the calendar toolbar filters (Platform / Status /
+ // Content Job / Campaign / Pillar). Applied across month, week, and list views.
+ const calFilterMatch = (post) => {
+ if (!post) return false;
+ if (calPlatform !== "all" && post.platform !== calPlatform) return false;
+ if (calStatus !== "all" && post.status !== calStatus) return false;
+ if (calContentJob !== "all" && (post.content_job || "") !== calContentJob) return false;
+ if (calCampaign !== "all" && String(post.campaign_id || "") !== calCampaign) return false;
+ if (calPillar !== "all" && (post.content_pillar || "") !== calPillar) return false;
+ return true;
+ };
  const spStatusColor = (status) =>
  status === "published" ? "#238a57"
  : status === "scheduled" ? "#7b2ca7"
@@ -2102,7 +2122,7 @@ export default function SocialMediaManager() {
  <React.Fragment key={slot.label}>
  <div className="week-time">{slot.label}</div>
  {days.map((d) => {
- const dayPosts = (calendarData[isoDate(d)] || []).filter((p) => {
+ const dayPosts = (calendarData[isoDate(d)] || []).filter(calFilterMatch).filter((p) => {
  const raw = p.scheduled_for || p.created_at;
  if (!raw) return si === 0;
  return weekSlotIndex(new Date(raw).getHours()) === si;
@@ -2147,9 +2167,10 @@ export default function SocialMediaManager() {
  return (
  <div className="calendar-card list-calendar">
  {groups.map((dateStr) => {
- const dPosts = [...(calendarData[dateStr] || [])].sort(
+ const dPosts = [...(calendarData[dateStr] || [])].filter(calFilterMatch).sort(
  (a, b) => new Date(a.scheduled_for || a.created_at || 0) - new Date(b.scheduled_for || b.created_at || 0)
  );
+ if (dPosts.length === 0) return null;
  const dObj = new Date(`${dateStr}T00:00:00`);
  return (
  <section className="list-date-group" key={dateStr}>
@@ -2277,7 +2298,7 @@ export default function SocialMediaManager() {
 
  for (let day = 1; day <= daysInMonth; day += 1) {
  const dateStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
- const dayPosts = calendarData[dateStr] || [];
+ const dayPosts = (calendarData[dateStr] || []).filter(calFilterMatch);
  const isToday = today === dateStr;
 
  cells.push(
@@ -2371,16 +2392,23 @@ export default function SocialMediaManager() {
  }, [posts]);
 
  const instagramGridPosts = useMemo(() => {
+ const fromTime = gridPreviewFrom ? new Date(gridPreviewFrom).getTime() : null;
  const ranked = [...posts]
  .filter((p) => p.platform === "instagram")
+ .filter((p) => gridCampaign === "all" || String(p.campaign_id || "") === gridCampaign)
+ .filter((p) => {
+ if (fromTime === null || Number.isNaN(fromTime)) return true;
+ const t = new Date(p.scheduled_for || p.created_at || 0).getTime();
+ return t >= fromTime;
+ })
  .sort((a, b) => {
  const aDate = new Date(a.scheduled_for || a.created_at || 0).getTime();
  const bDate = new Date(b.scheduled_for || b.created_at || 0).getTime();
  return bDate - aDate;
  });
 
- const slots = [...ranked.slice(0, 18)];
- while (slots.length < 18) {
+ const slots = [...ranked.slice(0, 9)];
+ while (slots.length < 9) {
  slots.push({
  id: `grid-empty-${slots.length + 1}`,
  isEmpty: true,
@@ -2388,7 +2416,7 @@ export default function SocialMediaManager() {
  });
  }
  return slots;
- }, [posts]);
+ }, [posts, gridCampaign, gridPreviewFrom]);
 
  useEffect(() => {
  setGridSlots(instagramGridPosts);
@@ -2630,6 +2658,42 @@ export default function SocialMediaManager() {
  >
  <ChevronRight size={18} />
  </button>
+ </div>
+
+ <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginLeft: "auto" }}>
+ <select className="control" value={calPlatform} onChange={(e) => setCalPlatform(e.target.value)} data-testid="cal-platform-filter">
+ <option value="all">Platform: All</option>
+ {Object.entries(PLATFORM_CFG).map(([id, c]) => (
+ <option key={id} value={id}>{c.label}</option>
+ ))}
+ </select>
+ <select className="control" value={calStatus} onChange={(e) => setCalStatus(e.target.value)} data-testid="cal-status-filter">
+ <option value="all">Status: All</option>
+ <option value="draft">Draft</option>
+ <option value="scheduled">Scheduled</option>
+ <option value="published">Published</option>
+ <option value="needs_approval">Needs Approval</option>
+ </select>
+ <select className="control" value={calContentJob} onChange={(e) => setCalContentJob(e.target.value)} data-testid="cal-content-job-filter">
+ <option value="all">Content Job: All</option>
+ <option value="Generate Demand">Generate Demand</option>
+ <option value="Convert Demand">Convert Demand</option>
+ <option value="Build Loyalty">Build Loyalty</option>
+ </select>
+ <select className="control" value={calCampaign} onChange={(e) => setCalCampaign(e.target.value)} data-testid="cal-campaign-filter">
+ <option value="all">Campaign: All</option>
+ {postCampaignOptions.map((c) => (
+ <option key={c.id} value={c.id}>{c.name}</option>
+ ))}
+ </select>
+ <select className="control" value={calPillar} onChange={(e) => setCalPillar(e.target.value)} data-testid="cal-pillar-filter">
+ <option value="all">Pillar: All</option>
+ <option value="Brand Strategy">Brand Strategy</option>
+ <option value="Founder Leadership">Founder Leadership</option>
+ <option value="Client Transformation">Client Transformation</option>
+ <option value="Systems &amp; Operations">Systems &amp; Operations</option>
+ <option value="Offers &amp; Conversion">Offers &amp; Conversion</option>
+ </select>
  </div>
  </div>
 
@@ -2888,11 +2952,35 @@ export default function SocialMediaManager() {
                     <span className="status-pill" style={{ background: "var(--cth-blush)", color: "var(--cth-ruby)" }}>Not connected</span>
                   </div>
                 ) : null}
+
+                <div className="field" style={{ marginTop: 12 }}>
+                  <label>Preview from</label>
+                  <input
+                    type="date"
+                    value={gridPreviewFrom}
+                    onChange={(e) => setGridPreviewFrom(e.target.value)}
+                    data-testid="grid-preview-from"
+                  />
+                </div>
+                <div className="field" style={{ marginTop: 10 }}>
+                  <label>Campaign</label>
+                  <select
+                    value={gridCampaign}
+                    onChange={(e) => setGridCampaign(e.target.value)}
+                    data-testid="grid-campaign-filter"
+                  >
+                    <option value="all">All Campaigns</option>
+                    {postCampaignOptions.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <p className="muted" style={{ fontSize: 10, lineHeight: 1.5, marginTop: 12 }}>
                   Drag planned tiles to test the visual order. Published posts remain locked.
                 </p>
                 <p className="muted" style={{ fontSize: 11, marginTop: 10 }}>
-                  {gridSlots.filter((p) => !p?.isEmpty).length}/18 planned
+                  {gridSlots.filter((p) => !p?.isEmpty).length}/9 planned
                 </p>
               </aside>
 
@@ -2999,7 +3087,7 @@ export default function SocialMediaManager() {
                 })}
               </div>
 
-              {gridSlots.filter((p) => !p?.isEmpty).length === 18 ? (
+              {gridSlots.filter((p) => !p?.isEmpty).length === 9 ? (
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
                   <button type="button" className="btn btn-small btn-danger" onClick={requestResetGrid}>
                     <Trash2 size={14} /> Reset Grid
