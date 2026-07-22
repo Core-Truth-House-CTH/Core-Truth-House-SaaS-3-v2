@@ -43,7 +43,7 @@ import BestPostingTimes from "../components/social/BestPostingTimes";
 import "../styles/social-planner.css";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 const PLATFORM_CFG = {
  instagram: { icon: Instagram, color: "#E1306C", limit: 2200, label: "Instagram" },
@@ -139,29 +139,29 @@ const SOCIAL_CONNECT_PLATFORMS = [
 ];
 
 const PAGE_STYLE = {
- background: "var(--cth-command-blush)",
+ background: "var(--cth-blush)",
  minHeight: "100%",
 };
 
 const PANEL_STYLE = {
- background: "var(--cth-command-panel)",
- border: "1px solid var(--cth-command-border)",
+ background: "var(--cth-panel-white)",
+ border: "1px solid var(--cth-border)",
  borderRadius: 4,
 };
 
 const SOFT_PANEL_STYLE = {
- background: "var(--cth-command-panel-soft)",
- border: "1px solid var(--cth-command-border)",
+ background: "var(--cth-blush)",
+ border: "1px solid var(--cth-border)",
  borderRadius: 4,
 };
 
 const INPUT_STYLE = {
  width: "100%",
- background: "var(--cth-command-panel)",
- border: "1px solid var(--cth-command-border)",
+ background: "var(--cth-panel-white)",
+ border: "1px solid var(--cth-border)",
  borderRadius: 4,
  padding: "10px 12px",
- color: "var(--cth-command-ink)",
+ color: "var(--cth-ink)",
  fontFamily: SANS,
  fontSize: 14,
  outline: "none",
@@ -180,8 +180,8 @@ const PRIMARY_BUTTON_STYLE = {
  gap: 8,
  padding: "10px 16px",
  borderRadius: 4,
- background: "var(--cth-command-purple)",
- color: "var(--cth-command-gold)",
+ background: "var(--cth-purple-deep)",
+ color: "var(--cth-gold)",
  fontFamily: SANS,
  fontSize: 14,
  fontWeight: 600,
@@ -197,8 +197,8 @@ const SECONDARY_BUTTON_STYLE = {
  padding: "8px 14px",
  borderRadius: 4,
  background: "transparent",
- border: "1px solid var(--cth-command-border)",
- color: "var(--cth-command-ink)",
+ border: "1px solid var(--cth-border)",
+ color: "var(--cth-ink)",
  fontFamily: SANS,
  fontSize: 14,
  fontWeight: 500,
@@ -212,8 +212,8 @@ const DESTRUCTIVE_BUTTON_STYLE = {
  gap: 8,
  padding: "10px 16px",
  borderRadius: 4,
- background: "var(--cth-command-crimson)",
- color: "var(--cth-command-ivory)",
+ background: "var(--cth-crimson)",
+ color: "var(--cth-ivory)",
  fontFamily: SANS,
  fontSize: 14,
  fontWeight: 600,
@@ -223,8 +223,8 @@ const DESTRUCTIVE_BUTTON_STYLE = {
 
 const DESTRUCTIVE_OUTLINE_STYLE = {
  ...SECONDARY_BUTTON_STYLE,
- color: "var(--cth-command-crimson)",
- border: "1px solid var(--cth-command-crimson)",
+ color: "var(--cth-crimson)",
+ border: "1px solid var(--cth-crimson)",
 };
 
 const EYEBROW_STYLE = {
@@ -233,7 +233,7 @@ const EYEBROW_STYLE = {
  fontWeight: 600,
  letterSpacing: "0.18em",
  textTransform: "uppercase",
- color: "var(--cth-command-muted)",
+ color: "var(--cth-muted)",
 };
 
 function backendAssetUrl(url) {
@@ -252,7 +252,7 @@ function FieldLabel({ children, hint }) {
  return (
  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
  <label style={{ ...EYEBROW_STYLE, fontSize: 11 }}>{children}</label>
- {hint ? <span style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)" }}>{hint}</span> : null}
+ {hint ? <span style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-muted)" }}>{hint}</span> : null}
  </div>
  );
 }
@@ -263,11 +263,11 @@ function Eyebrow({ children }) {
 
 function Chip({ children, tone = "muted" }) {
  const tones = {
- default: { background: "rgba(175,0,42,0.10)", border: "1px solid rgba(175,0,42,0.22)", color: "var(--cth-command-crimson)" },
- crimson: { background: "rgba(175,0,42,0.10)", border: "1px solid rgba(175,0,42,0.22)", color: "var(--cth-command-crimson)" },
- muted: { background: "var(--cth-command-panel-soft)", border: "1px solid var(--cth-command-border)", color: "var(--cth-command-muted)" },
- gold: { background: "rgba(196,169,91,0.18)", border: "1px solid rgba(196,169,91,0.40)", color: "var(--cth-command-purple)" },
- purple: { background: "rgba(51,3,60,0.10)", border: "1px solid rgba(51,3,60,0.22)", color: "var(--cth-command-purple)" },
+ default: { background: "rgba(175,0,42,0.10)", border: "1px solid rgba(175,0,42,0.22)", color: "var(--cth-crimson)" },
+ crimson: { background: "rgba(175,0,42,0.10)", border: "1px solid rgba(175,0,42,0.22)", color: "var(--cth-crimson)" },
+ muted: { background: "var(--cth-blush)", border: "1px solid var(--cth-border)", color: "var(--cth-muted)" },
+ gold: { background: "rgba(196,169,91,0.18)", border: "1px solid rgba(196,169,91,0.40)", color: "var(--cth-purple-deep)" },
+ purple: { background: "rgba(51,3,60,0.10)", border: "1px solid rgba(51,3,60,0.22)", color: "var(--cth-purple-deep)" },
  success: { background: "rgba(34,135,90,0.12)", border: "1px solid rgba(34,135,90,0.28)", color: "#15803d" },
  };
  const style = tones[tone] || tones.muted;
@@ -340,7 +340,7 @@ function MetricTile({ label, value, accent }) {
  fontFamily: SERIF,
  fontSize: 32,
  fontWeight: 600,
- color: "var(--cth-command-ink)",
+ color: "var(--cth-ink)",
  lineHeight: 1,
  }}
  >
@@ -373,7 +373,7 @@ function Panel({ eyebrow, title, subtitle, action, children, padding = 24 }) {
  fontFamily: SERIF,
  fontSize: 22,
  fontWeight: 600,
- color: "var(--cth-command-ink)",
+ color: "var(--cth-ink)",
  margin: eyebrow ? "6px 0 0" : 0,
  letterSpacing: "-0.005em",
  lineHeight: 1.2,
@@ -387,7 +387,7 @@ function Panel({ eyebrow, title, subtitle, action, children, padding = 24 }) {
  style={{
  fontFamily: SANS,
  fontSize: 14,
- color: "var(--cth-command-muted)",
+ color: "var(--cth-muted)",
  margin: "6px 0 0",
  lineHeight: 1.5,
  }}
@@ -410,15 +410,15 @@ function EmptyState({ icon: Icon, title, body }) {
  style={{
  padding: "32px 18px",
  textAlign: "center",
- background: "var(--cth-command-panel-soft)",
- border: "1px dashed var(--cth-command-border)",
+ background: "var(--cth-blush)",
+ border: "1px dashed var(--cth-border)",
  borderRadius: 4,
  }}
  >
  {Icon ? (
  <Icon
  size={28}
- style={{ color: "var(--cth-command-muted)", display: "block", margin: "0 auto 10px" }}
+ style={{ color: "var(--cth-muted)", display: "block", margin: "0 auto 10px" }}
  />
  ) : null}
  <div
@@ -426,18 +426,18 @@ function EmptyState({ icon: Icon, title, body }) {
  fontFamily: SERIF,
  fontSize: 16,
  fontWeight: 600,
- color: "var(--cth-command-ink)",
+ color: "var(--cth-ink)",
  marginBottom: 6,
  }}
  >
  {title}
  </div>
- <div style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-command-muted)" }}>{body}</div>
+ <div style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-muted)" }}>{body}</div>
  </div>
  );
 }
 
-function IconButton({ onClick, label, hoverColor = "var(--cth-command-crimson)", disabled = false, busy = false, children }) {
+function IconButton({ onClick, label, hoverColor = "var(--cth-crimson)", disabled = false, busy = false, children }) {
  const [hover, setHover] = useState(false);
  return (
  <button
@@ -455,8 +455,8 @@ function IconButton({ onClick, label, hoverColor = "var(--cth-command-crimson)",
  height: 32,
  borderRadius: 4,
  background: "transparent",
- border: `1px solid ${hover && !disabled ? "var(--cth-command-border)" : "transparent"}`,
- color: hover && !disabled ? hoverColor : "var(--cth-command-muted)",
+ border: `1px solid ${hover && !disabled ? "var(--cth-border)" : "transparent"}`,
+ color: hover && !disabled ? hoverColor : "var(--cth-muted)",
  cursor: disabled || busy ? "default" : "pointer",
  opacity: disabled ? 0.4 : 1,
  transition: "color 150ms ease, border-color 150ms ease",
@@ -475,8 +475,8 @@ function TabBar({ value, onChange }) {
  gap: 4,
  padding: 4,
  borderRadius: 4,
- background: "var(--cth-command-panel-soft)",
- border: "1px solid var(--cth-command-border)",
+ background: "var(--cth-blush)",
+ border: "1px solid var(--cth-border)",
  }}
  >
  {SURFACES.map((tab) => {
@@ -493,8 +493,8 @@ function TabBar({ value, onChange }) {
  gap: 8,
  padding: "8px 14px",
  borderRadius: 4,
- background: active ? "var(--cth-command-purple)" : "transparent",
- color: active ? "var(--cth-command-gold)" : "var(--cth-command-ink)",
+ background: active ? "var(--cth-purple-deep)" : "transparent",
+ color: active ? "var(--cth-gold)" : "var(--cth-ink)",
  fontFamily: SANS,
  fontSize: 13,
  fontWeight: 600,
@@ -523,22 +523,22 @@ function Toast({ toast }) {
  bottom: 24,
  right: 24,
  zIndex: 80,
- background: "var(--cth-command-panel)",
- border: `1px solid ${isError ? "var(--cth-command-crimson)" : "var(--cth-command-gold)"}`,
+ background: "var(--cth-panel-white)",
+ border: `1px solid ${isError ? "var(--cth-crimson)" : "var(--cth-gold)"}`,
  borderRadius: 4,
  padding: "12px 18px",
  boxShadow: "0 20px 40px rgba(13,0,16,0.18)",
  fontFamily: SANS,
  fontSize: 14,
  fontWeight: 500,
- color: "var(--cth-command-ink)",
+ color: "var(--cth-ink)",
  display: "flex",
  alignItems: "center",
  gap: 10,
  maxWidth: 420,
  }}
  >
- {isError ? <AlertCircle size={16} style={{ color: "var(--cth-command-crimson)", flexShrink: 0 }} /> : null}
+ {isError ? <AlertCircle size={16} style={{ color: "var(--cth-crimson)", flexShrink: 0 }} /> : null}
  <span>{toast.message}</span>
  </div>
  );
@@ -568,8 +568,8 @@ function ConfirmModal({ confirm, busy, onCancel, onConfirm }) {
  style={{
  width: "100%",
  maxWidth: 480,
- background: "var(--cth-command-panel)",
- border: "1px solid var(--cth-command-border)",
+ background: "var(--cth-panel-white)",
+ border: "1px solid var(--cth-border)",
  borderRadius: 4,
  padding: 28,
  boxShadow: "0 30px 60px rgba(13,0,16,0.25)",
@@ -580,7 +580,7 @@ function ConfirmModal({ confirm, busy, onCancel, onConfirm }) {
  fontFamily: SERIF,
  fontSize: 22,
  fontWeight: 600,
- color: "var(--cth-command-ink)",
+ color: "var(--cth-ink)",
  margin: 0,
  letterSpacing: "-0.005em",
  }}
@@ -591,7 +591,7 @@ function ConfirmModal({ confirm, busy, onCancel, onConfirm }) {
  style={{
  fontFamily: SANS,
  fontSize: 14,
- color: "var(--cth-command-muted)",
+ color: "var(--cth-muted)",
  margin: "12px 0 24px",
  lineHeight: 1.55,
  }}
@@ -2459,13 +2459,13 @@ export default function SocialMediaManager() {
         <div className="min-w-0 flex-1">
           <h1
             className="text-2xl md:text-[32px] leading-tight truncate"
-            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-command-ink)", margin: 0 }}
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "var(--cth-ink)", margin: 0 }}
           >
             Social Media Manager
           </h1>
           <p
             className="text-xs md:text-sm truncate"
-            style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: "'DM Sans', sans-serif" }}
+            style={{ margin: "6px 0 0 0", color: "var(--cth-muted)", fontFamily: "'DM Sans', sans-serif" }}
           >
             {`${totalPosts} posts / ${totalScheduled} scheduled / ${totalPublished} published`}
           </p>
@@ -2478,8 +2478,8 @@ export default function SocialMediaManager() {
  style={{
  ...SECONDARY_BUTTON_STYLE,
  padding: "10px 16px",
- background: "var(--cth-command-panel-soft)",
- color: "var(--cth-command-purple)",
+ background: "var(--cth-blush)",
+ color: "var(--cth-purple-deep)",
  fontWeight: 600,
  }}
  >
@@ -2515,14 +2515,14 @@ export default function SocialMediaManager() {
  <div data-testid="social-media-manager" style={PAGE_STYLE} className="px-4 py-6 md:px-7 md:py-8">
  {loading ? (
  <div style={{ padding: "80px 0", textAlign: "center" }}>
- <Loader2 size={32} className="animate-spin" style={{ color: "var(--cth-command-crimson)" }} />
+ <Loader2 size={32} className="animate-spin" style={{ color: "var(--cth-crimson)" }} />
  </div>
  ) : (
  <>
  <div style={{ marginBottom: 24, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
  <div>
  <Eyebrow>Social Planner</Eyebrow>
- <p style={{ fontFamily: SANS, fontSize: 14, color: "var(--cth-command-muted)", margin: "8px 0 0" }}>
+ <p style={{ fontFamily: SANS, fontSize: 14, color: "var(--cth-muted)", margin: "8px 0 0" }}>
  Plan, schedule, and publish across every channel from one workspace.
  </p>
  </div>
@@ -2541,10 +2541,10 @@ export default function SocialMediaManager() {
  </div>
 
  <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
- <MetricTile label="Total Posts" value={totalPosts} accent="var(--cth-command-purple)" />
- <MetricTile label="Scheduled" value={totalScheduled} accent="var(--cth-command-gold)" />
+ <MetricTile label="Total Posts" value={totalPosts} accent="var(--cth-purple-deep)" />
+ <MetricTile label="Scheduled" value={totalScheduled} accent="var(--cth-gold)" />
  <MetricTile label="Published" value={totalPublished} accent="#15803d" />
- <MetricTile label="Drafts" value={totalDrafts} accent="var(--cth-command-muted)" />
+ <MetricTile label="Drafts" value={totalDrafts} accent="var(--cth-muted)" />
  </div>
 
  {activeView === "publish" && (
@@ -2755,11 +2755,11 @@ export default function SocialMediaManager() {
  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
  <div>
  <Eyebrow>Instagram Grid Planner</Eyebrow>
- <p style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-command-muted)", margin: "4px 0 0" }}>
+ <p style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-muted)", margin: "4px 0 0" }}>
  Plan 18 posts at a glance in a 4:5 feed layout.
  </p>
  </div>
- <span style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>
+ <span style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-muted)" }}>
  {gridSlots.filter((p) => !p?.isEmpty).length}/18 filled
  </span>
  </div>
@@ -3023,7 +3023,7 @@ export default function SocialMediaManager() {
  style={{
  marginTop: 4,
  width: 16, height: 16,
- accentColor: "var(--cth-command-crimson)",
+ accentColor: "var(--cth-crimson)",
  cursor: "pointer",
  }}
  />
@@ -3042,13 +3042,13 @@ export default function SocialMediaManager() {
  margin: "0 0 10px", padding: "8px 10px", borderRadius: 4,
  background: post.status === "publish_unknown"
  ? "rgba(196,169,91,0.12)"
- : "var(--cth-command-panel-soft)",
+ : "var(--cth-blush)",
  border: post.status === "publish_unknown"
  ? "1px solid rgba(196,169,91,0.40)"
- : "1px solid var(--cth-command-border)",
+ : "1px solid var(--cth-border)",
  }}>
- <AlertCircle size={13} style={{ flexShrink: 0, marginTop: 1, color: "var(--cth-command-purple)" }} />
- <span style={{ fontFamily: SANS, fontSize: 11.5, lineHeight: 1.5, color: "var(--cth-command-ink)" }}>
+ <AlertCircle size={13} style={{ flexShrink: 0, marginTop: 1, color: "var(--cth-purple-deep)" }} />
+ <span style={{ fontFamily: SANS, fontSize: 11.5, lineHeight: 1.5, color: "var(--cth-ink)" }}>
  {statusCfg.hint}
  </span>
  </div>
@@ -3057,7 +3057,7 @@ export default function SocialMediaManager() {
  <p style={{
  margin: "0 0 10px",
  fontFamily: SANS, fontSize: 14, lineHeight: 1.55,
- color: "var(--cth-command-ink)",
+ color: "var(--cth-ink)",
  display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical",
  overflow: "hidden",
  }}>
@@ -3073,7 +3073,7 @@ export default function SocialMediaManager() {
  alt=""
  style={{
  width: 48, height: 48, borderRadius: 4, objectFit: "cover",
- border: "1px solid var(--cth-command-border)",
+ border: "1px solid var(--cth-border)",
  }}
  />
  ))}
@@ -3081,9 +3081,9 @@ export default function SocialMediaManager() {
  <span style={{
  width: 48, height: 48, borderRadius: 4,
  display: "flex", alignItems: "center", justifyContent: "center",
- background: "var(--cth-command-panel-soft)",
- border: "1px solid var(--cth-command-border)",
- fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)",
+ background: "var(--cth-blush)",
+ border: "1px solid var(--cth-border)",
+ fontFamily: SANS, fontSize: 12, color: "var(--cth-muted)",
  }}>+{post.media_urls.length - 4}</span>
  ) : null}
  </div>
@@ -3095,21 +3095,21 @@ export default function SocialMediaManager() {
  <span key={i} style={{
  fontFamily: SANS, fontSize: 11,
  padding: "2px 8px", borderRadius: 999,
- background: "var(--cth-command-panel-soft)",
- color: "var(--cth-command-muted)",
- border: "1px solid var(--cth-command-border)",
+ background: "var(--cth-blush)",
+ color: "var(--cth-muted)",
+ border: "1px solid var(--cth-border)",
  }}>#{tag}</span>
  ))}
  {post.hashtags.length > 6 ? (
  <span style={{
- fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)",
+ fontFamily: SANS, fontSize: 11, color: "var(--cth-muted)",
  alignSelf: "center",
  }}>+{post.hashtags.length - 6}</span>
  ) : null}
  </div>
  ) : null}
 
- <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14, fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)" }}>
+ <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14, fontFamily: SANS, fontSize: 11, color: "var(--cth-muted)" }}>
  {post.scheduled_for ? (
  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
  <Clock size={11} />
@@ -3190,8 +3190,8 @@ export default function SocialMediaManager() {
  style={{
  width: "100%", maxWidth: 760,
  maxHeight: "90dvh",
- background: "var(--cth-command-panel)",
- border: "1px solid var(--cth-command-border)",
+ background: "var(--cth-panel-white)",
+ border: "1px solid var(--cth-border)",
  borderRadius: 4,
  boxShadow: "0 30px 60px rgba(13,0,16,0.30)",
  display: "flex", flexDirection: "column",
@@ -3200,7 +3200,7 @@ export default function SocialMediaManager() {
  >
  <div style={{
  display: "flex", alignItems: "center", justifyContent: "space-between",
- padding: "18px 24px", borderBottom: "1px solid var(--cth-command-border)",
+ padding: "18px 24px", borderBottom: "1px solid var(--cth-border)",
  }}>
  <div>
  <Eyebrow>
@@ -3216,7 +3216,7 @@ export default function SocialMediaManager() {
  </Eyebrow>
  <h3 style={{
  fontFamily: SERIF, fontSize: 20, fontWeight: 600,
- color: "var(--cth-command-ink)", margin: "4px 0 0",
+ color: "var(--cth-ink)", margin: "4px 0 0",
  }}>{modalTitle}</h3>
  </div>
  <IconButton label="Close modal" onClick={closePostModal}>
@@ -3232,8 +3232,8 @@ export default function SocialMediaManager() {
  background: "rgba(196,169,91,0.12)",
  border: "1px solid rgba(196,169,91,0.40)",
  }}>
- <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1, color: "var(--cth-command-purple)" }} />
- <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: "var(--cth-command-ink)" }}>
+ <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1, color: "var(--cth-purple-deep)" }} />
+ <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: "var(--cth-ink)" }}>
  {formData.status === "publish_unknown" ? (
  <>
  <strong>This post may or may not have gone live.</strong> The platform never
@@ -3273,9 +3273,9 @@ export default function SocialMediaManager() {
  style={{
  display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
  padding: "12px 6px", borderRadius: 4,
- background: active ? `${cfg.color}15` : "var(--cth-command-panel-soft)",
- border: `1px solid ${active ? `${cfg.color}50` : "var(--cth-command-border)"}`,
- color: active ? cfg.color : "var(--cth-command-muted)",
+ background: active ? `${cfg.color}15` : "var(--cth-blush)",
+ border: `1px solid ${active ? `${cfg.color}50` : "var(--cth-border)"}`,
+ color: active ? cfg.color : "var(--cth-muted)",
  fontFamily: SANS, fontSize: 12, fontWeight: 600,
  cursor: "pointer",
  }}
@@ -3292,11 +3292,11 @@ export default function SocialMediaManager() {
  <div style={{
  display: "grid", gap: 12,
  padding: 14,
- background: "var(--cth-command-panel-soft)",
- border: "1px solid var(--cth-command-border)",
+ background: "var(--cth-blush)",
+ border: "1px solid var(--cth-border)",
  borderRadius: 4,
  }}>
- <div style={{ ...EYEBROW_STYLE, color: "var(--cth-command-crimson)" }}>
+ <div style={{ ...EYEBROW_STYLE, color: "var(--cth-crimson)" }}>
  Platform settings
  </div>
 
@@ -3306,7 +3306,7 @@ export default function SocialMediaManager() {
  hint={
  connections.pinterest
  ? null
- : <span style={{ color: "var(--cth-command-crimson)" }}>Pinterest not connected</span>
+ : <span style={{ color: "var(--cth-crimson)" }}>Pinterest not connected</span>
  }
  >
  Pinterest board
@@ -3343,7 +3343,7 @@ export default function SocialMediaManager() {
  hint={
  connections.google_business
  ? null
- : <span style={{ color: "var(--cth-command-crimson)" }}>Google Business not connected</span>
+ : <span style={{ color: "var(--cth-crimson)" }}>Google Business not connected</span>
  }
  >
  Google Business location
@@ -3394,9 +3394,9 @@ export default function SocialMediaManager() {
  style={{
  display: "inline-flex", alignItems: "center", gap: 6,
  padding: "6px 12px", borderRadius: 4,
- background: active ? `${cfg.color}15` : "var(--cth-command-panel-soft)",
- border: `1px solid ${active ? `${cfg.color}50` : "var(--cth-command-border)"}`,
- color: active ? cfg.color : "var(--cth-command-muted)",
+ background: active ? `${cfg.color}15` : "var(--cth-blush)",
+ border: `1px solid ${active ? `${cfg.color}50` : "var(--cth-border)"}`,
+ color: active ? cfg.color : "var(--cth-muted)",
  fontFamily: SANS, fontSize: 12, fontWeight: 600,
  cursor: "pointer",
  }}
@@ -3410,7 +3410,7 @@ export default function SocialMediaManager() {
 
  <FieldLabel
  hint={
- <span style={{ color: charCount > charLimit ? "var(--cth-command-crimson)" : "var(--cth-command-muted)" }}>
+ <span style={{ color: charCount > charLimit ? "var(--cth-crimson)" : "var(--cth-muted)" }}>
  {charCount}/{charLimit}
  </span>
  }
@@ -3442,34 +3442,34 @@ export default function SocialMediaManager() {
  style={{ ...INPUT_STYLE, resize: "vertical" }}
  />
  {charCount > charLimit ? (
- <p style={{ margin: "6px 0 0", fontFamily: SANS, fontSize: 12, color: "var(--cth-command-crimson)" }}>
+ <p style={{ margin: "6px 0 0", fontFamily: SANS, fontSize: 12, color: "var(--cth-crimson)" }}>
  Over the {PLATFORM_CFG[activePlatformKey]?.label || "platform"} limit. Trim before saving.
  </p>
  ) : null}
 
  <div style={{
  marginTop: 12,
- background: "var(--cth-command-panel-soft)",
- border: "2px solid var(--cth-command-gold)",
+ background: "var(--cth-blush)",
+ border: "2px solid var(--cth-gold)",
  borderRadius: 4,
  overflow: "hidden",
  }}>
  <div style={{
  display: "flex", alignItems: "center", gap: 10,
  padding: "12px 16px",
- borderBottom: "1px solid var(--cth-command-border)",
- background: "var(--cth-command-panel)",
+ borderBottom: "1px solid var(--cth-border)",
+ background: "var(--cth-panel-white)",
  }}>
- <Sparkles size={16} style={{ color: "var(--cth-command-crimson)" }} />
+ <Sparkles size={16} style={{ color: "var(--cth-crimson)" }} />
  <div style={{ flex: 1, minWidth: 0 }}>
  <div style={{
  fontFamily: SERIF, fontSize: 15, fontWeight: 600,
- color: "var(--cth-command-ink)", lineHeight: 1.2,
+ color: "var(--cth-ink)", lineHeight: 1.2,
  }}>
  Ask the House
  </div>
  <div style={{
- fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)",
+ fontFamily: SANS, fontSize: 11, color: "var(--cth-muted)",
  marginTop: 2,
  }}>
  Topic + tone → draft caption and hashtags for the active platform.
@@ -3484,9 +3484,9 @@ export default function SocialMediaManager() {
  style={{
  display: "inline-flex", alignItems: "center", gap: 6,
  flexShrink: 0, padding: "8px 12px", borderRadius: 4,
- background: "var(--cth-command-purple)",
- border: "1px solid var(--cth-command-purple)",
- color: "var(--cth-command-gold)",
+ background: "var(--cth-purple-deep)",
+ border: "1px solid var(--cth-purple-deep)",
+ color: "var(--cth-gold)",
  fontFamily: SANS, fontSize: 12, fontWeight: 600,
  cursor: editingLocked ? "default" : "pointer",
  opacity: editingLocked ? 0.4 : 1,
@@ -3530,7 +3530,7 @@ export default function SocialMediaManager() {
  </button>
  </div>
  {(!formData.topic || !selectedPlatforms.length) && !generating ? (
- <p style={{ margin: 0, fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)" }}>
+ <p style={{ margin: 0, fontFamily: SANS, fontSize: 11, color: "var(--cth-muted)" }}>
  {!selectedPlatforms.length
  ? "Select at least one platform above to enable generation."
  : "Add a topic to enable generation."}
@@ -3554,7 +3554,7 @@ export default function SocialMediaManager() {
  padding: "4px 10px", borderRadius: 999,
  background: "rgba(175,0,42,0.10)",
  border: "1px solid rgba(175,0,42,0.22)",
- color: "var(--cth-command-crimson)",
+ color: "var(--cth-crimson)",
  fontFamily: SANS, fontSize: 12, fontWeight: 600,
  cursor: "pointer",
  }}
@@ -3587,10 +3587,10 @@ export default function SocialMediaManager() {
  {m.type === "video" ? (
  <div style={{
  width: 80, height: 80, borderRadius: 4,
- background: "var(--cth-command-panel-soft)",
- border: "1px solid var(--cth-command-border)",
+ background: "var(--cth-blush)",
+ border: "1px solid var(--cth-border)",
  display: "flex", alignItems: "center", justifyContent: "center",
- color: "var(--cth-command-crimson)",
+ color: "var(--cth-crimson)",
  }}>
  <Video size={22} />
  </div>
@@ -3600,7 +3600,7 @@ export default function SocialMediaManager() {
  alt={m.name}
  style={{
  width: 80, height: 80, borderRadius: 4, objectFit: "cover",
- border: "1px solid var(--cth-command-border)",
+ border: "1px solid var(--cth-border)",
  }}
  />
  )}
@@ -3611,8 +3611,8 @@ export default function SocialMediaManager() {
  style={{
  position: "absolute", top: -6, right: -6,
  width: 22, height: 22, borderRadius: "50%",
- background: "var(--cth-command-crimson)",
- color: "var(--cth-command-ivory)",
+ background: "var(--cth-crimson)",
+ color: "var(--cth-ivory)",
  border: "none", cursor: "pointer",
  display: "flex", alignItems: "center", justifyContent: "center",
  }}
@@ -3633,9 +3633,9 @@ export default function SocialMediaManager() {
  width: "100%",
  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
  padding: "12px 16px", borderRadius: 4,
- background: "var(--cth-command-panel-soft)",
- border: "1px dashed var(--cth-command-border)",
- color: "var(--cth-command-muted)",
+ background: "var(--cth-blush)",
+ border: "1px dashed var(--cth-border)",
+ color: "var(--cth-muted)",
  fontFamily: SANS, fontSize: 13, fontWeight: 500,
  cursor: uploadingMedia ? "default" : "pointer",
  opacity: uploadingMedia ? 0.7 : 1,
@@ -3656,9 +3656,9 @@ export default function SocialMediaManager() {
  width: "100%", marginTop: 8,
  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
  padding: "12px 16px", borderRadius: 4,
- background: "var(--cth-command-panel-soft)",
- border: "1px dashed var(--cth-command-border)",
- color: "var(--cth-command-muted)",
+ background: "var(--cth-blush)",
+ border: "1px dashed var(--cth-border)",
+ color: "var(--cth-muted)",
  fontFamily: SANS, fontSize: 13, fontWeight: 500, cursor: "pointer",
  }}
  >
@@ -3670,22 +3670,22 @@ export default function SocialMediaManager() {
  <div style={{
  marginTop: 8, display: "flex", alignItems: "center", gap: 8,
  padding: "8px 10px", borderRadius: 4,
- background: "var(--cth-command-panel-soft)",
- border: "1px solid var(--cth-command-gold)",
+ background: "var(--cth-blush)",
+ border: "1px solid var(--cth-gold)",
  }}>
  <img
  src={backendAssetUrl(selectedBrandAsset.url)}
  alt=""
  style={{ width: 32, height: 32, borderRadius: 3, objectFit: "cover" }}
  />
- <span style={{ flex: 1, fontFamily: SANS, fontSize: 12, color: "var(--cth-command-ink)" }}>
+ <span style={{ flex: 1, fontFamily: SANS, fontSize: 12, color: "var(--cth-ink)" }}>
  Brand asset selected: {selectedBrandAsset.label}
  </span>
  <button
  type="button"
  onClick={() => setSelectedBrandAsset(null)}
  aria-label="Clear selected brand asset"
- style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cth-command-muted)", display: "flex" }}
+ style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cth-muted)", display: "flex" }}
  >
  <X size={12} />
  </button>
@@ -3698,9 +3698,9 @@ export default function SocialMediaManager() {
  width: "100%", marginTop: 8,
  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
  padding: "10px 16px", borderRadius: 4,
- background: "var(--cth-command-gold)",
- border: "1px solid var(--cth-command-gold)",
- color: "var(--cth-command-ink)",
+ background: "var(--cth-gold)",
+ border: "1px solid var(--cth-gold)",
+ color: "var(--cth-ink)",
  fontFamily: SANS, fontSize: 13, fontWeight: 600,
  cursor: captionFromAssetLoading ? "not-allowed" : "pointer",
  opacity: captionFromAssetLoading ? 0.7 : 1,
@@ -3756,12 +3756,12 @@ export default function SocialMediaManager() {
  </div>
 
  <div style={{
- borderTop: "1px solid var(--cth-command-border)",
+ borderTop: "1px solid var(--cth-border)",
  paddingTop: 16,
  }}>
  <div style={{ marginBottom: 10 }}>
  <div style={EYEBROW_STYLE}>Tracked Links</div>
- <p style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)", margin: "4px 0 0", lineHeight: 1.5 }}>
+ <p style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-muted)", margin: "4px 0 0", lineHeight: 1.5 }}>
  Create tracked links for the CTA, profile, or campaign URL on this post.
  </p>
  </div>
@@ -3806,8 +3806,8 @@ export default function SocialMediaManager() {
 
  <div style={{
  display: "flex", justifyContent: "flex-end", gap: 10,
- padding: "16px 24px", borderTop: "1px solid var(--cth-command-border)",
- background: "var(--cth-command-panel)",
+ padding: "16px 24px", borderTop: "1px solid var(--cth-border)",
+ background: "var(--cth-panel-white)",
  }}>
  <button type="button" onClick={closePostModal} style={SECONDARY_BUTTON_STYLE}>
  {editingLocked ? "Close" : "Cancel"}
@@ -3857,8 +3857,8 @@ export default function SocialMediaManager() {
  style={{
  position: "fixed", top: 0, right: 0,
  height: "100vh", width: 420, maxWidth: "100vw",
- background: "var(--cth-command-panel)",
- borderLeft: "1px solid var(--cth-command-border)",
+ background: "var(--cth-panel-white)",
+ borderLeft: "1px solid var(--cth-border)",
  boxShadow: "-12px 0 32px rgba(13,0,16,0.18)",
  zIndex: 61,
  display: "flex", flexDirection: "column",
@@ -3867,7 +3867,7 @@ export default function SocialMediaManager() {
  >
  <div style={{
  padding: "18px 22px",
- borderBottom: "1px solid var(--cth-command-border)",
+ borderBottom: "1px solid var(--cth-border)",
  display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12,
  }}>
  <div>
@@ -3875,7 +3875,7 @@ export default function SocialMediaManager() {
  <h3 style={{
  margin: "4px 0 0",
  fontFamily: SERIF, fontSize: 20, fontWeight: 600,
- color: "var(--cth-command-ink)",
+ color: "var(--cth-ink)",
  }}>
  From Campaign
  </h3>
@@ -3895,9 +3895,9 @@ export default function SocialMediaManager() {
  style={{
  flex: 1, padding: "8px 10px", borderRadius: 4, cursor: "pointer",
  fontFamily: SANS, fontSize: 12, fontWeight: 600,
- background: drawerTab === key ? "rgba(196,169,91,0.15)" : "var(--cth-command-panel-soft)",
- border: `1px solid ${drawerTab === key ? "var(--cth-command-gold)" : "var(--cth-command-border)"}`,
- color: drawerTab === key ? "var(--cth-command-ink)" : "var(--cth-command-muted)",
+ background: drawerTab === key ? "rgba(196,169,91,0.15)" : "var(--cth-blush)",
+ border: `1px solid ${drawerTab === key ? "var(--cth-gold)" : "var(--cth-border)"}`,
+ color: drawerTab === key ? "var(--cth-ink)" : "var(--cth-muted)",
  }}
  >
  {label}
@@ -3907,7 +3907,7 @@ export default function SocialMediaManager() {
 
  {drawerTab === "brand_assets" ? (
  brandAssetsLoading ? (
- <p style={{ color: "var(--cth-command-muted)", fontSize: 13, fontFamily: SANS }}>Loading brand assets…</p>
+ <p style={{ color: "var(--cth-muted)", fontSize: 13, fontFamily: SANS }}>Loading brand assets…</p>
  ) : brandAssets.length === 0 ? (
  <EmptyState
  icon={LayoutIcon}
@@ -3931,8 +3931,8 @@ export default function SocialMediaManager() {
  }}
  style={{
  padding: 0,
- background: "var(--cth-command-panel-soft)",
- border: `2px solid ${isSel ? "var(--cth-command-gold)" : "var(--cth-command-border)"}`,
+ background: "var(--cth-blush)",
+ border: `2px solid ${isSel ? "var(--cth-gold)" : "var(--cth-border)"}`,
  borderRadius: 4, cursor: "pointer", overflow: "hidden",
  aspectRatio: "1 / 1", position: "relative",
  }}
@@ -3943,7 +3943,7 @@ export default function SocialMediaManager() {
  {isSel ? (
  <div style={{
  position: "absolute", top: 4, right: 4,
- background: "var(--cth-command-purple)", color: "var(--cth-command-gold)",
+ background: "var(--cth-purple-deep)", color: "var(--cth-gold)",
  borderRadius: 3, padding: 2,
  }}>
  <Check size={10} />
@@ -3956,7 +3956,7 @@ export default function SocialMediaManager() {
  )
  ) : !drawerSelectedCampaignId ? (
  drawerCampaignsLoading ? (
- <p style={{ color: "var(--cth-command-muted)", fontSize: 13, fontFamily: SANS }}>Loading campaigns…</p>
+ <p style={{ color: "var(--cth-muted)", fontSize: 13, fontFamily: SANS }}>Loading campaigns…</p>
  ) : drawerCampaigns.length === 0 ? (
  <EmptyState
  icon={LayoutIcon}
@@ -3975,10 +3975,10 @@ export default function SocialMediaManager() {
  }}
  >
  <div style={{ minWidth: 0, flex: 1 }}>
- <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: "var(--cth-command-ink)" }}>
+ <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: "var(--cth-ink)" }}>
  {c.name || "Untitled"}
  </div>
- <div style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)", textTransform: "capitalize" }}>
+ <div style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-muted)", textTransform: "capitalize" }}>
  {c.status || "draft"}
  </div>
  </div>
@@ -3994,7 +3994,7 @@ export default function SocialMediaManager() {
  </div>
  )
  ) : drawerLoading ? (
- <p style={{ color: "var(--cth-command-muted)", fontSize: 13, fontFamily: SANS }}>Loading campaign assets…</p>
+ <p style={{ color: "var(--cth-muted)", fontSize: 13, fontFamily: SANS }}>Loading campaign assets…</p>
  ) : (
  <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
  <button
@@ -4004,7 +4004,7 @@ export default function SocialMediaManager() {
  alignSelf: "flex-start",
  background: "transparent", border: "none", padding: 0,
  fontFamily: SANS, fontSize: 12, fontWeight: 600,
- color: "var(--cth-command-muted)",
+ color: "var(--cth-muted)",
  cursor: "pointer",
  textDecoration: "underline",
  }}
@@ -4015,7 +4015,7 @@ export default function SocialMediaManager() {
  <div>
  <Eyebrow>Pick Content</Eyebrow>
  {drawerContent.length === 0 ? (
- <p style={{ color: "var(--cth-command-muted)", fontSize: 12, fontFamily: SANS, margin: "8px 0 0" }}>
+ <p style={{ color: "var(--cth-muted)", fontSize: 12, fontFamily: SANS, margin: "8px 0 0" }}>
  No content for this campaign.
  </p>
  ) : (
@@ -4030,20 +4030,20 @@ export default function SocialMediaManager() {
  style={{
  textAlign: "left",
  padding: "10px 12px",
- background: isSel ? "rgba(196,169,91,0.15)" : "var(--cth-command-panel-soft)",
- border: `1px solid ${isSel ? "var(--cth-command-gold)" : "var(--cth-command-border)"}`,
+ background: isSel ? "rgba(196,169,91,0.15)" : "var(--cth-blush)",
+ border: `1px solid ${isSel ? "var(--cth-gold)" : "var(--cth-border)"}`,
  borderRadius: 4,
  cursor: "pointer",
  fontFamily: SANS,
  }}
  >
  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
- {isSel ? <Check size={12} color="var(--cth-command-purple)" /> : null}
- <span style={{ fontWeight: 600, fontSize: 13, color: "var(--cth-command-ink)" }}>
+ {isSel ? <Check size={12} color="var(--cth-purple-deep)" /> : null}
+ <span style={{ fontWeight: 600, fontSize: 13, color: "var(--cth-ink)" }}>
  {item.title || item.content_type || "Untitled"}
  </span>
  </div>
- <p style={{ margin: 0, fontSize: 11, color: "var(--cth-command-muted)", lineHeight: 1.4 }}>
+ <p style={{ margin: 0, fontSize: 11, color: "var(--cth-muted)", lineHeight: 1.4 }}>
  {(item.content || "").replace(/[#*_>`]/g, "").slice(0, 100)}
  </p>
  </button>
@@ -4056,7 +4056,7 @@ export default function SocialMediaManager() {
  <div>
  <Eyebrow>Pick Media</Eyebrow>
  {drawerMedia.length === 0 ? (
- <p style={{ color: "var(--cth-command-muted)", fontSize: 12, fontFamily: SANS, margin: "8px 0 0" }}>
+ <p style={{ color: "var(--cth-muted)", fontSize: 12, fontFamily: SANS, margin: "8px 0 0" }}>
  No media for this campaign.
  </p>
  ) : (
@@ -4075,8 +4075,8 @@ export default function SocialMediaManager() {
  )}
  style={{
  padding: 0,
- background: "var(--cth-command-panel-soft)",
- border: `2px solid ${isSel ? "var(--cth-command-gold)" : "var(--cth-command-border)"}`,
+ background: "var(--cth-blush)",
+ border: `2px solid ${isSel ? "var(--cth-gold)" : "var(--cth-border)"}`,
  borderRadius: 4,
  cursor: "pointer",
  overflow: "hidden",
@@ -4094,8 +4094,8 @@ export default function SocialMediaManager() {
  {isSel ? (
  <div style={{
  position: "absolute", top: 4, right: 4,
- background: "var(--cth-command-purple)",
- color: "var(--cth-command-gold)",
+ background: "var(--cth-purple-deep)",
+ color: "var(--cth-gold)",
  borderRadius: 3, padding: 2,
  }}>
  <Check size={10} />
@@ -4112,7 +4112,7 @@ export default function SocialMediaManager() {
  </div>
 
  {drawerSelectedCampaignId ? (
- <div style={{ padding: "16px 22px", borderTop: "1px solid var(--cth-command-border)" }}>
+ <div style={{ padding: "16px 22px", borderTop: "1px solid var(--cth-border)" }}>
  <button
  type="button"
  onClick={applyDrawerSelections}
