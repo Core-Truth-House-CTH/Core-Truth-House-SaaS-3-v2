@@ -17,6 +17,7 @@ import {
 } from "../utils/diagnosticDimensions";
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
+import { getStoredAttribution } from "../lib/utmCapture";
 
 const A = {
  logo: "/brand-assets/logo/cth-logo-seal.png",
@@ -233,6 +234,8 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  status,
  consent: Boolean(leadInfo.consent),
  source: "brand_diagnostic",
+ // First-touch UTM/referrer/landing set captured at app entry.
+ ...getStoredAttribution(),
  };
  }
 

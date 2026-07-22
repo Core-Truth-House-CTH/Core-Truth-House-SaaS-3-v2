@@ -143,6 +143,7 @@ const INTAKE_LABELS = {
  cohort_application: "Applied to cohort",
  brand_diagnostic: "Took the diagnostic",
  contact_page: "Sent a message",
+ campaign: "Came from a campaign",
 };
 
 function intakeLabel(channel) {
@@ -264,7 +265,7 @@ function Chip({ children, tone = "default" }) {
  success: {
  background: "rgba(34,135,90,0.12)",
  border: "1px solid rgba(34,135,90,0.28)",
- color: "#15803d",
+ color: "var(--cth-command-success)",
  },
  gold: {
  background: "rgba(196,169,91,0.18)",
