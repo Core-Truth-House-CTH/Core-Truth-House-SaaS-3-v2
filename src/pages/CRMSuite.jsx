@@ -1436,6 +1436,17 @@ export default function CRMSuite() {
  Contacts, deals, follow-ups, and opportunities in one view.
  </p>
  </>
+ ) : activeTab === "contacts" ? (
+ <p
+ style={{
+ fontFamily: SANS,
+ fontSize: 14,
+ color: "var(--cth-command-muted)",
+ margin: 0,
+ }}
+ >
+ Every contact and client in one place.
+ </p>
  ) : (
  <>
  <div style={EYEBROW_STYLE}>Customer Relationship Manager</div>
@@ -1924,13 +1935,70 @@ export default function CRMSuite() {
  )}
 
  {activeTab === "contacts" && (
- <Section
- eyebrow="Directory"
- title="Client Database"
- flush
- action={
- <div className="flex flex-wrap items-center gap-2">
- <div className="relative">
+ <section
+ style={{
+ ...PANEL_STYLE,
+ borderRadius: 16,
+ boxShadow:
+ "0 18px 40px color-mix(in srgb, var(--cth-command-ink) 8%, transparent)",
+ overflow: "hidden",
+ }}
+ >
+ {/* Header row: count eyebrow + serif title (left), Sort pill (right) */}
+ <div
+ style={{
+ display: "flex",
+ alignItems: "flex-start",
+ justifyContent: "space-between",
+ gap: 12,
+ flexWrap: "wrap",
+ padding: "20px 22px",
+ borderBottom: "1px solid var(--cth-command-border)",
+ }}
+ >
+ <div>
+ <div style={EYEBROW_STYLE}>
+ {contacts.length} record{contacts.length === 1 ? "" : "s"}
+ </div>
+ <h2
+ style={{
+ fontFamily: SERIF,
+ fontSize: 24,
+ fontWeight: 600,
+ color: "var(--cth-command-ink)",
+ margin: "4px 0 0",
+ letterSpacing: "-0.005em",
+ lineHeight: 1.2,
+ }}
+ >
+ Client Database
+ </h2>
+ </div>
+ <select
+ value={contactSortOrder}
+ onChange={(e) => setContactSortOrder(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999, width: "auto" }}
+ aria-label="Sort order"
+ >
+ <option value="newest">Newest first</option>
+ <option value="oldest">Oldest first</option>
+ <option value="name-asc">Name A-Z</option>
+ <option value="name-desc">Name Z-A</option>
+ </select>
+ </div>
+
+ {/* Filter row: one horizontal, left-aligned, wrapping row of compact pills */}
+ <div
+ style={{
+ display: "flex",
+ flexWrap: "wrap",
+ alignItems: "center",
+ gap: 8,
+ padding: "14px 22px",
+ borderBottom: "1px solid var(--cth-command-border)",
+ }}
+ >
+ <div style={{ position: "relative" }}>
  <Search
  size={14}
  style={{
@@ -1945,24 +2013,14 @@ export default function CRMSuite() {
  <input
  value={contactQuery}
  onChange={(e) => setContactQuery(e.target.value)}
- placeholder="Search contacts"
+ placeholder="Search"
  style={{ ...SMALL_INPUT_STYLE, paddingLeft: 32, width: 200, borderRadius: 999 }}
  />
  </div>
  <select
- value={contactSortOrder}
- onChange={(e) => setContactSortOrder(e.target.value)}
- style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
- >
- <option value="newest">Newest First</option>
- <option value="oldest">Oldest First</option>
- <option value="name-asc">Name A-Z</option>
- <option value="name-desc">Name Z-A</option>
- </select>
- <select
  value={contactStatusFilter}
  onChange={(e) => setContactStatusFilter(e.target.value)}
- style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999, width: "auto" }}
  aria-label="Filter by status"
  >
  <option value="all">All statuses</option>
@@ -1975,7 +2033,7 @@ export default function CRMSuite() {
  <select
  value={contactIndustryFilter}
  onChange={(e) => setContactIndustryFilter(e.target.value)}
- style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999, width: "auto" }}
  aria-label="Filter by industry"
  >
  <option value="all">All industries</option>
@@ -1988,7 +2046,7 @@ export default function CRMSuite() {
  <select
  value={contactSourceFilter}
  onChange={(e) => setContactSourceFilter(e.target.value)}
- style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999, width: "auto" }}
  aria-label="Filter by source"
  >
  <option value="all">All sources</option>
@@ -1999,9 +2057,9 @@ export default function CRMSuite() {
  ))}
  </select>
  </div>
- }
- >
+
  {filteredContacts.length === 0 ? (
+ <div style={{ padding: "16px 22px" }}>
  <EmptyState
  text={
  contactQuery.trim()
@@ -2009,6 +2067,7 @@ export default function CRMSuite() {
  : "No contacts yet."
  }
  />
+ </div>
  ) : (
  <div style={{ overflowX: "auto" }}>
  <table
@@ -2126,7 +2185,7 @@ export default function CRMSuite() {
  </table>
  </div>
  )}
- </Section>
+ </section>
  )}
 
  {activeTab === "activity" && (
