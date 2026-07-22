@@ -2887,9 +2887,10 @@ export default function SocialMediaManager() {
  action={
  <button
  type="button"
+ className="btn btn-primary btn-small"
  onClick={handleRecycleTopPost}
  disabled={recycleBusy}
- style={{ ...PRIMARY_BUTTON_STYLE, opacity: recycleBusy ? 0.7 : 1 }}
+ style={{ opacity: recycleBusy ? 0.7 : 1 }}
  >
  {recycleBusy ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
  Recycle Top Post
@@ -2897,103 +2898,98 @@ export default function SocialMediaManager() {
  }
  />
 
- <Panel padding={20}>
- <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
- <div style={{ flex: "1 1 180px", minWidth: 160 }}>
- <FieldLabel>Status</FieldLabel>
- <select
- value={filterStatus}
- onChange={(e) => setFilterStatus(e.target.value)}
- data-testid="status-filter"
- style={SMALL_INPUT_STYLE}
- >
- {STATUS_FILTER_OPTIONS.map((opt) => (
- <option key={opt.key} value={opt.key}>{opt.label}</option>
- ))}
- </select>
- </div>
- <div style={{ flex: "1 1 180px", minWidth: 160 }}>
- <FieldLabel>Platform</FieldLabel>
- <select
- value={filterPlatform}
- onChange={(e) => setFilterPlatform(e.target.value)}
- data-testid="platform-filter"
- style={SMALL_INPUT_STYLE}
- >
- <option value="all">All Platforms</option>
- {Object.entries(PLATFORM_CFG).map(([id, c]) => (
- <option key={id} value={id}>{c.label}</option>
- ))}
- </select>
- </div>
- <div style={{ flex: "1 1 180px", minWidth: 160 }}>
- <FieldLabel>Sort by</FieldLabel>
- <select
- value={sortBy}
- onChange={(e) => setSortBy(e.target.value)}
- data-testid="sort-posts"
- style={SMALL_INPUT_STYLE}
- >
- {SORT_OPTIONS.map((opt) => (
- <option key={opt.key} value={opt.key}>{opt.label}</option>
- ))}
- </select>
- </div>
- </div>
+                <div className="panel" style={{ padding: 16 }}>
+                  <div className="post-filters" style={{ gridTemplateColumns: "repeat(3, minmax(160px, 1fr))" }}>
+                    <div>
+                      <FieldLabel>Status</FieldLabel>
+                      <select
+                        className="control"
+                        style={{ width: "100%" }}
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        data-testid="status-filter"
+                      >
+                        {STATUS_FILTER_OPTIONS.map((opt) => (
+                          <option key={opt.key} value={opt.key}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <FieldLabel>Platform</FieldLabel>
+                      <select
+                        className="control"
+                        style={{ width: "100%" }}
+                        value={filterPlatform}
+                        onChange={(e) => setFilterPlatform(e.target.value)}
+                        data-testid="platform-filter"
+                      >
+                        <option value="all">All Platforms</option>
+                        {Object.entries(PLATFORM_CFG).map(([id, c]) => (
+                          <option key={id} value={id}>{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <FieldLabel>Sort by</FieldLabel>
+                      <select
+                        className="control"
+                        style={{ width: "100%" }}
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        data-testid="sort-posts"
+                      >
+                        {SORT_OPTIONS.map((opt) => (
+                          <option key={opt.key} value={opt.key}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
- {filteredPosts.length > 0 ? (
- <div style={{
- marginTop: 16,
- padding: 14,
- ...SOFT_PANEL_STYLE,
- display: "flex", flexDirection: "column", gap: 10,
- }}>
- <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
- <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
- <button
- type="button"
- onClick={() => {
- // Published / in-flight posts are never selectable — bulk schedule
- // cannot do anything with them.
- const schedulable = filteredPosts.filter((post) => !isPublishLocked(post));
- if (selectedPostIds.length >= schedulable.length && schedulable.length > 0) {
- setSelectedPostIds([]);
- } else {
- setSelectedPostIds(schedulable.map((post) => post.id));
- }
- }}
- style={SECONDARY_BUTTON_STYLE}
- >
- {selectedPostIds.length >= filteredPosts.filter((p) => !isPublishLocked(p)).length
- && selectedPostIds.length > 0
- ? "Clear Selection"
- : "Select All"}
- </button>
- <span style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>
- {selectedPostIds.length} selected
- </span>
- </div>
- <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
- <input
- type="datetime-local"
- value={bulkScheduleDate}
- onChange={(e) => setBulkScheduleDate(e.target.value)}
- style={SMALL_INPUT_STYLE}
- />
- <button
- type="button"
- onClick={handleBulkSchedule}
- disabled={!selectedPostIds.length || !bulkScheduleDate || bulkScheduling}
- style={{ ...PRIMARY_BUTTON_STYLE, opacity: (!selectedPostIds.length || !bulkScheduleDate || bulkScheduling) ? 0.4 : 1 }}
- >
- {bulkScheduling ? <Loader2 size={14} className="animate-spin" /> : <Clock size={14} />}
- Bulk Schedule
- </button>
- </div>
- </div>
- </div>
- ) : null}
- </Panel>
+                  {filteredPosts.length > 0 ? (
+                    <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--cth-border)", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <button
+                          type="button"
+                          className="btn btn-small btn-secondary"
+                          onClick={() => {
+                            // Published / in-flight posts are never selectable — bulk schedule
+                            // cannot do anything with them.
+                            const schedulable = filteredPosts.filter((post) => !isPublishLocked(post));
+                            if (selectedPostIds.length >= schedulable.length && schedulable.length > 0) {
+                              setSelectedPostIds([]);
+                            } else {
+                              setSelectedPostIds(schedulable.map((post) => post.id));
+                            }
+                          }}
+                        >
+                          {selectedPostIds.length >= filteredPosts.filter((p) => !isPublishLocked(p)).length
+                            && selectedPostIds.length > 0
+                            ? "Clear Selection"
+                            : "Select All"}
+                        </button>
+                        <span className="muted" style={{ fontSize: 12 }}>{selectedPostIds.length} selected</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <input
+                          type="datetime-local"
+                          className="control"
+                          value={bulkScheduleDate}
+                          onChange={(e) => setBulkScheduleDate(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-small btn-primary"
+                          onClick={handleBulkSchedule}
+                          disabled={!selectedPostIds.length || !bulkScheduleDate || bulkScheduling}
+                          style={{ opacity: (!selectedPostIds.length || !bulkScheduleDate || bulkScheduling) ? 0.4 : 1 }}
+                        >
+                          {bulkScheduling ? <Loader2 size={14} className="animate-spin" /> : <Clock size={14} />}
+                          Bulk Schedule
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
 
  {filteredPosts.length > 0 ? (
  filteredPosts.map((post) => {
@@ -3005,10 +3001,10 @@ export default function SocialMediaManager() {
  <div
  key={post.id}
  data-testid={`post-${post.id}`}
+ className="panel"
  style={{
- ...PANEL_STYLE,
  padding: 20,
- outline: checked ? "2px solid var(--cth-command-crimson)" : "none",
+ outline: checked ? "2px solid var(--cth-crimson)" : "none",
  outlineOffset: -2,
  }}
  >
