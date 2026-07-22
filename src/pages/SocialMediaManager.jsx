@@ -2615,209 +2615,142 @@ export default function SocialMediaManager() {
  <div data-testid="instagram-grid-planner" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
  <Panel padding={24}>
  <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
- <div
- style={{
- display: "flex",
- flexWrap: "wrap",
- alignItems: "center",
- justifyContent: "space-between",
- gap: 12,
- paddingBottom: 12,
- borderBottom: "1px solid var(--cth-command-border)",
- }}
- >
- <div>
- <Eyebrow>Profile</Eyebrow>
- <p style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-command-muted)", margin: "4px 0 0" }}>
- Edit by hand or pull live data from a connected Instagram account.
- </p>
- {igConnection?.username ? (
- <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
- <Chip tone="success">Instagram</Chip>
- <span style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>
- @{igConnection.username}
- </span>
- {linkedFacebookPageName ? (
- <>
- <Chip tone="success">Facebook</Chip>
- <span style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>
- {linkedFacebookPageName}
- </span>
- </>
- ) : null}
- </div>
- ) : !igConnectionLoading ? (
- <div style={{ marginTop: 8 }}>
- <Chip tone="muted">Not connected</Chip>
- </div>
- ) : null}
- </div>
- <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
- {igConnection ? (
- <button
- type="button"
- onClick={handleDisconnectInstagram}
- disabled={igActionBusy}
- style={{ ...DESTRUCTIVE_OUTLINE_STYLE, opacity: igActionBusy ? 0.7 : 1 }}
- title="Disconnect Instagram"
- >
- {igActionBusy ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
- Disconnect
- </button>
- ) : (
- <button
- type="button"
- onClick={handleConnectInstagram}
- disabled={igActionBusy || igConnectionLoading}
- style={{ ...PRIMARY_BUTTON_STYLE, opacity: (igActionBusy || igConnectionLoading) ? 0.7 : 1 }}
- title="Connect Instagram"
- >
- {igActionBusy ? <Loader2 size={14} className="animate-spin" /> : <Instagram size={14} />}
- Connect Instagram + Facebook
- </button>
- )}
- <button
- type="button"
- onClick={handleSyncInstagramProfile}
- disabled={syncingProfile || !igConnection}
- style={{ ...SECONDARY_BUTTON_STYLE, opacity: (syncingProfile || !igConnection) ? 0.7 : 1 }}
- title={igConnection ? "Sync profile from Instagram" : "Connect Instagram first"}
- >
- {syncingProfile ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
- {syncingProfile ? "Syncing…" : "Sync from Instagram"}
- </button>
- </div>
- </div>
+            <div className="inner-header">
+              <div>
+                <div className="section-kicker" style={{ color: "var(--cth-crimson)" }}>Profile</div>
+                <p className="muted" style={{ margin: "4px 0 0", fontSize: 12 }}>
+                  Edit by hand or pull live data from a connected Instagram account.
+                </p>
+                {igConnection?.username ? (
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <span className="status-pill published"><span className="status-dot" style={{ background: "#5bac76" }} />Instagram</span>
+                    <span className="muted" style={{ fontSize: 12 }}>@{igConnection.username}</span>
+                    {linkedFacebookPageName ? (
+                      <>
+                        <span className="status-pill published"><span className="status-dot" style={{ background: "#5bac76" }} />Facebook</span>
+                        <span className="muted" style={{ fontSize: 12 }}>{linkedFacebookPageName}</span>
+                      </>
+                    ) : null}
+                  </div>
+                ) : !igConnectionLoading ? (
+                  <div style={{ marginTop: 8 }}>
+                    <span className="status-pill" style={{ background: "var(--cth-blush)", color: "var(--cth-ruby)" }}>Not connected</span>
+                  </div>
+                ) : null}
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                {igConnection ? (
+                  <button
+                    type="button"
+                    className="btn btn-small btn-danger"
+                    onClick={handleDisconnectInstagram}
+                    disabled={igActionBusy}
+                    title="Disconnect Instagram"
+                    style={{ opacity: igActionBusy ? 0.7 : 1 }}
+                  >
+                    {igActionBusy ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+                    Disconnect
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-small btn-primary"
+                    onClick={handleConnectInstagram}
+                    disabled={igActionBusy || igConnectionLoading}
+                    title="Connect Instagram"
+                    style={{ opacity: (igActionBusy || igConnectionLoading) ? 0.7 : 1 }}
+                  >
+                    {igActionBusy ? <Loader2 size={14} className="animate-spin" /> : <Instagram size={14} />}
+                    Connect Instagram + Facebook
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-small btn-secondary"
+                  onClick={handleSyncInstagramProfile}
+                  disabled={syncingProfile || !igConnection}
+                  title={igConnection ? "Sync profile from Instagram" : "Connect Instagram first"}
+                  style={{ opacity: (syncingProfile || !igConnection) ? 0.7 : 1 }}
+                >
+                  {syncingProfile ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                  {syncingProfile ? "Syncing…" : "Sync from Instagram"}
+                </button>
+              </div>
+            </div>
 
- <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 24 }}>
- <input
- ref={gridAvatarInputRef}
- type="file"
- accept="image/*"
- onChange={handleGridAvatarSelect}
- style={{ display: "none" }}
- />
+            <div className="profile-top" style={{ alignItems: "flex-start", flexWrap: "wrap", gap: 20, marginTop: 16 }}>
+              <input
+                ref={gridAvatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleGridAvatarSelect}
+                style={{ display: "none" }}
+              />
 
- <button
- type="button"
- onClick={() => gridAvatarInputRef.current?.click()}
- title="Upload avatar"
- style={{
- width: 96,
- height: 96,
- borderRadius: "50%",
- background: "var(--cth-command-panel-soft)",
- border: "2px solid var(--cth-command-border)",
- overflow: "hidden",
- cursor: "pointer",
- padding: 0,
- position: "relative",
- }}
- >
- {gridProfile.avatar_url ? (
- <img
- src={backendAssetUrl(gridProfile.avatar_url)}
- alt=""
- style={{ width: "100%", height: "100%", objectFit: "cover" }}
- />
- ) : (
- <div style={{
- width: "100%", height: "100%",
- display: "flex", alignItems: "center", justifyContent: "center",
- fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)",
- }}>Upload</div>
- )}
- </button>
+              <button
+                type="button"
+                className="avatar"
+                onClick={() => gridAvatarInputRef.current?.click()}
+                title="Upload avatar"
+                style={{ overflow: "hidden", padding: 0, cursor: "pointer" }}
+              >
+                {gridProfile.avatar_url ? (
+                  <img
+                    src={backendAssetUrl(gridProfile.avatar_url)}
+                    alt=""
+                    style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                  />
+                ) : (
+                  <span style={{ fontSize: 12 }}>Upload</span>
+                )}
+              </button>
 
- <div style={{ flex: 1, minWidth: 240, display: "flex", flexDirection: "column", gap: 8 }}>
- <input
- value={gridProfile.handle}
- onChange={(e) => setGridProfile((p) => ({ ...p, handle: e.target.value }))}
- style={{
- background: "transparent",
- border: "none",
- fontFamily: SERIF,
- fontSize: 22,
- fontWeight: 600,
- color: "var(--cth-command-ink)",
- outline: "none",
- padding: 0,
- }}
- />
- <input
- value={gridProfile.display_name}
- onChange={(e) => setGridProfile((p) => ({ ...p, display_name: e.target.value }))}
- style={{
- background: "transparent",
- border: "none",
- fontFamily: SANS,
- fontSize: 14,
- fontWeight: 600,
- color: "var(--cth-command-ink)",
- outline: "none",
- padding: 0,
- }}
- />
- <input
- value={gridProfile.category}
- onChange={(e) => setGridProfile((p) => ({ ...p, category: e.target.value }))}
- style={{
- background: "transparent",
- border: "none",
- fontFamily: SANS,
- fontSize: 13,
- color: "var(--cth-command-muted)",
- outline: "none",
- padding: 0,
- }}
- />
- {[1, 2, 3].map((n) => (
- <input
- key={n}
- value={gridProfile[`bio_line_${n}`]}
- onChange={(e) => setGridProfile((p) => ({ ...p, [`bio_line_${n}`]: e.target.value }))}
- style={{
- background: "transparent",
- border: "none",
- fontFamily: SANS,
- fontSize: 13,
- color: "var(--cth-command-ink)",
- outline: "none",
- padding: 0,
- }}
- />
- ))}
- <input
- value={gridProfile.website}
- onChange={(e) => setGridProfile((p) => ({ ...p, website: e.target.value }))}
- style={{
- background: "transparent",
- border: "none",
- fontFamily: SANS,
- fontSize: 13,
- fontWeight: 600,
- color: "var(--cth-command-crimson)",
- outline: "none",
- padding: 0,
- }}
- />
- </div>
+              <div style={{ flex: 1, minWidth: 240, display: "flex", flexDirection: "column", gap: 6 }}>
+                <input
+                  className="profile-name"
+                  value={gridProfile.handle}
+                  onChange={(e) => setGridProfile((p) => ({ ...p, handle: e.target.value }))}
+                  style={{ background: "transparent", border: "none", outline: "none", padding: 0 }}
+                />
+                <input
+                  value={gridProfile.display_name}
+                  onChange={(e) => setGridProfile((p) => ({ ...p, display_name: e.target.value }))}
+                  style={{ background: "transparent", border: "none", outline: "none", padding: 0, fontWeight: 600, color: "var(--cth-ink)" }}
+                />
+                <input
+                  className="muted"
+                  value={gridProfile.category}
+                  onChange={(e) => setGridProfile((p) => ({ ...p, category: e.target.value }))}
+                  style={{ background: "transparent", border: "none", outline: "none", padding: 0, fontSize: 13 }}
+                />
+                {[1, 2, 3].map((n) => (
+                  <input
+                    key={n}
+                    value={gridProfile[`bio_line_${n}`]}
+                    onChange={(e) => setGridProfile((p) => ({ ...p, [`bio_line_${n}`]: e.target.value }))}
+                    style={{ background: "transparent", border: "none", outline: "none", padding: 0, fontSize: 13, color: "var(--cth-ink)" }}
+                  />
+                ))}
+                <input
+                  value={gridProfile.website}
+                  onChange={(e) => setGridProfile((p) => ({ ...p, website: e.target.value }))}
+                  style={{ background: "transparent", border: "none", outline: "none", padding: 0, fontSize: 13, fontWeight: 600, color: "var(--cth-crimson)" }}
+                />
+              </div>
 
- <div style={{ display: "flex", gap: 24, alignSelf: "center" }}>
- {[
- { label: "Posts", value: gridProfile.posts_count || gridSlots.filter((p) => !p?.isEmpty).length },
- { label: "Followers", value: gridProfile.followers_count || 0 },
- { label: "Following", value: gridProfile.following_count || 0 },
- ].map((stat) => (
- <div key={stat.label} style={{ textAlign: "center" }}>
- <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 600, color: "var(--cth-command-ink)", lineHeight: 1 }}>
- {stat.value}
- </div>
- <div style={{ ...EYEBROW_STYLE, fontSize: 10, marginTop: 6 }}>{stat.label}</div>
- </div>
- ))}
- </div>
- </div>
+              <div className="profile-stats" style={{ margin: 0, minWidth: 220, alignSelf: "center" }}>
+                {[
+                  { label: "Posts", value: gridProfile.posts_count || gridSlots.filter((p) => !p?.isEmpty).length },
+                  { label: "Followers", value: gridProfile.followers_count || 0 },
+                  { label: "Following", value: gridProfile.following_count || 0 },
+                ].map((stat) => (
+                  <div className="profile-stat" key={stat.label}>
+                    <strong>{stat.value}</strong>
+                    {stat.label}
+                  </div>
+                ))}
+              </div>
+            </div>
 
  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
  <div>
@@ -2831,217 +2764,115 @@ export default function SocialMediaManager() {
  </span>
  </div>
 
- <input
- ref={gridSlotFileInputRef}
- type="file"
- accept="image/*"
- onChange={handleGridSlotFileSelect}
- style={{ display: "none" }}
- />
+              <input
+                ref={gridSlotFileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleGridSlotFileSelect}
+                style={{ display: "none" }}
+              />
 
- <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
- {gridSlots.map((post, index) => {
- if (post.isEmpty) {
- return (
- <div
- key={post.id}
- onDragOver={(e) => e.preventDefault()}
- onDrop={(e) => handleGridFileDrop(e, index)}
- style={{
- background: "var(--cth-command-panel-soft)",
- border: "1px dashed var(--cth-command-border)",
- borderRadius: 4,
- overflow: "hidden",
- }}
- >
- <div style={{
- aspectRatio: "4 / 5",
- display: "flex",
- flexDirection: "column",
- alignItems: "center",
- justifyContent: "center",
- padding: 14,
- textAlign: "center",
- gap: 8,
- }}>
- <span style={{ ...EYEBROW_STYLE, fontSize: 10 }}>{post.label}</span>
- <span style={{ fontFamily: SANS, fontSize: 11, color: "var(--cth-command-muted)" }}>
- Drop image or
- </span>
- <button
- type="button"
- onClick={() => {
- setPendingGridSlotIndex(index);
- gridSlotFileInputRef.current?.click();
- }}
- style={{
- ...PRIMARY_BUTTON_STYLE,
- padding: "6px 12px",
- fontSize: 12,
- }}
- >
- Select Image
- </button>
- </div>
- </div>
- );
- }
+              <div className="grid-preview">
+                {gridSlots.map((post, index) => {
+                  if (post.isEmpty) {
+                    return (
+                      <div
+                        key={post.id}
+                        className="grid-tile"
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => handleGridFileDrop(e, index)}
+                        style={{ cursor: "default", background: "var(--cth-panel-white)", border: "1px dashed var(--cth-border)", display: "grid", placeItems: "center", padding: 12, textAlign: "center" }}
+                      >
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                          <span className="section-kicker" style={{ margin: 0, fontSize: 10 }}>{post.label}</span>
+                          <span className="muted" style={{ fontSize: 11 }}>Drop image or</span>
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-small"
+                            onClick={() => {
+                              setPendingGridSlotIndex(index);
+                              gridSlotFileInputRef.current?.click();
+                            }}
+                          >
+                            Select Image
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
 
- const statusCfg = STATUS_CFG[post.status] || STATUS_CFG.draft;
- const thumb = post.media_urls?.[0];
+                  const statusCfg = STATUS_CFG[post.status] || STATUS_CFG.draft;
+                  const thumb = post.media_urls?.[0];
 
- return (
- <div
- key={post.id}
- draggable
- onDragStart={() => setDraggedGridIndex(index)}
- onDragOver={(e) => e.preventDefault()}
- onDrop={() => handleGridDrop(index)}
- style={{
- background: "var(--cth-command-panel)",
- border: "1px solid var(--cth-command-border)",
- borderRadius: 4,
- overflow: "hidden",
- position: "relative",
- cursor: "grab",
- }}
- >
- <button
- type="button"
- onClick={() => handleEditPost(post)}
- style={{
- display: "block",
- width: "100%",
- padding: 0,
- background: "transparent",
- border: "none",
- textAlign: "left",
- cursor: "pointer",
- }}
- >
- <div style={{
- aspectRatio: "4 / 5",
- width: "100%",
- background: "var(--cth-command-panel-soft)",
- overflow: "hidden",
- }}>
- {thumb ? (
- <img
- src={backendAssetUrl(thumb)}
- alt=""
- style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
- onError={(e) => {
- e.currentTarget.style.display = "none";
- }}
- />
- ) : (
- <div style={{
- width: "100%", height: "100%",
- display: "flex", alignItems: "center", justifyContent: "center",
- padding: 14, textAlign: "center",
- fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)",
- }}>
- No media preview
- </div>
- )}
- </div>
+                  return (
+                    <div
+                      key={post.id}
+                      className="grid-tile"
+                      draggable
+                      onDragStart={() => setDraggedGridIndex(index)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleGridDrop(index)}
+                      style={{ cursor: "grab" }}
+                    >
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleEditPost(post)}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleEditPost(post); } }}
+                        style={{ position: "absolute", inset: 0 }}
+                      >
+                        {thumb ? (
+                          <img
+                            src={backendAssetUrl(thumb)}
+                            alt=""
+                            onError={(e) => { e.currentTarget.style.display = "none"; }}
+                          />
+                        ) : (
+                          <div style={{ width: "100%", height: "100%", display: "grid", placeItems: "center", padding: 12, textAlign: "center", background: "var(--cth-panel-white)", color: "var(--cth-muted)", fontSize: 12 }}>
+                            No media preview
+                          </div>
+                        )}
+                        <div className="grid-overlay">
+                          {post.content || post.topic || "Untitled Instagram post"}
+                        </div>
+                      </div>
 
- <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
- <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
- <span style={{ ...EYEBROW_STYLE, fontSize: 9, letterSpacing: "0.16em" }}>
- Slot {index + 1}
- </span>
- <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
- {post.content_item_id ? <Chip tone="gold">Reviewed</Chip> : null}
- <Chip tone={statusCfg.tone}>{statusCfg.label}</Chip>
- </span>
- </div>
- <p style={{
- margin: 0,
- fontFamily: SANS, fontSize: 12, lineHeight: 1.5,
- color: "var(--cth-command-ink)",
- display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
- overflow: "hidden",
- }}>
- {post.content || post.topic || "Untitled Instagram post"}
- </p>
- </div>
- </button>
+                      <span className="planned-badge">{post.content_item_id ? "Reviewed" : statusCfg.label}</span>
 
- <div
- style={{
- position: "absolute",
- top: 8,
- right: 8,
- display: "flex",
- gap: 4,
- }}
- >
- {post.status === "scheduled" ? (
- <button
- type="button"
- onClick={(e) => {
- e.stopPropagation();
- requestPublishPost(post);
- }}
- aria-label="Publish now"
- title="Publish now"
- style={{
- width: 28,
- height: 28,
- borderRadius: 4,
- background: "var(--cth-command-purple)",
- color: "var(--cth-command-gold)",
- border: "none",
- display: "flex",
- alignItems: "center",
- justifyContent: "center",
- cursor: "pointer",
- }}
- >
- <Send size={13} />
- </button>
- ) : null}
- <button
- type="button"
- onClick={(e) => {
- e.stopPropagation();
- requestDeletePost(post);
- }}
- aria-label="Delete post"
- title="Delete post"
- style={{
- width: 28,
- height: 28,
- borderRadius: 4,
- background: "rgba(13,0,16,0.7)",
- color: "var(--cth-command-ivory)",
- border: "none",
- display: "flex",
- alignItems: "center",
- justifyContent: "center",
- cursor: "pointer",
- }}
- >
- <Trash2 size={13} />
- </button>
- </div>
- </div>
- );
- })}
- </div>
+                      <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 4, zIndex: 2 }}>
+                        {post.status === "scheduled" ? (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); requestPublishPost(post); }}
+                            aria-label="Publish now"
+                            title="Publish now"
+                            style={{ width: 28, height: 28, borderRadius: 4, background: "var(--cth-purple-deep)", color: "var(--cth-gold)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}
+                          >
+                            <Send size={13} />
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); requestDeletePost(post); }}
+                          aria-label="Delete post"
+                          title="Delete post"
+                          style={{ width: 28, height: 28, borderRadius: 4, background: "rgba(13,0,16,0.7)", color: "var(--cth-ivory)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
- {gridSlots.filter((p) => !p?.isEmpty).length === 18 ? (
- <div style={{ display: "flex", justifyContent: "flex-end" }}>
- <button
- type="button"
- onClick={requestResetGrid}
- style={DESTRUCTIVE_OUTLINE_STYLE}
- >
- <Trash2 size={14} /> Reset Grid
- </button>
- </div>
- ) : null}
+              {gridSlots.filter((p) => !p?.isEmpty).length === 18 ? (
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+                  <button type="button" className="btn btn-small btn-danger" onClick={requestResetGrid}>
+                    <Trash2 size={14} /> Reset Grid
+                  </button>
+                </div>
+              ) : null}
  </div>
  </Panel>
  </div>
