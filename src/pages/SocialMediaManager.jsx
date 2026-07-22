@@ -676,6 +676,43 @@ export default function SocialMediaManager() {
  following_count: 0,
  });
 
+ // Monthly Focus — a lightweight planning note shown in the calendar rail.
+ // No backend field exists for it, so it is persisted per workspace in
+ // localStorage rather than through an invented endpoint.
+ const [monthlyFocus, setMonthlyFocus] = useState({
+ primary_offer: "",
+ audience: "",
+ core_message: "",
+ success_target: "",
+ });
+ const monthlyFocusKey = `cth_social_monthly_focus:${workspaceId || "default"}`;
+ useEffect(() => {
+ try {
+ const raw = localStorage.getItem(monthlyFocusKey);
+ setMonthlyFocus({
+ primary_offer: "",
+ audience: "",
+ core_message: "",
+ success_target: "",
+ ...(raw ? JSON.parse(raw) : {}),
+ });
+ } catch {
+ /* ignore malformed storage */
+ }
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [monthlyFocusKey]);
+ const updateMonthlyFocus = (field, value) => {
+ setMonthlyFocus((prev) => {
+ const next = { ...prev, [field]: value };
+ try {
+ localStorage.setItem(monthlyFocusKey, JSON.stringify(next));
+ } catch {
+ /* ignore quota / disabled storage */
+ }
+ return next;
+ });
+ };
+
  const [confirm, setConfirm] = useState(null);
  const [confirmBusy, setConfirmBusy] = useState(false);
  const [toast, setToast] = useState(null);
@@ -2241,6 +2278,28 @@ export default function SocialMediaManager() {
  <div><div className="focus-label">Published</div><div className="focus-value">{publishedCount} post{publishedCount === 1 ? "" : "s"}</div></div>
  <div><div className="focus-label">Next up</div><div className="focus-value">{nextUp ? `${new Date(nextUp.scheduled_for).toLocaleDateString([], { month: "short", day: "numeric" })} · ${(PLATFORM_CFG[nextUp.platform] || {}).label || nextUp.platform}` : "Nothing scheduled"}</div></div>
  <div><div className="focus-label">Connected platforms</div><div className="focus-value">{connectedCount} connected</div></div>
+ </div>
+ </section>
+ <section className="panel rail-card">
+ <div className="rail-card-title">Monthly Focus <Pencil size={13} style={{ color: "var(--cth-muted)" }} /></div>
+ <div className="focus-list">
+ {[
+ { key: "primary_offer", label: "Primary Offer", placeholder: "Your core offer this month" },
+ { key: "audience", label: "Audience", placeholder: "Who you are speaking to" },
+ { key: "core_message", label: "Core Message", placeholder: "The through-line of the month" },
+ { key: "success_target", label: "Success Target", placeholder: "What success looks like" },
+ ].map((f) => (
+ <div key={f.key}>
+ <div className="focus-label">{f.label}</div>
+ <input
+ className="focus-value"
+ value={monthlyFocus[f.key]}
+ onChange={(e) => updateMonthlyFocus(f.key, e.target.value)}
+ placeholder={f.placeholder}
+ style={{ width: "100%", background: "transparent", border: "none", outline: "none", padding: 0, font: "inherit", color: "var(--cth-ink)" }}
+ />
+ </div>
+ ))}
  </div>
  </section>
  <section className="panel rail-card">
