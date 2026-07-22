@@ -37,6 +37,7 @@ import {
 import TrackingLinkManager from "../components/mail/TrackingLinkManager";
 import CampaignContextBanner from "../components/shared/CampaignContextBanner";
 import BestPostingTimes from "../components/social/BestPostingTimes";
+import "../styles/social-planner.css";
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Playfair Display', serif";
@@ -2273,6 +2274,7 @@ export default function SocialMediaManager() {
 
  return (
  <DashboardLayout>
+ <div className="cth-social-planner">
  <header className="cth-page-header">
         <div className="min-w-0 flex-1">
           <h1
@@ -4130,6 +4132,7 @@ export default function SocialMediaManager() {
 
  <ConfirmModal confirm={confirm} busy={confirmBusy} onCancel={cancelConfirm} onConfirm={performConfirm} />
  <Toast toast={toast} />
+ </div>
  </DashboardLayout>
  );
 }
