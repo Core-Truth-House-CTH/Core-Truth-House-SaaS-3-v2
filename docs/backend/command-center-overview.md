@@ -1,10 +1,40 @@
 # Command Center Overview API Contract
 
+## Source and runtime locations
+
+Backend source of truth:
+
+```text
+Sha1427/Core-Truth-House-Backend-
+```
+
+Production runtime:
+
+```text
+/var/www/coretruthhouse-backend/app
+```
+
+The VPS service runs Gunicorn as:
+
+```text
+app.main:app
+```
+
+Systemd unit:
+
+```text
+coretruthhouse-backend.service
+```
+
+The production working tree runs directly from the VPS filesystem. It does not deploy through a normal `git pull` from this frontend repository.
+
 ## Status
 
-Frontend contract: implemented in Section 3.
+Frontend contract: implemented in Section 3 on `feat/command-center-shell`.
 
-Backend implementation: required in the separately deployed Core Truth House API service. This frontend repository does not contain that service's source code.
+Backend implementation: must be built in `Sha1427/Core-Truth-House-Backend-`, then reconciled into the VPS working tree at `/var/www/coretruthhouse-backend/app`.
+
+The connected GitHub installation currently exposes only the frontend repository, so the backend implementation cannot be committed from this session until repository access is granted.
 
 ## Endpoint
 
@@ -148,3 +178,46 @@ Raw stack traces, database details, tokens, and internal identifiers must not be
 - An expired support grant cannot access the endpoint.
 - Cache entries never cross workspace boundaries.
 - Missing optional data does not create fabricated metrics.
+
+## Safe VPS reconciliation and deployment
+
+Do not pull or rebase directly inside the production working tree.
+
+Before changing production:
+
+```bash
+cd /var/www/coretruthhouse-backend/app
+git status --short
+git rev-parse HEAD
+```
+
+Record the pre-merge `main` SHA as the rollback point.
+
+Reconcile with fetch:
+
+```bash
+git fetch origin --prune
+```
+
+Review differences between the VPS tree, backend GitHub `main`, and the approved feature branch before merging. Preserve VPS-only production configuration and uncommitted changes deliberately. Do not overwrite them blindly.
+
+After the approved merge is present in the local production tree:
+
+```bash
+sudo systemctl restart coretruthhouse-backend.service
+sudo systemctl status coretruthhouse-backend.service --no-pager
+```
+
+The service has no `ExecReload`, so use `restart`, not `reload`.
+
+Verify:
+
+```bash
+curl -i https://api.coretruthhouse.com/health
+```
+
+Expected result: HTTP `200`.
+
+Then verify the authenticated Command Center endpoint with two separate tenant workspaces before enabling the new frontend as the live `/command-center` route.
+
+Rollback must be possible in one step by resetting the VPS working tree to the captured pre-merge SHA, rebuilding any environment-specific artifacts only when required, and restarting `coretruthhouse-backend.service`.
