@@ -1,16 +1,55 @@
 # Command Center Backend To-Do
 
-This list tracks backend work that is intentionally not being bundled into the Section 3 Command Center overview contract.
+## Backend source and production runtime
+
+Backend source of truth:
+
+```text
+Sha1427/Core-Truth-House-Backend-
+```
+
+Production working tree:
+
+```text
+/var/www/coretruthhouse-backend/app
+```
+
+Runtime:
+
+```text
+gunicorn app.main:app
+systemd unit: coretruthhouse-backend.service
+```
+
+Health check:
+
+```text
+https://api.coretruthhouse.com/health
+```
+
+Expected status: `200`.
+
+The VPS tree has drifted from GitHub in the past. Reconcile with `git fetch`, never `git pull` or rebase directly in the production working tree. Capture the pre-merge production `main` SHA before any change.
 
 ## Required now
 
-- [ ] Implement `GET /api/command-center/overview` in the separately deployed backend service.
+- [ ] Grant the connected GitHub installation access to `Sha1427/Core-Truth-House-Backend-`, or run the backend section through Claude Code on the VPS.
+- [ ] Inspect backend `main`, current production VPS SHA, and working-tree drift before editing.
+- [ ] Create a backend feature branch from the reconciled source.
+- [ ] Implement `GET /api/command-center/overview` in the backend source repository.
+- [ ] Register the router in `app.main:app` using the backend's existing router conventions.
 - [ ] Enforce authenticated workspace membership server-side.
 - [ ] Enforce role and plan access server-side.
 - [ ] Add response-schema validation.
 - [ ] Add tests for two isolated tenant workspaces.
 - [ ] Add tests confirming super administrators cannot read tenant content by default.
 - [ ] Add workspace-aware cache keys.
+- [ ] Run backend tests before production reconciliation.
+- [ ] Merge the approved backend branch into the VPS local `main` without pulling or rebasing the production tree.
+- [ ] Restart with `sudo systemctl restart coretruthhouse-backend.service`.
+- [ ] Confirm `https://api.coretruthhouse.com/health` returns `200`.
+- [ ] Verify the endpoint with two different tenant workspaces.
+- [ ] Preserve the captured pre-merge SHA for one-step rollback.
 
 ## Later routes
 
