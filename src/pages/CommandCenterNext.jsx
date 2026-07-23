@@ -124,6 +124,19 @@ function statusCopy(score) {
   return "Complete the diagnostic";
 }
 
+/**
+ * Time-of-day greeting. Pure and exported so it can be unit tested without
+ * touching the machine clock.
+ *   hour < 12  -> "Good Morning"
+ *   12 to 16   -> "Good Afternoon"
+ *   17 and up  -> "Good Evening"
+ */
+export function greetingForHour(hour) {
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+}
+
 function fallbackNextMove({ score, modules, audit, stats }) {
   if (!audit) {
     return {
@@ -556,6 +569,8 @@ export default function CommandCenterNext() {
 
   const firstName = user?.firstName || (user?.fullName || "").split(" ")[0] || activeWorkspace?.name || "Founder";
   const today = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(new Date());
+  // Local browser time, not server UTC.
+  const greeting = useMemo(() => greetingForHour(new Date().getHours()), []);
 
   return (
     <AuthShell activeNav="command-center">
@@ -563,7 +578,7 @@ export default function CommandCenterNext() {
         <section className="ccn-heading-row">
           <div>
             <span className="ccn-kicker">{today}</span>
-            <h1>Good Morning, {firstName}.</h1>
+            <h1>{greeting}, {firstName}.</h1>
             <p>The House has organized what needs your attention inside {activeWorkspace?.name || "this workspace"}.</p>
           </div>
           <button type="button" className="ccn-refresh" onClick={loadDashboard} disabled={loading}>
@@ -590,7 +605,10 @@ export default function CommandCenterNext() {
 
         <section className="ccn-primary-grid">
           <article className="ccn-next-move">
-            <span className="ccn-panel-eyebrow"><Sparkles size={14} aria-hidden="true" /> {derived.nextMove.eyebrow}</span>
+            {/* Static section label, matching its sibling panels ("YOUR BRAND HOUSE").
+                The backend still sends nextMove.eyebrow; it is intentionally not used
+                as the section heading so the approved copy stays stable. */}
+            <span className="ccn-panel-eyebrow"><Sparkles size={14} aria-hidden="true" /> YOUR NEXT MOVE</span>
             <h2>{derived.nextMove.title}</h2>
             <p>{derived.nextMove.body}</p>
             <button type="button" onClick={() => navigate(derived.nextMove.route)}>
