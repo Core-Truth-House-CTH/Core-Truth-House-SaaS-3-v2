@@ -9,6 +9,17 @@
   scrollbar-color: rgba(196, 169, 91, 0.45) transparent;
 }
 
+.cth-authshell .ccn-data-source {
+  margin-bottom: 14px;
+  border: 1px solid rgba(196, 169, 91, 0.5);
+  border-radius: 10px;
+  background: #fff9e9;
+  color: #654f23;
+  padding: 10px 13px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 @media (max-width: 700px) {
   .cth-authshell .as-topbar {
     align-items: center;
