@@ -1,31 +1,23 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Activity,
   AlertTriangle,
   ArrowRight,
-  BarChart3,
-  BookOpen,
   BriefcaseBusiness,
-  CalendarDays,
   CheckCircle2,
   CircleDot,
   Compass,
-  FileText,
   Gauge,
   Lightbulb,
   Megaphone,
   MessageSquareText,
   PenTool,
-  Plus,
   Radar,
   RefreshCw,
   SearchCheck,
   ShieldCheck,
   Sparkles,
-  Target,
   TrendingUp,
-  Users,
   WandSparkles,
   Workflow,
 } from "lucide-react";
@@ -38,6 +30,7 @@ import { useWorkspace } from "../context/WorkspaceContext";
 import { useUser } from "../hooks/useAuth";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
+import { fetchCommandCenterOverview } from "../lib/commandCenterOverview";
 import "../styles/command-center-next.css";
 
 const SIGNAL_LABELS = {
@@ -67,6 +60,15 @@ function numberFrom(...values) {
   return 0;
 }
 
+function nullableNumber(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
 function arrayFrom(value, keys = []) {
   if (Array.isArray(value)) return value;
   for (const key of keys) {
@@ -78,6 +80,11 @@ function arrayFrom(value, keys = []) {
 function safeText(value, fallback = "Not available yet") {
   const text = String(value ?? "").trim();
   return text || fallback;
+}
+
+function safeRoute(value, fallback) {
+  const route = String(value || "").trim();
+  return route.startsWith("/") ? route : fallback;
 }
 
 function dateLabel(value) {
@@ -99,11 +106,13 @@ function scoreFromAudit(audit) {
 
 function modulePercent(modules, key, fallback = 0) {
   const module = modules?.[key];
-  const direct = numberFrom(module?.score);
-  if (direct) return Math.max(0, Math.min(100, direct));
-  const completed = numberFrom(module?.completed);
-  const total = numberFrom(module?.total);
-  if (total > 0) return Math.round((completed / total) * 100);
+  const direct = nullableNumber(module?.score);
+  if (direct !== null) return Math.max(0, Math.min(100, direct));
+  const completed = nullableNumber(module?.completed);
+  const total = nullableNumber(module?.total);
+  if (completed !== null && total !== null && total > 0) {
+    return Math.round((completed / total) * 100);
+  }
   return Math.max(0, Math.min(100, numberFrom(fallback)));
 }
 
@@ -115,7 +124,7 @@ function statusCopy(score) {
   return "Complete the diagnostic";
 }
 
-function buildNextMove({ score, modules, audit, stats }) {
+function fallbackNextMove({ score, modules, audit, stats }) {
   if (!audit) {
     return {
       eyebrow: "START HERE",
@@ -129,6 +138,7 @@ function buildNextMove({ score, modules, audit, stats }) {
   const candidates = [
     {
       score: modulePercent(modules, "brand_foundation", stats?.foundation_completion),
+      eyebrow: "NEXT BEST MOVE",
       title: "Strengthen the Brand Foundation",
       body: "Clarify the truth, audience, promise, and voice before adding more execution.",
       action: "Open Brand Foundation",
@@ -136,6 +146,7 @@ function buildNextMove({ score, modules, audit, stats }) {
     },
     {
       score: modulePercent(modules, "offer_builder", stats?.offers_completion),
+      eyebrow: "NEXT BEST MOVE",
       title: "Clarify the offer architecture",
       body: "Define the outcome, packaging, and pricing logic buyers are actually choosing between.",
       action: "Open Offer Builder",
@@ -143,6 +154,7 @@ function buildNextMove({ score, modules, audit, stats }) {
     },
     {
       score: modulePercent(modules, "systems_builder", stats?.systems_completion),
+      eyebrow: "NEXT BEST MOVE",
       title: "Build one repeatable system",
       body: "Turn one process into documented infrastructure so the brand can move without relying on memory.",
       action: "Open Systems Builder",
@@ -150,6 +162,7 @@ function buildNextMove({ score, modules, audit, stats }) {
     },
     {
       score: modulePercent(modules, "content_studio", stats?.content_completion),
+      eyebrow: "NEXT BEST MOVE",
       title: "Create one aligned content direction",
       body: "Give the next piece of content a clear strategic job and connect it to a real offer or decision.",
       action: "Open Content Studio",
@@ -167,10 +180,10 @@ function buildNextMove({ score, modules, audit, stats }) {
     };
   }
 
-  return { eyebrow: "NEXT BEST MOVE", ...candidates[0] };
+  return candidates[0];
 }
 
-function buildHouseLevels({ modules, stats, score }) {
+function fallbackHouseLevels({ modules, stats, score }) {
   const foundation = Math.round([
     modulePercent(modules, "brand_foundation", stats?.foundation_completion),
     modulePercent(modules, "identity_studio", stats?.identity_completion),
@@ -184,13 +197,13 @@ function buildHouseLevels({ modules, stats, score }) {
 
   const house = Math.round([
     modulePercent(modules, "content_studio", stats?.content_completion),
-    numberFrom(stats?.campaign_completion, numberFrom(stats?.total_campaigns) > 0 ? 65 : 0),
+    numberFrom(stats?.campaign_completion),
     numberFrom(stats?.launch_readiness),
   ].reduce((sum, value) => sum + value, 0) / 3);
 
   const estate = Math.round([
-    numberFrom(stats?.publishing_completion, stats?.social_posts ? 60 : 0),
-    numberFrom(stats?.crm_completion, stats?.contacts_count ? 55 : 0),
+    numberFrom(stats?.publishing_completion),
+    numberFrom(stats?.crm_completion),
     numberFrom(stats?.workspace_usage, score),
   ].reduce((sum, value) => sum + value, 0) / 3);
 
@@ -202,8 +215,81 @@ function buildHouseLevels({ modules, stats, score }) {
   ];
 }
 
+function authoritativeHouseLevels(brandHouse) {
+  return [
+    { key: "foundation", label: "Foundation", value: brandHouse.foundation, route: "/brand-foundation", rooms: "Truth · Audience · Identity" },
+    { key: "structure", label: "Structure", value: brandHouse.structure, route: "/strategic-os", rooms: "Positioning · Offers · Systems" },
+    { key: "house", label: "House", value: brandHouse.house, route: "/campaign-builder", rooms: "Content · Campaigns · Launches" },
+    { key: "estate", label: "Estate", value: brandHouse.estate, route: "/workspace", rooms: "Publishing · CRM · Reporting" },
+  ];
+}
+
+function intelligenceIcon(item) {
+  const type = String(item?.type || item?.label || "").toLowerCase();
+  if (type.includes("signal") || type.includes("audience")) return Radar;
+  if (type.includes("campaign") || type.includes("content")) return Megaphone;
+  if (type.includes("health") || type.includes("brand")) return TrendingUp;
+  return Lightbulb;
+}
+
+function progressIcon(item) {
+  const type = String(item?.type || item?.title || "").toLowerCase();
+  if (type.includes("campaign")) return Megaphone;
+  if (type.includes("signal")) return Radar;
+  return CheckCircle2;
+}
+
+function normalizeSignalCard(signal) {
+  const level = numberFrom(signal?.confirmed_level, signal?.level, signal?.suggested_level);
+  return {
+    id: signal?.id || signal?._id || `${signal?.created_at}-${level}`,
+    level,
+    title: safeText(signal?.title || signal?.signal_type || signal?.description, "New buyer signal"),
+    source: safeText(signal?.source || signal?.entity_type || signal?.channel, "Workspace activity"),
+    date: dateLabel(signal?.created_at),
+    route: safeRoute(signal?.route, "/signal-inbox"),
+  };
+}
+
+function normalizeWorkbenchItem(item) {
+  return {
+    id: item?.id || item?._id || item?.title || item?.name,
+    title: safeText(item?.title || item?.name, "Untitled work item"),
+    type: safeText(item?.type, "Work"),
+    status: safeText(item?.status, "In progress"),
+    route: safeRoute(item?.route, "/workspace?view=work"),
+  };
+}
+
+function normalizeIntelligenceItem(item, index) {
+  return {
+    id: item?.id || `${item?.label || item?.type || "intelligence"}-${index}`,
+    icon: intelligenceIcon(item),
+    label: safeText(item?.label || item?.type, "House intelligence"),
+    title: safeText(item?.title || item?.summary || item?.body, "New workspace evidence is available."),
+    route: safeRoute(item?.route, "/analytics"),
+  };
+}
+
+function normalizeProgressItem(item, index) {
+  return {
+    id: item?.id || `${item?.title || item?.type || "progress"}-${index}`,
+    icon: progressIcon(item),
+    title: safeText(item?.title || item?.summary, "Workspace progress recorded"),
+    meta: safeText(item?.meta || item?.status || dateLabel(item?.created_at), "Recently"),
+    route: safeRoute(item?.route, "/workspace?view=activity"),
+  };
+}
+
 function HouseIllustration({ levels, onOpen }) {
   const levelMap = Object.fromEntries(levels.map((level) => [level.key, level]));
+  const positions = [
+    { left: "7%", top: "66%" },
+    { left: "17%", top: "22%" },
+    { right: "7%", top: "22%" },
+    { right: "9%", top: "68%" },
+  ];
+
   return (
     <div className="ccn-house-visual" role="img" aria-label="Interactive architectural Brand House">
       <svg viewBox="0 0 760 430" aria-hidden="true">
@@ -243,27 +329,19 @@ function HouseIllustration({ levels, onOpen }) {
         </g>
       </svg>
 
-      {levels.map((level, index) => {
-        const positions = [
-          { left: "7%", top: "66%" },
-          { left: "17%", top: "22%" },
-          { right: "7%", top: "22%" },
-          { right: "9%", top: "68%" },
-        ];
-        return (
-          <button
-            key={level.key}
-            type="button"
-            className={`ccn-house-marker ccn-house-marker--${level.key}`}
-            style={positions[index]}
-            onClick={() => onOpen(level.route)}
-            aria-label={`Open ${level.label}, ${level.value}% complete`}
-          >
-            <span>{level.label}</span>
-            <strong>{Math.round(levelMap[level.key]?.value || 0)}%</strong>
-          </button>
-        );
-      })}
+      {levels.map((level, index) => (
+        <button
+          key={level.key}
+          type="button"
+          className={`ccn-house-marker ccn-house-marker--${level.key}`}
+          style={positions[index]}
+          onClick={() => onOpen(level.route)}
+          aria-label={`Open ${level.label}, ${level.value}% complete`}
+        >
+          <span>{level.label}</span>
+          <strong>{Math.round(levelMap[level.key]?.value || 0)}%</strong>
+        </button>
+      ))}
     </div>
   );
 }
@@ -274,7 +352,7 @@ function MetricCard({ icon: Icon, label, value, note, tone, onClick }) {
       <span className="ccn-metric-icon"><Icon size={18} aria-hidden="true" /></span>
       <span>
         <small>{label}</small>
-        <strong>{value}</strong>
+        <strong>{value === null || value === undefined ? "—" : value}</strong>
         <em>{note}</em>
       </span>
       <ArrowRight size={15} aria-hidden="true" />
@@ -295,18 +373,10 @@ export default function CommandCenterNext() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [dataSource, setDataSource] = useState("pending");
   const [data, setData] = useState({});
 
-  const loadDashboard = useCallback(async () => {
-    if (!activeWorkspaceId) {
-      setLoading(false);
-      setData({});
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
+  const loadLegacySources = useCallback(async () => {
     const requests = [
       apiClient.get(API_PATHS.onboarding.progress, { params: { workspace_id: activeWorkspaceId, user_id: user?.id } }),
       apiClient.get(API_PATHS.audit.latest, { params: { workspace_id: activeWorkspaceId, user_id: user?.id, _t: Date.now() } }),
@@ -319,91 +389,138 @@ export default function CommandCenterNext() {
 
     const results = await Promise.allSettled(requests);
     const value = (index) => results[index]?.status === "fulfilled" ? results[index].value : null;
-
-    setData({
-      progress: value(0),
-      audit: value(1)?.audit || value(1)?.data?.audit || value(1),
-      stats: value(2),
-      signals: value(3),
-      campaigns: value(4),
-      crm: value(5),
-      analytics: value(6),
-    });
-
     const failed = results.filter((result) => result.status === "rejected").length;
-    if (failed) setError(`${failed} workspace data source${failed === 1 ? " is" : "s are"} temporarily unavailable.`);
-    setLoading(false);
+
+    return {
+      data: {
+        overview: null,
+        progress: value(0),
+        audit: value(1)?.audit || value(1)?.data?.audit || value(1),
+        stats: value(2),
+        signals: value(3),
+        campaigns: value(4),
+        crm: value(5),
+        analytics: value(6),
+      },
+      failed,
+    };
   }, [activeWorkspaceId, user?.id]);
+
+  const loadDashboard = useCallback(async () => {
+    if (!activeWorkspaceId) {
+      setLoading(false);
+      setDataSource("empty");
+      setData({});
+      setError("");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const overviewResult = await fetchCommandCenterOverview(activeWorkspaceId);
+
+      if (overviewResult.available) {
+        setData({ overview: overviewResult.data });
+        setDataSource("overview");
+        return;
+      }
+
+      const fallback = await loadLegacySources();
+      setData(fallback.data);
+      setDataSource("legacy-fallback");
+      if (fallback.failed) {
+        setError(`${fallback.failed} verified workspace data source${fallback.failed === 1 ? " is" : "s are"} temporarily unavailable.`);
+      }
+    } catch (requestError) {
+      setData({});
+      setDataSource("error");
+      setError(requestError?.message || "The Command Center could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
+  }, [activeWorkspaceId, loadLegacySources]);
 
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
 
   const derived = useMemo(() => {
+    const overview = data.overview || null;
+
+    if (overview) {
+      const signalCards = overview.buyerSignals.recent.slice(0, 4).map(normalizeSignalCard);
+      const workbench = overview.activeWork.items.slice(0, 3).map(normalizeWorkbenchItem);
+      const intelligence = overview.dailyIntelligence.slice(0, 4).map(normalizeIntelligenceItem);
+      const recentProgress = overview.recentProgress.slice(0, 4).map(normalizeProgressItem);
+
+      return {
+        authoritative: true,
+        score: overview.brandHealth.score,
+        scoreStatus: overview.brandHealth.status || statusCopy(overview.brandHealth.score),
+        confirmedSignalCount: overview.buyerSignals.confirmed,
+        unconfirmedSignalCount: overview.buyerSignals.unconfirmed,
+        signalCards,
+        openDecisions: overview.openDecisions.count,
+        activeWork: overview.activeWork.count,
+        activeCampaignCount: overview.activeWork.campaignCount,
+        systemAlerts: overview.systemAlerts.count,
+        nextMove: overview.nextMove,
+        houseLevels: authoritativeHouseLevels(overview.brandHouse),
+        workbench,
+        intelligence,
+        recentProgress,
+      };
+    }
+
     const modules = healthData?.modules || {};
     const stats = data.stats || {};
     const audit = data.audit || null;
     const progress = data.progress || {};
     const signals = arrayFrom(data.signals, ["signals", "items", "results"]);
     const campaigns = arrayFrom(data.campaigns, ["campaigns", "items", "results"]);
-    const crm = data.crm || {};
-    const analytics = data.analytics || {};
 
     const score = Math.round(numberFrom(healthData?.overall_score, healthData?.overall, scoreFromAudit(audit)));
     const confirmedSignals = signals.filter((signal) => String(signal?.status || "").toLowerCase() === "confirmed");
     const unconfirmedSignals = signals.filter((signal) => String(signal?.status || "unconfirmed").toLowerCase() !== "confirmed");
     const activeCampaigns = campaigns.filter((campaign) => !["complete", "completed", "archived", "cancelled"].includes(String(campaign?.status || "active").toLowerCase()));
 
-    const incompleteModules = Object.values(modules).filter((module) => {
-      const completed = numberFrom(module?.completed);
-      const total = numberFrom(module?.total);
-      return total > 0 && completed < total;
-    }).length;
+    const signalCards = [...signals]
+      .sort((a, b) => new Date(b?.created_at || 0) - new Date(a?.created_at || 0))
+      .slice(0, 4)
+      .map(normalizeSignalCard);
 
-    const systemAlerts = numberFrom(stats?.system_alerts, stats?.integration_errors, stats?.failed_jobs);
-    const openDecisions = unconfirmedSignals.length + incompleteModules;
-    const activeWork = activeCampaigns.length + numberFrom(stats?.draft_content, stats?.active_projects);
-    const nextMove = buildNextMove({ score, modules, audit, stats });
-    const houseLevels = buildHouseLevels({ modules, stats, score });
-
-    const sortedSignals = [...signals].sort((a, b) => new Date(b?.created_at || 0) - new Date(a?.created_at || 0));
-    const signalCards = sortedSignals.slice(0, 4).map((signal) => ({
-      id: signal?.id || signal?._id || `${signal?.created_at}-${signal?.level}`,
-      level: numberFrom(signal?.confirmed_level, signal?.level, signal?.suggested_level),
-      title: safeText(signal?.title || signal?.signal_type || signal?.description, "New buyer signal"),
-      source: safeText(signal?.source || signal?.entity_type || signal?.channel, "Workspace activity"),
-      date: dateLabel(signal?.created_at),
-    }));
-
-    const workbench = activeCampaigns.slice(0, 3).map((campaign) => ({
-      id: campaign?.id || campaign?._id || campaign?.name,
-      title: safeText(campaign?.name || campaign?.title, "Untitled campaign"),
+    const workbench = activeCampaigns.slice(0, 3).map((campaign) => normalizeWorkbenchItem({
+      ...campaign,
       type: "Campaign",
-      status: safeText(campaign?.status, "In progress"),
       route: "/campaign-builder",
     }));
 
     if (!workbench.length && numberFrom(stats?.total_content) > 0) {
-      workbench.push({ id: "content", title: "Content Library", type: "Content", status: `${numberFrom(stats?.total_content)} assets`, route: "/content-studio" });
+      workbench.push(normalizeWorkbenchItem({ id: "content", title: "Content Library", type: "Content", status: `${numberFrom(stats?.total_content)} assets`, route: "/content-studio" }));
     }
     if (!workbench.length && numberFrom(stats?.total_offers) > 0) {
-      workbench.push({ id: "offers", title: "Offer Architecture", type: "Offer", status: `${numberFrom(stats?.total_offers)} offers`, route: "/offer-builder" });
+      workbench.push(normalizeWorkbenchItem({ id: "offers", title: "Offer Architecture", type: "Offer", status: `${numberFrom(stats?.total_offers)} offers`, route: "/offer-builder" }));
     }
 
     const intelligence = [
       confirmedSignals.length > 0 ? {
+        id: "signals",
         icon: Radar,
         label: "Audience intelligence",
         title: `${confirmedSignals.length} confirmed buyer signal${confirmedSignals.length === 1 ? "" : "s"} are shaping the evidence base.`,
         route: "/signal-inbox",
       } : null,
       score > 0 ? {
+        id: "brand-health",
         icon: TrendingUp,
         label: "Brand movement",
         title: `Brand Health is ${score}. ${statusCopy(score)}.`,
         route: "/brand-health",
       } : null,
       activeCampaigns.length > 0 ? {
+        id: "campaigns",
         icon: Megaphone,
         label: "Campaign activity",
         title: `${activeCampaigns.length} active campaign${activeCampaigns.length === 1 ? " is" : "s are"} currently moving through the House.`,
@@ -412,31 +529,28 @@ export default function CommandCenterNext() {
     ].filter(Boolean);
 
     const recentProgress = [
-      audit ? { icon: CheckCircle2, title: "Brand Diagnostic recorded", meta: dateLabel(audit?.created_at || audit?.updated_at), route: "/brand-health" } : null,
-      progress?.brand_memory_complete ? { icon: CheckCircle2, title: "Brand Memory connected", meta: "Foundation", route: "/brand-foundation" } : null,
-      activeCampaigns[0] ? { icon: Megaphone, title: safeText(activeCampaigns[0]?.name || activeCampaigns[0]?.title, "Campaign in progress"), meta: safeText(activeCampaigns[0]?.status, "Active"), route: "/campaign-builder" } : null,
-      confirmedSignals[0] ? { icon: Radar, title: "Buyer signal confirmed", meta: dateLabel(confirmedSignals[0]?.created_at), route: "/signal-inbox" } : null,
+      audit ? { id: "audit", icon: CheckCircle2, title: "Brand Diagnostic recorded", meta: dateLabel(audit?.created_at || audit?.updated_at), route: "/brand-health" } : null,
+      progress?.brand_memory_complete ? { id: "brand-memory", icon: CheckCircle2, title: "Brand Memory connected", meta: "Foundation", route: "/brand-foundation" } : null,
+      activeCampaigns[0] ? { id: "campaign", icon: Megaphone, title: safeText(activeCampaigns[0]?.name || activeCampaigns[0]?.title, "Campaign in progress"), meta: safeText(activeCampaigns[0]?.status, "Active"), route: "/campaign-builder" } : null,
+      confirmedSignals[0] ? { id: "signal", icon: Radar, title: "Buyer signal confirmed", meta: dateLabel(confirmedSignals[0]?.created_at), route: "/signal-inbox" } : null,
     ].filter(Boolean).slice(0, 4);
 
     return {
+      authoritative: false,
       score,
-      audit,
-      stats,
-      signals,
+      scoreStatus: statusCopy(score),
+      confirmedSignalCount: confirmedSignals.length,
+      unconfirmedSignalCount: unconfirmedSignals.length,
       signalCards,
-      confirmedSignals,
-      unconfirmedSignals,
-      activeCampaigns,
-      activeWork,
-      openDecisions,
-      systemAlerts,
-      nextMove,
-      houseLevels,
+      openDecisions: null,
+      activeWork: activeCampaigns.length + numberFrom(stats?.draft_content, stats?.active_projects),
+      activeCampaignCount: activeCampaigns.length,
+      systemAlerts: nullableNumber(stats?.system_alerts, stats?.integration_errors, stats?.failed_jobs),
+      nextMove: fallbackNextMove({ score, modules, audit, stats }),
+      houseLevels: fallbackHouseLevels({ modules, stats, score }),
       workbench,
       intelligence,
       recentProgress,
-      crm,
-      analytics,
     };
   }, [data, healthData]);
 
@@ -458,14 +572,20 @@ export default function CommandCenterNext() {
           </button>
         </section>
 
-        {error ? <div className="ccn-alert" role="status"><AlertTriangle size={16} aria-hidden="true" /> {error}</div> : null}
+        {dataSource === "legacy-fallback" ? (
+          <div className="ccn-data-source" role="status">
+            The consolidated Command Center backend is pending. This preview is using verified existing workspace sources and leaves unsupported metrics blank.
+          </div>
+        ) : null}
+
+        {error ? <div className="ccn-alert" role="alert"><AlertTriangle size={16} aria-hidden="true" /> {error}</div> : null}
 
         <section className="ccn-metrics" aria-label="Command Center summary">
-          <MetricCard icon={Gauge} label="Brand Health Score" value={derived.score || "—"} note={statusCopy(derived.score)} tone="crimson" onClick={() => navigate("/brand-health")} />
-          <MetricCard icon={Radar} label="Buyer Signals" value={derived.confirmedSignals.length} note={`${derived.unconfirmedSignals.length} awaiting confirmation`} tone="gold" onClick={() => navigate("/signal-inbox")} />
-          <MetricCard icon={Compass} label="Open Decisions" value={derived.openDecisions} note="Structural choices needing attention" tone="purple" onClick={() => navigate("/workspace?view=decisions")} />
-          <MetricCard icon={Workflow} label="Active Work" value={derived.activeWork} note={`${derived.activeCampaigns.length} active campaigns`} tone="green" onClick={() => navigate("/workspace?view=work")} />
-          <MetricCard icon={AlertTriangle} label="System Alerts" value={derived.systemAlerts} note={derived.systemAlerts ? "Review workspace health" : "All systems normal"} tone="orange" onClick={() => navigate("/alerts")} />
+          <MetricCard icon={Gauge} label="Brand Health Score" value={derived.score || null} note={derived.scoreStatus} tone="crimson" onClick={() => navigate("/brand-health")} />
+          <MetricCard icon={Radar} label="Buyer Signals" value={derived.confirmedSignalCount} note={`${derived.unconfirmedSignalCount} awaiting confirmation`} tone="gold" onClick={() => navigate("/signal-inbox")} />
+          <MetricCard icon={Compass} label="Open Decisions" value={derived.openDecisions} note={derived.openDecisions === null ? "Decision endpoint pending" : "Unresolved strategic decisions"} tone="purple" onClick={() => navigate("/workspace?view=decisions")} />
+          <MetricCard icon={Workflow} label="Active Work" value={derived.activeWork} note={`${derived.activeCampaignCount} active campaigns`} tone="green" onClick={() => navigate("/workspace?view=work")} />
+          <MetricCard icon={AlertTriangle} label="System Alerts" value={derived.systemAlerts} note={derived.systemAlerts === null ? "Alert endpoint pending" : derived.systemAlerts ? "Review workspace health" : "All systems normal"} tone="orange" onClick={() => navigate("/alerts")} />
         </section>
 
         <section className="ccn-primary-grid">
@@ -485,7 +605,7 @@ export default function CommandCenterNext() {
             </div>
             <div className="ccn-signal-list">
               {derived.signalCards.length ? derived.signalCards.map((signal) => (
-                <button key={signal.id} type="button" className="ccn-signal" onClick={() => navigate("/signal-inbox")}>
+                <button key={signal.id} type="button" className="ccn-signal" onClick={() => navigate(signal.route)}>
                   <span className={`ccn-signal-level ccn-signal-level--${signal.level || 1}`}>{signal.level || 1}</span>
                   <span>
                     <strong>{signal.title}</strong>
@@ -532,7 +652,7 @@ export default function CommandCenterNext() {
               {derived.intelligence.length ? derived.intelligence.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <button key={item.label} type="button" onClick={() => navigate(item.route)}>
+                  <button key={item.id} type="button" onClick={() => navigate(item.route)}>
                     <span><Icon size={17} aria-hidden="true" /></span>
                     <span><small>{item.label}</small><strong>{item.title}</strong></span>
                     <ArrowRight size={14} aria-hidden="true" />
@@ -545,10 +665,10 @@ export default function CommandCenterNext() {
           <article className="ccn-card ccn-progress-card">
             <div className="ccn-card-heading"><div><span>Recent Progress</span><small>Movement recorded in this workspace</small></div><button type="button" onClick={() => navigate("/workspace?view=activity")}>View activity</button></div>
             <div className="ccn-progress-list">
-              {derived.recentProgress.length ? derived.recentProgress.map((item, index) => {
+              {derived.recentProgress.length ? derived.recentProgress.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <button key={`${item.title}-${index}`} type="button" onClick={() => navigate(item.route)}>
+                  <button key={item.id} type="button" onClick={() => navigate(item.route)}>
                     <span><Icon size={15} aria-hidden="true" /></span>
                     <span><strong>{item.title}</strong><small>{item.meta}</small></span>
                     <ArrowRight size={13} aria-hidden="true" />
