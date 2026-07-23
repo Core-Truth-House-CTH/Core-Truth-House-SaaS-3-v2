@@ -1,6 +1,22 @@
 name: Verify Shared Auth Shell
 
 on:
+  push:
+    branches:
+      - "feat/command-center-shell"
+    paths:
+      - "src/components/AuthShell.jsx"
+      - "src/pages/CommandCenterNext.jsx"
+      - "src/pages/WorkspacePage.jsx"
+      - "src/pages/ReportsShell.jsx"
+      - "src/navigation/pageRegistry.jsx"
+      - "src/styles/auth-shell.css"
+      - "src/styles/auth-shell-enhancements.css"
+      - "src/styles/reports-shell-bridge.css"
+      - "public/command-center-assets/cth-logo-seal.png"
+      - "package.json"
+      - "yarn.lock"
+      - ".github/workflows/verify-auth-shell.yml"
   pull_request:
     paths:
       - "src/components/AuthShell.jsx"
