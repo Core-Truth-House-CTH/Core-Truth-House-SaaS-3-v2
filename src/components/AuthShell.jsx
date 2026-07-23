@@ -16,20 +16,18 @@ import { usePlan } from "../context/PlanContext";
 import { PLAN_INFO, normalizePlan } from "../config/planAccess";
 import { NotificationBell } from "./NotificationBell";
 import "../styles/auth-shell.css";
+import "../styles/auth-shell-enhancements.css";
 
 // Served from public/; referenced by URL (not a module import).
 const CTH_LOGO = "/command-center-assets/cth-logo-seal.png";
 
 /*
- * Shared authenticated shell for the Command Center + Workspace prototypes.
+ * Shared authenticated shell for the Command Center, Workspace, and Reports.
  * Full-width top bar + full-width page frame (responsive gutters, no max-width
  * wrapper, no sidebar). Nav, notifications, search, account, and plan are wired
- * to the app's real sources. Applied only to the new shell routes for now.
+ * to the app's real sources. Applied only to staged shell routes for now.
  */
 
-// Nav wired to real routes. Command Center + Workspace are the new shell pages;
-// the rest point at the closest existing real destinations until they are
-// rebuilt in later sections.
 const NAV_ITEMS = [
   { key: "command-center", label: "Command Center", icon: LayoutDashboard, path: "/command-center-next" },
   { key: "workspace", label: "Workspace", icon: LayoutGrid, path: "/workspace" },
@@ -54,13 +52,18 @@ export default function AuthShell({ activeNav, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Close the account menu on outside click / Escape.
   useEffect(() => {
     if (!menuOpen) return undefined;
-    const onDown = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+
+    const onDown = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
     };
-    const onKey = (e) => { if (e.key === "Escape") setMenuOpen(false); };
+    const onKey = (event) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -116,7 +119,7 @@ export default function AuthShell({ activeNav, children }) {
                 aria-current={active ? "page" : undefined}
                 onClick={() => navigate(item.path)}
               >
-                <Icon size={15} /> {item.label}
+                <Icon size={15} aria-hidden="true" /> {item.label}
               </button>
             );
           })}
@@ -126,21 +129,19 @@ export default function AuthShell({ activeNav, children }) {
           <form
             className="as-search"
             role="search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const q = searchValue.trim();
-              // No global search backend yet; route the query to Knowledge Base
-              // (the app's closest existing search-capable surface).
-              if (q) navigate(`/knowledge-base?q=${encodeURIComponent(q)}`);
+            onSubmit={(event) => {
+              event.preventDefault();
+              const query = searchValue.trim();
+              if (query) navigate(`/knowledge-base?q=${encodeURIComponent(query)}`);
             }}
           >
-            <Search size={15} />
+            <Search size={15} aria-hidden="true" />
             <input
               type="search"
               placeholder="Search the House..."
               aria-label="Search the House"
               value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              onChange={(event) => setSearchValue(event.target.value)}
             />
           </form>
 
@@ -152,22 +153,24 @@ export default function AuthShell({ activeNav, children }) {
             <button
               type="button"
               className="as-profile"
-              onClick={() => setMenuOpen((v) => !v)}
+              onClick={() => setMenuOpen((value) => !value)}
+              aria-label="Open account menu"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
+              aria-controls="as-account-menu"
             >
-              <span className="as-avatar">
-                {avatarUrl ? <img src={avatarUrl} alt="" /> : initials}
+              <span className="as-avatar" aria-hidden={!avatarUrl}>
+                {avatarUrl ? <img src={avatarUrl} alt={`${displayName} profile`} /> : initials}
               </span>
               <span className="as-profile-copy">
                 <strong>{displayName}</strong>
                 <small>{planLabel(plan?.plan)}</small>
               </span>
-              <ChevronDown size={15} />
+              <ChevronDown size={15} aria-hidden="true" />
             </button>
 
             {menuOpen ? (
-              <div className="as-menu" role="menu">
+              <div className="as-menu" id="as-account-menu" role="menu">
                 <div className="as-menu-head">
                   <strong>{displayName}</strong>
                   <span>{planLabel(plan?.plan)}</span>
@@ -176,17 +179,23 @@ export default function AuthShell({ activeNav, children }) {
                   type="button"
                   className="as-menu-item"
                   role="menuitem"
-                  onClick={() => { setMenuOpen(false); navigate("/settings"); }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate("/settings");
+                  }}
                 >
-                  <Settings size={15} /> Account settings
+                  <Settings size={15} aria-hidden="true" /> Account settings
                 </button>
                 <button
                   type="button"
                   className="as-menu-item"
                   role="menuitem"
-                  onClick={() => { setMenuOpen(false); navigate("/billing"); }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate("/billing");
+                  }}
                 >
-                  <BarChart3 size={15} /> Plan &amp; billing
+                  <BarChart3 size={15} aria-hidden="true" /> Plan &amp; billing
                 </button>
                 <button
                   type="button"
@@ -194,7 +203,7 @@ export default function AuthShell({ activeNav, children }) {
                   role="menuitem"
                   onClick={handleSignOut}
                 >
-                  <LogOut size={15} /> Sign out
+                  <LogOut size={15} aria-hidden="true" /> Sign out
                 </button>
               </div>
             ) : null}
@@ -202,7 +211,7 @@ export default function AuthShell({ activeNav, children }) {
         </div>
       </header>
 
-      <main className="as-frame">{children}</main>
+      <div className="as-frame">{children}</div>
     </div>
   );
 }
