@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -435,6 +435,9 @@ export default function CommandCenterNext() {
     };
   }, [activeWorkspaceId, user?.id]);
 
+  // Monotonic id of the latest dashboard load; see the stale-response guard below.
+  const loadRequestRef = useRef(0);
+
   const loadDashboard = useCallback(async () => {
     if (!activeWorkspaceId) {
       setLoading(false);
@@ -444,11 +447,20 @@ export default function CommandCenterNext() {
       return;
     }
 
+    // Guard against out-of-order responses when the workspace changes mid-flight:
+    // only the most recently started request may write state. Without this, a
+    // slow request for a previous workspace can resolve last and overwrite the
+    // current workspace's metrics under its heading.
+    const requestId = loadRequestRef.current + 1;
+    loadRequestRef.current = requestId;
+    const isStale = () => loadRequestRef.current !== requestId;
+
     setLoading(true);
     setError("");
 
     try {
       const overviewResult = await fetchCommandCenterOverview(activeWorkspaceId);
+      if (isStale()) return;
 
       if (overviewResult.available) {
         setData({ overview: overviewResult.data });
@@ -457,17 +469,19 @@ export default function CommandCenterNext() {
       }
 
       const fallback = await loadLegacySources();
+      if (isStale()) return;
       setData(fallback.data);
       setDataSource("legacy-fallback");
       if (fallback.failed) {
         setError(`${fallback.failed} verified workspace data source${fallback.failed === 1 ? " is" : "s are"} temporarily unavailable.`);
       }
     } catch (requestError) {
+      if (isStale()) return;
       setData({});
       setDataSource("error");
       setError(requestError?.message || "The Command Center could not be loaded.");
     } finally {
-      setLoading(false);
+      if (!isStale()) setLoading(false);
     }
   }, [activeWorkspaceId, loadLegacySources]);
 
@@ -611,7 +625,10 @@ export default function CommandCenterNext() {
   }, []);
 
   const greeting = greetingForHour(now.getHours());
-  const dateLabel = useMemo(
+  // Named distinctly from the module-level dateLabel() formatter: a local
+  // `const dateLabel` would shadow that helper across the whole component and
+  // throw a TDZ ReferenceError when the fallback path calls it during render.
+  const todayLabel = useMemo(
     () => new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric" }).format(now),
     [now],
   );
@@ -648,7 +665,7 @@ export default function CommandCenterNext() {
           </div>
           <div className="ccn-heading-meta">
             <span className="ccn-heading-stamp">
-              <time dateTime={dateTimeAttr}>{dateLabel}</time>
+              <time dateTime={dateTimeAttr}>{todayLabel}</time>
               <span className="ccn-stamp-dot" aria-hidden="true" />
               <time dateTime={timeAttr}>{timeLabel}</time>
             </span>
