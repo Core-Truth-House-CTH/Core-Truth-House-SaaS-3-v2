@@ -5,6 +5,7 @@ const makePlaceholder = (title) => () => <PlaceholderPage title={title} />;
 
 const CommandCenter = lazy(() => import("../pages/CommandCenter"));
 const CommandCenterNext = lazy(() => import("../pages/CommandCenterNext"));
+const BrandHouse = lazy(() => import("../pages/BrandHouse"));
 const WorkspacePage = lazy(() => import("../pages/WorkspacePage"));
 const ReportsShell = lazy(() => import("../pages/ReportsShell"));
 const Billing = lazy(() => import("../pages/Billing"));
@@ -57,6 +58,7 @@ const pageRegistry = {
   "/onboarding": OnboardingWorkflow,
   "/command-center": CommandCenter,
   "/command-center-next": CommandCenterNext,
+  "/brand-house": BrandHouse,
   "/workspace": WorkspacePage,
   "/my-data": TenantDataDashboardV2,
 

@@ -27,6 +27,47 @@
   justify-content: space-between;
   gap: 24px;
   margin-bottom: 18px;
+  /* Lets the date/time/Refresh group drop under the greeting as one unit when
+     the row cannot hold both - it never splits the group itself. */
+  flex-wrap: wrap;
+}
+
+.ccn-heading-row > div:first-child { flex: 1 1 380px; min-width: 0; }
+
+/* Approved heading row: greeting left, date - time - Refresh right. */
+.ccn-heading-meta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ccn-heading-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ccn-muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ccn-stamp-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .55;
+}
+
+/* Decorative only - restrained, never animated. */
+.ccn-greeting-sparkle {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 12px;
+  color: var(--ccn-purple);
 }
 
 .ccn-kicker,
@@ -107,18 +148,21 @@
 
 .ccn-metrics {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 11px;
-  margin-bottom: 14px;
 }
 
+/* Approved compact metric: label and icon on the top row, the value dominant
+   beneath it, supporting text and the arrow along the bottom. The previous
+   `38px | 1fr | auto` row left only 39px for the copy in a 141px card, so every
+   label and note overflowed its own box. Stacking gives the text the full card
+   width and keeps the arrow on the right edge. */
 .ccn-metric {
   min-width: 0;
   min-height: 112px;
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   border: 1px solid var(--ccn-border);
   border-radius: 14px;
   background: linear-gradient(155deg, #fff, #fffaf7);
@@ -136,9 +180,27 @@
   box-shadow: 0 14px 30px rgba(51, 3, 60, .09);
 }
 
+.ccn-metric-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ccn-metric-head small { min-width: 0; }
+
+.ccn-metric-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+.ccn-metric-foot em { min-width: 0; }
+
 .ccn-metric-icon {
-  width: 38px;
-  height: 38px;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -150,17 +212,76 @@
 .ccn-metric--green .ccn-metric-icon { background: #e7f2e8; color: #2d7c4b; }
 .ccn-metric--orange .ccn-metric-icon { background: #fce9e3; color: var(--ccn-cinnabar); }
 
-.ccn-metric > span:nth-child(2) { min-width: 0; display: grid; }
-.ccn-metric small { color: var(--ccn-muted); font-size: 9px; letter-spacing: .04em; text-transform: uppercase; }
-.ccn-metric strong { margin-top: 2px; color: #23101e; font-family: "Cormorant Garamond", Georgia, serif; font-size: 30px; font-weight: 600; line-height: .95; }
-.ccn-metric em { margin-top: 5px; color: #5a4452; font-size: 9px; font-style: normal; line-height: 1.25; }
-.ccn-metric > svg { color: #b8a7af; }
+.ccn-metric small { color: var(--ccn-muted); font-size: 9px; letter-spacing: .04em; line-height: 1.3; text-transform: uppercase; }
+.ccn-metric strong { color: #23101e; font-family: "Cormorant Garamond", Georgia, serif; font-size: 30px; font-weight: 600; line-height: 1.05; }
+.ccn-metric em { color: #5a4452; font-size: 9px; font-style: normal; line-height: 1.3; }
+/* The affordance stays secondary until the card is hovered or focused. */
+.ccn-metric > svg { color: #b8a7af; transition: color .18s ease; }
+.ccn-metric:hover .ccn-metric-arrow,
+.ccn-metric:focus-visible .ccn-metric-arrow { color: var(--ccn-crimson); }
 
-.ccn-primary-grid {
+/* Approved three-column composition: left rail, centre spine, right rail.
+   Column ratios come from the approved prototype (1.1fr 1.7fr .82fr). */
+.ccn-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(310px, .68fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.7fr) minmax(0, .82fr);
   gap: 14px;
-  margin-bottom: 14px;
+  align-items: start;
+}
+
+.ccn-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.ccn-card-label {
+  display: block;
+  color: #8f103b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* --- Brand Health card (left column, top) --- */
+.ccn-health-card { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); padding: 0; overflow: hidden; }
+.ccn-health-score {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 0;
+  border-right: 1px solid var(--ccn-border);
+  background: transparent;
+  padding: 18px 16px;
+  text-align: left;
+  cursor: pointer;
+}
+.ccn-health-score strong { color: #7f002c; font-family: "Cormorant Garamond", Georgia, serif; font-size: 62px; font-weight: 600; line-height: .8; }
+.ccn-health-score small { color: #a2592d; font-size: 10px; line-height: 1.4; }
+.ccn-health-detail { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; padding: 18px 16px; }
+.ccn-health-rows { display: grid; gap: 13px; }
+.ccn-health-row { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; align-items: start; }
+.ccn-health-row > span:last-child { display: grid; gap: 2px; min-width: 0; }
+.ccn-health-row strong { color: var(--ccn-ink); font-size: 11px; font-weight: 700; line-height: 1.35; }
+.ccn-health-row small { color: var(--ccn-muted); font-size: 9px; }
+.ccn-health-dot { width: 20px; height: 20px; display: grid; place-items: center; border: 1px solid; border-radius: 50%; }
+.ccn-health-dot.is-good { border-color: #2d7c4b; color: #2d7c4b; }
+.ccn-health-dot.is-warn { border-color: var(--ccn-cinnabar); color: var(--ccn-cinnabar); }
+.ccn-health-note { margin: 0; color: var(--ccn-muted); font-size: 11px; line-height: 1.55; }
+.ccn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  color: var(--ccn-crimson);
+  padding: 0;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .ccn-next-move,
@@ -200,12 +321,12 @@
   max-width: 620px;
   margin: 15px 0 0;
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(34px, 4vw, 54px);
+  font-size: clamp(27px, 2.3vw, 34px);
   font-weight: 600;
-  line-height: .98;
-  letter-spacing: -.02em;
+  line-height: 1.02;
+  letter-spacing: -.01em;
 }
-.ccn-next-move p { max-width: 660px; margin: 17px 0 0; color: rgba(255,255,255,.75); font-size: 13px; line-height: 1.65; }
+.ccn-next-move p { max-width: 660px; margin: 15px 0 0; color: rgba(255,255,255,.83); font-size: 12px; line-height: 1.55; }
 .ccn-next-move button,
 .ccn-consult-card > button {
   display: inline-flex;
@@ -218,7 +339,22 @@
   font-weight: 800;
   cursor: pointer;
 }
-.ccn-next-move button { margin-top: 24px; min-height: 42px; padding: 0 17px; color: #351126; background: linear-gradient(135deg, #d2ba72, #b99640); box-shadow: 0 10px 24px rgba(0,0,0,.2); }
+.ccn-next-actions { position: relative; z-index: 1; display: grid; gap: 8px; margin-top: 22px; }
+.ccn-gold-btn,
+.ccn-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border-radius: 9px;
+  padding: 0 15px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.ccn-gold-btn { border: 0; color: #351126; background: linear-gradient(135deg, #d2ba72, #b99640); box-shadow: 0 10px 24px rgba(0,0,0,.2); }
+.ccn-ghost-btn { border: 1px solid var(--ccn-gold); background: transparent; color: #fff; }
 
 .ccn-signals-card,
 .ccn-card {
@@ -278,19 +414,36 @@
 .ccn-signal em { color: #9a8791; font-size: 8px; font-style: normal; }
 
 .ccn-house-card {
-  display: grid;
-  grid-template-columns: minmax(280px, .72fr) minmax(0, 1.35fr);
-  gap: 28px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   overflow: hidden;
-  margin-bottom: 14px;
   border: 1px solid var(--ccn-border);
   background:
     radial-gradient(circle at 82% 15%, rgba(196,169,91,.11), transparent 26%),
     linear-gradient(135deg, #fffdfb, #f5ebe7);
-  padding: clamp(24px, 3vw, 38px);
+  padding: 18px;
   box-shadow: 0 12px 34px rgba(51, 3, 60, .07);
 }
+
+.ccn-house-body { display: grid; grid-template-columns: minmax(0, 175px) minmax(0, 1fr); gap: 14px; align-items: center; }
+.ccn-house-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ccn-house-foot small { color: var(--ccn-ruby, #763b5b); font-size: 10px; }
+.ccn-outline-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--ccn-border);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ccn-ink);
+  padding: 10px 15px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ccn-outline-btn:hover { border-color: rgba(175, 0, 36, .35); }
+.ccn-level-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #78002e; color: #fff; flex: 0 0 auto; }
 
 .ccn-house-copy h2,
 .ccn-consult-card h2 {
@@ -302,7 +455,7 @@
   line-height: 1;
 }
 .ccn-house-copy > p { margin: 13px 0 0; color: var(--ccn-muted); font-size: 12px; line-height: 1.65; }
-.ccn-level-list { display: grid; gap: 5px; margin-top: 18px; }
+.ccn-level-list { display: grid; gap: 5px; }
 .ccn-level-list button {
   width: 100%;
   display: flex;
@@ -317,55 +470,129 @@
   text-align: left;
   cursor: pointer;
 }
-.ccn-level-list button > span { display: grid; gap: 2px; }
+/* The row's `space-between` used to be balanced by the completion figure. With
+   the approved rail showing only name and descriptor, the copy takes the
+   remaining width so it sits beside its icon instead of being pushed right. */
+.ccn-level-list button > span:not(.ccn-level-icon) { flex: 1 1 auto; display: grid; gap: 2px; min-width: 0; }
+.ccn-level-list button { gap: 9px; }
 .ccn-level-list strong { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; }
 .ccn-level-list small { color: var(--ccn-muted); font-size: 8px; }
 .ccn-level-list em { color: var(--ccn-crimson); font-family: "Cormorant Garamond", Georgia, serif; font-size: 20px; font-style: normal; }
 
-.ccn-house-visual { position: relative; min-height: 360px; }
-.ccn-house-visual svg { width: 100%; height: 100%; min-height: 360px; }
-.ccn-house-marker {
+.ccn-house-visual { position: relative; display: grid; place-items: center; min-height: 250px; }
+.ccn-house-visual img { width: 100%; max-width: 470px; max-height: 285px; object-fit: contain; mix-blend-mode: multiply; }
+.ccn-house-hotspot {
   position: absolute;
-  min-width: 112px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--ccn-gold);
+  box-shadow: 0 0 0 5px rgba(196, 169, 91, .25);
+  cursor: pointer;
+  animation: ccn-hotspot-pulse 2s infinite;
+}
+@keyframes ccn-hotspot-pulse { 50% { box-shadow: 0 0 0 10px rgba(196, 169, 91, 0); } }
+
+.ccn-consult-card { padding: 18px 17px; }
+/* Approved Consult the House: seal beside the introduction, four crimson
+   prompts, then a single-row composer. */
+.ccn-consult-heading { align-items: baseline; }
+.ccn-consult-intro { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 12px; align-items: center; margin-top: 14px; }
+.ccn-consult-seal {
+  width: 78px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(196, 169, 91, .62);
+  border-radius: 50%;
+  background: #fff;
+}
+.ccn-consult-seal img { width: 100%; height: 100%; object-fit: contain; }
+.ccn-consult-intro strong { display: block; color: var(--ccn-ink); font-size: 12px; }
+.ccn-consult-intro p { margin: 5px 0 0; color: var(--ccn-muted); font-size: 10px; line-height: 1.5; }
+
+.ccn-consult-composer { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.ccn-consult-composer input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid var(--ccn-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ccn-ink);
+  padding: 0 11px;
+  font-family: inherit;
+  font-size: 10px;
+}
+.ccn-consult-composer input::placeholder { color: var(--ccn-muted); }
+.ccn-consult-send {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #9f0039, #650027);
+  color: #fff;
+  cursor: pointer;
+}
+
+.ccn-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.ccn-prompt-list { display: grid; gap: 7px; margin-top: 14px; }
+.ccn-prompt-mark {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .72);
+}
+.ccn-prompt > span:nth-child(2) { flex: 1 1 auto; min-width: 0; }
+.ccn-prompt {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  border: 1px solid rgba(196, 169, 91, .48);
-  border-radius: 999px;
-  background: rgba(13, 0, 16, .88);
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #9f0039, #650027);
   color: #fff;
-  padding: 8px 11px;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(13,0,16,.17);
-  backdrop-filter: blur(8px);
 }
-.ccn-house-marker span { font-size: 8px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
-.ccn-house-marker strong { color: var(--ccn-gold); font-family: "Cormorant Garamond", Georgia, serif; font-size: 16px; }
-
-.ccn-consult-card {
-  display: grid;
-  grid-template-columns: 60px minmax(0, 1fr) auto;
+.ccn-consult-ask {
+  display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 14px;
-  padding: 22px 25px;
-  color: #fff;
-  background:
-    radial-gradient(circle at 78% 0%, rgba(196,169,91,.17), transparent 30%),
-    linear-gradient(110deg, #af0024 0%, #650026 34%, #33033c 72%, #170019 100%);
-  box-shadow: 0 14px 34px rgba(51,3,60,.17);
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid var(--ccn-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ccn-muted);
+  padding: 11px 12px;
+  text-align: left;
+  font-size: 10px;
+  cursor: pointer;
 }
-.ccn-consult-icon { width: 58px; height: 58px; display: grid; place-items: center; border: 1px solid rgba(196,169,91,.52); border-radius: 50%; color: var(--ccn-gold); background: rgba(13,0,16,.18); }
-.ccn-consult-card > div:nth-child(2) > span { color: var(--ccn-gold); font-size: 9px; font-weight: 800; letter-spacing: .15em; }
-.ccn-consult-card h2 { margin-top: 5px; color: #fff; font-size: clamp(24px, 2.6vw, 36px); }
-.ccn-consult-card p { max-width: 760px; margin: 7px 0 0; color: rgba(255,255,255,.72); font-size: 10px; line-height: 1.55; }
-.ccn-consult-card > button { min-height: 40px; padding: 0 16px; color: #351126; background: var(--ccn-gold); }
 
-.ccn-secondary-grid,
-.ccn-bottom-grid { display: grid; gap: 14px; margin-bottom: 14px; }
-.ccn-secondary-grid { grid-template-columns: 1.18fr .82fr; }
-.ccn-bottom-grid { grid-template-columns: .78fr 1.22fr; margin-bottom: 0; }
 .ccn-card { padding: 18px; }
 
 .ccn-intelligence-list,
@@ -397,6 +624,157 @@
 .ccn-intelligence-list > button > span:nth-child(2),
 .ccn-progress-list > button > span:nth-child(2),
 .ccn-workbench-list > button > span:nth-child(2) { min-width: 0; display: grid; gap: 2px; }
+/* Approved Recent Progress: up to four compact milestones across one row. The
+   track count follows the CARD's width, not the viewport - the centre column is
+   598px at 1440 and 524px at 1280, so 112px is the floor that still yields four
+   readable tracks in the narrower of the two. */
+.ccn-progress-row {
+  display: grid;
+  /* auto-FILL, not auto-fit: with fewer than four real records the unused
+     tracks must stay open so a single milestone keeps its compact footprint
+     instead of stretching across the whole card. Empty tracks render nothing,
+     so there are no placeholder cells. */
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 8px;
+  margin-top: 13px;
+}
+.ccn-progress-empty { margin-top: 13px; }
+
+.ccn-progress-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--ccn-border);
+  border-radius: 9px;
+  background: var(--ccn-white);
+  color: var(--ccn-ink);
+  padding: 12px 11px;
+  min-height: 80px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, transform .18s ease;
+}
+.ccn-progress-item:hover { transform: translateY(-1px); border-color: rgba(175, 0, 36, .35); }
+.ccn-progress-when {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ccn-muted);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.ccn-progress-when svg { flex: 0 0 auto; color: var(--ccn-crimson); }
+.ccn-progress-item strong {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+/* Approved Active Workbench: compact work cards across one row, sized from the
+   CARD's width like Recent Progress rather than the viewport. auto-fill keeps
+   the unused tracks open so one or two real items keep their compact footprint
+   instead of stretching across the card; empty tracks render nothing. */
+.ccn-workbench-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 8px;
+  margin-top: 13px;
+}
+.ccn-workbench-empty { margin-top: 13px; }
+
+.ccn-work-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--ccn-border);
+  border-radius: 10px;
+  background: var(--ccn-white);
+  color: var(--ccn-ink);
+  padding: 12px 11px;
+  min-height: 100px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, transform .18s ease;
+}
+.ccn-work-card:hover { transform: translateY(-1px); border-color: rgba(175, 0, 36, .35); }
+/* The existing type pill is this card's visual marker - keep it hugging its
+   own text rather than stretching to the column. */
+.ccn-work-card .ccn-work-type { align-self: flex-start; }
+.ccn-work-card strong {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+/* Real status only - the dot is decorative and carries no invented meaning. */
+.ccn-work-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  color: var(--ccn-muted);
+  font-size: 9px;
+}
+.ccn-work-dot { flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: var(--ccn-gold); }
+
+/* Approved Daily Intelligence: up to three compact cards in one row. This card
+   sits in the narrower LEFT column (387px at 1440, 339px at 1280), so the track
+   floor is set from that width - 94px still yields three readable tracks in the
+   narrower of the two. auto-fill keeps unused tracks open so one or two real
+   records never inflate into oversized panels. */
+.ccn-intel-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(94px, 1fr));
+  gap: 8px;
+  margin-top: 13px;
+}
+.ccn-intel-empty { margin-top: 13px; }
+
+.ccn-intel-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--ccn-border);
+  border-radius: 10px;
+  background: var(--ccn-white);
+  color: var(--ccn-ink);
+  padding: 12px 11px;
+  min-height: 120px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, transform .18s ease;
+}
+.ccn-intel-card:hover { transform: translateY(-1px); border-color: rgba(175, 0, 36, .35); }
+.ccn-intel-eyebrow {
+  display: flex;
+  align-items: center;
+  /* The narrow left-column tracks cannot always fit the icon and the longest
+     category word on one line - wrapping keeps whole words instead of letting
+     the row overflow its track. */
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  color: #8c143a;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.ccn-intel-eyebrow svg { flex: 0 0 auto; color: var(--ccn-crimson); }
+.ccn-intel-card p {
+  margin: 0;
+  color: #4d3a46;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+
 .ccn-intelligence-list small,
 .ccn-progress-list small,
 .ccn-workbench-list small { color: var(--ccn-muted); font-size: 8px; }
@@ -408,7 +786,6 @@
 .ccn-workbench-list > button > svg { color: #b6a4ad; }
 .ccn-work-type { display: inline-flex !important; align-items: center; justify-content: center; border-radius: 999px; background: #f1e5e9; color: #7b2544; padding: 6px 8px; font-size: 8px; font-weight: 800; text-transform: uppercase; }
 
-.ccn-action-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 13px; }
 .ccn-action-grid button {
   min-width: 0;
   display: grid;
@@ -430,6 +807,84 @@
 .ccn-action-grid strong { color: #321326; font-size: 9px; }
 .ccn-action-grid small { color: var(--ccn-muted); font-size: 7px; line-height: 1.35; }
 
+/* Approved Quick Actions: seven compact tiles on one row, icon above the label.
+   These rules must stay AFTER the base tile styles above - the base sets
+   `display: grid` with a two-track template, which collapsed the label track to
+   0px and broke every label into one character per line. Helper text stays in
+   the DOM for screen readers but is not painted. */
+/* The tile count follows the CARD's real width, not the viewport - this card is
+   349px in the three-column dashboard, 302px at 1280 and 682px in the single
+   column, so a fixed `repeat(7)` produced 44px slivers in some layouts and
+   comfortable tiles in others. 60px is the floor that fits the longest word
+   ("Competitor", 51.2px at 9px) plus padding and border, so auto-fit only ever
+   creates a track that can show whole words: seven across when the card is wide
+   enough, fewer when it is not. */
+.ccn-action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 5px; margin-top: 13px; }
+.ccn-action-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 92px;
+  padding: 10px 3px;
+  text-align: center;
+}
+.ccn-action-grid button > span:first-child { flex: 0 0 auto; }
+.ccn-action-grid button > span:nth-child(2) { display: block; width: 100%; min-width: 0; }
+/* Never split a word. The grid above guarantees every track can fit the longest
+   word, so wrapping only ever happens at spaces. */
+.ccn-action-grid strong {
+  display: block;
+  font-size: 9px;
+  line-height: 1.25;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+.ccn-action-grid small {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Approved Brand Signals arrangement: title (with subtitle beneath) on the left,
+   LIVE pinned to the far right of the header, and the "View All Signals" action
+   in its own footer at the lower right - not in the header. `space-between` on
+   .ccn-card-heading already pushes the badge to the right edge; wrapping is
+   allowed only if the rail becomes too narrow for one row. */
+.ccn-signals-card .ccn-signals-heading { flex-wrap: wrap; gap: 8px 12px; }
+.ccn-signals-card .ccn-signals-heading > div { min-width: 0; }
+.ccn-signals-card .ccn-signals-foot { display: flex; justify-content: flex-end; margin-top: 13px; }
+
+/* Brand Signals "LIVE" status. Scoped to this card only - deliberately NOT
+   shared with the Notifications badge so the two stay independent. */
+.ccn-signals-card .ccn-live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  color: var(--ccn-crimson);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ccn-signals-card .ccn-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ccn-crimson);
+  flex: 0 0 auto;
+}
+
 .ccn-empty { border: 1px dashed #d9c8c3; border-radius: 10px; background: #fffaf7; color: var(--ccn-muted); padding: 16px; font-size: 9px; line-height: 1.5; text-align: center; }
 
 .ccn-page :is(button, a):focus-visible {
@@ -437,40 +892,67 @@
   outline-offset: 3px;
 }
 
-@media (max-width: 1280px) {
-  .ccn-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .ccn-primary-grid { grid-template-columns: minmax(0, 1.3fr) minmax(300px, .7fr); }
+/* 1280-1400: three columns are preserved. The Quick Action tile count is no
+   longer pinned here - auto-fit derives it from the card width instead. */
+@media (max-width: 1400px) {
+  .ccn-house-body { grid-template-columns: minmax(0, 150px) minmax(0, 1fr); }
 }
 
-@media (max-width: 980px) {
+/* 1024-1180: drop to two columns. The right rail moves below the fold and lays
+   its two panels side by side, exactly as the approved prototype does. */
+@media (max-width: 1180px) {
+  .ccn-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); }
+  .ccn-col-right {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+/* 768 and below: a single column. Section order follows the approved
+   composition - left rail, centre spine, then the right rail panels. */
+@media (max-width: 900px) {
   .ccn-heading-row { flex-direction: column; }
+  /* Column direction makes flex-basis a HEIGHT - the desktop `flex: 1 1 380px`
+     would otherwise force a 380px-tall greeting block and a dead gap above the
+     date/time/Refresh group. */
+  .ccn-heading-row > div:first-child { flex: 0 0 auto; }
+  .ccn-layout { grid-template-columns: 1fr; }
+  .ccn-col-right { grid-column: auto; display: flex; flex-direction: column; }
   .ccn-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ccn-primary-grid,
-  .ccn-house-card,
-  .ccn-secondary-grid,
-  .ccn-bottom-grid { grid-template-columns: 1fr; }
-  .ccn-house-copy { order: 1; }
-  .ccn-house-visual { order: 2; }
-  .ccn-consult-card { grid-template-columns: 52px minmax(0, 1fr); }
-  .ccn-consult-card > button { grid-column: 1 / -1; justify-self: start; }
+  .ccn-house-body { grid-template-columns: 1fr; }
+  .ccn-level-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ccn-action-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  /* Tablet: the approved prototype drops these rows to a stable two columns. */
+  .ccn-progress-row,
+  .ccn-workbench-row,
+  .ccn-intel-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
   .ccn-heading-row h1 { font-size: 39px; }
   .ccn-refresh { width: 100%; justify-content: center; }
-  .ccn-metrics { grid-template-columns: 1fr; }
+  /* Refresh goes full width here, so left-align the date/time with the greeting
+     rather than leaving it floating above the button. */
+  .ccn-heading-meta { justify-content: flex-start; align-self: stretch; }
+  .ccn-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ccn-metric { min-height: 96px; }
-  .ccn-next-move { min-height: 300px; padding: 25px 21px; }
+  .ccn-health-card { grid-template-columns: 1fr; }
+  .ccn-health-score { border-right: 0; border-bottom: 1px solid var(--ccn-border); }
+  .ccn-next-move { min-height: 0; padding: 25px 21px; }
   .ccn-signals-card,
   .ccn-card { padding: 15px; }
-  .ccn-house-card { padding: 22px 18px; }
-  .ccn-house-visual { min-height: 270px; }
-  .ccn-house-visual svg { min-height: 270px; }
-  .ccn-house-marker { min-width: 92px; padding: 6px 8px; }
-  .ccn-house-marker span { font-size: 7px; }
-  .ccn-house-marker strong { font-size: 14px; }
-  .ccn-consult-card { padding: 20px 17px; }
-  .ccn-action-grid { grid-template-columns: 1fr; }
+  .ccn-house-card { padding: 16px 14px; }
+  .ccn-house-visual { min-height: 190px; }
+  .ccn-level-list { grid-template-columns: 1fr; }
+  .ccn-house-foot { justify-content: flex-start; }
+  .ccn-outline-btn { width: 100%; justify-content: center; }
+  .ccn-action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Mobile: one readable record per row, as the approved prototype does. */
+  .ccn-progress-row,
+  .ccn-workbench-row,
+  .ccn-intel-row { grid-template-columns: 1fr; }
   .ccn-workbench-list > button { grid-template-columns: 62px minmax(0, 1fr) auto; }
 }
 

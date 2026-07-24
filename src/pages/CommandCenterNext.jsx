@@ -5,9 +5,11 @@ import {
   ArrowRight,
   BriefcaseBusiness,
   CheckCircle2,
+  ChevronRight,
   CircleDot,
   Compass,
   Gauge,
+  Home,
   Lightbulb,
   Megaphone,
   MessageSquareText,
@@ -18,7 +20,6 @@ import {
   ShieldCheck,
   Sparkles,
   TrendingUp,
-  WandSparkles,
   Workflow,
 } from "lucide-react";
 
@@ -40,6 +41,22 @@ const SIGNAL_LABELS = {
   4: "Offer Curiosity",
   5: "Purchase Movement",
 };
+
+const CONSULT_PROMPTS = [
+  "Why aren’t people buying?",
+  "Rewrite my homepage.",
+  "Build my launch strategy.",
+  "Analyze my positioning.",
+];
+
+// Rows for the Brand Health card. These read REAL module scores from the Brand
+// Health service - no invented copy. A module scoring 0 (or absent) is dropped
+// rather than shown as a fabricated insight.
+const HEALTH_ROWS = [
+  { key: "brand_foundation", label: "Brand Foundation" },
+  { key: "strategic_os", label: "Positioning & Messaging" },
+  { key: "content_studio", label: "Content Consistency" },
+];
 
 const QUICK_ACTIONS = [
   { label: "Run Brand Diagnostic", helper: "Find the structural gap", icon: Gauge, route: "/brand-audit" },
@@ -196,7 +213,7 @@ function fallbackNextMove({ score, modules, audit, stats }) {
   return candidates[0];
 }
 
-function fallbackHouseLevels({ modules, stats, score }) {
+export function fallbackHouseLevels({ modules, stats, score }) {
   const foundation = Math.round([
     modulePercent(modules, "brand_foundation", stats?.foundation_completion),
     modulePercent(modules, "identity_studio", stats?.identity_completion),
@@ -228,7 +245,7 @@ function fallbackHouseLevels({ modules, stats, score }) {
   ];
 }
 
-function authoritativeHouseLevels(brandHouse) {
+export function authoritativeHouseLevels(brandHouse) {
   return [
     { key: "foundation", label: "Foundation", value: brandHouse.foundation, route: "/brand-foundation", rooms: "Truth · Audience · Identity" },
     { key: "structure", label: "Structure", value: brandHouse.structure, route: "/strategic-os", rooms: "Positioning · Offers · Systems" },
@@ -294,81 +311,80 @@ function normalizeProgressItem(item, index) {
   };
 }
 
-function HouseIllustration({ levels, onOpen }) {
-  const levelMap = Object.fromEntries(levels.map((level) => [level.key, level]));
-  const positions = [
-    { left: "7%", top: "66%" },
-    { left: "17%", top: "22%" },
-    { right: "7%", top: "22%" },
-    { right: "9%", top: "68%" },
-  ];
+// The approved Brand House asset. The same file is used by the Command Center
+// and the /brand-house page - there is exactly one house image in the repo.
+const HOUSE_ASSET = "/command-center-assets/brand-house.png";
 
+// The approved Core Truth House seal, already present in the repo and byte
+// identical to the approved source.
+const SEAL_ASSET = "/command-center-assets/cth-logo-seal.png";
+
+// Static interface copy from the approved Command Center prototype's floor rail.
+// These are UI descriptors, not workspace data - the real completion values keep
+// coming from the authoritative overview response.
+const HOUSE_LEVEL_DESCRIPTORS = {
+  estate: "Legacy & Scale",
+  house: "Systems & Offers",
+  structure: "Messaging & Positioning",
+  foundation: "Identity & Clarity",
+};
+
+// Hotspot coordinates are taken from the approved prototype (.hot1-.hot4) and
+// are percentages, so they stay on the correct room as the image scales.
+const HOUSE_HOTSPOTS = {
+  estate: { left: "68%", top: "18%" },
+  house: { left: "51%", top: "43%" },
+  structure: { left: "33%", top: "62%" },
+  foundation: { left: "67%", top: "70%" },
+};
+
+function HouseVisual({ levels, onOpen, className = "" }) {
   return (
-    <div className="ccn-house-visual" role="img" aria-label="Interactive architectural Brand House">
-      <svg viewBox="0 0 760 430" aria-hidden="true">
-        <defs>
-          <linearGradient id="ccn-house-wall" x1="0" x2="1">
-            <stop offset="0" stopColor="#fffaf5" />
-            <stop offset="1" stopColor="#efe3df" />
-          </linearGradient>
-          <linearGradient id="ccn-house-glass" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="#efe6ee" stopOpacity="0.86" />
-            <stop offset="1" stopColor="#bea9bc" stopOpacity="0.48" />
-          </linearGradient>
-          <filter id="ccn-house-shadow" x="-20%" y="-20%" width="140%" height="160%">
-            <feDropShadow dx="0" dy="16" stdDeviation="14" floodColor="#33033c" floodOpacity="0.18" />
-          </filter>
-        </defs>
-        <path d="M80 345 L660 345 L706 383 L32 383 Z" fill="#c4a95b" opacity="0.18" />
-        <g filter="url(#ccn-house-shadow)">
-          <path d="M132 152 L364 34 L617 152 L617 345 L132 345 Z" fill="url(#ccn-house-wall)" stroke="#af0024" strokeWidth="3" />
-          <path d="M111 154 L364 18 L638 154" fill="none" stroke="#33033c" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M364 44 L364 345" stroke="#c4a95b" strokeWidth="3" />
-          <rect x="168" y="183" width="156" height="122" rx="4" fill="url(#ccn-house-glass)" stroke="#33033c" strokeWidth="2" />
-          <path d="M246 183 V305 M168 244 H324" stroke="#fffaf5" strokeWidth="3" opacity="0.8" />
-          <rect x="404" y="177" width="158" height="168" rx="4" fill="#33033c" />
-          <rect x="442" y="221" width="82" height="124" rx="2" fill="#af0024" />
-          <circle cx="508" cy="284" r="5" fill="#c4a95b" />
-          <rect x="155" y="320" width="430" height="25" fill="#260128" />
-          <path d="M128 345 H624" stroke="#c4a95b" strokeWidth="5" />
-          <path d="M138 150 L364 43 L608 150" fill="none" stroke="#c4a95b" strokeWidth="2" opacity="0.9" />
-        </g>
-        <g fill="none" stroke="#c4a95b" strokeWidth="1.2" strokeDasharray="5 7" opacity="0.65">
-          <path d="M54 92 H250" />
-          <path d="M486 82 H708" />
-          <path d="M70 402 H690" />
-          <path d="M92 74 V328" />
-          <path d="M650 92 V330" />
-        </g>
-      </svg>
-
-      {levels.map((level, index) => (
-        <button
-          key={level.key}
-          type="button"
-          className={`ccn-house-marker ccn-house-marker--${level.key}`}
-          style={positions[index]}
-          onClick={() => onOpen(level.route)}
-          aria-label={`Open ${level.label}, ${level.value}% complete`}
-        >
-          <span>{level.label}</span>
-          <strong>{Math.round(levelMap[level.key]?.value || 0)}%</strong>
-        </button>
-      ))}
+    <div className={`ccn-house-visual ${className}`.trim()}>
+      <img src={HOUSE_ASSET} alt="The Core Truth House brand operating system" />
+      {levels.map((level) => {
+        const position = HOUSE_HOTSPOTS[level.key];
+        if (!position) return null;
+        return (
+          <button
+            key={level.key}
+            type="button"
+            className="ccn-house-hotspot"
+            style={position}
+            onClick={() => onOpen(level.route)}
+            aria-label={`Open ${level.label}, ${level.value}% complete`}
+          />
+        );
+      })}
     </div>
   );
 }
 
 function MetricCard({ icon: Icon, label, value, note, tone, onClick }) {
+  const displayValue = value === null || value === undefined ? "—" : value;
+  // Without this the flattened name reads "Buyer Signals00 awaiting confirmation"
+  // and never says where the card goes. The note stays in the name so the real
+  // supporting text is not lost to assistive technology.
+  // "Go to" rather than "Open" - several labels already begin with "Open",
+  // which would otherwise be announced as "Open Open Decisions".
+  const spokenName = `${label}: ${displayValue}. ${note}. Go to ${label}.`;
+
   return (
-    <button type="button" className={`ccn-metric ccn-metric--${tone}`} onClick={onClick}>
-      <span className="ccn-metric-icon"><Icon size={18} aria-hidden="true" /></span>
-      <span>
+    <button
+      type="button"
+      className={`ccn-metric ccn-metric--${tone}`}
+      onClick={onClick}
+      aria-label={spokenName}
+    >
+      <span className="ccn-metric-head">
         <small>{label}</small>
-        <strong>{value === null || value === undefined ? "—" : value}</strong>
-        <em>{note}</em>
+        <span className="ccn-metric-icon"><Icon size={16} aria-hidden="true" /></span>
       </span>
-      <ArrowRight size={15} aria-hidden="true" />
+      <strong>{displayValue}</strong>
+      <span className="ccn-metric-foot">
+        <em>{note}</em>
+        <ArrowRight className="ccn-metric-arrow" size={15} aria-hidden="true" />
+      </span>
     </button>
   );
 }
@@ -458,6 +474,11 @@ export default function CommandCenterNext() {
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  // Brand Signals is only "live" when the panel is reading the consolidated
+  // overview response - never on legacy fallback, empty, pending or error. This
+  // reuses the existing dataSource state; it adds no request, poll or socket.
+  const signalsLive = dataSource === "overview" && !error;
 
   const derived = useMemo(() => {
     const overview = data.overview || null;
@@ -568,23 +589,74 @@ export default function CommandCenterNext() {
   }, [data, healthData]);
 
   const firstName = user?.firstName || (user?.fullName || "").split(" ")[0] || activeWorkspace?.name || "Founder";
-  const today = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(new Date());
-  // Local browser time, not server UTC.
-  const greeting = useMemo(() => greetingForHour(new Date().getHours()), []);
+
+  // Local browser clock, not server UTC. Ticks once a minute purely so the
+  // displayed time (and the daypart greeting) stay current while the page sits
+  // open - it triggers no request of any kind.
+  const [consultQuestion, setConsultQuestion] = useState("");
+
+  // Blank or whitespace-only input does nothing. On a real question we open the
+  // existing Ask the House panel; the question cannot be handed over because
+  // that panel exposes no prefill contract, so it stays in the field.
+  const handleConsultSubmit = useCallback((event) => {
+    event.preventDefault();
+    if (!consultQuestion.trim()) return;
+    open("command-center-consult");
+  }, [consultQuestion, open]);
+
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const greeting = greetingForHour(now.getHours());
+  const dateLabel = useMemo(
+    () => new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric" }).format(now),
+    [now],
+  );
+  const timeLabel = useMemo(
+    () => new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(now),
+    [now],
+  );
+  // Machine-readable local values for the <time> elements.
+  const pad = (value) => String(value).padStart(2, "0");
+  const dateTimeAttr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const timeAttr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  // Approved composition lists the House top floor first (Estate -> Foundation);
+  // the data layer returns it bottom-up, so present a reversed copy.
+  const houseLevelsTopDown = useMemo(() => [...derived.houseLevels].reverse(), [derived.houseLevels]);
+
+  const healthRows = useMemo(() => {
+    const modules = healthData?.modules || {};
+    return HEALTH_ROWS
+      .map((row) => ({ ...row, value: Math.round(modulePercent(modules, row.key)) }))
+      .filter((row) => row.value > 0);
+  }, [healthData]);
 
   return (
     <AuthShell activeNav="command-center">
       <main className="ccn-page">
         <section className="ccn-heading-row">
           <div>
-            <span className="ccn-kicker">{today}</span>
-            <h1>{greeting}, {firstName}.</h1>
+            <h1>
+              {greeting}, {firstName}.
+              <Sparkles className="ccn-greeting-sparkle" size={26} aria-hidden="true" focusable="false" />
+            </h1>
             <p>The House has organized what needs your attention inside {activeWorkspace?.name || "this workspace"}.</p>
           </div>
-          <button type="button" className="ccn-refresh" onClick={loadDashboard} disabled={loading}>
-            <RefreshCw size={15} className={loading ? "is-spinning" : ""} aria-hidden="true" />
-            Refresh intelligence
-          </button>
+          <div className="ccn-heading-meta">
+            <span className="ccn-heading-stamp">
+              <time dateTime={dateTimeAttr}>{dateLabel}</time>
+              <span className="ccn-stamp-dot" aria-hidden="true" />
+              <time dateTime={timeAttr}>{timeLabel}</time>
+            </span>
+            <button type="button" className="ccn-refresh" onClick={loadDashboard} disabled={loading}>
+              <RefreshCw size={15} className={loading ? "is-spinning" : ""} aria-hidden="true" />
+              Refresh
+            </button>
+          </div>
         </section>
 
         {dataSource === "legacy-fallback" ? (
@@ -595,137 +667,254 @@ export default function CommandCenterNext() {
 
         {error ? <div className="ccn-alert" role="alert"><AlertTriangle size={16} aria-hidden="true" /> {error}</div> : null}
 
-        <section className="ccn-metrics" aria-label="Command Center summary">
-          <MetricCard icon={Gauge} label="Brand Health Score" value={derived.score || null} note={derived.scoreStatus} tone="crimson" onClick={() => navigate("/brand-health")} />
-          <MetricCard icon={Radar} label="Buyer Signals" value={derived.confirmedSignalCount} note={`${derived.unconfirmedSignalCount} awaiting confirmation`} tone="gold" onClick={() => navigate("/signal-inbox")} />
-          <MetricCard icon={Compass} label="Open Decisions" value={derived.openDecisions} note={derived.openDecisions === null ? "Decision endpoint pending" : "Unresolved strategic decisions"} tone="purple" onClick={() => navigate("/workspace?view=decisions")} />
-          <MetricCard icon={Workflow} label="Active Work" value={derived.activeWork} note={`${derived.activeCampaignCount} active campaigns`} tone="green" onClick={() => navigate("/workspace?view=work")} />
-          <MetricCard icon={AlertTriangle} label="System Alerts" value={derived.systemAlerts} note={derived.systemAlerts === null ? "Alert endpoint pending" : derived.systemAlerts ? "Review workspace health" : "All systems normal"} tone="orange" onClick={() => navigate("/alerts")} />
-        </section>
+        <div className="ccn-layout">
+          <div className="ccn-col ccn-col-left">
+            <article className="ccn-card ccn-health-card">
+              <button type="button" className="ccn-health-score" onClick={() => navigate("/brand-health")}>
+                <span className="ccn-card-label">Brand Health Score</span>
+                <strong>{derived.score === null || derived.score === undefined ? "—" : derived.score}</strong>
+                <small>{derived.scoreStatus}</small>
+              </button>
+              <div className="ccn-health-detail">
+                {healthRows.length ? (
+                  <div className="ccn-health-rows">
+                    {healthRows.map((row) => (
+                      <div key={row.key} className="ccn-health-row">
+                        <span className={`ccn-health-dot ${row.value >= 70 ? "is-good" : "is-warn"}`} aria-hidden="true">
+                          {row.value >= 70 ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
+                        </span>
+                        <span><strong>{row.label}</strong><small>{row.value}% complete</small></span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="ccn-health-note">{derived.scoreStatus}</p>
+                )}
+                <button type="button" className="ccn-link" onClick={() => navigate("/brand-health")}>
+                  View Full Report <ArrowRight size={13} aria-hidden="true" />
+                </button>
+              </div>
+            </article>
 
-        <section className="ccn-primary-grid">
-          <article className="ccn-next-move">
-            {/* Static section label, matching its sibling panels ("YOUR BRAND HOUSE").
-                The backend still sends nextMove.eyebrow; it is intentionally not used
-                as the section heading so the approved copy stays stable. */}
-            <span className="ccn-panel-eyebrow"><Sparkles size={14} aria-hidden="true" /> YOUR NEXT MOVE</span>
-            <h2>{derived.nextMove.title}</h2>
-            <p>{derived.nextMove.body}</p>
-            <button type="button" onClick={() => navigate(derived.nextMove.route)}>
-              {derived.nextMove.action} <ArrowRight size={15} aria-hidden="true" />
-            </button>
-          </article>
+            <article className="ccn-next-move">
+              {/* Static section label, matching its sibling panels ("YOUR BRAND HOUSE").
+                  The backend still sends nextMove.eyebrow; it is intentionally not used
+                  as the section heading so the approved copy stays stable. */}
+              <span className="ccn-panel-eyebrow"><Sparkles size={14} aria-hidden="true" /> YOUR NEXT MOVE</span>
+              <h2>{derived.nextMove.title}</h2>
+              <p>{derived.nextMove.body}</p>
+              <div className="ccn-next-actions">
+                <button type="button" className="ccn-gold-btn" onClick={() => navigate(derived.nextMove.route)}>
+                  {derived.nextMove.action} <ArrowRight size={15} aria-hidden="true" />
+                </button>
+                <button type="button" className="ccn-ghost-btn" onClick={() => open("command-center-next-move")}>
+                  Ask Zuri Why
+                </button>
+              </div>
+            </article>
 
-          <aside className="ccn-signals-card">
-            <div className="ccn-card-heading">
-              <div><span>Brand Signals</span><small>What the market is showing you</small></div>
-              <button type="button" onClick={() => navigate("/signal-inbox")}>View all</button>
-            </div>
-            <div className="ccn-signal-list">
-              {derived.signalCards.length ? derived.signalCards.map((signal) => (
-                <button key={signal.id} type="button" className="ccn-signal" onClick={() => navigate(signal.route)}>
-                  <span className={`ccn-signal-level ccn-signal-level--${signal.level || 1}`}>{signal.level || 1}</span>
-                  <span>
-                    <strong>{signal.title}</strong>
-                    <small>{SIGNAL_LABELS[signal.level] || "Signal"} · {signal.source}</small>
+            <article className="ccn-card ccn-intelligence">
+              <div className="ccn-card-heading"><div><span>Daily Intelligence</span><small>Evidence worth acting on today</small></div></div>
+              {derived.intelligence.length ? (
+                <div className="ccn-intel-row">
+                  {/* Approved composition shows three cards; the normalization keeps
+                      its own limit and only the presentation is capped here. */}
+                  {derived.intelligence.slice(0, 3).map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button key={item.id} type="button" className="ccn-intel-card" onClick={() => navigate(item.route)}>
+                        <span className="ccn-intel-eyebrow">
+                          <Icon size={12} aria-hidden="true" />
+                          {item.label}
+                        </span>
+                        <p>{item.title}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="ccn-intel-empty">
+                  <EmptyState>Complete the diagnostic, confirm signals, or create a campaign to begin the daily intelligence feed.</EmptyState>
+                </div>
+              )}
+            </article>
+
+            <article className="ccn-card ccn-quick-actions">
+              <div className="ccn-card-heading"><div><span>Quick Actions</span><small>Open the right room without searching</small></div></div>
+              <div className="ccn-action-grid">
+                {QUICK_ACTIONS.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button key={action.label} type="button" onClick={() => navigate(action.route)}>
+                      <span><Icon size={17} aria-hidden="true" /></span>
+                      <span><strong>{action.label}</strong><small>{action.helper}</small></span>
+                    </button>
+                  );
+                })}
+              </div>
+            </article>
+          </div>
+
+          <div className="ccn-col ccn-col-center">
+            <section className="ccn-metrics" aria-label="Command Center summary">
+              <MetricCard icon={Radar} label="Buyer Signals" value={derived.confirmedSignalCount} note={`${derived.unconfirmedSignalCount} awaiting confirmation`} tone="gold" onClick={() => navigate("/signal-inbox")} />
+              <MetricCard icon={Compass} label="Open Decisions" value={derived.openDecisions} note={derived.openDecisions === null ? "Decision endpoint pending" : "Unresolved strategic decisions"} tone="purple" onClick={() => navigate("/workspace?view=decisions")} />
+              <MetricCard icon={Workflow} label="Active Work" value={derived.activeWork} note={`${derived.activeCampaignCount} active campaigns`} tone="green" onClick={() => navigate("/workspace?view=work")} />
+              <MetricCard icon={AlertTriangle} label="System Alerts" value={derived.systemAlerts} note={derived.systemAlerts === null ? "Alert endpoint pending" : derived.systemAlerts ? "Review workspace health" : "All systems normal"} tone="orange" onClick={() => navigate("/alerts")} />
+            </section>
+
+            <article className="ccn-card ccn-house-card">
+              <span className="ccn-card-label">Your Brand House</span>
+              <div className="ccn-house-body">
+                <div className="ccn-level-list">
+                  {houseLevelsTopDown.map((level) => (
+                    <button key={level.key} type="button" onClick={() => navigate(level.route)}>
+                      <span className="ccn-level-icon" aria-hidden="true"><Home size={14} /></span>
+                      {/* The approved Command Center rail is architectural navigation:
+                          name and descriptor only. level.value stays in state and is
+                          announced on the matching hotspot; the detailed completion
+                          view lives on /brand-house. */}
+                      <span>
+                        <strong>{level.label.toUpperCase()}</strong>
+                        <small>{HOUSE_LEVEL_DESCRIPTORS[level.key] || level.rooms}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <HouseVisual levels={derived.houseLevels} onOpen={navigate} />
+              </div>
+              <div className="ccn-house-foot">
+                <small>Select a level to open that room.</small>
+                <button type="button" className="ccn-outline-btn" onClick={() => navigate("/brand-house")}>
+                  Explore the House <ArrowRight size={14} aria-hidden="true" />
+                </button>
+              </div>
+            </article>
+
+            <article className="ccn-card ccn-progress-card">
+              <div className="ccn-card-heading"><div><span>Recent Progress</span><small>Movement recorded in this workspace</small></div><button type="button" onClick={() => navigate("/workspace?view=activity")}>View activity</button></div>
+              {derived.recentProgress.length ? (
+                <div className="ccn-progress-row">
+                  {derived.recentProgress.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button key={item.id} type="button" className="ccn-progress-item" onClick={() => navigate(item.route)}>
+                        <span className="ccn-progress-when">
+                          <Icon size={12} aria-hidden="true" />
+                          {item.meta}
+                        </span>
+                        <strong>{item.title}</strong>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="ccn-progress-empty">
+                  <EmptyState>Workspace milestones will appear here as the tenant completes real work.</EmptyState>
+                </div>
+              )}
+            </article>
+
+            <article className="ccn-card ccn-workbench">
+              <div className="ccn-card-heading"><div><span>Active Workbench</span><small>What is currently being built</small></div><button type="button" onClick={() => navigate("/workspace?view=work")}>Open workspace</button></div>
+              {derived.workbench.length ? (
+                <div className="ccn-workbench-row">
+                  {derived.workbench.map((item) => (
+                    <button key={item.id} type="button" className="ccn-work-card" onClick={() => navigate(item.route)}>
+                      <span className="ccn-work-type">{item.type}</span>
+                      <strong>{item.title}</strong>
+                      <span className="ccn-work-status">
+                        <span className="ccn-work-dot" aria-hidden="true" />
+                        {item.status}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="ccn-workbench-empty">
+                  <EmptyState>Start a campaign, build an offer, or generate content to place work on the bench.</EmptyState>
+                </div>
+              )}
+            </article>
+          </div>
+
+          <aside className="ccn-col ccn-col-right">
+            <article className="ccn-card ccn-signals-card">
+              <div className="ccn-card-heading ccn-signals-heading">
+                <div>
+                  <span>Brand Signals</span>
+                  <small>What the market is showing you</small>
+                </div>
+                {signalsLive ? (
+                  <span className="ccn-live-status" aria-label="Brand Signals connected to the workspace overview">
+                    <span className="ccn-live-dot" aria-hidden="true" />
+                    LIVE
                   </span>
-                  <em>{signal.date}</em>
-                </button>
-              )) : <EmptyState>Confirmed buyer signals will appear here after the tenant reviews them.</EmptyState>}
-            </div>
-          </aside>
-        </section>
-
-        <section className="ccn-house-card">
-          <div className="ccn-house-copy">
-            <span className="ccn-panel-eyebrow"><ShieldCheck size={14} aria-hidden="true" /> YOUR BRAND HOUSE</span>
-            <h2>See the structure behind the brand.</h2>
-            <p>Every level opens the real room where the tenant’s work is built, reviewed, and improved.</p>
-            <div className="ccn-level-list">
-              {derived.houseLevels.map((level) => (
-                <button key={level.key} type="button" onClick={() => navigate(level.route)}>
-                  <span><strong>{level.label}</strong><small>{level.rooms}</small></span>
-                  <em>{level.value}%</em>
-                </button>
-              ))}
-            </div>
-          </div>
-          <HouseIllustration levels={derived.houseLevels} onOpen={navigate} />
-        </section>
-
-        <section className="ccn-consult-card">
-          <div className="ccn-consult-icon"><WandSparkles size={28} aria-hidden="true" /></div>
-          <div>
-            <span>CONSULT THE HOUSE</span>
-            <h2>Ask Zuri what the data means before making the next decision.</h2>
-            <p>Zuri uses this tenant’s Brand Memory, workspace records, and confirmed signals. Other tenant content is never included.</p>
-          </div>
-          <button type="button" onClick={() => open("command-center-consult")}>Ask Zuri <ArrowRight size={15} aria-hidden="true" /></button>
-        </section>
-
-        <section className="ccn-secondary-grid">
-          <article className="ccn-card ccn-intelligence">
-            <div className="ccn-card-heading"><div><span>Daily Intelligence</span><small>Evidence worth acting on today</small></div></div>
-            <div className="ccn-intelligence-list">
-              {derived.intelligence.length ? derived.intelligence.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button key={item.id} type="button" onClick={() => navigate(item.route)}>
-                    <span><Icon size={17} aria-hidden="true" /></span>
-                    <span><small>{item.label}</small><strong>{item.title}</strong></span>
-                    <ArrowRight size={14} aria-hidden="true" />
+                ) : null}
+              </div>
+              <div className="ccn-signal-list">
+                {derived.signalCards.length ? derived.signalCards.map((signal) => (
+                  <button key={signal.id} type="button" className="ccn-signal" onClick={() => navigate(signal.route)}>
+                    <span className={`ccn-signal-level ccn-signal-level--${signal.level || 1}`}>{signal.level || 1}</span>
+                    <span>
+                      <strong>{signal.title}</strong>
+                      <small>{SIGNAL_LABELS[signal.level] || "Signal"} · {signal.source}</small>
+                    </span>
+                    <em>{signal.date}</em>
                   </button>
-                );
-              }) : <EmptyState>Complete the diagnostic, confirm signals, or create a campaign to begin the daily intelligence feed.</EmptyState>}
-            </div>
-          </article>
+                )) : <EmptyState>Confirmed buyer signals will appear here after the tenant reviews them.</EmptyState>}
+              </div>
+              <div className="ccn-signals-foot">
+                <button type="button" className="ccn-link" onClick={() => navigate("/signal-inbox")}>
+                  View All Signals <ArrowRight size={13} aria-hidden="true" />
+                </button>
+              </div>
+            </article>
 
-          <article className="ccn-card ccn-progress-card">
-            <div className="ccn-card-heading"><div><span>Recent Progress</span><small>Movement recorded in this workspace</small></div><button type="button" onClick={() => navigate("/workspace?view=activity")}>View activity</button></div>
-            <div className="ccn-progress-list">
-              {derived.recentProgress.length ? derived.recentProgress.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button key={item.id} type="button" onClick={() => navigate(item.route)}>
-                    <span><Icon size={15} aria-hidden="true" /></span>
-                    <span><strong>{item.title}</strong><small>{item.meta}</small></span>
-                    <ArrowRight size={13} aria-hidden="true" />
+            <article className="ccn-card ccn-consult-card">
+              <div className="ccn-card-heading ccn-consult-heading">
+                <span>Consult the House</span>
+                <small>AI Brand Architect</small>
+              </div>
+              <div className="ccn-consult-intro">
+                <div className="ccn-consult-seal">
+                  <img src={SEAL_ASSET} alt="" />
+                </div>
+                <div>
+                  <strong>I’m your AI Brand Architect.</strong>
+                  <p>I help you make high-impact moves that build a brand that lasts.</p>
+                </div>
+              </div>
+              <div className="ccn-prompt-list">
+                {CONSULT_PROMPTS.map((prompt) => (
+                  <button key={prompt} type="button" className="ccn-prompt" onClick={() => open("command-center-consult")}>
+                    <span className="ccn-prompt-mark" aria-hidden="true" />
+                    <span>{prompt}</span>
+                    <ChevronRight size={13} aria-hidden="true" />
                   </button>
-                );
-              }) : <EmptyState>Workspace milestones will appear here as the tenant completes real work.</EmptyState>}
-            </div>
-          </article>
-        </section>
-
-        <section className="ccn-bottom-grid">
-          <article className="ccn-card ccn-workbench">
-            <div className="ccn-card-heading"><div><span>Active Workbench</span><small>What is currently being built</small></div><button type="button" onClick={() => navigate("/workspace?view=work")}>Open workspace</button></div>
-            <div className="ccn-workbench-list">
-              {derived.workbench.length ? derived.workbench.map((item) => (
-                <button key={item.id} type="button" onClick={() => navigate(item.route)}>
-                  <span className="ccn-work-type">{item.type}</span>
-                  <span><strong>{item.title}</strong><small>{item.status}</small></span>
+                ))}
+              </div>
+              {/* Opens the existing Ask the House panel. That panel's open(section)
+                  contract takes a section id only - it has no prompt-prefill
+                  parameter - so the typed question is not passed and the field is
+                  left intact rather than discarded. */}
+              <form className="ccn-consult-composer" onSubmit={handleConsultSubmit}>
+                <label className="ccn-visually-hidden" htmlFor="ccn-consult-question">Ask a strategic question</label>
+                <input
+                  id="ccn-consult-question"
+                  type="text"
+                  value={consultQuestion}
+                  onChange={(event) => setConsultQuestion(event.target.value)}
+                  placeholder="Ask a strategic question..."
+                  autoComplete="off"
+                />
+                <button type="submit" className="ccn-consult-send" aria-label="Ask the House">
                   <ArrowRight size={14} aria-hidden="true" />
                 </button>
-              )) : <EmptyState>Start a campaign, build an offer, or generate content to place work on the bench.</EmptyState>}
-            </div>
-          </article>
-
-          <article className="ccn-card ccn-quick-actions">
-            <div className="ccn-card-heading"><div><span>Quick Actions</span><small>Open the right room without searching</small></div></div>
-            <div className="ccn-action-grid">
-              {QUICK_ACTIONS.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <button key={action.label} type="button" onClick={() => navigate(action.route)}>
-                    <span><Icon size={17} aria-hidden="true" /></span>
-                    <span><strong>{action.label}</strong><small>{action.helper}</small></span>
-                  </button>
-                );
-              })}
-            </div>
-          </article>
-        </section>
+              </form>
+            </article>
+          </aside>
+        </div>
 
         {loading ? <div className="ccn-loading" role="status"><CircleDot size={15} aria-hidden="true" /> Updating workspace intelligence…</div> : null}
       </main>

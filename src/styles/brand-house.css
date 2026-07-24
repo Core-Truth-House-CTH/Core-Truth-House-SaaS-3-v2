@@ -1,0 +1,212 @@
+/* Brand House - the approved "house-map" view rendered as a real page.
+   Palette mirrors the Command Center so the two views read as one system. */
+.bh-page {
+  --bh-ink: #2b1040;
+  --bh-crimson: #af0024;
+  --bh-gold: #c4a95b;
+  --bh-border: #dfd0cb;
+  --bh-muted: #796171;
+  --bh-ruby: #763b5b;
+  width: 100%;
+  min-width: 0;
+  max-width: 1250px;
+  margin: 0 auto;
+  color: var(--bh-ink);
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+.bh-page * { box-sizing: border-box; }
+.bh-page button { font: inherit; }
+
+.bh-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.bh-back,
+.bh-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--bh-border);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--bh-ink);
+  padding: 10px 15px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.bh-back:hover,
+.bh-refresh:hover { border-color: rgba(175, 0, 36, .35); box-shadow: 0 8px 20px rgba(51, 3, 60, .07); }
+.bh-refresh:disabled { opacity: .6; cursor: default; }
+.bh-refresh .is-spinning { animation: bh-spin 1s linear infinite; }
+@keyframes bh-spin { to { transform: rotate(360deg); } }
+
+/* Deep crimson-to-purple introduction panel, with the architectural arc. */
+.bh-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  margin-bottom: 16px;
+  padding: clamp(24px, 3vw, 34px);
+  color: #fff;
+  background: linear-gradient(135deg, #6f002a, #21001d);
+  box-shadow: 0 18px 44px rgba(51, 3, 60, .18);
+}
+
+.bh-hero::after {
+  content: "";
+  position: absolute;
+  right: -70px;
+  top: -100px;
+  width: 300px;
+  height: 300px;
+  border: 1px solid rgba(196, 169, 91, .25);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.bh-hero > * { position: relative; z-index: 1; }
+
+.bh-eyebrow {
+  display: block;
+  color: #e5cb78;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.bh-hero h1 {
+  margin: 8px 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(30px, 3.6vw, 38px);
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.bh-hero p {
+  max-width: 760px;
+  margin: 0;
+  color: rgba(255, 255, 255, .78);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.bh-alert {
+  border: 1px solid #f0c9c9;
+  border-radius: 12px;
+  background: #fdf1f1;
+  color: #8d2231;
+  margin-bottom: 14px;
+  padding: 13px 15px;
+  font-size: 12px;
+}
+
+/* Large white Brand House card: levels on the left, the exact asset on the right. */
+.bh-card {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  border: 1px solid var(--bh-border);
+  border-radius: 14px;
+  background: #fff;
+  padding: clamp(22px, 3vw, 34px);
+  box-shadow: 0 12px 34px rgba(51, 3, 60, .08);
+}
+
+.bh-levels { display: flex; flex-direction: column; gap: 14px; }
+
+.bh-level {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--bh-ink);
+  padding: 4px 0;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.bh-level:hover .bh-level-icon { background: linear-gradient(135deg, #d58f47, #8f143d); }
+
+.bh-level-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #78002e;
+  color: #fff;
+}
+
+.bh-level-copy { display: grid; gap: 2px; min-width: 0; }
+.bh-level-copy strong { font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+.bh-level-copy small { color: var(--bh-ruby); font-size: 10px; }
+.bh-level em {
+  margin-left: auto;
+  color: var(--bh-crimson);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 20px;
+  font-style: normal;
+}
+
+/* Hotspots are positioned as percentages of .bh-visual, so the container must
+   match the painted image exactly. Capping the container - not just the img -
+   keeps the percentages and the artwork in one coordinate space; capping only
+   the image let the container stretch to the column (937px at 1440) and pushed
+   every marker ~45px off its room. */
+.bh-visual { position: relative; width: 100%; max-width: 670px; margin-inline: auto; }
+.bh-visual img { width: 100%; height: auto; display: block; mix-blend-mode: multiply; }
+
+.bh-hotspot {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--bh-gold);
+  box-shadow: 0 0 0 5px rgba(196, 169, 91, .25);
+  cursor: pointer;
+  animation: bh-pulse 2s infinite;
+}
+
+@keyframes bh-pulse { 50% { box-shadow: 0 0 0 10px rgba(196, 169, 91, 0); } }
+
+.bh-page button:focus-visible {
+  outline: 3px solid var(--bh-gold);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .bh-card { grid-template-columns: 1fr; gap: 18px; }
+  .bh-levels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bh-visual { min-height: 220px; }
+}
+
+@media (max-width: 640px) {
+  .bh-head { flex-wrap: wrap; }
+  .bh-back, .bh-refresh { flex: 1; justify-content: center; }
+  .bh-levels { grid-template-columns: 1fr; }
+  .bh-card { padding: 18px 15px; }
+  .bh-visual { min-height: 170px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bh-page *, .bh-page *::before, .bh-page *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

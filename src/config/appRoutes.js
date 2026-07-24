@@ -67,6 +67,16 @@ export const APP_ROUTES = [
     lockedTooltip: "Upgrade to Foundation to unlock the Command Center.",
   },
   {
+    path: "/brand-house",
+    label: "Your Brand House",
+    group: "workspaceCore",
+    requiredPlan: "foundation",
+    gateType: "page",
+    hidden: true,
+    tooltip: "Explore every level of your Brand Operating System.",
+    lockedTooltip: "Upgrade to Foundation to unlock the Brand House.",
+  },
+  {
     path: "/workspace",
     label: "Workspace",
     group: "workspaceCore",
