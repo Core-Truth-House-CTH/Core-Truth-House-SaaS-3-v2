@@ -150,6 +150,7 @@ export function NotificationBell() {
   const [loading, setLoading] = useState(false);
   const [brandAlerts, setBrandAlerts] = useState([]);
   const [brandUnread, setBrandUnread] = useState(0);
+  const triggerRef = useRef(null);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const pingIntervalRef = useRef(null);
@@ -330,6 +331,24 @@ export function NotificationBell() {
     }
   }, [filter]);
 
+  // Escape closes the notifications panel and returns focus to the bell.
+  // The listener is only attached while the panel is open, so Escape never
+  // fires unrelated behaviour when it is closed, and it is always removed on
+  // close or unmount.
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const onKey = (event) => {
+      if (event.key !== 'Escape') return;
+      setShowFilter(false);
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
+
   const markRead = async (id) => {
     // Optimistic update
     setNotifications(prev => 
@@ -440,8 +459,12 @@ export function NotificationBell() {
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         onClick={() => { setOpen(!open); if (!open) { load(); loadBrandAlerts(); loadBrandCount(); } }}
         data-testid="notification-bell"
+        aria-label="Notifications"
+        aria-haspopup="dialog"
+        aria-expanded={open}
         className="relative p-2 rounded-lg cth-muted hover:opacity-80 hover:bg-[var(--cth-command-panel-soft)] transition-all"
       >
         <Bell size={18} />

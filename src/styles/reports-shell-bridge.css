@@ -1,0 +1,45 @@
+/*
+ * Section 1 bridge: the existing Analytics page still uses DashboardLayout.
+ * These scoped rules suppress that legacy sidebar/global-control shell only
+ * when Analytics is rendered inside the shared AuthShell. The report body and
+ * its data logic are untouched.
+ */
+.cth-authshell .as-embedded-reports {
+  width: 100%;
+  min-width: 0;
+}
+
+.cth-authshell .as-embedded-reports .cth-app-shell {
+  display: block;
+  min-height: 0;
+  width: 100%;
+  background: transparent;
+}
+
+.cth-authshell .as-embedded-reports [data-testid="sidebar"],
+.cth-authshell .as-embedded-reports .cth-global-controls {
+  display: none !important;
+}
+
+.cth-authshell .as-embedded-reports .cth-app-main,
+.cth-authshell .as-embedded-reports .cth-app-stage,
+.cth-authshell .as-embedded-reports .cth-app-body {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+}
+
+.cth-authshell .as-embedded-reports .cth-page-header {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (max-width: 1080px) {
+  .cth-authshell .as-embedded-reports {
+    overflow-x: hidden;
+  }
+}
