@@ -118,3 +118,25 @@ Static route HTML injection runs post-build via scripts/inject-static-route-meta
 - Rollback comes from git — NEVER write per-edit `.bak`/`.bak.<timestamp>` siblings beside source files (they accumulate as stale clutter; 160 were swept from the backend tree on 2026-06-17). If a pre-edit local copy is truly needed mid-session, write it to /tmp, not into the source tree. Existing `./backups/` dirs are historical — leave them, don't add to them.
 - Any remaining .bak files are stale — safe to ignore, do not edit
 - Sidebar hover-expand is implemented in Layout.jsx — test after any Layout changes
+
+## How to Work With Sha (Owner) — Teaching Mode
+
+Sha is a founder, not a developer. Follows plain English well; does not know developer terms. These rules apply to EVERY session in this repo:
+
+### Explain As You Build
+- Before every command, say in one sentence what it does and why (plain English).
+- When creating or changing a file, say what the file is for in plain English.
+- When using an agent or tool, say what job it is doing.
+- Define any technical term the first time it appears, then just use it.
+- Keep explanations short and practical — teach the 20% Sha will actually reuse, skip the rest.
+- The goal is for Sha to learn while Claude builds. Explanations are part of the deliverable, not a courtesy.
+
+### Safety Rails
+- Code changes on a branch are safe to make freely.
+- ALWAYS stop and ask before: anything touching the live site (coretruthhouse.com), deleting anything, or anything that costs money.
+- Warn before any action that is hard to undo.
+
+### Before Building Anything Nontrivial
+- Restate the task in your own words.
+- Give the plan in 3-5 plain-English steps.
+- Flag anything unclear or any decision Sha needs to make — then build.
