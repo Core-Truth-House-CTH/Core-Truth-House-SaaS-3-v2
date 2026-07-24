@@ -271,6 +271,11 @@
      `flex: 1` (= flex: 1 1 0%), and for a flex item flex-basis wins over
      width - so width: 100% alone never forced the nav onto its own row. */
   .cth-authshell .as-nav { order: 3; flex: 0 0 100%; width: 100%; overflow-x: auto; }
-  .cth-authshell .as-search { width: 160px; }
+  /* 160px left only 112px for text once the 24px padding, 15px icon and 8px
+     gap are taken out - 7px short of the "Search the House" placeholder and
+     15px short of its trailing ellipsis, so the label rendered as
+     "Search the Hous". 190px yields 142px of text area against the 127px the
+     full placeholder needs. Nothing is hidden, shrunk or reworded. */
+  .cth-authshell .as-search { width: 190px; }
   .cth-authshell .as-profile-copy { display: none; }
 }
