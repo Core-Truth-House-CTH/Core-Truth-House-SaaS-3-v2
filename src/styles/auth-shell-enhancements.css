@@ -1,0 +1,99 @@
+/* Accessibility and small-screen completion for the shared authenticated shell. */
+.cth-authshell :is(button, input, a):focus-visible {
+  outline: 3px solid var(--as-gold);
+  outline-offset: 3px;
+}
+
+.cth-authshell .as-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 169, 91, 0.45) transparent;
+}
+
+.cth-authshell .ccn-data-source {
+  margin-bottom: 14px;
+  border: 1px solid rgba(196, 169, 91, 0.5);
+  border-radius: 10px;
+  background: #fff9e9;
+  color: #654f23;
+  padding: 10px 13px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .cth-authshell .as-topbar {
+    align-items: center;
+  }
+
+  .cth-authshell .as-brand {
+    min-width: 0;
+  }
+
+  .cth-authshell .as-brand img {
+    width: 46px;
+    height: 46px;
+  }
+
+  .cth-authshell .as-brand-copy strong {
+    font-size: 14px;
+    letter-spacing: 0.07em;
+  }
+
+  .cth-authshell .as-brand-copy span {
+    display: none;
+  }
+
+  .cth-authshell .as-actions {
+    order: 2;
+    width: 100%;
+  }
+
+  .cth-authshell .as-search {
+    width: auto;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .cth-authshell .as-nav {
+    order: 3;
+    width: 100%;
+    padding-bottom: 2px;
+  }
+
+  .cth-authshell .as-navbtn {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .cth-authshell .as-frame {
+    margin: 0 8px 12px;
+    padding: 12px;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 430px) {
+  .cth-authshell .as-brand-copy strong {
+    font-size: 12px;
+  }
+
+  .cth-authshell .as-profile {
+    gap: 6px;
+  }
+
+  .cth-authshell .as-avatar {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cth-authshell *,
+  .cth-authshell *::before,
+  .cth-authshell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

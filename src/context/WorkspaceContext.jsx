@@ -90,6 +90,16 @@ function sleep(ms) {
 export function WorkspaceProvider({ children }) {
   const auth = useAuth();
 
+  // Keep the latest auth accessible without depending on its (unstable) identity.
+  // Clerk returns a new auth object on every store tick; depending on the whole
+  // object re-created fetchWorkspaces on every tick and re-ran its effect in the
+  // same commit as the signed-out redirect, clobbering Router location propagation.
+  const authRef = useRef(auth);
+  authRef.current = auth;
+  const authIsLoaded = auth?.isLoaded;
+  const authIsSignedIn = auth?.isSignedIn;
+  const authUserId = auth?.userId;
+
   const storageKeys = LIVE_STORAGE_KEYS;
 
   const provisionResolveRef = useRef(null);
@@ -236,11 +246,11 @@ export function WorkspaceProvider({ children }) {
         return [];
       }
 
-      if (!auth?.isLoaded) {
+      if (!authIsLoaded) {
         return [];
       }
 
-      if (!auth?.isSignedIn) {
+      if (!authIsSignedIn) {
         clearWorkspaceState();
         setLoading(false);
         setInitialized(true);
@@ -248,15 +258,15 @@ export function WorkspaceProvider({ children }) {
         return [];
       }
 
-      if (typeof auth?.getToken !== "function") {
+      if (typeof authRef.current?.getToken !== "function") {
         setLoading(false);
         setInitialized(true);
         releaseGate();
         return [];
       }
 
-      const bootKey = `${auth?.userId || "unknown"}:${
-        auth?.isSignedIn ? "signed-in" : "signed-out"
+      const bootKey = `${authUserId || "unknown"}:${
+        authIsSignedIn ? "signed-in" : "signed-out"
       }`;
 
       if (!force && bootstrappedKeyRef.current === bootKey) {
@@ -276,11 +286,11 @@ export function WorkspaceProvider({ children }) {
       setError(null);
 
       try {
-        let token = await auth.getToken();
+        let token = await authRef.current.getToken();
 
         if (!token) {
           await sleep(250);
-          token = await auth.getToken();
+          token = await authRef.current.getToken();
         }
 
         if (!token) {
@@ -343,7 +353,9 @@ export function WorkspaceProvider({ children }) {
       }
     },
     [
-      auth,
+      authIsLoaded,
+      authIsSignedIn,
+      authUserId,
       clearWorkspaceState,
       resolveAndApplyActiveWorkspace,
       releaseGate,
