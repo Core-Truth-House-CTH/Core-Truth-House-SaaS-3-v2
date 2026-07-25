@@ -15,6 +15,7 @@ import { useUser, useClerk } from "../hooks/useAuth";
 import { usePlan } from "../context/PlanContext";
 import { PLAN_INFO, normalizePlan } from "../config/planAccess";
 import { NotificationBell } from "./NotificationBell";
+import AuthShellContext, { AUTH_SHELL_OWNS_BELL } from "../context/AuthShellContext";
 import "../styles/auth-shell.css";
 import "../styles/auth-shell-enhancements.css";
 
@@ -92,6 +93,9 @@ export default function AuthShell({ activeNav, children }) {
   };
 
   return (
+    // This shell renders the notification bell for everything beneath it, so a
+    // legacy DashboardLayout embedded in one of these routes omits its own.
+    <AuthShellContext.Provider value={AUTH_SHELL_OWNS_BELL}>
     <div className="cth-authshell">
       <header className="as-topbar">
         <button
@@ -213,5 +217,6 @@ export default function AuthShell({ activeNav, children }) {
 
       <div className="as-frame">{children}</div>
     </div>
+    </AuthShellContext.Provider>
   );
 }

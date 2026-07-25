@@ -68,6 +68,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
+import { useAuthShellContext } from "../context/AuthShellContext";
 
 const ADMIN_ROLES = [
   "SUPER_ADMIN",
@@ -640,6 +641,12 @@ export function Sidebar() {
 
 export function DashboardLayout({ children }) {
   const { isOpen, close, sectionId, toggle } = useAskTheHouse();
+  // When this layout is embedded in the shared AuthShell (Reports -> Analytics)
+  // that shell already renders the visible bell. Mounting a second one here
+  // would open a second notification WebSocket and a second brand-alert poll,
+  // so the nested bell is omitted rather than hidden. Standalone routes keep
+  // theirs: the context default is false.
+  const { ownsNotificationBell } = useAuthShellContext();
   const location = useLocation();
   const surface = getSurfaceFromPath(location.pathname);
 
@@ -676,7 +683,7 @@ export function DashboardLayout({ children }) {
           >
             Ask the House
           </button>
-          <NotificationBell />
+          {!ownsNotificationBell && <NotificationBell />}
         </div>
         <main className="cth-app-stage">
           <div className="cth-app-body">
