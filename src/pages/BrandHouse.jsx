@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Home, RefreshCw } from "lucide-react";
 
@@ -32,9 +32,23 @@ export default function BrandHouse() {
   const [overview, setOverview] = useState(null);
   const [stats, setStats] = useState(null);
 
+  // Monotonic id of the latest Brand House load; see the stale-response guard
+  // below. Same reviewed pattern the Command Center uses.
+  const loadRequestRef = useRef(0);
+
   const load = useCallback(async () => {
+    // Claim the generation before anything else - including the no-workspace
+    // branch - so switching away from a workspace also invalidates whatever is
+    // still in flight for the previous one. Only the newest load may write
+    // state; a slower earlier request would otherwise resolve last and show the
+    // previous workspace's metrics under the current workspace's heading.
+    const requestId = loadRequestRef.current + 1;
+    loadRequestRef.current = requestId;
+    const isStale = () => loadRequestRef.current !== requestId;
+
     if (!activeWorkspaceId) {
       setLoading(false);
+      setError("");
       setOverview(null);
       setStats(null);
       return;
@@ -45,6 +59,7 @@ export default function BrandHouse() {
 
     try {
       const result = await fetchCommandCenterOverview(activeWorkspaceId);
+      if (isStale()) return;
 
       if (result.available) {
         setOverview(result.data);
@@ -54,22 +69,33 @@ export default function BrandHouse() {
 
       // Same verified fallback source the Command Center uses, so both views
       // report identical completion percentages.
-      setOverview(null);
       const workspaceStats = await apiClient
         .get(API_PATHS.workspace.stats(activeWorkspaceId))
         .catch(() => null);
+      if (isStale()) return;
+
+      setOverview(null);
       setStats(workspaceStats);
     } catch (requestError) {
+      if (isStale()) return;
+
       setOverview(null);
       setStats(null);
       setError(requestError?.message || "The Brand House could not be loaded.");
     } finally {
-      setLoading(false);
+      if (!isStale()) setLoading(false);
     }
   }, [activeWorkspaceId]);
 
   useEffect(() => {
     load();
+
+    // Invalidate the in-flight generation on unmount so a late response cannot
+    // write to an unmounted Brand House. This only retires the generation - no
+    // request is cancelled and no shared/global fetch behaviour changes.
+    return () => {
+      loadRequestRef.current += 1;
+    };
   }, [load]);
 
   // Real backend completion percentages - never prototype sample numbers.
