@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   BookOpen,
   Search,
@@ -202,6 +203,7 @@ function SectionTab({ section, active, count = 0, onClick }) {
 }
 
 export default function KnowledgeBasePage() {
+  const [searchParams] = useSearchParams();
   const [sections, setSections] = useState(() => buildSectionsFromArticles([]));
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -234,6 +236,21 @@ export default function KnowledgeBasePage() {
       cancelled = true;
     };
   }, []);
+
+  // The shared authenticated shell submits its header search as
+  // /knowledge-base?q=<encoded query>. Seed this page's existing search state
+  // from that parameter so the submitted query filters as soon as the articles
+  // are in, and keep reacting while the page stays mounted (a second header
+  // search, a direct link, browser Back/Forward). Local typing only updates
+  // local state - it deliberately does not rewrite the URL, so this effect
+  // cannot loop. No extra Knowledge Base request is made: the filter below is
+  // client-side over the articles already loaded.
+  const urlQuery = searchParams.get("q") || "";
+
+  useEffect(() => {
+    setQuery(urlQuery);
+    setSelectedArticleId(null);
+  }, [urlQuery]);
 
   const totalArticleCount = useMemo(
     () => flattenSections(sections).length,
