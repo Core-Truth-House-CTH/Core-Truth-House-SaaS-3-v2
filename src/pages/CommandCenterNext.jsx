@@ -439,6 +439,18 @@ export default function CommandCenterNext() {
   const loadRequestRef = useRef(0);
 
   const loadDashboard = useCallback(async () => {
+    // Guard against out-of-order responses when the workspace changes mid-flight:
+    // only the most recently started request may write state. Without this, a
+    // slow request for a previous workspace can resolve last and overwrite the
+    // current workspace's metrics under its heading.
+    //
+    // The generation is claimed before the no-workspace branch as well, so
+    // clearing the workspace also retires a pending request instead of letting
+    // it repopulate the empty screen with the previous workspace's metrics.
+    const requestId = loadRequestRef.current + 1;
+    loadRequestRef.current = requestId;
+    const isStale = () => loadRequestRef.current !== requestId;
+
     if (!activeWorkspaceId) {
       setLoading(false);
       setDataSource("empty");
@@ -446,14 +458,6 @@ export default function CommandCenterNext() {
       setError("");
       return;
     }
-
-    // Guard against out-of-order responses when the workspace changes mid-flight:
-    // only the most recently started request may write state. Without this, a
-    // slow request for a previous workspace can resolve last and overwrite the
-    // current workspace's metrics under its heading.
-    const requestId = loadRequestRef.current + 1;
-    loadRequestRef.current = requestId;
-    const isStale = () => loadRequestRef.current !== requestId;
 
     setLoading(true);
     setError("");
@@ -487,6 +491,13 @@ export default function CommandCenterNext() {
 
   useEffect(() => {
     loadDashboard();
+
+    // Retire the in-flight generation on workspace change or unmount so a late
+    // response cannot write to a screen it no longer owns. Only the generation
+    // is retired - no request is cancelled.
+    return () => {
+      loadRequestRef.current += 1;
+    };
   }, [loadDashboard]);
 
   // Brand Signals is only "live" when the panel is reading the consolidated
