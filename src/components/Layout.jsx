@@ -332,6 +332,7 @@ export function Sidebar() {
 
       {mobileOpen && (
         <div
+          data-testid="mobile-menu-backdrop"
           className="fixed inset-0 bg-black/60 z-40 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
