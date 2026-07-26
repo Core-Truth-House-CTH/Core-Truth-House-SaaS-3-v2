@@ -138,7 +138,11 @@ const CATEGORY_LABELS = {
   system: 'System',
 };
 
-export function NotificationBell() {
+// panelClassName is optional and applies ONLY to the dropdown panel, so a host
+// shell can constrain it without affecting the bell button, the component root
+// or any other caller. Omitted by default, which preserves the existing
+// standalone behaviour for every current caller.
+export function NotificationBell({ panelClassName = "" }) {
   const { user } = useUser();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -516,8 +520,8 @@ export function NotificationBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div 
-            className="absolute right-0 top-12 z-50 w-96 max-h-[500px] overflow-hidden rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] shadow-2xl"
+          <div
+            className={`absolute right-0 top-12 z-50 w-96 max-h-[500px] overflow-hidden rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] shadow-2xl ${panelClassName}`.trim()}
             data-testid="notification-panel"
           >
             {/* Header */}

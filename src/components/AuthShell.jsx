@@ -160,7 +160,9 @@ export default function AuthShell({ activeNav, children }) {
           </form>
 
           <span className="as-bell">
-            <NotificationBell />
+            {/* Only this shell-owned bell gets the scoped class. Standalone
+                DashboardLayout and CRM bells pass nothing and are unaffected. */}
+            <NotificationBell panelClassName="as-notification-panel" />
           </span>
 
           <div ref={menuRef} style={{ position: "relative" }}>
