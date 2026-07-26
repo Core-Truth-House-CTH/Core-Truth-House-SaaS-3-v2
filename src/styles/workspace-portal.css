@@ -1,0 +1,17 @@
+:root {
+  --ws-night: #0d0010;
+  --ws-purple: #33033c;
+  --ws-crimson: #af0024;
+  --ws-gold: #c4a95b;
+  --ws-ivory: #f8f1ec;
+  --ws-blush: #efe3df;
+  --ws-panel: #fffaf5;
+  --ws-border: #d8c5c3;
+  --ws-muted: #7c6576;
+  --ws-success: #2d6a4f;
+}
+
+.ws-dialog-content,
+.ws-select-content {
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
