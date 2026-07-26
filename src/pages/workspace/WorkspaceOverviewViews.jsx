@@ -1,8 +1,7 @@
-import { useState } from "react";
 import * as Progress from "@radix-ui/react-progress";
 import {
-  Archive, CalendarClock, Database, File, FileImage, FolderOpen,
-  Mail, Search, ShieldCheck, UserPlus, Users,
+  Archive, BarChart3, Database, File, FileImage, FolderOpen,
+  Mail, ShieldCheck, UserPlus, Users,
 } from "lucide-react";
 import { Empty, Pill } from "./WorkspacePrimitives";
 import {
@@ -82,15 +81,17 @@ export function MembersView({ data, navigate }) {
 }
 
 export function ActivityView({ data }) {
-  const [query, setQuery] = useState("");
-  const filtered = data.activity.filter((item) => `${item.actor} ${item.action} ${item.detail}`.toLowerCase().includes(query.toLowerCase()));
+  const summary = data.activitySummary || {};
+  const items = [
+    ["AI credits used", summary.total_credits_used ?? 0],
+    ["Content generated", summary.content_generated ?? 0],
+    ["Active contributors", Object.keys(summary.credits_by_member || {}).length],
+  ];
   return (
     <article className="ws-panel">
-      <div className="ws-panel-head"><div><h2>Activity Log</h2><p>Search by member, action, module, or date.</p></div><Pill>{data.activity.length} events</Pill></div>
-      <label className="ws-search-field"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search activity" /></label>
-      {filtered.length ? <div className="ws-timeline">{filtered.map((item) => (
-        <div key={item.id} className="ws-timeline-event"><time>{formatDateTime(item.createdAt)}</time><span className="ws-timeline-dot" /><div><strong>{item.actor} {item.action}</strong>{item.detail ? <p>{item.detail}</p> : null}</div></div>
-      ))}</div> : <Empty icon={CalendarClock} title="No matching activity" description="Workspace activity will appear here as members use connected modules." />}
+      <div className="ws-panel-head"><div><h2>Workspace Activity</h2><p>Current tenant-scoped activity summary from the team service.</p></div><Pill tone="green">Live summary</Pill></div>
+      <div className="ws-stat-grid">{items.map(([label, value]) => <div key={label}><BarChart3 size={18} /><strong>{value}</strong><span>{label}</span></div>)}</div>
+      <div className="ws-privacy-card"><ShieldCheck size={18} /><div><strong>Chronological audit history is not fabricated</strong><p>The detailed timeline will activate after a member-level audit endpoint is available.</p></div></div>
     </article>
   );
 }
@@ -98,17 +99,17 @@ export function ActivityView({ data }) {
 export function StorageView({ data, navigate }) {
   const percent = data.storageLimit ? Math.min(100, Math.round((data.storageUsed / data.storageLimit) * 100)) : 0;
   const media = data.assets.reduce((total, item) => total + normalizeNumber(item?.size_bytes || item?.file_size), 0);
-  const docs = data.documents.reduce((total, item) => total + item.size, 0);
+  const docs = normalizeNumber(data.tenantSummary?.collections?.documents?.total_size_bytes) || data.documents.reduce((total, item) => total + item.size, 0);
   return (
     <div className="ws-grid two">
       <article className="ws-panel">
-        <div className="ws-panel-head"><div><h2>Storage Usage</h2><p>{formatBytes(data.storageUsed)} used{data.storageLimit ? ` of ${formatBytes(data.storageLimit)}` : ""}.</p></div><Pill tone={percent > 80 ? "red" : percent > 60 ? "gold" : "green"}>{percent}% used</Pill></div>
+        <div className="ws-panel-head"><div><h2>Storage Usage</h2><p>{formatBytes(data.storageUsed)} known usage{data.storageLimit ? ` of ${formatBytes(data.storageLimit)}` : ""}.</p></div><Pill tone={percent > 80 ? "red" : percent > 60 ? "gold" : "green"}>{data.storageLimit ? `${percent}% used` : "Known files"}</Pill></div>
         <Progress.Root className="ws-progress" value={percent}><Progress.Indicator className="ws-progress-indicator" style={{ transform: `translateX(-${100 - percent}%)` }} /></Progress.Root>
-        <div className="ws-stat-grid"><div><FileImage size={18} /><strong>{formatBytes(media)}</strong><span>Media assets</span></div><div><File size={18} /><strong>{formatBytes(docs)}</strong><span>Documents and reports</span></div><div><Database size={18} /><strong>{data.documents.length + data.assets.length}</strong><span>Total stored items</span></div></div>
+        <div className="ws-stat-grid"><div><FileImage size={18} /><strong>{formatBytes(media)}</strong><span>Known media size</span></div><div><File size={18} /><strong>{formatBytes(docs)}</strong><span>Documents and reports</span></div><div><Database size={18} /><strong>{data.documents.length + data.assets.length}</strong><span>Total stored items</span></div></div>
       </article>
       <article className="ws-panel soft">
         <div className="ws-panel-head"><div><h2>Plan Limits</h2><p>Usage and limits come from the active subscription.</p></div><button className="ws-btn secondary compact" onClick={() => navigate("/workspace/controls/plan-billing")}>Plan & Billing</button></div>
-        <div className="ws-detail-list"><div><span>Current plan</span><strong>{data.billing?.plan_name || data.billing?.plan || data.activeWorkspace?.plan || "Foundation"}</strong></div><div><span>Storage used</span><strong>{formatBytes(data.storageUsed)}</strong></div><div><span>Storage allowance</span><strong>{data.storageLimit ? formatBytes(data.storageLimit) : "See billing summary"}</strong></div><div><span>Workspace isolation</span><strong>Enabled</strong></div></div>
+        <div className="ws-detail-list"><div><span>Current plan</span><strong>{data.billing?.plan_name || data.billing?.plan || data.activeWorkspace?.plan || "Foundation"}</strong></div><div><span>Known storage used</span><strong>{formatBytes(data.storageUsed)}</strong></div><div><span>Storage allowance</span><strong>{data.storageLimit ? formatBytes(data.storageLimit) : "Not returned by billing"}</strong></div><div><span>Workspace isolation</span><strong>Enabled</strong></div></div>
       </article>
     </div>
   );
