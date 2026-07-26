@@ -93,6 +93,12 @@ function sleep(ms) {
 // timer-free by design: no interval, no unbounded retry, no random backoff.
 const TOKEN_RETRY_DELAYS_MS = [0, 250, 500, 1000, 1500];
 
+// Second stage. If the immediate window above still yields no token, the whole
+// bootstrap is re-attempted after each of these delays. Fixed and finite: at most
+// three further attempts, one timer at a time, cancelled on success, forced
+// refresh, sign-out, identity change and unmount. No interval, no recursion.
+const TOKEN_RECOVERY_DELAYS_MS = [2000, 5000, 10000];
+
 export function WorkspaceProvider({ children }) {
   const auth = useAuth();
 
@@ -168,6 +174,30 @@ export function WorkspaceProvider({ children }) {
   const bootstrappedKeyRef = useRef(null);
   const activeIdentityRef = useRef(null);
   const mountedRef = useRef(true);
+
+  // Delayed token-recovery ownership. At most one timer exists at a time; it is
+  // owned by the identity that scheduled it, and the tick is what re-runs the
+  // bootstrap effect (a stable number, so the unstable Clerk auth object never
+  // has to become a dependency).
+  const tokenRecoveryTimerRef = useRef(null);
+  const tokenRecoveryAttemptRef = useRef(0);
+  const tokenRecoveryIdentityRef = useRef(null);
+  const [tokenRecoveryTick, setTokenRecoveryTick] = useState(0);
+
+  const cancelTokenRecovery = useCallback(() => {
+    if (tokenRecoveryTimerRef.current) {
+      clearTimeout(tokenRecoveryTimerRef.current);
+      tokenRecoveryTimerRef.current = null;
+    }
+  }, []);
+
+  // Cancels the pending timer and forgets how many attempts were spent, so the
+  // next exhaustion starts a fresh full sequence.
+  const resetTokenRecovery = useCallback(() => {
+    cancelTokenRecovery();
+    tokenRecoveryAttemptRef.current = 0;
+    tokenRecoveryIdentityRef.current = null;
+  }, [cancelTokenRecovery]);
 
   const writeActiveWorkspaceId = useCallback(
     (workspaceId) => {
@@ -263,6 +293,13 @@ export function WorkspaceProvider({ children }) {
         activeIdentityRef.current = requestUserId;
         fetchSequenceRef.current += 1;
         fetchInFlightRef.current = null;
+        // Any pending recovery belongs to the previous identity.
+        resetTokenRecovery();
+      }
+
+      // A deliberate manual refresh restarts the recovery budget from zero.
+      if (force) {
+        resetTokenRecovery();
       }
 
       if (!HAS_CLERK) {
@@ -277,6 +314,7 @@ export function WorkspaceProvider({ children }) {
       }
 
       if (!authIsSignedIn) {
+        resetTokenRecovery();
         clearWorkspaceState();
         setLoading(false);
         setInitialized(true);
@@ -315,6 +353,10 @@ export function WorkspaceProvider({ children }) {
         requestUserId !== activeIdentityRef.current ||
         !mountedRef.current;
 
+      // Set when this run hands off to a delayed recovery attempt, so `finally`
+      // does not settle initialization into a final empty state.
+      let recoveryScheduled = false;
+
       setLoading(true);
       setError(null);
 
@@ -352,12 +394,38 @@ export function WorkspaceProvider({ children }) {
         }
 
         if (!token) {
-          // Hydration never completed inside the window. This is not a sign-out,
-          // so workspace state is left intact and bootstrappedKeyRef stays unset
-          // — an explicit refreshWorkspaces() can still retry.
+          // Hydration never completed inside the immediate window. This is not a
+          // sign-out, so workspace state is left intact and bootstrappedKeyRef
+          // stays unset.
           const tokenError =
             lastTokenError ||
             new Error("Session token was unavailable during workspace bootstrap.");
+
+          const attempt = tokenRecoveryAttemptRef.current;
+
+          if (attempt < TOKEN_RECOVERY_DELAYS_MS.length) {
+            // Schedule the next bounded recovery attempt. Reaching here means the
+            // request is still current, so this can never retire a newer
+            // identity's timer.
+            cancelTokenRecovery();
+            tokenRecoveryAttemptRef.current = attempt + 1;
+            tokenRecoveryIdentityRef.current = requestUserId;
+            recoveryScheduled = true;
+
+            tokenRecoveryTimerRef.current = setTimeout(() => {
+              tokenRecoveryTimerRef.current = null;
+
+              if (!mountedRef.current) return;
+              if (tokenRecoveryIdentityRef.current !== activeIdentityRef.current) {
+                return;
+              }
+
+              setTokenRecoveryTick((tick) => tick + 1);
+            }, TOKEN_RECOVERY_DELAYS_MS[attempt]);
+
+            // No terminal error while an automatic recovery is still pending.
+            return [];
+          }
 
           console.error("Workspace bootstrap token unavailable", tokenError);
           setError(tokenError);
@@ -391,6 +459,8 @@ export function WorkspaceProvider({ children }) {
 
         bootstrappedKeyRef.current = bootKey;
         setError(null);
+        // Token and workspace both resolved: drop any recovery budget/timer.
+        resetTokenRecovery();
 
         return normalized;
       } catch (err) {
@@ -417,7 +487,12 @@ export function WorkspaceProvider({ children }) {
         if (!isStale()) {
           fetchInFlightRef.current = null;
           setLoading(false);
-          setInitialized(true);
+
+          // While an automatic recovery is still scheduled the provider is not
+          // finished bootstrapping, so initialization must not settle yet.
+          if (!recoveryScheduled) {
+            setInitialized(true);
+          }
         }
         releaseGate();
       }
@@ -429,6 +504,8 @@ export function WorkspaceProvider({ children }) {
       clearWorkspaceState,
       resolveAndApplyActiveWorkspace,
       releaseGate,
+      cancelTokenRecovery,
+      resetTokenRecovery,
     ]
   );
 
@@ -447,9 +524,20 @@ export function WorkspaceProvider({ children }) {
       mountedRef.current = false;
       fetchSequenceRef.current += 1;
       fetchInFlightRef.current = null;
+
+      // Drop any pending recovery timer so its callback cannot set state after
+      // the provider is gone.
+      if (tokenRecoveryTimerRef.current) {
+        clearTimeout(tokenRecoveryTimerRef.current);
+        tokenRecoveryTimerRef.current = null;
+      }
+      tokenRecoveryAttemptRef.current = 0;
+      tokenRecoveryIdentityRef.current = null;
     };
   }, []);
 
+  // tokenRecoveryTick is a stable number, so a delayed recovery attempt re-runs
+  // this effect without the unstable Clerk auth object entering the dependencies.
   useEffect(() => {
     if (!HAS_CLERK) {
       setInitialized(true);
@@ -457,7 +545,7 @@ export function WorkspaceProvider({ children }) {
     }
 
     void fetchWorkspaces();
-  }, [fetchWorkspaces]);
+  }, [fetchWorkspaces, tokenRecoveryTick]);
 
   useEffect(() => {
     if (!activeWorkspaceId) {
