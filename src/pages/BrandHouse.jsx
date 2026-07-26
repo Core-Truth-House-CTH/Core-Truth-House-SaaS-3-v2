@@ -68,10 +68,14 @@ export default function BrandHouse() {
       }
 
       // Same verified fallback source the Command Center uses, so both views
-      // report identical completion percentages.
-      const workspaceStats = await apiClient
-        .get(API_PATHS.workspace.stats(activeWorkspaceId))
-        .catch(() => null);
+      // report identical completion percentages. A failure here is deliberately
+      // NOT swallowed: normalising it to null rendered every level as 0%, so a
+      // backend outage looked like a genuinely empty Brand House. Letting it
+      // throw reaches the outer catch, which clears stale data and shows the
+      // error instead of fabricating zero completion.
+      const workspaceStats = await apiClient.get(
+        API_PATHS.workspace.stats(activeWorkspaceId)
+      );
       if (isStale()) return;
 
       setOverview(null);
