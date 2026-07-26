@@ -62,9 +62,7 @@ export function useWorkspaceSuiteData() {
     const offers = normalizeList(payload.offers, ["offers"]);
     setState({
       loading: false,
-      error: settled.every((result) => result.status === "rejected")
-        ? failures.join(" · ")
-        : "",
+      error: failures.length ? `Some data is unavailable: ${failures.join(" · ")}` : "",
       detail: payload.detail || activeWorkspace?.raw || activeWorkspace || null,
       stats: payload.stats || null,
       settings: payload.settings || null,
