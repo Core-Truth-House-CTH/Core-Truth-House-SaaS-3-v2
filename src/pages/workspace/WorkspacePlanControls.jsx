@@ -1,13 +1,12 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import {
   AlertTriangle, Bell, CircleDollarSign, Download, Link2, Trash2, X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import apiClient from "../../lib/apiClient";
-import { API_PATHS } from "../../lib/apiPaths";
 import { formatDateTime } from "./workspaceRoutes";
 import { Pill, Status, messageFor } from "./WorkspaceControlPrimitives";
+import { disconnectSupportedIntegrations, downloadTenantExport } from "./workspaceApi";
 
 export function BillingControl({ data }) {
   const navigate = useNavigate();
@@ -28,34 +27,33 @@ export function BillingControl({ data }) {
 }
 
 export function ActivityLogControl({ data }) {
-  const [query, setQuery] = useState("");
-  const filtered = useMemo(() => data.activity.filter((item) =>
-    `${item.actor} ${item.action} ${item.detail}`.toLowerCase().includes(query.toLowerCase())
-  ), [data.activity, query]);
+  const summary = data.activitySummary || {};
+  const entries = [
+    ["AI credits used", summary.total_credits_used ?? 0],
+    ["Content generated", summary.content_generated ?? 0],
+    ["Members represented", Object.keys(summary.credits_by_member || {}).length],
+  ];
 
   return (
     <article className="ws-panel">
-      <div className="ws-panel-head"><div><h2>Detailed Audit</h2><p>Workspace activity is separate from the platform audit.</p></div><Pill>{filtered.length} events</Pill></div>
-      <label className="ws-search-field"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search member, action, or module" /></label>
-      {filtered.length ? (
-        <div className="ws-table-wrap"><table className="ws-table"><thead><tr><th>Time</th><th>Member</th><th>Action</th><th>Detail</th></tr></thead><tbody>{filtered.map((item) => <tr key={item.id}><td>{formatDateTime(item.createdAt)}</td><td>{item.actor}</td><td>{item.action}</td><td>{item.detail || "—"}</td></tr>)}</tbody></table></div>
-      ) : <div className="ws-empty"><Bell size={22} /><h3>No matching activity</h3><p>New member and module activity will appear here.</p></div>}
+      <div className="ws-panel-head"><div><h2>Detailed Activity</h2><p>The live team service currently exposes a tenant-scoped activity summary, not a member-by-member event stream.</p></div><Pill tone="green">Verified source</Pill></div>
+      <div className="ws-stat-grid">{entries.map(([label, value]) => <div key={label}><Bell size={18} /><strong>{value}</strong><span>{label}</span></div>)}</div>
+      <div className="ws-privacy-card"><AlertTriangle size={18} /><div><strong>No fabricated audit rows</strong><p>A chronological event table will activate only after the backend exposes an enforceable tenant audit endpoint.</p></div></div>
     </article>
   );
 }
 
 export function DangerControl({ data }) {
   const name = data.activeWorkspace?.name || "workspace";
-  const [confirmation, setConfirmation] = useState("");
   const [message, setMessage] = useState("");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState("");
 
-  const requestArchive = async () => {
+  const downloadArchive = async () => {
     setBusy("archive");
     try {
-      await apiClient.post(`/api/workspaces/${encodeURIComponent(data.activeWorkspaceId)}/exports`, { scope: "workspace", final: true });
-      setMessage("Final workspace archive requested.");
+      await downloadTenantExport(name);
+      setMessage("Tenant-scoped archive downloaded.");
     } catch (error) {
       setMessage(messageFor(error));
     } finally {
@@ -66,9 +64,8 @@ export function DangerControl({ data }) {
   const disconnect = async () => {
     setBusy("disconnect");
     try {
-      await apiClient.patch(API_PATHS.workspace.settings(data.activeWorkspaceId), { integrations: {} });
-      await data.reload();
-      setMessage("Workspace integrations disconnected.");
+      const result = await disconnectSupportedIntegrations();
+      setMessage(`${result.disconnected} supported AI integration${result.disconnected === 1 ? "" : "s"} disconnected${result.failed ? `; ${result.failed} could not be changed` : ""}.`);
     } catch (error) {
       setMessage(messageFor(error));
     } finally {
@@ -76,35 +73,20 @@ export function DangerControl({ data }) {
     }
   };
 
-  const remove = async () => {
-    if (confirmation.trim() !== name) {
-      setMessage(`Type “${name}” exactly to continue.`);
-      return;
-    }
-    try {
-      await apiClient.delete(API_PATHS.workspace.detail(data.activeWorkspaceId));
-      setMessage("Workspace deletion request submitted.");
-      setOpen(false);
-    } catch (error) {
-      setMessage(messageFor(error));
-    }
-  };
-
   return (
     <article className="ws-panel danger-panel">
       <div className="ws-panel-head"><div><h2>Danger Zone</h2><p>Owner-only actions are irreversible or disruptive.</p></div><Pill tone="red">Owner only</Pill></div>
-      <div className="ws-danger-row"><div><strong>Download final archive</strong><p>Create an export before a major change.</p></div><button className="ws-btn secondary" onClick={() => void requestArchive()} disabled={Boolean(busy)}><Download size={16} /> {busy === "archive" ? "Requesting…" : "Request Archive"}</button></div>
-      <div className="ws-danger-row"><div><strong>Disconnect all integrations</strong><p>Remove connected systems while keeping records.</p></div><button className="ws-btn secondary" onClick={() => void disconnect()} disabled={Boolean(busy)}><Link2 size={16} /> {busy === "disconnect" ? "Disconnecting…" : "Disconnect"}</button></div>
-      <div className="ws-danger-row critical"><div><strong>Delete workspace</strong><p>Begin the supported deletion and retention process.</p></div><button className="ws-btn danger" onClick={() => setOpen(true)}><Trash2 size={16} /> Delete Workspace</button></div>
+      <div className="ws-danger-row"><div><strong>Download final archive</strong><p>Download the supported tenant collections before a major change.</p></div><button className="ws-btn secondary" onClick={() => void downloadArchive()} disabled={Boolean(busy)}><Download size={16} /> {busy === "archive" ? "Preparing…" : "Download Archive"}</button></div>
+      <div className="ws-danger-row"><div><strong>Disconnect supported AI integrations</strong><p>Disconnect OpenAI, fal.ai, and Higgsfield workspace credentials.</p></div><button className="ws-btn secondary" onClick={() => void disconnect()} disabled={Boolean(busy)}><Link2 size={16} /> {busy === "disconnect" ? "Disconnecting…" : "Disconnect AI Providers"}</button></div>
+      <div className="ws-danger-row critical"><div><strong>Delete workspace</strong><p>Deletion remains blocked until a retention-aware owner endpoint is deployed.</p></div><button className="ws-btn danger" onClick={() => setOpen(true)}><Trash2 size={16} /> Review Deletion Requirement</button></div>
       <Status tone="danger">{message}</Status>
       <AlertDialog.Root open={open} onOpenChange={setOpen}>
         <AlertDialog.Portal>
           <AlertDialog.Overlay className="ws-dialog-overlay" />
           <AlertDialog.Content className="ws-dialog-content">
-            <div className="ws-dialog-head"><div><AlertDialog.Title>Delete {name}?</AlertDialog.Title><AlertDialog.Description>This requires an owner-authorized backend endpoint.</AlertDialog.Description></div><AlertDialog.Cancel className="ws-icon-btn"><X size={17} /></AlertDialog.Cancel></div>
-            <div className="ws-privacy-card danger"><AlertTriangle size={18} /><div><strong>Confirmation required</strong><p>Type the workspace name exactly.</p></div></div>
-            <label className="ws-form"><span>Workspace name</span><input value={confirmation} onChange={(event) => setConfirmation(event.target.value)} /></label>
-            <div className="ws-dialog-actions"><AlertDialog.Cancel className="ws-btn secondary">Cancel</AlertDialog.Cancel><AlertDialog.Action className="ws-btn danger" onClick={(event) => { event.preventDefault(); void remove(); }}>Submit Deletion Request</AlertDialog.Action></div>
+            <div className="ws-dialog-head"><div><AlertDialog.Title>Workspace deletion is not available</AlertDialog.Title><AlertDialog.Description>The current backend has no tenant-owner deletion endpoint with export, retention, ownership, and audit safeguards.</AlertDialog.Description></div><AlertDialog.Cancel className="ws-icon-btn"><X size={17} /></AlertDialog.Cancel></div>
+            <div className="ws-privacy-card danger"><AlertTriangle size={18} /><div><strong>No unsafe request will be sent</strong><p>{name} remains unchanged. This control will activate only after the complete deletion contract is deployed.</p></div></div>
+            <div className="ws-dialog-actions"><AlertDialog.Cancel className="ws-btn primary">Close</AlertDialog.Cancel></div>
           </AlertDialog.Content>
         </AlertDialog.Portal>
       </AlertDialog.Root>
