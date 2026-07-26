@@ -152,9 +152,16 @@ export function WorkspaceProvider({ children }) {
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchInFlightRef = useRef(false);
+  // Bootstrap ownership is scoped to an identity, not a single global lock.
+  // fetchInFlightRef holds the request that currently owns the bootstrap (or
+  // null); activeIdentityRef is the userId the provider is bootstrapping for.
+  // A response may only commit while it still owns the latest generation and
+  // its captured identity is still the signed-in one.
+  const fetchInFlightRef = useRef(null);
   const fetchSequenceRef = useRef(0);
   const bootstrappedKeyRef = useRef(null);
+  const activeIdentityRef = useRef(null);
+  const mountedRef = useRef(true);
 
   const writeActiveWorkspaceId = useCallback(
     (workspaceId) => {
@@ -239,6 +246,19 @@ export function WorkspaceProvider({ children }) {
 
   const fetchWorkspaces = useCallback(
     async ({ force = false } = {}) => {
+      // Capture the identity this call belongs to before any early return -
+      // including the signed-out branch - and retire anything started for a
+      // different user. Advancing the generation stops the previous identity's
+      // response from committing; releasing the in-flight owner stops it from
+      // silently skipping this identity's own bootstrap.
+      const requestUserId = authUserId ?? null;
+
+      if (activeIdentityRef.current !== requestUserId) {
+        activeIdentityRef.current = requestUserId;
+        fetchSequenceRef.current += 1;
+        fetchInFlightRef.current = null;
+      }
+
       if (!HAS_CLERK) {
         setLoading(false);
         setInitialized(true);
@@ -274,13 +294,20 @@ export function WorkspaceProvider({ children }) {
         return [];
       }
 
+      // Only a request belonging to this same identity can short-circuit here;
+      // a previous user's request was already released above.
       if (fetchInFlightRef.current) {
         return [];
       }
 
-      fetchInFlightRef.current = true;
       fetchSequenceRef.current += 1;
       const requestId = fetchSequenceRef.current;
+      fetchInFlightRef.current = { userId: requestUserId, requestId };
+
+      const isStale = () =>
+        requestId !== fetchSequenceRef.current ||
+        requestUserId !== activeIdentityRef.current ||
+        !mountedRef.current;
 
       setLoading(true);
       setError(null);
@@ -310,7 +337,7 @@ export function WorkspaceProvider({ children }) {
           }
         );
 
-        if (requestId !== fetchSequenceRef.current) {
+        if (isStale()) {
           return [];
         }
 
@@ -327,7 +354,7 @@ export function WorkspaceProvider({ children }) {
 
         return normalized;
       } catch (err) {
-        if (requestId !== fetchSequenceRef.current) {
+        if (isStale()) {
           return [];
         }
 
@@ -344,8 +371,11 @@ export function WorkspaceProvider({ children }) {
         setActiveWorkspace(null);
         return [];
       } finally {
-        if (requestId === fetchSequenceRef.current) {
-          fetchInFlightRef.current = false;
+        // Only the owning request releases the lock and settles loading state,
+        // so a retired request never clears the successor's in-flight marker
+        // and never writes after an identity change or unmount.
+        if (!isStale()) {
+          fetchInFlightRef.current = null;
           setLoading(false);
           setInitialized(true);
         }
@@ -366,6 +396,19 @@ export function WorkspaceProvider({ children }) {
     const storedId = getStoredWorkspaceId();
     setActiveWorkspaceIdState((prev) => (prev === storedId ? prev : storedId));
   }, [getStoredWorkspaceId]);
+
+  // Retire the in-flight bootstrap on unmount so a late response cannot write to
+  // an unmounted provider. Deliberately mount-only: retiring on every dependency
+  // change would also cancel a healthy same-user request and double the fetch.
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+      fetchSequenceRef.current += 1;
+      fetchInFlightRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (!HAS_CLERK) {
