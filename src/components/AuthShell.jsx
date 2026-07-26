@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
-  LayoutGrid,
   BarChart3,
   Command,
   BookOpen,
@@ -31,7 +30,11 @@ const CTH_LOGO = "/command-center-assets/cth-logo-seal.png";
 
 const NAV_ITEMS = [
   { key: "command-center", label: "Command Center", icon: LayoutDashboard, path: "/command-center-next" },
-  { key: "workspace", label: "Workspace", icon: LayoutGrid, path: "/workspace" },
+  // No primary Workspace tab: /workspace still renders only a placeholder and
+  // ignores the ?view=decisions|work|activity links, so promoting it in the
+  // shared shell would expose an unfinished route to every Reports user. The
+  // route itself, its gating and the Command Center links are untouched - the
+  // tab returns when the Workspace views are built.
   { key: "reports", label: "Reports", icon: BarChart3, path: "/analytics" },
   { key: "signal-os", label: "Signal OS", icon: Command, path: "/signal-inbox" },
   { key: "knowledge-base", label: "Knowledge Base", icon: BookOpen, path: "/knowledge-base" },
