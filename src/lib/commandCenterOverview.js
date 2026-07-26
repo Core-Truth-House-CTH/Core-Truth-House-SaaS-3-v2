@@ -101,7 +101,12 @@ export async function fetchCommandCenterOverview(activeWorkspaceId, options = {}
       error: null,
     };
   } catch (error) {
-    if (error?.status === 404 || error?.status === 501) {
+    // Only an explicit not-implemented response means "this endpoint is not
+    // deployed yet", which is what legacy fallback exists for. The endpoint
+    // contract assigns 404 to a validated workspace that does not exist, so a
+    // 404 is a real workspace error and must reach the page instead of being
+    // replaced by partial legacy metrics.
+    if (error?.status === 501) {
       return {
         available: false,
         source: "legacy-fallback",
