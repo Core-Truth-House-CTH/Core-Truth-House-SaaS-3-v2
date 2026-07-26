@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -6,15 +6,14 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
-import { GripVertical } from "lucide-react";
+import { GripVertical, LockKeyhole } from "lucide-react";
 import { z } from "zod";
-import apiClient from "../../lib/apiClient";
-import { API_PATHS } from "../../lib/apiPaths";
 import { Empty, Modal, Pill } from "./WorkspacePrimitives";
 import { WORK_STATUS_COLUMNS, formatDateTime } from "./workspaceRoutes";
-import { errorText } from "./workspaceRecords";
 
 const noteSchema = z.object({ html: z.string().max(25000, "Workspace notes are too long.") });
+const orderKey = (workspaceId) => `cth:workspace:${workspaceId}:active-work-order`;
+const noteKey = (workspaceId, itemId) => `cth:workspace:${workspaceId}:work-note:${itemId}`;
 
 function SortableCard({ item, onOpen }) {
   const sortable = useSortable({ id: item.id });
@@ -26,48 +25,49 @@ function SortableCard({ item, onOpen }) {
   );
 }
 
-function Notes({ item, workspaceId, reload, notesMap }) {
+function Notes({ item, workspaceId }) {
   const [message, setMessage] = useState("");
-  const [saving, setSaving] = useState(false);
+  const initialContent = useMemo(() => {
+    try {
+      return localStorage.getItem(noteKey(workspaceId, item.id)) || item?.raw?.notes || "";
+    } catch {
+      return item?.raw?.notes || "";
+    }
+  }, [item, workspaceId]);
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Placeholder.configure({ placeholder: "Add workspace-scoped notes and next actions…" }),
+      Placeholder.configure({ placeholder: "Add a private browser draft…" }),
       Link.configure({ openOnClick: false }),
     ],
-    content: notesMap?.[item.id] || item?.raw?.workspace_notes || item?.raw?.notes || "",
-  }, [item?.id, notesMap]);
+    content: initialContent,
+  }, [item?.id, initialContent]);
 
-  const save = async () => {
+  const save = () => {
     const parsed = noteSchema.safeParse({ html: editor?.getHTML() || "" });
     if (!parsed.success) {
       setMessage(parsed.error.issues[0]?.message);
       return;
     }
-    setSaving(true);
     try {
-      await apiClient.patch(API_PATHS.workspace.settings(workspaceId), {
-        active_work_notes: { ...(notesMap || {}), [item.id]: parsed.data.html },
-      });
-      setMessage("Notes saved.");
-      await reload();
-    } catch (error) {
-      setMessage(errorText(error));
-    } finally {
-      setSaving(false);
+      localStorage.setItem(noteKey(workspaceId, item.id), parsed.data.html);
+      setMessage("Private browser draft saved. It is not shared with workspace members.");
+    } catch {
+      setMessage("This browser could not store the draft.");
     }
   };
 
   return (
     <div className="ws-editor-wrap">
+      <div className="ws-privacy-card"><LockKeyhole size={17} /><div><strong>Private browser draft</strong><p>The live backend does not yet expose shared work-item notes. This draft remains on this device only.</p></div></div>
       <div className="ws-editor-toolbar">
-        <button onClick={() => editor?.chain().focus().toggleBold().run()}>Bold</button>
-        <button onClick={() => editor?.chain().focus().toggleBulletList().run()}>List</button>
-        <button onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}>Heading</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleBold().run()}>Bold</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()}>List</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}>Heading</button>
       </div>
       <EditorContent editor={editor} className="ws-editor" />
       {message ? <div className="ws-inline-message">{message}</div> : null}
-      <button className="ws-btn primary" onClick={() => void save()} disabled={saving}>{saving ? "Saving…" : "Save Notes"}</button>
+      <button type="button" className="ws-btn primary" onClick={save}>Save Private Draft</button>
     </div>
   );
 }
@@ -81,9 +81,21 @@ export default function WorkspaceActiveWorkView({ data }) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  useEffect(() => setItems(data.workItems), [data.workItems]);
+  useEffect(() => {
+    let ordered = [...data.workItems];
+    try {
+      const saved = JSON.parse(localStorage.getItem(orderKey(data.activeWorkspaceId)) || "[]");
+      if (Array.isArray(saved) && saved.length) {
+        const index = new Map(saved.map((id, position) => [id, position]));
+        ordered.sort((a, b) => (index.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (index.get(b.id) ?? Number.MAX_SAFE_INTEGER));
+      }
+    } catch {
+      ordered = [...data.workItems];
+    }
+    setItems(ordered);
+  }, [data.activeWorkspaceId, data.workItems]);
 
-  const dragEnd = async ({ active, over }) => {
+  const dragEnd = ({ active, over }) => {
     if (!over || active.id === over.id) return;
     const activeItem = items.find((item) => item.id === active.id);
     const overItem = items.find((item) => item.id === over.id);
@@ -95,18 +107,16 @@ export default function WorkspaceActiveWorkView({ data }) {
     );
     setItems(reordered);
     try {
-      await apiClient.patch(API_PATHS.workspace.settings(data.activeWorkspaceId), {
-        active_work_order: reordered.map((item) => item.id),
-      });
-      setMessage("Workbench order saved.");
-    } catch (error) {
-      setMessage(`Order updated on screen. ${errorText(error)}`);
+      localStorage.setItem(orderKey(data.activeWorkspaceId), JSON.stringify(reordered.map((item) => item.id)));
+      setMessage("Personal board order saved in this browser.");
+    } catch {
+      setMessage("Board reordered for this session, but the browser could not retain it.");
     }
   };
 
   return (
     <article className="ws-panel">
-      <div className="ws-panel-head"><div><h2>Active Workbench</h2><p>Drag to reorder work. Open an item to add TipTap notes.</p></div><Pill tone="gold">{items.length} active</Pill></div>
+      <div className="ws-panel-head"><div><h2>Active Workbench</h2><p>Drag within a status column to create a personal browser order. Open an item for a private TipTap draft.</p></div><Pill tone="gold">{items.length} active</Pill></div>
       {message ? <div className="ws-inline-message">{message}</div> : null}
       {items.length ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={dragEnd}>
@@ -125,8 +135,8 @@ export default function WorkspaceActiveWorkView({ data }) {
           </div>
         </DndContext>
       ) : <Empty title="No active work yet" description="Campaigns and offers saved in the House will appear here." />}
-      <Modal open={Boolean(selected)} onOpenChange={(next) => !next && setSelected(null)} title={selected?.title || "Work item"} description="Workspace-scoped notes and next actions.">
-        {selected ? <Notes item={selected} workspaceId={data.activeWorkspaceId} reload={data.reload} notesMap={data.settings?.active_work_notes} /> : null}
+      <Modal open={Boolean(selected)} onOpenChange={(next) => !next && setSelected(null)} title={selected?.title || "Work item"} description="Private drafting for the selected work item.">
+        {selected ? <Notes item={selected} workspaceId={data.activeWorkspaceId} /> : null}
       </Modal>
     </article>
   );
