@@ -7,6 +7,7 @@ import WorkspaceOverviewPage from "./workspace/WorkspacePage";
 import WorkspaceControlsPage from "./workspace/WorkspaceControlsPage";
 import { requiredPlanForWorkspacePath } from "./workspace/workspaceRoutes";
 import "../styles/workspace-suite.css";
+import "../styles/workspace-portal.css";
 
 function WorkspaceAccessGate({ requiredPlan }) {
   const navigate = useNavigate();
