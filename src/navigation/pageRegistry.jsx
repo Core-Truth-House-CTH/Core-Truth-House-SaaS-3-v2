@@ -4,6 +4,10 @@ import PlaceholderPage from "../pages/PlaceholderPage";
 const makePlaceholder = (title) => () => <PlaceholderPage title={title} />;
 
 const CommandCenter = lazy(() => import("../pages/CommandCenter"));
+const CommandCenterNext = lazy(() => import("../pages/CommandCenterNext"));
+const BrandHouse = lazy(() => import("../pages/BrandHouse"));
+const WorkspacePage = lazy(() => import("../pages/WorkspacePage"));
+const ReportsShell = lazy(() => import("../pages/ReportsShell"));
 const Billing = lazy(() => import("../pages/Billing"));
 const BrandIntelligencePage = lazy(() => import("../pages/BrandIntelligencePage"));
 const BrandAudit = lazy(() => import("../pages/BrandAudit"));
@@ -17,7 +21,6 @@ const StrategicOS = lazy(() => import("../pages/StrategicOS"));
 const SystemsBuilder = lazy(() => import("../pages/SystemsBuilder"));
 const SignalInbox = lazy(() => import("../pages/SignalInbox"));
 const CustomerJourney = lazy(() => import("../pages/CustomerJourney"));
-const Analytics = lazy(() => import("../pages/Analytics"));
 const Settings = lazy(() => import("../pages/Settings"));
 const Alerts = lazy(() => import("../pages/Alerts"));
 const CRMSuite = lazy(() => import("../pages/CRMSuite"));
@@ -54,6 +57,9 @@ const FirstCampaign = CampaignBuilder;
 const pageRegistry = {
   "/onboarding": OnboardingWorkflow,
   "/command-center": CommandCenter,
+  "/command-center-next": CommandCenterNext,
+  "/brand-house": BrandHouse,
+  "/workspace": WorkspacePage,
   "/my-data": TenantDataDashboardV2,
 
   "/brand-audit": BrandAudit,
@@ -97,11 +103,11 @@ const pageRegistry = {
   "/crm/contacts/:id": ContactRecordPage,
   "/email-settings": EmailSettings,
   "/mail": MailSuite,
-  "/analytics": Analytics,
+  "/analytics": ReportsShell,
 
   "/tutorials": VideoTutorialsPage,
   "/documents": TenantDataDashboardV2,
-    "/workspace-library": TenantDataDashboardV2,
+  "/workspace-library": TenantDataDashboardV2,
   "/billing": Billing,
   "/settings": Settings,
   "/alerts": Alerts,

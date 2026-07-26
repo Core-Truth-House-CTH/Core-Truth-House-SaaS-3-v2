@@ -87,8 +87,30 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Clerk can report a signed-in user while getToken() is still hydrating, or
+// during a transient refresh. These fixed waits give hydration a bounded ~3.25s
+// window inside the request that already owns the bootstrap. Fixed, finite and
+// timer-free by design: no interval, no unbounded retry, no random backoff.
+const TOKEN_RETRY_DELAYS_MS = [0, 250, 500, 1000, 1500];
+
+// Second stage. If the immediate window above still yields no token, the whole
+// bootstrap is re-attempted after each of these delays. Fixed and finite: at most
+// three further attempts, one timer at a time, cancelled on success, forced
+// refresh, sign-out, identity change and unmount. No interval, no recursion.
+const TOKEN_RECOVERY_DELAYS_MS = [2000, 5000, 10000];
+
 export function WorkspaceProvider({ children }) {
   const auth = useAuth();
+
+  // Keep the latest auth accessible without depending on its (unstable) identity.
+  // Clerk returns a new auth object on every store tick; depending on the whole
+  // object re-created fetchWorkspaces on every tick and re-ran its effect in the
+  // same commit as the signed-out redirect, clobbering Router location propagation.
+  const authRef = useRef(auth);
+  authRef.current = auth;
+  const authIsLoaded = auth?.isLoaded;
+  const authIsSignedIn = auth?.isSignedIn;
+  const authUserId = auth?.userId;
 
   const storageKeys = LIVE_STORAGE_KEYS;
 
@@ -142,9 +164,40 @@ export function WorkspaceProvider({ children }) {
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchInFlightRef = useRef(false);
+  // Bootstrap ownership is scoped to an identity, not a single global lock.
+  // fetchInFlightRef holds the request that currently owns the bootstrap (or
+  // null); activeIdentityRef is the userId the provider is bootstrapping for.
+  // A response may only commit while it still owns the latest generation and
+  // its captured identity is still the signed-in one.
+  const fetchInFlightRef = useRef(null);
   const fetchSequenceRef = useRef(0);
   const bootstrappedKeyRef = useRef(null);
+  const activeIdentityRef = useRef(null);
+  const mountedRef = useRef(true);
+
+  // Delayed token-recovery ownership. At most one timer exists at a time; it is
+  // owned by the identity that scheduled it, and the tick is what re-runs the
+  // bootstrap effect (a stable number, so the unstable Clerk auth object never
+  // has to become a dependency).
+  const tokenRecoveryTimerRef = useRef(null);
+  const tokenRecoveryAttemptRef = useRef(0);
+  const tokenRecoveryIdentityRef = useRef(null);
+  const [tokenRecoveryTick, setTokenRecoveryTick] = useState(0);
+
+  const cancelTokenRecovery = useCallback(() => {
+    if (tokenRecoveryTimerRef.current) {
+      clearTimeout(tokenRecoveryTimerRef.current);
+      tokenRecoveryTimerRef.current = null;
+    }
+  }, []);
+
+  // Cancels the pending timer and forgets how many attempts were spent, so the
+  // next exhaustion starts a fresh full sequence.
+  const resetTokenRecovery = useCallback(() => {
+    cancelTokenRecovery();
+    tokenRecoveryAttemptRef.current = 0;
+    tokenRecoveryIdentityRef.current = null;
+  }, [cancelTokenRecovery]);
 
   const writeActiveWorkspaceId = useCallback(
     (workspaceId) => {
@@ -229,6 +282,26 @@ export function WorkspaceProvider({ children }) {
 
   const fetchWorkspaces = useCallback(
     async ({ force = false } = {}) => {
+      // Capture the identity this call belongs to before any early return -
+      // including the signed-out branch - and retire anything started for a
+      // different user. Advancing the generation stops the previous identity's
+      // response from committing; releasing the in-flight owner stops it from
+      // silently skipping this identity's own bootstrap.
+      const requestUserId = authUserId ?? null;
+
+      if (activeIdentityRef.current !== requestUserId) {
+        activeIdentityRef.current = requestUserId;
+        fetchSequenceRef.current += 1;
+        fetchInFlightRef.current = null;
+        // Any pending recovery belongs to the previous identity.
+        resetTokenRecovery();
+      }
+
+      // A deliberate manual refresh restarts the recovery budget from zero.
+      if (force) {
+        resetTokenRecovery();
+      }
+
       if (!HAS_CLERK) {
         setLoading(false);
         setInitialized(true);
@@ -236,11 +309,12 @@ export function WorkspaceProvider({ children }) {
         return [];
       }
 
-      if (!auth?.isLoaded) {
+      if (!authIsLoaded) {
         return [];
       }
 
-      if (!auth?.isSignedIn) {
+      if (!authIsSignedIn) {
+        resetTokenRecovery();
         clearWorkspaceState();
         setLoading(false);
         setInitialized(true);
@@ -248,15 +322,15 @@ export function WorkspaceProvider({ children }) {
         return [];
       }
 
-      if (typeof auth?.getToken !== "function") {
+      if (typeof authRef.current?.getToken !== "function") {
         setLoading(false);
         setInitialized(true);
         releaseGate();
         return [];
       }
 
-      const bootKey = `${auth?.userId || "unknown"}:${
-        auth?.isSignedIn ? "signed-in" : "signed-out"
+      const bootKey = `${authUserId || "unknown"}:${
+        authIsSignedIn ? "signed-in" : "signed-out"
       }`;
 
       if (!force && bootstrappedKeyRef.current === bootKey) {
@@ -264,26 +338,97 @@ export function WorkspaceProvider({ children }) {
         return [];
       }
 
+      // Only a request belonging to this same identity can short-circuit here;
+      // a previous user's request was already released above.
       if (fetchInFlightRef.current) {
         return [];
       }
 
-      fetchInFlightRef.current = true;
       fetchSequenceRef.current += 1;
       const requestId = fetchSequenceRef.current;
+      fetchInFlightRef.current = { userId: requestUserId, requestId };
+
+      const isStale = () =>
+        requestId !== fetchSequenceRef.current ||
+        requestUserId !== activeIdentityRef.current ||
+        !mountedRef.current;
+
+      // Set when this run hands off to a delayed recovery attempt, so `finally`
+      // does not settle initialization into a final empty state.
+      let recoveryScheduled = false;
 
       setLoading(true);
       setError(null);
 
       try {
-        let token = await auth.getToken();
+        // Bounded token-hydration retry. Every attempt re-reads the latest
+        // getToken() and re-checks the same stale guard, so a workspace switch,
+        // sign-out or unmount ends the wait immediately without writing state.
+        let token = null;
+        let lastTokenError = null;
 
-        if (!token) {
-          await sleep(250);
-          token = await auth.getToken();
+        for (const delay of TOKEN_RETRY_DELAYS_MS) {
+          if (delay > 0) {
+            await sleep(delay);
+          }
+
+          if (isStale()) {
+            return [];
+          }
+
+          try {
+            token = await authRef.current.getToken();
+            lastTokenError = null;
+          } catch (tokenError) {
+            lastTokenError = tokenError;
+            token = null;
+          }
+
+          if (token) {
+            break;
+          }
+        }
+
+        if (isStale()) {
+          return [];
         }
 
         if (!token) {
+          // Hydration never completed inside the immediate window. This is not a
+          // sign-out, so workspace state is left intact and bootstrappedKeyRef
+          // stays unset.
+          const tokenError =
+            lastTokenError ||
+            new Error("Session token was unavailable during workspace bootstrap.");
+
+          const attempt = tokenRecoveryAttemptRef.current;
+
+          if (attempt < TOKEN_RECOVERY_DELAYS_MS.length) {
+            // Schedule the next bounded recovery attempt. Reaching here means the
+            // request is still current, so this can never retire a newer
+            // identity's timer.
+            cancelTokenRecovery();
+            tokenRecoveryAttemptRef.current = attempt + 1;
+            tokenRecoveryIdentityRef.current = requestUserId;
+            recoveryScheduled = true;
+
+            tokenRecoveryTimerRef.current = setTimeout(() => {
+              tokenRecoveryTimerRef.current = null;
+
+              if (!mountedRef.current) return;
+              if (tokenRecoveryIdentityRef.current !== activeIdentityRef.current) {
+                return;
+              }
+
+              setTokenRecoveryTick((tick) => tick + 1);
+            }, TOKEN_RECOVERY_DELAYS_MS[attempt]);
+
+            // No terminal error while an automatic recovery is still pending.
+            return [];
+          }
+
+          console.error("Workspace bootstrap token unavailable", tokenError);
+          setError(tokenError);
           return [];
         }
 
@@ -300,7 +445,7 @@ export function WorkspaceProvider({ children }) {
           }
         );
 
-        if (requestId !== fetchSequenceRef.current) {
+        if (isStale()) {
           return [];
         }
 
@@ -314,10 +459,12 @@ export function WorkspaceProvider({ children }) {
 
         bootstrappedKeyRef.current = bootKey;
         setError(null);
+        // Token and workspace both resolved: drop any recovery budget/timer.
+        resetTokenRecovery();
 
         return normalized;
       } catch (err) {
-        if (requestId !== fetchSequenceRef.current) {
+        if (isStale()) {
           return [];
         }
 
@@ -334,19 +481,31 @@ export function WorkspaceProvider({ children }) {
         setActiveWorkspace(null);
         return [];
       } finally {
-        if (requestId === fetchSequenceRef.current) {
-          fetchInFlightRef.current = false;
+        // Only the owning request releases the lock and settles loading state,
+        // so a retired request never clears the successor's in-flight marker
+        // and never writes after an identity change or unmount.
+        if (!isStale()) {
+          fetchInFlightRef.current = null;
           setLoading(false);
-          setInitialized(true);
+
+          // While an automatic recovery is still scheduled the provider is not
+          // finished bootstrapping, so initialization must not settle yet.
+          if (!recoveryScheduled) {
+            setInitialized(true);
+          }
         }
         releaseGate();
       }
     },
     [
-      auth,
+      authIsLoaded,
+      authIsSignedIn,
+      authUserId,
       clearWorkspaceState,
       resolveAndApplyActiveWorkspace,
       releaseGate,
+      cancelTokenRecovery,
+      resetTokenRecovery,
     ]
   );
 
@@ -355,6 +514,30 @@ export function WorkspaceProvider({ children }) {
     setActiveWorkspaceIdState((prev) => (prev === storedId ? prev : storedId));
   }, [getStoredWorkspaceId]);
 
+  // Retire the in-flight bootstrap on unmount so a late response cannot write to
+  // an unmounted provider. Deliberately mount-only: retiring on every dependency
+  // change would also cancel a healthy same-user request and double the fetch.
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+      fetchSequenceRef.current += 1;
+      fetchInFlightRef.current = null;
+
+      // Drop any pending recovery timer so its callback cannot set state after
+      // the provider is gone.
+      if (tokenRecoveryTimerRef.current) {
+        clearTimeout(tokenRecoveryTimerRef.current);
+        tokenRecoveryTimerRef.current = null;
+      }
+      tokenRecoveryAttemptRef.current = 0;
+      tokenRecoveryIdentityRef.current = null;
+    };
+  }, []);
+
+  // tokenRecoveryTick is a stable number, so a delayed recovery attempt re-runs
+  // this effect without the unstable Clerk auth object entering the dependencies.
   useEffect(() => {
     if (!HAS_CLERK) {
       setInitialized(true);
@@ -362,7 +545,7 @@ export function WorkspaceProvider({ children }) {
     }
 
     void fetchWorkspaces();
-  }, [fetchWorkspaces]);
+  }, [fetchWorkspaces, tokenRecoveryTick]);
 
   useEffect(() => {
     if (!activeWorkspaceId) {
