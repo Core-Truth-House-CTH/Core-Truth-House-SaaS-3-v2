@@ -558,6 +558,7 @@ export default function CommandCenterNext() {
         activeWork: overview.activeWork.count,
         activeCampaignCount: overview.activeWork.campaignCount,
         systemAlerts: overview.systemAlerts.count,
+        systemAlertsAvailable: true,
         nextMove: overview.nextMove,
         houseLevels: authoritativeHouseLevels(overview.brandHouse),
         workbench,
@@ -684,7 +685,11 @@ export default function CommandCenterNext() {
       openDecisions: null,
       activeWork,
       activeCampaignCount: activeCampaigns ? activeCampaigns.length : null,
+      // Null here means two different things: the stats source failed, or it
+      // answered and simply carries no alert counter. Only the first may be
+      // reported as an unavailable source.
       systemAlerts: statsOk ? nullableNumber(stats?.system_alerts, stats?.integration_errors, stats?.failed_jobs) : null,
+      systemAlertsAvailable: statsOk,
       nextMove: auditOk && statsOk ? fallbackNextMove({ score: score ?? 0, modules, audit, stats }) : null,
       houseLevels: statsOk ? fallbackHouseLevels({ modules, stats, score: score ?? 0 }) : null,
       workbench,
@@ -905,7 +910,7 @@ export default function CommandCenterNext() {
               <MetricCard icon={Radar} label="Buyer Signals" value={derived.confirmedSignalCount} note={derived.unconfirmedSignalCount === null ? "Signal source unavailable" : `${derived.unconfirmedSignalCount} awaiting confirmation`} tone="gold" onClick={() => navigate("/signal-inbox")} />
               <MetricCard icon={Compass} label="Open Decisions" value={derived.openDecisions} note={derived.openDecisions === null ? "Decision endpoint pending" : "Unresolved strategic decisions"} tone="purple" onClick={() => navigate("/workspace?view=decisions")} />
               <MetricCard icon={Workflow} label="Active Work" value={derived.activeWork} note={derived.activeCampaignCount === null ? "Campaign source unavailable" : `${derived.activeCampaignCount} active campaigns`} tone="green" onClick={() => navigate("/workspace?view=work")} />
-              <MetricCard icon={AlertTriangle} label="System Alerts" value={derived.systemAlerts} note={derived.systemAlerts === null ? "Alert source unavailable" : derived.systemAlerts ? "Review workspace health" : "All systems normal"} tone="orange" onClick={() => navigate("/alerts")} />
+              <MetricCard icon={AlertTriangle} label="System Alerts" value={derived.systemAlerts} note={!derived.systemAlertsAvailable ? "Alert source unavailable" : derived.systemAlerts === null ? "Alert endpoint pending" : derived.systemAlerts ? "Review workspace health" : "All systems normal"} tone="orange" onClick={() => navigate("/alerts")} />
             </section>
 
             {derived.houseLevels ? (
