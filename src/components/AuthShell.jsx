@@ -38,7 +38,17 @@ const NAV_ITEMS = [
 ];
 
 function planLabel(rawPlan) {
-  const info = PLAN_INFO[normalizePlan(rawPlan)] || PLAN_INFO.foundation;
+  const normalizedPlan = normalizePlan(rawPlan);
+
+  // normalizePlan and PLAN_ORDER both support "legacy", but PLAN_INFO carries no
+  // legacy entry (it holds pricing/positioning for the sellable plans). Label it
+  // explicitly here so legacy accounts are not mislabelled as Foundation. No
+  // legacy price, order or entitlement is invented.
+  if (normalizedPlan === "legacy") {
+    return "Legacy Plan";
+  }
+
+  const info = PLAN_INFO[normalizedPlan] || PLAN_INFO.foundation;
   return `${(info.name || "").replace(/^The\s+/, "")} Plan`;
 }
 
