@@ -144,7 +144,7 @@ export default function WorkspaceLibraryView({ data }) {
           ]} /></label>
           <label><span>File</span><input type="file" onChange={(event) => setForm((current) => ({ ...current, file: event.target.files?.[0] || null }))} /></label>
           {message ? <div className="ws-inline-message">{message}</div> : null}
-          <div className="ws-dialog-actions"><Dialog.Close className="ws-btn secondary">Cancel</Dialog.Close><button className="ws-btn primary" disabled={saving}>{saving ? "Uploading…" : "Upload Asset"}</button></div>
+          <div className="ws-dialog-actions"><Dialog.Close type="button" className="ws-btn secondary">Cancel</Dialog.Close><button className="ws-btn primary" disabled={saving}>{saving ? "Uploading…" : "Upload Asset"}</button></div>
         </form>
       </Modal>
     </article>
