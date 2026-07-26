@@ -49,13 +49,14 @@ export default function WorkspaceRoute() {
   const location = useLocation();
   const planState = usePlan();
   const workspaceState = useWorkspace();
-  const requiredPlan = requiredPlanForWorkspacePath(location.pathname);
+  const pathname = location.pathname.replace(/\/+$/, "") || "/";
+  const requiredPlan = requiredPlanForWorkspacePath(pathname);
   const currentPlan = normalizePlan(planState?.plan);
   const canAccess =
     PLAN_ORDER.indexOf(currentPlan) >= PLAN_ORDER.indexOf(requiredPlan);
   const currentRole = String(workspaceState?.activeWorkspace?.role || "").toLowerCase();
   const ownerOnlyDenied =
-    location.pathname === "/workspace/controls/danger-zone" &&
+    pathname === "/workspace/controls/danger-zone" &&
     !planState?.isSuperAdmin &&
     !["owner", "workspace_owner"].includes(currentRole);
 
@@ -86,7 +87,7 @@ export default function WorkspaceRoute() {
     return <WorkspaceAccessGate requiredPlan={requiredPlan} />;
   }
 
-  return location.pathname.startsWith("/workspace/controls/") ? (
+  return pathname.startsWith("/workspace/controls/") ? (
     <WorkspaceControlsPage />
   ) : (
     <WorkspaceOverviewPage />
