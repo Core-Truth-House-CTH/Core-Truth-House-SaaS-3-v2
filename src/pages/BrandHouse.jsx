@@ -104,16 +104,27 @@ export default function BrandHouse() {
 
   // Real backend completion percentages - never prototype sample numbers.
   const levels = useMemo(() => {
+    // A failed load has no inputs left: the catch clears both `overview` and
+    // `stats`, so the fallback would build percentages out of an empty stats
+    // object plus whatever the independently cached Brand Health context still
+    // holds. That renders mostly-0% floors beside the error alert, making an
+    // outage or an access error look like genuine completion data. Return no
+    // levels and let the page show only the error state.
+    //
+    // `error` is cleared at the start of every load, so a retry restores the
+    // card. The verified 501-then-stats path never sets it and is unchanged.
+    if (error) return null;
+
     if (overview?.brandHouse) return authoritativeHouseLevels(overview.brandHouse);
     return fallbackHouseLevels({
       modules: healthData?.modules || {},
       stats: stats || {},
       score: Math.round(Number(healthData?.overall_score) || 0),
     });
-  }, [overview, healthData, stats]);
+  }, [error, overview, healthData, stats]);
 
   // Approved order runs top floor first: Estate down to Foundation.
-  const levelsTopDown = useMemo(() => [...levels].reverse(), [levels]);
+  const levelsTopDown = useMemo(() => (levels ? [...levels].reverse() : []), [levels]);
 
   return (
     <AuthShell>
@@ -135,6 +146,7 @@ export default function BrandHouse() {
 
         {error ? <div className="bh-alert" role="alert">{error}</div> : null}
 
+        {levels ? (
         <section className="bh-card">
           <div className="bh-levels">
             {levelsTopDown.map((level) => (
@@ -173,6 +185,7 @@ export default function BrandHouse() {
             })}
           </div>
         </section>
+        ) : null}
       </main>
     </AuthShell>
   );
