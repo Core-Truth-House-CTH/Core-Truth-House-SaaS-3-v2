@@ -9,6 +9,7 @@ import { formatBytes, formatDateTime, normalizeNumber } from "./workspaceRoutes"
 import { errorText } from "./workspaceRecords";
 import { Empty, Modal, Pill, SelectField } from "./WorkspacePrimitives";
 
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 const uploadSchema = z.object({
   title: z.string().trim().min(2, "Add a clear title."),
   type: z.enum(["document", "image", "video", "template", "report"]),
@@ -28,8 +29,8 @@ export default function WorkspaceLibraryView({ data }) {
       id: String(item?.id || item?._id || `asset-${index}`),
       title: item?.title || item?.name || item?.filename || "Untitled asset",
       filename: item?.filename || item?.original_filename || "",
-      type: item?.type || item?.asset_type || item?.mime_type || "asset",
-      libraryType: String(item?.type || item?.asset_type || "asset").toLowerCase(),
+      type: item?.content_type || item?.mime_type || item?.type || item?.asset_type || "asset",
+      libraryType: String(item?.type || item?.asset_type || item?.media_type || "asset").toLowerCase(),
       size: normalizeNumber(item?.size_bytes || item?.file_size),
       updatedAt: item?.updated_at || item?.created_at || null,
       downloadUrl: item?.url || item?.file_url || "",
@@ -51,14 +52,19 @@ export default function WorkspaceLibraryView({ data }) {
       setMessage(parsed.error?.issues?.[0]?.message || "Choose a file to upload.");
       return;
     }
+    if (form.file.size > MAX_UPLOAD_BYTES) {
+      setMessage("Choose a file smaller than 25 MB.");
+      return;
+    }
 
     setSaving(true);
     try {
       const created = await apiClient.post(API_PATHS.documents.create, {
         title: parsed.data.title,
-        document_type: parsed.data.type,
-        original_filename: form.file.name,
-        mime_type: form.file.type || "application/octet-stream",
+        description: `Uploaded to the Workspace Library as ${parsed.data.type}.`,
+        category: parsed.data.type,
+        tags: [parsed.data.type],
+        is_public: false,
       });
       const id = created?.id || created?.document_id || created?.document?.id;
       if (!id) throw new Error("The document record was created without an ID.");
@@ -72,6 +78,7 @@ export default function WorkspaceLibraryView({ data }) {
       });
       setOpen(false);
       setForm({ title: "", type: "document", file: null });
+      setMessage("Asset uploaded to this workspace.");
       await data.reload();
     } catch (error) {
       setMessage(errorText(error));
@@ -82,7 +89,7 @@ export default function WorkspaceLibraryView({ data }) {
 
   const download = async (item) => {
     try {
-      if (item.downloadUrl) {
+      if (item.libraryType !== "document" && item.downloadUrl) {
         window.open(item.downloadUrl, "_blank", "noopener,noreferrer");
         return;
       }
@@ -95,7 +102,9 @@ export default function WorkspaceLibraryView({ data }) {
       const link = document.createElement("a");
       link.href = url;
       link.download = item.filename || item.title;
+      document.body.appendChild(link);
       link.click();
+      link.remove();
       URL.revokeObjectURL(url);
     } catch (error) {
       setMessage(errorText(error));
@@ -123,7 +132,7 @@ export default function WorkspaceLibraryView({ data }) {
       {filtered.length ? (
         <div className="ws-asset-grid">
           {filtered.map((item) => (
-            <article key={item.id} className="ws-asset-card">
+            <article key={`${item.libraryType}-${item.id}`} className="ws-asset-card">
               <span className="ws-asset-icon">{String(item.type).includes("image") ? <FileImage size={22} /> : <File size={22} />}</span>
               <div><strong>{item.title}</strong><p>{formatDateTime(item.updatedAt)}</p><div className="ws-asset-meta"><Pill>{String(item.type).split("/").pop()}</Pill><span>{item.size ? formatBytes(item.size) : "Size unavailable"}</span></div></div>
               <button className="ws-icon-btn" onClick={() => void download(item)} aria-label={`Download ${item.title}`}><ArrowDownToLine size={17} /></button>
@@ -132,7 +141,7 @@ export default function WorkspaceLibraryView({ data }) {
         </div>
       ) : <Empty title="Your workspace library is empty" description="Upload documents, media, reports, and saved workspace files to begin." />}
 
-      <Modal open={open} onOpenChange={setOpen} title="Upload to Workspace" description="The file will belong only to the active workspace.">
+      <Modal open={open} onOpenChange={setOpen} title="Upload to Workspace" description="The file will belong only to the active workspace. Maximum file size: 25 MB.">
         <form className="ws-form" onSubmit={upload}>
           <label><span>Title</span><input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} /></label>
           <label><span>Asset type</span><SelectField value={form.type} onValueChange={(value) => setForm((current) => ({ ...current, type: value }))} label="Asset type" options={[
