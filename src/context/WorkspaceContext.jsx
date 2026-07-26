@@ -87,6 +87,12 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Clerk can report a signed-in user while getToken() is still hydrating, or
+// during a transient refresh. These fixed waits give hydration a bounded ~3.25s
+// window inside the request that already owns the bootstrap. Fixed, finite and
+// timer-free by design: no interval, no unbounded retry, no random backoff.
+const TOKEN_RETRY_DELAYS_MS = [0, 250, 500, 1000, 1500];
+
 export function WorkspaceProvider({ children }) {
   const auth = useAuth();
 
@@ -313,14 +319,48 @@ export function WorkspaceProvider({ children }) {
       setError(null);
 
       try {
-        let token = await authRef.current.getToken();
+        // Bounded token-hydration retry. Every attempt re-reads the latest
+        // getToken() and re-checks the same stale guard, so a workspace switch,
+        // sign-out or unmount ends the wait immediately without writing state.
+        let token = null;
+        let lastTokenError = null;
 
-        if (!token) {
-          await sleep(250);
-          token = await authRef.current.getToken();
+        for (const delay of TOKEN_RETRY_DELAYS_MS) {
+          if (delay > 0) {
+            await sleep(delay);
+          }
+
+          if (isStale()) {
+            return [];
+          }
+
+          try {
+            token = await authRef.current.getToken();
+            lastTokenError = null;
+          } catch (tokenError) {
+            lastTokenError = tokenError;
+            token = null;
+          }
+
+          if (token) {
+            break;
+          }
+        }
+
+        if (isStale()) {
+          return [];
         }
 
         if (!token) {
+          // Hydration never completed inside the window. This is not a sign-out,
+          // so workspace state is left intact and bootstrappedKeyRef stays unset
+          // — an explicit refreshWorkspaces() can still retry.
+          const tokenError =
+            lastTokenError ||
+            new Error("Session token was unavailable during workspace bootstrap.");
+
+          console.error("Workspace bootstrap token unavailable", tokenError);
+          setError(tokenError);
           return [];
         }
 
