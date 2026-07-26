@@ -1,5 +1,5 @@
 import { CircleDot } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import WorkspaceShell from "./WorkspaceShell";
 import WorkspaceLibraryView from "./WorkspaceLibraryView";
 import WorkspaceActiveWorkView from "./WorkspaceActiveWorkView";
@@ -10,6 +10,7 @@ export default function WorkspacePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const data = useWorkspaceSuiteData();
+  const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const views = {
     "/workspace/library": <WorkspaceLibraryView data={data} />,
     "/workspace/active-work": <WorkspaceActiveWorkView data={data} />,
@@ -22,7 +23,7 @@ export default function WorkspacePage() {
     <WorkspaceShell summary={data.summary} loading={data.loading} error={data.error} onRefresh={data.reload}>
       {data.loading && !data.detail ? (
         <div className="ws-loading"><CircleDot className="ws-pulse" size={20} /> Loading workspace…</div>
-      ) : views[location.pathname] || <Overview data={data} navigate={navigate} />}
+      ) : views[pathname] || (pathname === "/workspace" ? <Overview data={data} navigate={navigate} /> : <Navigate to="/workspace" replace />)}
     </WorkspaceShell>
   );
 }
