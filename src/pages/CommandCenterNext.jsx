@@ -620,14 +620,36 @@ export default function CommandCenterNext() {
   // open - it triggers no request of any kind.
   const [consultQuestion, setConsultQuestion] = useState("");
 
-  // Blank or whitespace-only input does nothing. On a real question we open the
-  // existing Ask the House panel; the question cannot be handed over because
-  // that panel exposes no prefill contract, so it stays in the field.
+  // Transient handoff to the existing Ask the House drawer. Local to this page -
+  // AskTheHouseContext still owns only visibility and section id.
+  const [consultPrefill, setConsultPrefill] = useState("");
+
+  // Opens the existing drawer with the question already in its composer. It is a
+  // draft only: nothing is sent until the user activates the drawer's own Send.
+  const openConsult = useCallback(
+    (question) => {
+      const text = String(question ?? "").trim();
+      if (!text) return;
+
+      setConsultPrefill(text);
+      open("command-center-consult");
+    },
+    [open]
+  );
+
+  // Blank or whitespace-only input does nothing. `consultQuestion` is deliberately
+  // left intact, so closing the drawer before sending does not lose the original.
   const handleConsultSubmit = useCallback((event) => {
     event.preventDefault();
-    if (!consultQuestion.trim()) return;
-    open("command-center-consult");
-  }, [consultQuestion, open]);
+    openConsult(consultQuestion);
+  }, [consultQuestion, openConsult]);
+
+  // Clears only the transient handoff, so a later unrelated open does not show a
+  // stale question or preset.
+  const handleConsultClose = useCallback(() => {
+    close();
+    setConsultPrefill("");
+  }, [close]);
 
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -915,7 +937,7 @@ export default function CommandCenterNext() {
               </div>
               <div className="ccn-prompt-list">
                 {CONSULT_PROMPTS.map((prompt) => (
-                  <button key={prompt} type="button" className="ccn-prompt" onClick={() => open("command-center-consult")}>
+                  <button key={prompt} type="button" className="ccn-prompt" onClick={() => openConsult(prompt)}>
                     <span className="ccn-prompt-mark" aria-hidden="true" />
                     <span>{prompt}</span>
                     <ChevronRight size={13} aria-hidden="true" />
@@ -947,7 +969,13 @@ export default function CommandCenterNext() {
         {loading ? <div className="ccn-loading" role="status"><CircleDot size={15} aria-hidden="true" /> Updating workspace intelligence…</div> : null}
       </main>
 
-      <AskTheHouseDrawer open={isOpen} onClose={close} surface="command_center" sectionId={sectionId} />
+      <AskTheHouseDrawer
+        open={isOpen}
+        onClose={handleConsultClose}
+        surface="command_center"
+        sectionId={sectionId}
+        initialInput={consultPrefill}
+      />
     </AuthShell>
   );
 }
