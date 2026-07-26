@@ -32,6 +32,13 @@ export default function BrandHouse() {
   const [overview, setOverview] = useState(null);
   const [stats, setStats] = useState(null);
 
+  // Which source the percentages on screen came from: "pending" until a request
+  // resolves, then "overview" (authoritative) or "stats" (the verified 501
+  // fallback), or "error"/"empty" when there is nothing to show. Percentages are
+  // derived only from the two resolved sources, so a slow load or a retry can
+  // never be mistaken for genuine completion data.
+  const [dataSource, setDataSource] = useState("pending");
+
   // Monotonic id of the latest Brand House load; see the stale-response guard
   // below. Same reviewed pattern the Command Center uses.
   const loadRequestRef = useRef(0);
@@ -51,11 +58,15 @@ export default function BrandHouse() {
       setError("");
       setOverview(null);
       setStats(null);
+      setDataSource("empty");
       return;
     }
 
     setLoading(true);
     setError("");
+    // Every load - including a retry over data already on screen - starts
+    // unresolved, so nothing is derived until a source actually answers.
+    setDataSource("pending");
 
     try {
       const result = await fetchCommandCenterOverview(activeWorkspaceId);
@@ -64,6 +75,7 @@ export default function BrandHouse() {
       if (result.available) {
         setOverview(result.data);
         setStats(null);
+        setDataSource("overview");
         return;
       }
 
@@ -80,11 +92,13 @@ export default function BrandHouse() {
 
       setOverview(null);
       setStats(workspaceStats);
+      setDataSource("stats");
     } catch (requestError) {
       if (isStale()) return;
 
       setOverview(null);
       setStats(null);
+      setDataSource("error");
       setError(requestError?.message || "The Brand House could not be loaded.");
     } finally {
       if (!isStale()) setLoading(false);
@@ -104,24 +118,26 @@ export default function BrandHouse() {
 
   // Real backend completion percentages - never prototype sample numbers.
   const levels = useMemo(() => {
-    // A failed load has no inputs left: the catch clears both `overview` and
-    // `stats`, so the fallback would build percentages out of an empty stats
-    // object plus whatever the independently cached Brand Health context still
-    // holds. That renders mostly-0% floors beside the error alert, making an
-    // outage or an access error look like genuine completion data. Return no
-    // levels and let the page show only the error state.
-    //
-    // `error` is cleared at the start of every load, so a retry restores the
-    // card. The verified 501-then-stats path never sets it and is unchanged.
-    if (error) return null;
+    // Percentages require a resolved source. While the load is still pending -
+    // on first mount and immediately after a retry - `overview` and `stats` are
+    // both null, so the fallback would convert empty inputs plus whatever the
+    // independently cached Brand Health context holds into mostly-zero or
+    // partially cached floors, before the request has established anything. The
+    // same applies once a load has failed. Only an authoritative overview or a
+    // successful stats fallback may produce levels; everything else renders no
+    // card at all, leaving just the hero, the error alert and Refresh.
+    if (loading) return null;
+    if (dataSource === "overview") {
+      return overview?.brandHouse ? authoritativeHouseLevels(overview.brandHouse) : null;
+    }
+    if (dataSource !== "stats") return null;
 
-    if (overview?.brandHouse) return authoritativeHouseLevels(overview.brandHouse);
     return fallbackHouseLevels({
       modules: healthData?.modules || {},
       stats: stats || {},
       score: Math.round(Number(healthData?.overall_score) || 0),
     });
-  }, [error, overview, healthData, stats]);
+  }, [loading, dataSource, overview, healthData, stats]);
 
   // Approved order runs top floor first: Estate down to Foundation.
   const levelsTopDown = useMemo(() => (levels ? [...levels].reverse() : []), [levels]);
