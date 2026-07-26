@@ -1,8 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Switch from "@radix-ui/react-switch";
 import { X } from "lucide-react";
-import apiClient from "../../lib/apiClient";
-import { API_PATHS } from "../../lib/apiPaths";
 
 export const messageFor = (error) =>
   error?.response?.data?.detail || error?.message || "The request could not be completed.";
@@ -19,7 +17,7 @@ export function Toggle({ label, description, checked, onCheckedChange, disabled 
   return (
     <div className="ws-toggle-row">
       <div><strong>{label}</strong><p>{description}</p></div>
-      <Switch.Root className="ws-switch" checked={checked} onCheckedChange={onCheckedChange} disabled={disabled}>
+      <Switch.Root className="ws-switch" checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} aria-label={label}>
         <Switch.Thumb className="ws-switch-thumb" />
       </Switch.Root>
     </div>
@@ -34,16 +32,11 @@ export function Modal({ open, onOpenChange, title, description, children }) {
         <Dialog.Content className="ws-dialog-content">
           <div className="ws-dialog-head">
             <div><Dialog.Title>{title}</Dialog.Title><Dialog.Description>{description}</Dialog.Description></div>
-            <Dialog.Close className="ws-icon-btn"><X size={17} /></Dialog.Close>
+            <Dialog.Close type="button" className="ws-icon-btn" aria-label="Close dialog"><X size={17} /></Dialog.Close>
           </div>
           {children}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
   );
-}
-
-export async function saveSettings(data, patch) {
-  await apiClient.patch(API_PATHS.workspace.settings(data.activeWorkspaceId), patch);
-  await data.reload();
 }
