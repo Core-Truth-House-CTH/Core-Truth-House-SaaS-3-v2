@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "../components/Auth";
 import { PlanGate } from "../components/PlanGate";
@@ -55,9 +55,21 @@ function buildRouteElement(route) {
   );
 }
 
+function buildWorkspaceRouteElement() {
+  const WorkspacePage = getPageComponent("/workspace");
+
+  return (
+    <ProtectedRoute>
+      <BillingWall>
+        <WorkspacePage />
+      </BillingWall>
+    </ProtectedRoute>
+  );
+}
+
 export default function AppRouter() {
   const protectedRouteItems = [...ADMIN_ROUTES, ...APP_ROUTES].filter(
-    (route) => route?.path
+    (route) => route?.path && !["/workspace", "/workspace-library"].includes(route.path)
   );
 
   useEffect(() => {
@@ -82,6 +94,8 @@ export default function AppRouter() {
             element={<Navigate to={route.redirectTo} replace />}
           />
         ))}
+
+        <Route path="/workspace/*" element={buildWorkspaceRouteElement()} />
 
         {protectedRouteItems.map((route) => (
           <Route
