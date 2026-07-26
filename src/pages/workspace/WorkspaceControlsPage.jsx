@@ -1,5 +1,5 @@
 import { RefreshCw } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import WorkspaceShell from "./WorkspaceShell";
 import { useWorkspaceSuiteData } from "./workspaceData";
 import {
@@ -15,6 +15,7 @@ import {
 export default function WorkspaceControlsPage() {
   const location = useLocation();
   const data = useWorkspaceSuiteData();
+  const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const views = {
     "/workspace/controls/members": <MembersControl data={data} />,
     "/workspace/controls/client-workspaces": <ClientWorkspacesControl data={data} />,
@@ -32,7 +33,7 @@ export default function WorkspaceControlsPage() {
     <WorkspaceShell summary={data.summary} loading={data.loading} error={data.error} onRefresh={data.reload}>
       {data.loading && !data.detail ? (
         <div className="ws-loading"><RefreshCw className="ws-spin" size={20} /> Loading workspace controls…</div>
-      ) : views[location.pathname] || <GeneralControl data={data} />}
+      ) : views[pathname] || (pathname === "/workspace/controls/general" ? <GeneralControl data={data} /> : <Navigate to="/workspace/controls/general" replace />)}
     </WorkspaceShell>
   );
 }
