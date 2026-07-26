@@ -506,6 +506,15 @@ export default function CommandCenterNext() {
   const signalsLive = dataSource === "overview" && !error;
 
   const derived = useMemo(() => {
+    // A failed load leaves nothing to derive from: the catch resets `data` to
+    // {} and no legacy source was ever fetched. Falling through would invent
+    // every value below out of empty objects - zero buyer signals, zero active
+    // work, a diagnostic recommendation and partial House levels rendered
+    // beside the error alert - so an outage or a 401/403/404 reads as a
+    // genuinely empty workspace. Derive nothing and let the page show only the
+    // error state. Overview and legacy-fallback loads are unaffected.
+    if (dataSource === "error") return null;
+
     const overview = data.overview || null;
 
     if (overview) {
@@ -611,7 +620,7 @@ export default function CommandCenterNext() {
       intelligence,
       recentProgress,
     };
-  }, [data, healthData]);
+  }, [data, healthData, dataSource]);
 
   const firstName = user?.firstName || (user?.fullName || "").split(" ")[0] || activeWorkspace?.name || "Founder";
 
@@ -676,7 +685,10 @@ export default function CommandCenterNext() {
 
   // Approved composition lists the House top floor first (Estate -> Foundation);
   // the data layer returns it bottom-up, so present a reversed copy.
-  const houseLevelsTopDown = useMemo(() => [...derived.houseLevels].reverse(), [derived.houseLevels]);
+  const houseLevelsTopDown = useMemo(
+    () => (derived ? [...derived.houseLevels].reverse() : []),
+    [derived]
+  );
 
   const healthRows = useMemo(() => {
     const modules = healthData?.modules || {};
@@ -719,6 +731,10 @@ export default function CommandCenterNext() {
 
         <div className="ccn-layout">
           <div className="ccn-col ccn-col-left">
+            {/* Data-bearing panels only. Quick Actions below is static navigation
+                and stays available while the workspace data is unavailable. */}
+            {derived ? (
+            <>
             <article className="ccn-card ccn-health-card">
               <button type="button" className="ccn-health-score" onClick={() => navigate("/brand-health")}>
                 <span className="ccn-card-label">Brand Health Score</span>
@@ -788,6 +804,8 @@ export default function CommandCenterNext() {
                 </div>
               )}
             </article>
+            </>
+            ) : null}
 
             <article className="ccn-card ccn-quick-actions">
               <div className="ccn-card-heading"><div><span>Quick Actions</span><small>Open the right room without searching</small></div></div>
@@ -805,6 +823,7 @@ export default function CommandCenterNext() {
             </article>
           </div>
 
+          {derived ? (
           <div className="ccn-col ccn-col-center">
             <section className="ccn-metrics" aria-label="Command Center summary">
               <MetricCard icon={Radar} label="Buyer Signals" value={derived.confirmedSignalCount} note={`${derived.unconfirmedSignalCount} awaiting confirmation`} tone="gold" onClick={() => navigate("/signal-inbox")} />
@@ -887,8 +906,10 @@ export default function CommandCenterNext() {
               )}
             </article>
           </div>
+          ) : null}
 
           <aside className="ccn-col ccn-col-right">
+            {derived ? (
             <article className="ccn-card ccn-signals-card">
               <div className="ccn-card-heading ccn-signals-heading">
                 <div>
@@ -920,6 +941,7 @@ export default function CommandCenterNext() {
                 </button>
               </div>
             </article>
+            ) : null}
 
             <article className="ccn-card ccn-consult-card">
               <div className="ccn-card-heading ccn-consult-heading">
