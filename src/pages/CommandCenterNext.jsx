@@ -418,6 +418,7 @@ export default function CommandCenterNext() {
 
     const results = await Promise.allSettled(requests);
     const value = (index) => results[index]?.status === "fulfilled" ? results[index].value : null;
+    const ok = (index) => results[index]?.status === "fulfilled";
     const failed = results.filter((result) => result.status === "rejected").length;
 
     return {
@@ -430,6 +431,22 @@ export default function CommandCenterNext() {
         campaigns: value(4),
         crm: value(5),
         analytics: value(6),
+        // Which legacy sources actually answered. A rejected request normalises
+        // to null, which the derivation would otherwise read as an empty
+        // collection: a failed buyer-signals call would render "0 confirmed"
+        // and a failed campaigns call "0 active work", both indistinguishable
+        // from a real zero. Availability is tracked per source so only the
+        // metrics belonging to a failed source are blanked; everything that did
+        // answer is still shown.
+        available: {
+          progress: ok(0),
+          audit: ok(1),
+          stats: ok(2),
+          signals: ok(3),
+          campaigns: ok(4),
+          crm: ok(5),
+          analytics: ok(6),
+        },
       },
       failed,
     };
@@ -461,6 +478,11 @@ export default function CommandCenterNext() {
 
     setLoading(true);
     setError("");
+    // Every load starts unresolved, including a Refresh over data that is
+    // already on screen. Until a source answers there is nothing verified to
+    // derive from, and leaving the previous source in place would keep stale or
+    // invented metrics visible for the whole duration of a slow request.
+    setDataSource("pending");
 
     try {
       const overviewResult = await fetchCommandCenterOverview(activeWorkspaceId);
@@ -506,14 +528,16 @@ export default function CommandCenterNext() {
   const signalsLive = dataSource === "overview" && !error;
 
   const derived = useMemo(() => {
-    // A failed load leaves nothing to derive from: the catch resets `data` to
-    // {} and no legacy source was ever fetched. Falling through would invent
-    // every value below out of empty objects - zero buyer signals, zero active
-    // work, a diagnostic recommendation and partial House levels rendered
-    // beside the error alert - so an outage or a 401/403/404 reads as a
-    // genuinely empty workspace. Derive nothing and let the page show only the
-    // error state. Overview and legacy-fallback loads are unaffected.
-    if (dataSource === "error") return null;
+    // Only a resolved source may produce numbers. "pending" covers the first
+    // mount and every refresh, "empty" means no active workspace and "error"
+    // means the load failed; in all three there is nothing verified to show,
+    // and deriving anyway would invent metrics from an empty `data` object -
+    // zero buyer signals, zero active work, a fabricated diagnostic
+    // recommendation and partial House levels - which is indistinguishable from
+    // a genuinely empty workspace and persists for as long as a slow request
+    // takes. Only an authoritative overview or a completed legacy fallback
+    // qualifies.
+    if (dataSource !== "overview" && dataSource !== "legacy-fallback") return null;
 
     const overview = data.overview || null;
 
@@ -542,52 +566,86 @@ export default function CommandCenterNext() {
       };
     }
 
+    // Per-source availability. A source that rejected is `null` here rather
+    // than an empty object/array, so anything derived from it stays blank
+    // instead of collapsing to a real-looking zero. Sources that did answer are
+    // used exactly as before.
+    const available = data.available || {};
+    const statsOk = available.stats === true;
+    const auditOk = available.audit === true;
+    const progressOk = available.progress === true;
+    const signalsOk = available.signals === true;
+    const campaignsOk = available.campaigns === true;
+
     const modules = healthData?.modules || {};
-    const stats = data.stats || {};
-    const audit = data.audit || null;
-    const progress = data.progress || {};
-    const signals = arrayFrom(data.signals, ["signals", "items", "results"]);
-    const campaigns = arrayFrom(data.campaigns, ["campaigns", "items", "results"]);
+    const stats = statsOk ? (data.stats || {}) : null;
+    const audit = auditOk ? (data.audit || null) : null;
+    const progress = progressOk ? (data.progress || {}) : null;
+    const signals = signalsOk ? arrayFrom(data.signals, ["signals", "items", "results"]) : null;
+    const campaigns = campaignsOk ? arrayFrom(data.campaigns, ["campaigns", "items", "results"]) : null;
 
-    const score = Math.round(numberFrom(healthData?.overall_score, healthData?.overall, scoreFromAudit(audit)));
-    const confirmedSignals = signals.filter((signal) => String(signal?.status || "").toLowerCase() === "confirmed");
-    const unconfirmedSignals = signals.filter((signal) => String(signal?.status || "unconfirmed").toLowerCase() !== "confirmed");
-    const activeCampaigns = campaigns.filter((campaign) => !["complete", "completed", "archived", "cancelled"].includes(String(campaign?.status || "active").toLowerCase()));
+    // Brand Health comes from the independently loaded health context first and
+    // only falls back to the audit. With neither available the score is unknown,
+    // not zero, so it stays null and the card renders a dash.
+    const rawScore = nullableNumber(
+      healthData?.overall_score,
+      healthData?.overall,
+      audit ? scoreFromAudit(audit) : null
+    );
+    const score = rawScore === null ? null : Math.round(rawScore);
 
-    const signalCards = [...signals]
-      .sort((a, b) => new Date(b?.created_at || 0) - new Date(a?.created_at || 0))
-      .slice(0, 4)
-      .map(normalizeSignalCard);
+    const confirmedSignals = signals
+      ? signals.filter((signal) => String(signal?.status || "").toLowerCase() === "confirmed")
+      : null;
+    const unconfirmedSignals = signals
+      ? signals.filter((signal) => String(signal?.status || "unconfirmed").toLowerCase() !== "confirmed")
+      : null;
+    const activeCampaigns = campaigns
+      ? campaigns.filter((campaign) => !["complete", "completed", "archived", "cancelled"].includes(String(campaign?.status || "active").toLowerCase()))
+      : null;
 
-    const workbench = activeCampaigns.slice(0, 3).map((campaign) => normalizeWorkbenchItem({
-      ...campaign,
-      type: "Campaign",
-      route: "/campaign-builder",
-    }));
+    const signalCards = signals
+      ? [...signals]
+          .sort((a, b) => new Date(b?.created_at || 0) - new Date(a?.created_at || 0))
+          .slice(0, 4)
+          .map(normalizeSignalCard)
+      : null;
 
-    if (!workbench.length && numberFrom(stats?.total_content) > 0) {
-      workbench.push(normalizeWorkbenchItem({ id: "content", title: "Content Library", type: "Content", status: `${numberFrom(stats?.total_content)} assets`, route: "/content-studio" }));
-    }
-    if (!workbench.length && numberFrom(stats?.total_offers) > 0) {
-      workbench.push(normalizeWorkbenchItem({ id: "offers", title: "Offer Architecture", type: "Offer", status: `${numberFrom(stats?.total_offers)} offers`, route: "/offer-builder" }));
+    // The bench is fed by campaigns, with content/offer counts from stats as a
+    // secondary source. With campaigns unavailable an empty bench would read as
+    // "nothing is being built", so the panel is withheld entirely.
+    let workbench = null;
+    if (campaignsOk) {
+      workbench = activeCampaigns.slice(0, 3).map((campaign) => normalizeWorkbenchItem({
+        ...campaign,
+        type: "Campaign",
+        route: "/campaign-builder",
+      }));
+
+      if (!workbench.length && stats && numberFrom(stats?.total_content) > 0) {
+        workbench.push(normalizeWorkbenchItem({ id: "content", title: "Content Library", type: "Content", status: `${numberFrom(stats?.total_content)} assets`, route: "/content-studio" }));
+      }
+      if (!workbench.length && stats && numberFrom(stats?.total_offers) > 0) {
+        workbench.push(normalizeWorkbenchItem({ id: "offers", title: "Offer Architecture", type: "Offer", status: `${numberFrom(stats?.total_offers)} offers`, route: "/offer-builder" }));
+      }
     }
 
     const intelligence = [
-      confirmedSignals.length > 0 ? {
+      confirmedSignals && confirmedSignals.length > 0 ? {
         id: "signals",
         icon: Radar,
         label: "Audience intelligence",
         title: `${confirmedSignals.length} confirmed buyer signal${confirmedSignals.length === 1 ? "" : "s"} are shaping the evidence base.`,
         route: "/signal-inbox",
       } : null,
-      score > 0 ? {
+      score !== null && score > 0 ? {
         id: "brand-health",
         icon: TrendingUp,
         label: "Brand movement",
         title: `Brand Health is ${score}. ${statusCopy(score)}.`,
         route: "/brand-health",
       } : null,
-      activeCampaigns.length > 0 ? {
+      activeCampaigns && activeCampaigns.length > 0 ? {
         id: "campaigns",
         icon: Megaphone,
         label: "Campaign activity",
@@ -596,26 +654,39 @@ export default function CommandCenterNext() {
       } : null,
     ].filter(Boolean);
 
-    const recentProgress = [
+    const progressItems = [
       audit ? { id: "audit", icon: CheckCircle2, title: "Brand Diagnostic recorded", meta: dateLabel(audit?.created_at || audit?.updated_at), route: "/brand-health" } : null,
       progress?.brand_memory_complete ? { id: "brand-memory", icon: CheckCircle2, title: "Brand Memory connected", meta: "Foundation", route: "/brand-foundation" } : null,
-      activeCampaigns[0] ? { id: "campaign", icon: Megaphone, title: safeText(activeCampaigns[0]?.name || activeCampaigns[0]?.title, "Campaign in progress"), meta: safeText(activeCampaigns[0]?.status, "Active"), route: "/campaign-builder" } : null,
-      confirmedSignals[0] ? { id: "signal", icon: Radar, title: "Buyer signal confirmed", meta: dateLabel(confirmedSignals[0]?.created_at), route: "/signal-inbox" } : null,
+      activeCampaigns && activeCampaigns[0] ? { id: "campaign", icon: Megaphone, title: safeText(activeCampaigns[0]?.name || activeCampaigns[0]?.title, "Campaign in progress"), meta: safeText(activeCampaigns[0]?.status, "Active"), route: "/campaign-builder" } : null,
+      confirmedSignals && confirmedSignals[0] ? { id: "signal", icon: Radar, title: "Buyer signal confirmed", meta: dateLabel(confirmedSignals[0]?.created_at), route: "/signal-inbox" } : null,
     ].filter(Boolean).slice(0, 4);
+
+    // "No milestones yet" is only honest when every source that feeds the list
+    // actually answered. If one failed and the list came back empty, withhold
+    // the panel rather than report an absence that was never established.
+    const progressSourcesComplete = auditOk && progressOk && campaignsOk && signalsOk;
+    const recentProgress = progressItems.length || progressSourcesComplete ? progressItems : null;
+
+    // Active Work sums campaigns and stats counters, so it is only meaningful
+    // when both answered. House levels read stats and the health modules, so
+    // without stats they would be fabricated from an empty object.
+    const activeWork = campaignsOk && statsOk
+      ? activeCampaigns.length + numberFrom(stats?.draft_content, stats?.active_projects)
+      : null;
 
     return {
       authoritative: false,
       score,
-      scoreStatus: statusCopy(score),
-      confirmedSignalCount: confirmedSignals.length,
-      unconfirmedSignalCount: unconfirmedSignals.length,
+      scoreStatus: score === null ? "Brand Health is unavailable" : statusCopy(score),
+      confirmedSignalCount: confirmedSignals ? confirmedSignals.length : null,
+      unconfirmedSignalCount: unconfirmedSignals ? unconfirmedSignals.length : null,
       signalCards,
       openDecisions: null,
-      activeWork: activeCampaigns.length + numberFrom(stats?.draft_content, stats?.active_projects),
-      activeCampaignCount: activeCampaigns.length,
-      systemAlerts: nullableNumber(stats?.system_alerts, stats?.integration_errors, stats?.failed_jobs),
-      nextMove: fallbackNextMove({ score, modules, audit, stats }),
-      houseLevels: fallbackHouseLevels({ modules, stats, score }),
+      activeWork,
+      activeCampaignCount: activeCampaigns ? activeCampaigns.length : null,
+      systemAlerts: statsOk ? nullableNumber(stats?.system_alerts, stats?.integration_errors, stats?.failed_jobs) : null,
+      nextMove: auditOk && statsOk ? fallbackNextMove({ score: score ?? 0, modules, audit, stats }) : null,
+      houseLevels: statsOk ? fallbackHouseLevels({ modules, stats, score: score ?? 0 }) : null,
       workbench,
       intelligence,
       recentProgress,
@@ -686,7 +757,7 @@ export default function CommandCenterNext() {
   // Approved composition lists the House top floor first (Estate -> Foundation);
   // the data layer returns it bottom-up, so present a reversed copy.
   const houseLevelsTopDown = useMemo(
-    () => (derived ? [...derived.houseLevels].reverse() : []),
+    () => (derived?.houseLevels ? [...derived.houseLevels].reverse() : []),
     [derived]
   );
 
@@ -762,6 +833,7 @@ export default function CommandCenterNext() {
               </div>
             </article>
 
+            {derived.nextMove ? (
             <article className="ccn-next-move">
               {/* Static section label, matching its sibling panels ("YOUR BRAND HOUSE").
                   The backend still sends nextMove.eyebrow; it is intentionally not used
@@ -778,6 +850,7 @@ export default function CommandCenterNext() {
                 </button>
               </div>
             </article>
+            ) : null}
 
             <article className="ccn-card ccn-intelligence">
               <div className="ccn-card-heading"><div><span>Daily Intelligence</span><small>Evidence worth acting on today</small></div></div>
@@ -826,12 +899,16 @@ export default function CommandCenterNext() {
           {derived ? (
           <div className="ccn-col ccn-col-center">
             <section className="ccn-metrics" aria-label="Command Center summary">
-              <MetricCard icon={Radar} label="Buyer Signals" value={derived.confirmedSignalCount} note={`${derived.unconfirmedSignalCount} awaiting confirmation`} tone="gold" onClick={() => navigate("/signal-inbox")} />
+              {/* A null value renders a dash. The supporting note must not
+                  assert a count for a source that never answered, so each one
+                  falls back to "source unavailable" instead of "0 …". */}
+              <MetricCard icon={Radar} label="Buyer Signals" value={derived.confirmedSignalCount} note={derived.unconfirmedSignalCount === null ? "Signal source unavailable" : `${derived.unconfirmedSignalCount} awaiting confirmation`} tone="gold" onClick={() => navigate("/signal-inbox")} />
               <MetricCard icon={Compass} label="Open Decisions" value={derived.openDecisions} note={derived.openDecisions === null ? "Decision endpoint pending" : "Unresolved strategic decisions"} tone="purple" onClick={() => navigate("/workspace?view=decisions")} />
-              <MetricCard icon={Workflow} label="Active Work" value={derived.activeWork} note={`${derived.activeCampaignCount} active campaigns`} tone="green" onClick={() => navigate("/workspace?view=work")} />
-              <MetricCard icon={AlertTriangle} label="System Alerts" value={derived.systemAlerts} note={derived.systemAlerts === null ? "Alert endpoint pending" : derived.systemAlerts ? "Review workspace health" : "All systems normal"} tone="orange" onClick={() => navigate("/alerts")} />
+              <MetricCard icon={Workflow} label="Active Work" value={derived.activeWork} note={derived.activeCampaignCount === null ? "Campaign source unavailable" : `${derived.activeCampaignCount} active campaigns`} tone="green" onClick={() => navigate("/workspace?view=work")} />
+              <MetricCard icon={AlertTriangle} label="System Alerts" value={derived.systemAlerts} note={derived.systemAlerts === null ? "Alert source unavailable" : derived.systemAlerts ? "Review workspace health" : "All systems normal"} tone="orange" onClick={() => navigate("/alerts")} />
             </section>
 
+            {derived.houseLevels ? (
             <article className="ccn-card ccn-house-card">
               <span className="ccn-card-label">Your Brand House</span>
               <div className="ccn-house-body">
@@ -859,7 +936,9 @@ export default function CommandCenterNext() {
                 </button>
               </div>
             </article>
+            ) : null}
 
+            {derived.recentProgress ? (
             <article className="ccn-card ccn-progress-card">
               <div className="ccn-card-heading"><div><span>Recent Progress</span><small>Movement recorded in this workspace</small></div><button type="button" onClick={() => navigate("/workspace?view=activity")}>View activity</button></div>
               {derived.recentProgress.length ? (
@@ -883,7 +962,9 @@ export default function CommandCenterNext() {
                 </div>
               )}
             </article>
+            ) : null}
 
+            {derived.workbench ? (
             <article className="ccn-card ccn-workbench">
               <div className="ccn-card-heading"><div><span>Active Workbench</span><small>What is currently being built</small></div><button type="button" onClick={() => navigate("/workspace?view=work")}>Open workspace</button></div>
               {derived.workbench.length ? (
@@ -905,11 +986,12 @@ export default function CommandCenterNext() {
                 </div>
               )}
             </article>
+            ) : null}
           </div>
           ) : null}
 
           <aside className="ccn-col ccn-col-right">
-            {derived ? (
+            {derived?.signalCards ? (
             <article className="ccn-card ccn-signals-card">
               <div className="ccn-card-heading ccn-signals-heading">
                 <div>
