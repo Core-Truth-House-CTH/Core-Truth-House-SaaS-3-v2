@@ -125,7 +125,7 @@ export function MembersControl({ data }) {
           <label><span>Email address</span><input type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} /></label>
           <label><span>Access profile</span><select value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option><option value="billing">Billing</option><option value="guest">Guest</option></select></label>
           <Status>{message}</Status>
-          <div className="ws-dialog-actions"><Dialog.Close className="ws-btn secondary">Cancel</Dialog.Close><button className="ws-btn primary" disabled={saving}>{saving ? "Sending…" : "Send Invitation"}</button></div>
+          <div className="ws-dialog-actions"><Dialog.Close type="button" className="ws-btn secondary">Cancel</Dialog.Close><button className="ws-btn primary" disabled={saving}>{saving ? "Sending…" : "Send Invitation"}</button></div>
         </form>
       </Modal>
     </article>
@@ -184,7 +184,7 @@ export function ClientWorkspacesControl({ data }) {
           <label><span>Starting template</span><select value={form.template} onChange={(event) => setForm((current) => ({ ...current, template: event.target.value }))}><option value="blank">Blank Brand House</option><option value="service-brand">Service Brand</option><option value="founder-brand">Founder Brand</option></select></label>
           <div className="ws-privacy-card"><ShieldCheck size={18} /><div><strong>Separate House</strong><p>A new workspace ID, member directory, integrations, and audit log will be created.</p></div></div>
           <Status>{message}</Status>
-          <div className="ws-dialog-actions"><Dialog.Close className="ws-btn secondary">Cancel</Dialog.Close><button className="ws-btn primary" disabled={saving}>{saving ? "Creating…" : "Create Workspace"}</button></div>
+          <div className="ws-dialog-actions"><Dialog.Close type="button" className="ws-btn secondary">Cancel</Dialog.Close><button className="ws-btn primary" disabled={saving}>{saving ? "Creating…" : "Create Workspace"}</button></div>
         </form>
       </Modal>
     </article>
