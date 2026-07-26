@@ -8,7 +8,7 @@ export function documentRecord(item, index) {
     id: String(item?.id || item?.document_id || item?._id || `document-${index}`),
     title: item?.title || item?.original_filename || item?.filename || "Untitled file",
     filename: item?.original_filename || item?.stored_filename || item?.filename || "",
-    type: item?.type || item?.document_type || item?.mime_type || "document",
+    type: item?.content_type || item?.mime_type || item?.category || item?.type || "document",
     size: normalizeNumber(item?.size_bytes || item?.file_size || item?.size),
     updatedAt: item?.updated_at || item?.created_at || null,
     downloadUrl: item?.file_url || item?.download_url || "",
@@ -28,16 +28,6 @@ export function memberRecord(item) {
     role: item?.role || item?.workspace_role || "member",
     status: item?.status || "active",
     lastActive: item?.last_active_at || item?.last_seen_at || null,
-  };
-}
-
-export function activityRecord(item, index) {
-  return {
-    id: String(item?.id || item?.event_id || `${item?.created_at || "activity"}-${index}`),
-    actor: item?.actor_name || item?.member_name || item?.user_name || "Workspace member",
-    action: item?.action || item?.message || item?.event || "updated the workspace",
-    detail: item?.detail || item?.description || item?.module || "",
-    createdAt: item?.created_at || item?.timestamp || null,
   };
 }
 
