@@ -984,7 +984,15 @@ export default function CommandCenter() {
   ].filter(Boolean).length;
 
   const greeting = greetingFor(new Date());
-  const planLabel = PLAN_INFO[normalizePlan(plan)]?.name || "Free";
+  // normalizePlan supports "legacy" but PLAN_INFO has no legacy entry, so the
+  // `|| "Free"` fallback used to mislabel legacy accounts as Free. This banner
+  // renders the bare plan name ("Free", "Brand Audit", "The Estate"), so legacy
+  // shows "Legacy" to match that format. No pricing, order or entitlement added.
+  const normalizedPlan = normalizePlan(plan);
+  const planLabel =
+    normalizedPlan === "legacy"
+      ? "Legacy"
+      : PLAN_INFO[normalizedPlan]?.name || "Free";
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
   return (
