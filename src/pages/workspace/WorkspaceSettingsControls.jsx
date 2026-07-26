@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Cloud, Download, Link2, LockKeyhole, ShieldCheck } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Toggle, Status, messageFor } from "./WorkspaceControlPrimitives";
+import { z } from "zod";
+import apiClient from "../../lib/apiClient";
+import { Modal, Toggle, Status, messageFor } from "./WorkspaceControlPrimitives";
 import {
+  WORKSPACE_ENDPOINTS,
   downloadTenantExport,
   getIntegrationStatuses,
   patchWorkspaceSettings,
@@ -13,6 +15,27 @@ const approvalDefinitions = [
   ["Campaign approval", "Require approval before a campaign activates."],
   ["Asset approval", "Review uploaded media before shared use."],
 ];
+
+const providerDefinitions = {
+  openai: {
+    label: "OpenAI",
+    description: "Tenant-billed AI generation",
+    schema: z.object({ api_key: z.string().trim().min(10, "Enter a valid OpenAI API key.") }),
+  },
+  fal: {
+    label: "fal.ai",
+    description: "Image and video generation",
+    schema: z.object({ api_key: z.string().trim().min(10, "Enter a valid fal.ai API key.") }),
+  },
+  higgsfield: {
+    label: "Higgsfield",
+    description: "Studio generation credentials",
+    schema: z.object({
+      api_key: z.string().trim().min(8, "Enter a valid Higgsfield API key."),
+      api_secret: z.string().trim().min(8, "Enter a valid Higgsfield API secret."),
+    }),
+  },
+};
 
 export function PreferencesControl({ data, kind }) {
   const [notificationMode, setNotificationMode] = useState(
@@ -69,14 +92,19 @@ export function PreferencesControl({ data, kind }) {
 }
 
 export function IntegrationsControl() {
-  const navigate = useNavigate();
   const [statuses, setStatuses] = useState({});
   const [message, setMessage] = useState("");
-  const providers = [
-    ["openai", "OpenAI", "Tenant-billed AI generation"],
-    ["fal", "fal.ai", "Image and video generation"],
-    ["higgsfield", "Higgsfield", "Studio generation credentials"],
-  ];
+  const [activeProvider, setActiveProvider] = useState(null);
+  const [form, setForm] = useState({ api_key: "", api_secret: "" });
+  const [busy, setBusy] = useState("");
+
+  const loadStatuses = async () => {
+    try {
+      setStatuses(await getIntegrationStatuses());
+    } catch (error) {
+      setMessage(messageFor(error));
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -86,28 +114,108 @@ export function IntegrationsControl() {
     return () => { mounted = false; };
   }, []);
 
+  const openProvider = (provider) => {
+    setMessage("");
+    setForm({ api_key: "", api_secret: "" });
+    setActiveProvider(provider);
+  };
+
+  const connect = async (event) => {
+    event.preventDefault();
+    const definition = providerDefinitions[activeProvider];
+    const payload = activeProvider === "higgsfield"
+      ? { api_key: form.api_key, api_secret: form.api_secret }
+      : { api_key: form.api_key };
+    const parsed = definition?.schema.safeParse(payload);
+    if (!parsed?.success) {
+      setMessage(parsed?.error?.issues?.[0]?.message || "Check the provider credentials.");
+      return;
+    }
+
+    setBusy(activeProvider);
+    try {
+      await apiClient.post(WORKSPACE_ENDPOINTS.integrations[activeProvider], parsed.data);
+      setMessage(`${definition.label} connected to this workspace.`);
+      setActiveProvider(null);
+      setForm({ api_key: "", api_secret: "" });
+      await loadStatuses();
+    } catch (error) {
+      setMessage(messageFor(error));
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const disconnect = async (provider) => {
+    const definition = providerDefinitions[provider];
+    setBusy(provider);
+    setMessage("");
+    try {
+      await apiClient.delete(WORKSPACE_ENDPOINTS.integrations[provider]);
+      setMessage(`${definition.label} disconnected from this workspace.`);
+      await loadStatuses();
+    } catch (error) {
+      setMessage(messageFor(error));
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const activeDefinition = activeProvider ? providerDefinitions[activeProvider] : null;
+
   return (
     <article className="ws-panel">
       <div className="ws-panel-head">
-        <div><h2>Workspace Integrations</h2><p>Connection status is read from encrypted, tenant-scoped provider records.</p></div>
+        <div><h2>Workspace Integrations</h2><p>Credentials are encrypted at rest and remain scoped to the active tenant.</p></div>
         <Cloud size={21} />
       </div>
       <div className="ws-integration-grid">
-        {providers.map(([key, label, description]) => {
+        {Object.entries(providerDefinitions).map(([key, definition]) => {
           const status = statuses[key];
+          const connected = Boolean(status?.connected);
           return (
             <div key={key} className="ws-integration-card">
               <Link2 size={20} />
-              <div><strong>{label}</strong><p>{description}</p></div>
-              <span className={`ws-pill ${status?.connected ? "green" : "default"}`}>
-                {status?.available === false ? "Unavailable" : status?.connected ? `Connected${status.api_key_last4 ? ` · ••••${status.api_key_last4}` : ""}` : "Not connected"}
-              </span>
+              <div><strong>{definition.label}</strong><p>{definition.description}</p></div>
+              <div className="ws-integration-actions">
+                <span className={`ws-pill ${connected ? "green" : "default"}`}>
+                  {status?.available === false ? "Unavailable" : connected ? `Connected${status.api_key_last4 ? ` · ••••${status.api_key_last4}` : ""}` : "Not connected"}
+                </span>
+                {connected ? (
+                  <button type="button" className="ws-btn secondary compact" onClick={() => void disconnect(key)} disabled={Boolean(busy)}>
+                    {busy === key ? "Disconnecting…" : "Disconnect"}
+                  </button>
+                ) : (
+                  <button type="button" className="ws-btn primary compact" onClick={() => openProvider(key)} disabled={status?.available === false || Boolean(busy)}>
+                    Connect
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
       <Status>{message}</Status>
-      <button className="ws-btn primary" onClick={() => navigate("/integrations")}>Manage Integration Credentials</button>
+
+      <Modal
+        open={Boolean(activeProvider)}
+        onOpenChange={(open) => !open && setActiveProvider(null)}
+        title={activeDefinition ? `Connect ${activeDefinition.label}` : "Connect integration"}
+        description="Credentials will be sent directly to the tenant-scoped encrypted integration endpoint."
+      >
+        <form className="ws-form" onSubmit={connect}>
+          <label><span>API key</span><input type="password" autoComplete="off" value={form.api_key} onChange={(event) => setForm((current) => ({ ...current, api_key: event.target.value }))} /></label>
+          {activeProvider === "higgsfield" ? (
+            <label><span>API secret</span><input type="password" autoComplete="off" value={form.api_secret} onChange={(event) => setForm((current) => ({ ...current, api_secret: event.target.value }))} /></label>
+          ) : null}
+          <div className="ws-privacy-card"><ShieldCheck size={18} /><div><strong>Credentials are never returned</strong><p>After connection, the interface receives only connection status and the final four key characters.</p></div></div>
+          <Status>{message}</Status>
+          <div className="ws-dialog-actions">
+            <button type="button" className="ws-btn secondary" onClick={() => setActiveProvider(null)}>Cancel</button>
+            <button className="ws-btn primary" disabled={Boolean(busy)}>{busy ? "Connecting…" : "Connect Provider"}</button>
+          </div>
+        </form>
+      </Modal>
     </article>
   );
 }
