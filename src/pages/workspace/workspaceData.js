@@ -3,7 +3,8 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 import apiClient from "../../lib/apiClient";
 import { API_PATHS } from "../../lib/apiPaths";
 import { formatBytes, normalizeList, normalizeNumber } from "./workspaceRoutes";
-import { activityRecord, documentRecord, errorText, memberRecord, workRecord } from "./workspaceRecords";
+import { documentRecord, errorText, memberRecord, workRecord } from "./workspaceRecords";
+import { getTenantSummary, getWorkspaceSettings } from "./workspaceApi";
 
 export function useWorkspaceSuiteData() {
   const { activeWorkspaceId, activeWorkspace, workspaces } = useWorkspace();
@@ -16,9 +17,11 @@ export function useWorkspaceSuiteData() {
     members: [],
     invites: [],
     activity: [],
+    activitySummary: null,
     documents: [],
     assets: [],
     workItems: [],
+    tenantSummary: null,
     usage: null,
     billing: null,
   });
@@ -35,16 +38,16 @@ export function useWorkspaceSuiteData() {
 
     setState((current) => ({ ...current, loading: true, error: "" }));
     const requests = {
-      detail: apiClient.get(API_PATHS.workspace.detail(activeWorkspaceId)),
       stats: apiClient.get(API_PATHS.workspace.stats(activeWorkspaceId)),
-      settings: apiClient.get(API_PATHS.workspace.settings(activeWorkspaceId)),
+      settings: getWorkspaceSettings(),
       members: apiClient.get(API_PATHS.teams.members(activeWorkspaceId)),
       invites: apiClient.get(API_PATHS.teams.pendingInvites(activeWorkspaceId)),
-      activity: apiClient.get(API_PATHS.teams.activitySummary(activeWorkspaceId)),
+      activitySummary: apiClient.get(API_PATHS.teams.activitySummary(activeWorkspaceId)),
       documents: apiClient.get(API_PATHS.documents.list({ limit: 100 })),
       assets: apiClient.get(API_PATHS.persist.assets),
       campaigns: apiClient.get(API_PATHS.campaigns.list),
       offers: apiClient.get(API_PATHS.offers.list),
+      tenantSummary: getTenantSummary(),
       usage: apiClient.get(API_PATHS.usage.summary),
       billing: apiClient.get(API_PATHS.billing.summary),
     };
@@ -63,18 +66,20 @@ export function useWorkspaceSuiteData() {
     setState({
       loading: false,
       error: failures.length ? `Some data is unavailable: ${failures.join(" · ")}` : "",
-      detail: payload.detail || activeWorkspace?.raw || activeWorkspace || null,
+      detail: activeWorkspace?.raw || activeWorkspace || null,
       stats: payload.stats || null,
       settings: payload.settings || null,
       members: normalizeList(payload.members, ["members", "users"]).map(memberRecord),
       invites: normalizeList(payload.invites, ["invites", "pending_invites"]),
-      activity: normalizeList(payload.activity, ["activity", "events", "items"]).map(activityRecord),
+      activity: [],
+      activitySummary: payload.activitySummary || null,
       documents: normalizeList(payload.documents, ["documents"]).map(documentRecord),
       assets: normalizeList(payload.assets, ["assets", "media_assets"]),
       workItems: [
         ...campaigns.map((item, index) => workRecord(item, "Campaign", index)),
         ...offers.map((item, index) => workRecord(item, "Offer", index)),
       ],
+      tenantSummary: payload.tenantSummary || null,
       usage: payload.usage || null,
       billing: payload.billing || null,
     });
@@ -82,12 +87,15 @@ export function useWorkspaceSuiteData() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const storageUsed = normalizeNumber(
-    state.usage?.storage_used_bytes || state.usage?.storage?.used_bytes ||
-    state.stats?.storage_used_bytes || state.stats?.storage?.used_bytes
+  const documentBytes = normalizeNumber(
+    state.tenantSummary?.collections?.documents?.total_size_bytes
   );
+  const knownAssetBytes = state.assets.reduce(
+    (total, item) => total + normalizeNumber(item?.size_bytes || item?.file_size),
+    0
+  );
+  const storageUsed = documentBytes + knownAssetBytes;
   const storageLimit = normalizeNumber(
-    state.usage?.storage_limit_bytes || state.usage?.storage?.limit_bytes ||
     state.billing?.limits?.storage_bytes || state.stats?.storage_limit_bytes
   );
   const summary = {
