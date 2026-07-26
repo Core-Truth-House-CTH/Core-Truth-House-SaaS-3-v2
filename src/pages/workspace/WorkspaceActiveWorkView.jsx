@@ -26,7 +26,7 @@ function SortableCard({ item, onOpen }) {
   );
 }
 
-function Notes({ item, workspaceId, reload }) {
+function Notes({ item, workspaceId, reload, notesMap }) {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const editor = useEditor({
@@ -35,8 +35,8 @@ function Notes({ item, workspaceId, reload }) {
       Placeholder.configure({ placeholder: "Add workspace-scoped notes and next actions…" }),
       Link.configure({ openOnClick: false }),
     ],
-    content: item?.raw?.workspace_notes || item?.raw?.notes || "",
-  }, [item?.id]);
+    content: notesMap?.[item.id] || item?.raw?.workspace_notes || item?.raw?.notes || "",
+  }, [item?.id, notesMap]);
 
   const save = async () => {
     const parsed = noteSchema.safeParse({ html: editor?.getHTML() || "" });
@@ -47,7 +47,7 @@ function Notes({ item, workspaceId, reload }) {
     setSaving(true);
     try {
       await apiClient.patch(API_PATHS.workspace.settings(workspaceId), {
-        active_work_notes: { [item.id]: parsed.data.html },
+        active_work_notes: { ...(notesMap || {}), [item.id]: parsed.data.html },
       });
       setMessage("Notes saved.");
       await reload();
@@ -85,6 +85,9 @@ export default function WorkspaceActiveWorkView({ data }) {
 
   const dragEnd = async ({ active, over }) => {
     if (!over || active.id === over.id) return;
+    const activeItem = items.find((item) => item.id === active.id);
+    const overItem = items.find((item) => item.id === over.id);
+    if (!activeItem || !overItem || activeItem.status !== overItem.status) return;
     const reordered = arrayMove(
       items,
       items.findIndex((item) => item.id === active.id),
@@ -123,7 +126,7 @@ export default function WorkspaceActiveWorkView({ data }) {
         </DndContext>
       ) : <Empty title="No active work yet" description="Campaigns and offers saved in the House will appear here." />}
       <Modal open={Boolean(selected)} onOpenChange={(next) => !next && setSelected(null)} title={selected?.title || "Work item"} description="Workspace-scoped notes and next actions.">
-        {selected ? <Notes item={selected} workspaceId={data.activeWorkspaceId} reload={data.reload} /> : null}
+        {selected ? <Notes item={selected} workspaceId={data.activeWorkspaceId} reload={data.reload} notesMap={data.settings?.active_work_notes} /> : null}
       </Modal>
     </article>
   );
