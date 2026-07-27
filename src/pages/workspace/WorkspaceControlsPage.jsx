@@ -1,12 +1,13 @@
 import { RefreshCw } from "lucide-react";
 import { Navigate, useLocation } from "react-router-dom";
 import WorkspaceShell from "./WorkspaceShell";
+import WorkspacePrivacyControl from "./WorkspacePrivacyControl";
 import { useWorkspaceSuiteData } from "./workspaceData";
 import {
   ClientWorkspacesControl, GeneralControl, MembersControl, RolesControl,
 } from "./WorkspaceAccessControls";
 import {
-  IntegrationsControl, PreferencesControl, PrivacyControl,
+  IntegrationsControl, PreferencesControl,
 } from "./WorkspaceSettingsControls";
 import {
   ActivityLogControl, BillingControl, DangerControl,
@@ -23,14 +24,15 @@ export default function WorkspaceControlsPage() {
     "/workspace/controls/approvals": <PreferencesControl data={data} kind="approvals" />,
     "/workspace/controls/notifications": <PreferencesControl data={data} kind="notifications" />,
     "/workspace/controls/integrations": <IntegrationsControl data={data} />,
-    "/workspace/controls/data-privacy": <PrivacyControl data={data} />,
+    "/workspace/controls/data-privacy": <WorkspacePrivacyControl data={data} />,
     "/workspace/controls/plan-billing": <BillingControl data={data} />,
     "/workspace/controls/activity-log": <ActivityLogControl data={data} />,
     "/workspace/controls/danger-zone": <DangerControl data={data} />,
   };
+  const shellError = [data.error, data.companionError].filter(Boolean).join(" · ");
 
   return (
-    <WorkspaceShell summary={data.summary} loading={data.loading} error={data.error} onRefresh={data.reload}>
+    <WorkspaceShell summary={data.summary} loading={data.loading} error={shellError} onRefresh={data.reload}>
       {data.loading && !data.detail ? (
         <div className="ws-loading"><RefreshCw className="ws-spin" size={20} /> Loading workspace controls…</div>
       ) : views[pathname] || (pathname === "/workspace/controls/general" ? <GeneralControl data={data} /> : <Navigate to="/workspace/controls/general" replace />)}
