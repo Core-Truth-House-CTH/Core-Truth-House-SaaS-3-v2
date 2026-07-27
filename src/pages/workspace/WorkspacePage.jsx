@@ -3,7 +3,13 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import WorkspaceShell from "./WorkspaceShell";
 import WorkspaceLibraryView from "./WorkspaceLibraryView";
 import WorkspaceActiveWorkView from "./WorkspaceActiveWorkView";
-import { ActivityView, MembersView, Overview, StorageView } from "./WorkspaceOverviewViews";
+import {
+  ActivityView,
+  DecisionsView,
+  MembersView,
+  Overview,
+  StorageView,
+} from "./WorkspaceOverviewViews";
 import { useWorkspaceSuiteData } from "./workspaceData";
 
 export default function WorkspacePage() {
@@ -11,9 +17,21 @@ export default function WorkspacePage() {
   const navigate = useNavigate();
   const data = useWorkspaceSuiteData();
   const pathname = location.pathname.replace(/\/+$/, "") || "/";
+  const legacyView = new URLSearchParams(location.search).get("view");
+  const legacyDestination = legacyView === "work"
+    ? "/workspace/active-work"
+    : legacyView === "decisions"
+      ? "/workspace/decisions"
+      : null;
+
+  if (pathname === "/workspace" && legacyDestination) {
+    return <Navigate to={legacyDestination} replace />;
+  }
+
   const views = {
     "/workspace/library": <WorkspaceLibraryView data={data} />,
     "/workspace/active-work": <WorkspaceActiveWorkView data={data} />,
+    "/workspace/decisions": <DecisionsView data={data} navigate={navigate} />,
     "/workspace/members": <MembersView data={data} navigate={navigate} />,
     "/workspace/activity": <ActivityView data={data} />,
     "/workspace/storage": <StorageView data={data} navigate={navigate} />,
