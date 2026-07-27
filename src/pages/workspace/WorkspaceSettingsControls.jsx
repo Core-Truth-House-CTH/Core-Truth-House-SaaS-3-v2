@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Cloud, Download, Link2, LockKeyhole, ShieldCheck } from "lucide-react";
+import { Cloud, Link2, ShieldCheck } from "lucide-react";
 import { z } from "zod";
 import apiClient from "../../lib/apiClient";
 import { Modal, Toggle, Status, messageFor } from "./WorkspaceControlPrimitives";
 import {
   WORKSPACE_ENDPOINTS,
-  downloadTenantExport,
   getIntegrationStatuses,
   patchWorkspaceSettings,
 } from "./workspaceApi";
@@ -183,7 +182,7 @@ export function IntegrationsControl() {
                 </span>
                 {connected ? (
                   <button type="button" className="ws-btn secondary compact" onClick={() => void disconnect(key)} disabled={Boolean(busy)}>
-                    {busy === key ? "Disconnecting…" : "Disconnect"}
+                    {busy === key ? "Disconnecting…”" : "Disconnect"}
                   </button>
                 ) : (
                   <button type="button" className="ws-btn primary compact" onClick={() => openProvider(key)} disabled={status?.available === false || Boolean(busy)}>
@@ -217,55 +216,5 @@ export function IntegrationsControl() {
         </form>
       </Modal>
     </article>
-  );
-}
-
-export function PrivacyControl({ data }) {
-  const [visibility, setVisibility] = useState(data.settings?.brand_visibility || "private");
-  const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState("");
-
-  useEffect(() => setVisibility(data.settings?.brand_visibility || "private"), [data.settings]);
-
-  const save = async () => {
-    setBusy("save");
-    try {
-      await patchWorkspaceSettings({ brand_visibility: visibility });
-      setMessage("Privacy visibility saved.");
-      await data.reload();
-    } catch (error) {
-      setMessage(messageFor(error));
-    } finally {
-      setBusy("");
-    }
-  };
-
-  const exportData = async () => {
-    setBusy("export");
-    try {
-      await downloadTenantExport(data.activeWorkspace?.name || "workspace");
-      setMessage("Tenant-scoped export downloaded.");
-    } catch (error) {
-      setMessage(messageFor(error));
-    } finally {
-      setBusy("");
-    }
-  };
-
-  return (
-    <div className="ws-grid two">
-      <article className="ws-panel">
-        <div className="ws-panel-head"><div><h2>Privacy Boundary</h2><p>Visibility is stored by the tenant settings service.</p></div><LockKeyhole size={21} /></div>
-        <div className="ws-form"><label><span>Brand visibility</span><select value={visibility} onChange={(event) => setVisibility(event.target.value)}><option value="private">Private</option><option value="internal">Internal</option><option value="public">Public</option></select></label></div>
-        <div className="ws-privacy-card"><ShieldCheck size={18} /><div><strong>Support access is not automatic</strong><p>The live backend has no general support-access toggle. Access must remain case-specific and owner-authorized.</p></div></div>
-        <Status>{message}</Status>
-        <button className="ws-btn primary" onClick={() => void save()} disabled={Boolean(busy)}>{busy === "save" ? "Saving…" : "Save Privacy Visibility"}</button>
-      </article>
-      <article className="ws-panel soft">
-        <div className="ws-panel-head"><div><h2>Workspace Export</h2><p>Download the supported tenant collections as JSON.</p></div><Download size={21} /></div>
-        <p className="ws-body-copy">The export endpoint derives workspace scope from the authenticated tenant context rather than trusting a user-supplied workspace ID.</p>
-        <button className="ws-btn secondary" onClick={() => void exportData()} disabled={Boolean(busy)}><Download size={16} /> {busy === "export" ? "Preparing…" : "Download Workspace Export"}</button>
-      </article>
-    </div>
   );
 }
