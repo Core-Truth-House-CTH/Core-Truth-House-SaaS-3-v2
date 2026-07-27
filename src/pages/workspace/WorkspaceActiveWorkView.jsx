@@ -6,10 +6,13 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
-import { GripVertical, LockKeyhole } from "lucide-react";
+import DOMPurify from "dompurify";
+import { GripVertical, LockKeyhole, Users } from "lucide-react";
 import { z } from "zod";
 import { Empty, Modal, Pill } from "./WorkspacePrimitives";
 import { WORK_STATUS_COLUMNS, formatDateTime } from "./workspaceRoutes";
+import { patchWorkspaceWorkbench } from "./workspaceApi";
+import { errorText } from "./workspaceRecords";
 
 const noteSchema = z.object({ html: z.string().max(25000, "Workspace notes are too long.") });
 const orderKey = (workspaceId) => `cth:workspace:${workspaceId}:active-work-order`;
@@ -25,41 +28,71 @@ function SortableCard({ item, onOpen }) {
   );
 }
 
-function Notes({ item, workspaceId }) {
+function Notes({ item, data }) {
   const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const sharedContent = data.controls?.active_work_notes?.[item.id] || "";
   const initialContent = useMemo(() => {
+    let browserContent = "";
     try {
-      return localStorage.getItem(noteKey(workspaceId, item.id)) || item?.raw?.notes || "";
+      browserContent = localStorage.getItem(noteKey(data.activeWorkspaceId, item.id)) || "";
     } catch {
-      return item?.raw?.notes || "";
+      browserContent = "";
     }
-  }, [item, workspaceId]);
+    return DOMPurify.sanitize(sharedContent || browserContent || item?.raw?.notes || "");
+  }, [data.activeWorkspaceId, item, sharedContent]);
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Placeholder.configure({ placeholder: "Add a private browser draft…" }),
+      Placeholder.configure({ placeholder: data.companionAvailable ? "Add shared Workspace notes…" : "Add a private browser draft…" }),
       Link.configure({ openOnClick: false }),
     ],
     content: initialContent,
   }, [item?.id, initialContent]);
 
-  const save = () => {
-    const parsed = noteSchema.safeParse({ html: editor?.getHTML() || "" });
+  const saveBrowserDraft = (html, prefix = "") => {
+    try {
+      localStorage.setItem(noteKey(data.activeWorkspaceId, item.id), html);
+      setMessage(`${prefix}Private browser draft saved on this device.`.trim());
+    } catch {
+      setMessage(`${prefix}The browser could not retain the private draft.`.trim());
+    }
+  };
+
+  const save = async () => {
+    const html = DOMPurify.sanitize(editor?.getHTML() || "");
+    const parsed = noteSchema.safeParse({ html });
     if (!parsed.success) {
       setMessage(parsed.error.issues[0]?.message);
       return;
     }
+
+    if (!data.companionAvailable) {
+      saveBrowserDraft(parsed.data.html);
+      return;
+    }
+
+    setSaving(true);
     try {
-      localStorage.setItem(noteKey(workspaceId, item.id), parsed.data.html);
-      setMessage("Private browser draft saved. It is not shared with workspace members.");
-    } catch {
-      setMessage("This browser could not store the draft.");
+      await patchWorkspaceWorkbench({ active_work_notes: { [item.id]: parsed.data.html } });
+      setMessage("Shared Workspace note saved for authorized members.");
+      await data.reload();
+    } catch (error) {
+      saveBrowserDraft(parsed.data.html, `${errorText(error)} `);
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
     <div className="ws-editor-wrap">
-      <div className="ws-privacy-card"><LockKeyhole size={17} /><div><strong>Private browser draft</strong><p>The live backend does not yet expose shared work-item notes. This draft remains on this device only.</p></div></div>
+      <div className="ws-privacy-card">
+        {data.companionAvailable ? <Users size={17} /> : <LockKeyhole size={17} />}
+        <div>
+          <strong>{data.companionAvailable ? "Shared tenant note" : "Private browser draft"}</strong>
+          <p>{data.companionAvailable ? "Authorized Workspace members can read this note. HTML is sanitized before storage." : "The companion API is unavailable, so this draft remains on this device only."}</p>
+        </div>
+      </div>
       <div className="ws-editor-toolbar">
         <button type="button" onClick={() => editor?.chain().focus().toggleBold().run()}>Bold</button>
         <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()}>List</button>
@@ -67,7 +100,7 @@ function Notes({ item, workspaceId }) {
       </div>
       <EditorContent editor={editor} className="ws-editor" />
       {message ? <div className="ws-inline-message">{message}</div> : null}
-      <button type="button" className="ws-btn primary" onClick={save}>Save Private Draft</button>
+      <button type="button" className="ws-btn primary" onClick={() => void save()} disabled={saving}>{saving ? "Saving…" : data.companionAvailable ? "Save Shared Note" : "Save Private Draft"}</button>
     </div>
   );
 }
@@ -83,19 +116,31 @@ export default function WorkspaceActiveWorkView({ data }) {
 
   useEffect(() => {
     let ordered = [...data.workItems];
-    try {
-      const saved = JSON.parse(localStorage.getItem(orderKey(data.activeWorkspaceId)) || "[]");
-      if (Array.isArray(saved) && saved.length) {
-        const index = new Map(saved.map((id, position) => [id, position]));
-        ordered.sort((a, b) => (index.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (index.get(b.id) ?? Number.MAX_SAFE_INTEGER));
+    let saved = data.companionAvailable ? data.controls?.active_work_order : null;
+    if (!Array.isArray(saved) || !saved.length) {
+      try {
+        saved = JSON.parse(localStorage.getItem(orderKey(data.activeWorkspaceId)) || "[]");
+      } catch {
+        saved = [];
       }
-    } catch {
-      ordered = [...data.workItems];
+    }
+    if (Array.isArray(saved) && saved.length) {
+      const index = new Map(saved.map((id, position) => [id, position]));
+      ordered.sort((a, b) => (index.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (index.get(b.id) ?? Number.MAX_SAFE_INTEGER));
     }
     setItems(ordered);
-  }, [data.activeWorkspaceId, data.workItems]);
+  }, [data.activeWorkspaceId, data.companionAvailable, data.controls, data.workItems]);
 
-  const dragEnd = ({ active, over }) => {
+  const saveBrowserOrder = (reordered, prefix = "") => {
+    try {
+      localStorage.setItem(orderKey(data.activeWorkspaceId), JSON.stringify(reordered.map((item) => item.id)));
+      setMessage(`${prefix}Personal board order saved in this browser.`.trim());
+    } catch {
+      setMessage(`${prefix}Board reordered for this session, but the browser could not retain it.`.trim());
+    }
+  };
+
+  const dragEnd = async ({ active, over }) => {
     if (!over || active.id === over.id) return;
     const activeItem = items.find((item) => item.id === active.id);
     const overItem = items.find((item) => item.id === over.id);
@@ -106,20 +151,27 @@ export default function WorkspaceActiveWorkView({ data }) {
       items.findIndex((item) => item.id === over.id)
     );
     setItems(reordered);
+
+    if (!data.companionAvailable) {
+      saveBrowserOrder(reordered);
+      return;
+    }
+
     try {
-      localStorage.setItem(orderKey(data.activeWorkspaceId), JSON.stringify(reordered.map((item) => item.id)));
-      setMessage("Personal board order saved in this browser.");
-    } catch {
-      setMessage("Board reordered for this session, but the browser could not retain it.");
+      await patchWorkspaceWorkbench({ active_work_order: reordered.map((item) => item.id) });
+      setMessage("Shared Workspace board order saved.");
+      await data.reload();
+    } catch (error) {
+      saveBrowserOrder(reordered, `${errorText(error)} `);
     }
   };
 
   return (
     <article className="ws-panel">
-      <div className="ws-panel-head"><div><h2>Active Workbench</h2><p>Drag within a status column to create a personal browser order. Open an item for a private TipTap draft.</p></div><Pill tone="gold">{items.length} active</Pill></div>
+      <div className="ws-panel-head"><div><h2>Active Workbench</h2><p>Drag within a status column. Ordering and TipTap notes are shared when the Workspace companion API is available, with an honest browser-only fallback.</p></div><Pill tone="gold">{items.length} active</Pill></div>
       {message ? <div className="ws-inline-message">{message}</div> : null}
       {items.length ? (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={dragEnd}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(event) => void dragEnd(event)}>
           <div className="ws-board">
             {WORK_STATUS_COLUMNS.map((column) => {
               const columnItems = items.filter((item) => item.status === column.id);
@@ -135,8 +187,8 @@ export default function WorkspaceActiveWorkView({ data }) {
           </div>
         </DndContext>
       ) : <Empty title="No active work yet" description="Campaigns and offers saved in the House will appear here." />}
-      <Modal open={Boolean(selected)} onOpenChange={(next) => !next && setSelected(null)} title={selected?.title || "Work item"} description="Private drafting for the selected work item.">
-        {selected ? <Notes item={selected} workspaceId={data.activeWorkspaceId} /> : null}
+      <Modal open={Boolean(selected)} onOpenChange={(next) => !next && setSelected(null)} title={selected?.title || "Work item"} description="Notes and next actions for the selected work item.">
+        {selected ? <Notes item={selected} data={data} /> : null}
       </Modal>
     </article>
   );
