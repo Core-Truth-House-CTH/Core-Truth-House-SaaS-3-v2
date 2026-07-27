@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowRight,
@@ -21,6 +21,7 @@ import {
   Sparkles,
   TrendingUp,
   Workflow,
+  X,
 } from "lucide-react";
 
 import AuthShell from "../components/AuthShell";
@@ -33,6 +34,63 @@ import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 import { fetchCommandCenterOverview } from "../lib/commandCenterOverview";
 import "../styles/command-center-next.css";
+
+// Tier copy and destinations carried over verbatim from the legacy Command
+// Center so the post-diagnostic welcome reads and routes exactly as before.
+const TIER_WELCOME = {
+  Foundation: {
+    line: "Your first move is Brand Foundation. That is where your positioning, beliefs, and brand promise get built into structure.",
+    route: "/brand-foundation",
+  },
+  Structure: {
+    line: "Head to Brand Positioning and Messaging Structure. Your score shows the gaps are in how your brand communicates, not what it offers.",
+    route: "/brand-positioning",
+  },
+  House: {
+    line: "Start with Identity Studio and Strategic OS. You are ready to build the operational layer.",
+    route: "/identity-studio",
+  },
+  Estate: {
+    line: "Your brand is established. Head to Campaign Builder and Signal Inbox to start running it at scale.",
+    route: "/signal-inbox",
+  },
+};
+
+const DIAGNOSTIC_CONTEXT_KEY = "cth_diagnostic_context";
+
+// Personalized post-diagnostic welcome. Only the diagnostic banner is carried
+// over - the legacy generic first-login banner is deliberately not ported.
+function DiagnosticWelcomeBanner({ context, onGo, onDismiss }) {
+  const tier = context?.tier || "";
+  const score = context?.score || "";
+  const firstName = context?.first_name || "";
+  const tierLine = TIER_WELCOME[tier]?.line || TIER_WELCOME.Foundation.line;
+
+  return (
+    <section className="ccn-diag-welcome" aria-label="Welcome">
+      <button
+        type="button"
+        className="ccn-diag-welcome-dismiss"
+        aria-label="Dismiss welcome"
+        onClick={onDismiss}
+      >
+        <X size={16} aria-hidden="true" />
+      </button>
+      <h2 className="ccn-diag-welcome-title">
+        {firstName
+          ? `Welcome to Core Truth House, ${firstName}.`
+          : "Welcome to Core Truth House."}
+      </h2>
+      <p className="ccn-diag-welcome-line">
+        Your brand diagnostic score was {score}/60. You are starting in the {tier} tier.
+      </p>
+      <p className="ccn-diag-welcome-line">{tierLine}</p>
+      <button type="button" className="ccn-diag-welcome-cta" onClick={onGo}>
+        Let’s go →
+      </button>
+    </section>
+  );
+}
 
 const SIGNAL_LABELS = {
   1: "Recognition",
@@ -404,6 +462,71 @@ export default function CommandCenterNext() {
   const [error, setError] = useState("");
   const [dataSource, setDataSource] = useState("pending");
   const [data, setData] = useState({});
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Cohort invite redemption. CohortJoinPage sends invitees through sign-up to
+  // /command-center?cohort_token=..., and this is the only place that token is
+  // consumed, so the handoff has to live here now that /command-center resolves
+  // to this page. The ref makes the POST fire at most once per mount even
+  // though the effect re-runs when searchParams or the workspace change.
+  const redeemAttemptedRef = useRef(false);
+
+  useEffect(() => {
+    const cohortToken = searchParams.get("cohort_token");
+    if (!cohortToken || !activeWorkspaceId || redeemAttemptedRef.current) return;
+    redeemAttemptedRef.current = true;
+    (async () => {
+      try {
+        await apiClient.post(`/api/cohort/invite/${encodeURIComponent(cohortToken)}/redeem`);
+      } catch (err) {
+        const detail = err?.payload?.detail || err?.message || "Could not claim your cohort seat.";
+        alert(`Cohort claim failed: ${detail}\n\nPlease contact hello@coretruthhouse.com.`);
+      } finally {
+        // Strip only the token, so any other query parameters survive.
+        const next = new URLSearchParams(searchParams);
+        next.delete("cohort_token");
+        setSearchParams(next, { replace: true });
+      }
+    })();
+  }, [searchParams, activeWorkspaceId, setSearchParams]);
+
+  // Personalized welcome driven by the diagnostic context persisted at sign-up.
+  const [diagnosticWelcome, setDiagnosticWelcome] = useState(null);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(DIAGNOSTIC_CONTEXT_KEY);
+      if (!raw) return;
+      const ctx = JSON.parse(raw);
+      if (ctx && ctx.shown !== true) {
+        setDiagnosticWelcome(ctx);
+      }
+    } catch (err) {
+      // Malformed or unreadable storage must never block the dashboard.
+      console.error("Failed to read diagnostic context", err);
+    }
+  }, []);
+
+  const markDiagnosticShown = useCallback(() => {
+    try {
+      const raw = sessionStorage.getItem(DIAGNOSTIC_CONTEXT_KEY);
+      const ctx = raw ? JSON.parse(raw) : {};
+      sessionStorage.setItem(
+        DIAGNOSTIC_CONTEXT_KEY,
+        JSON.stringify({ ...ctx, shown: true })
+      );
+    } catch (err) {
+      console.error("Failed to update diagnostic context", err);
+    }
+    setDiagnosticWelcome(null);
+  }, []);
+
+  const handleDiagnosticGo = useCallback(() => {
+    const route = TIER_WELCOME[diagnosticWelcome?.tier]?.route || "/brand-foundation";
+    markDiagnosticShown();
+    navigate(route);
+  }, [diagnosticWelcome, markDiagnosticShown, navigate]);
 
   const loadLegacySources = useCallback(async () => {
     const requests = [
@@ -796,6 +919,14 @@ export default function CommandCenterNext() {
             </button>
           </div>
         </section>
+
+        {diagnosticWelcome ? (
+          <DiagnosticWelcomeBanner
+            context={diagnosticWelcome}
+            onGo={handleDiagnosticGo}
+            onDismiss={markDiagnosticShown}
+          />
+        ) : null}
 
         {dataSource === "legacy-fallback" ? (
           <div className="ccn-data-source" role="status">
