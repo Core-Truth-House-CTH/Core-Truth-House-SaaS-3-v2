@@ -182,7 +182,7 @@ export function IntegrationsControl() {
                 </span>
                 {connected ? (
                   <button type="button" className="ws-btn secondary compact" onClick={() => void disconnect(key)} disabled={Boolean(busy)}>
-                    {busy === key ? "Disconnecting…”" : "Disconnect"}
+                    {busy === key ? "Disconnecting…" : "Disconnect"}
                   </button>
                 ) : (
                   <button type="button" className="ws-btn primary compact" onClick={() => openProvider(key)} disabled={status?.available === false || Boolean(busy)}>
