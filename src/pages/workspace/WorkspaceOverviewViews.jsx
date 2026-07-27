@@ -1,6 +1,6 @@
 import * as Progress from "@radix-ui/react-progress";
 import {
-  Archive, BarChart3, Compass, Database, File, FileImage, FolderOpen,
+  Archive, Database, File, FileImage, FolderOpen,
   Mail, ShieldCheck, UserPlus, Users,
 } from "lucide-react";
 import { Empty, Pill } from "./WorkspacePrimitives";
@@ -54,37 +54,6 @@ export function Overview({ data, navigate }) {
   );
 }
 
-export function DecisionsView({ data, navigate }) {
-  const reviewItems = data.workItems.filter((item) => item.status === "review");
-  return (
-    <div className="ws-grid two">
-      <article className="ws-panel">
-        <div className="ws-panel-head"><div><h2>Work Awaiting Review</h2><p>Verified campaigns and offers currently marked for review.</p></div><Pill tone="gold">{reviewItems.length} open</Pill></div>
-        {reviewItems.length ? (
-          <div className="ws-project-grid">
-            {reviewItems.map((item) => {
-              const Icon = workspaceIconForType(item.type);
-              return (
-                <button key={item.id} className="ws-project-card" onClick={() => navigate("/workspace/active-work")}>
-                  <Icon size={19} />
-                  <strong>{item.title}</strong>
-                  <p>{item.owner}</p>
-                  <Pill tone="gold">Awaiting review</Pill>
-                </button>
-              );
-            })}
-          </div>
-        ) : <Empty icon={Compass} title="No verified review items" description="Items will appear when a campaign or offer source returns a review status." />}
-      </article>
-      <article className="ws-panel soft">
-        <div className="ws-panel-head"><div><h2>Strategic Decision Service</h2><p>The Command Center already links here for open decisions.</p></div><Compass size={21} /></div>
-        <div className="ws-privacy-card"><ShieldCheck size={18} /><div><strong>No invented decision count</strong><p>A dedicated decision endpoint has not been deployed, so this page only shows verified review-state work and clearly separates it from future strategic decisions.</p></div></div>
-        <button className="ws-btn secondary" onClick={() => navigate("/workspace/active-work")}>Open Active Workbench</button>
-      </article>
-    </div>
-  );
-}
-
 export function MembersView({ data, navigate }) {
   return (
     <div className="ws-grid two">
@@ -108,22 +77,6 @@ export function MembersView({ data, navigate }) {
         )) : <Empty icon={Mail} title="No pending invitations" description="New invitations will appear here until accepted or withdrawn." />}
       </article>
     </div>
-  );
-}
-
-export function ActivityView({ data }) {
-  const summary = data.activitySummary || {};
-  const items = [
-    ["AI credits used", summary.total_credits_used ?? 0],
-    ["Content generated", summary.content_generated ?? 0],
-    ["Active contributors", Object.keys(summary.credits_by_member || {}).length],
-  ];
-  return (
-    <article className="ws-panel">
-      <div className="ws-panel-head"><div><h2>Workspace Activity</h2><p>Current tenant-scoped activity summary from the team service.</p></div><Pill tone="green">Live summary</Pill></div>
-      <div className="ws-stat-grid">{items.map(([label, value]) => <div key={label}><BarChart3 size={18} /><strong>{value}</strong><span>{label}</span></div>)}</div>
-      <div className="ws-privacy-card"><ShieldCheck size={18} /><div><strong>Chronological audit history is not fabricated</strong><p>The detailed timeline will activate after a member-level audit endpoint is available.</p></div></div>
-    </article>
   );
 }
 
