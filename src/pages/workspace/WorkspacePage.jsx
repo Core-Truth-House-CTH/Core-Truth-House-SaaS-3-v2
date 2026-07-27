@@ -4,8 +4,8 @@ import WorkspaceShell from "./WorkspaceShell";
 import WorkspaceLibraryView from "./WorkspaceLibraryView";
 import WorkspaceActiveWorkView from "./WorkspaceActiveWorkView";
 import WorkspaceDecisionsView from "./WorkspaceDecisionsView";
+import WorkspaceActivityView from "./WorkspaceActivityView";
 import {
-  ActivityView,
   MembersView,
   Overview,
   StorageView,
@@ -33,7 +33,7 @@ export default function WorkspacePage() {
     "/workspace/active-work": <WorkspaceActiveWorkView data={data} />,
     "/workspace/decisions": <WorkspaceDecisionsView data={data} navigate={navigate} />,
     "/workspace/members": <MembersView data={data} navigate={navigate} />,
-    "/workspace/activity": <ActivityView data={data} />,
+    "/workspace/activity": <WorkspaceActivityView data={data} />,
     "/workspace/storage": <StorageView data={data} navigate={navigate} />,
   };
 
