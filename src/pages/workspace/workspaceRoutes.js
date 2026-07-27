@@ -4,6 +4,7 @@ import {
   Bell,
   Blocks,
   BookOpen,
+  Compass,
   CreditCard,
   Database,
   FolderKanban,
@@ -24,6 +25,7 @@ export const WORKSPACE_TABS = [
   { path: "/workspace", label: "Overview", icon: Gauge },
   { path: "/workspace/library", label: "Library", icon: Library },
   { path: "/workspace/active-work", label: "Active Work", icon: FolderKanban },
+  { path: "/workspace/decisions", label: "Decisions", icon: Compass },
   { path: "/workspace/members", label: "Members", icon: Users },
   { path: "/workspace/activity", label: "Activity", icon: Activity },
   { path: "/workspace/storage", label: "Storage", icon: HardDrive },
@@ -73,6 +75,12 @@ export const ROUTE_META = {
     description:
       "Continue campaigns, documents, content, offers, and systems already in motion inside the active workspace.",
   },
+  "/workspace/decisions": {
+    eyebrow: "Tenant Decision Queue",
+    title: "Open Decisions",
+    description:
+      "Review work that is awaiting a decision while the dedicated strategic-decision service is completed.",
+  },
   "/workspace/members": {
     eyebrow: "Tenant Members & Client Access",
     title: "Members",
@@ -83,13 +91,13 @@ export const ROUTE_META = {
     eyebrow: "Tenant Audit History",
     title: "Workspace Activity",
     description:
-      "Review actions performed by members of the active workspace. Core Truth House platform administration uses a separate audit log.",
+      "Review the tenant-scoped activity summary. Core Truth House platform administration uses a separate audit log.",
   },
   "/workspace/storage": {
     eyebrow: "Tenant Usage & Limits",
     title: "Storage",
     description:
-      "View storage used by this workspace. Client workspace storage remains separately metered and isolated.",
+      "View known storage used by this workspace. Client workspace storage remains separately metered and isolated.",
   },
   "/workspace/controls/general": {
     eyebrow: "Workspace Controls",
@@ -104,32 +112,32 @@ export const ROUTE_META = {
   "/workspace/controls/client-workspaces": {
     eyebrow: "Estate Controls",
     title: "Client Workspaces",
-    description: "Create and manage isolated client Houses with their own members, Brand Memory, and audit history.",
+    description: "View and enter isolated client Houses with their own members, Brand Memory, and audit history.",
   },
   "/workspace/controls/roles-permissions": {
     eyebrow: "Estate Controls",
     title: "Roles & Permissions",
-    description: "Define permission profiles without weakening workspace or tenant boundaries.",
+    description: "Review enforceable permission profiles without weakening workspace or tenant boundaries.",
   },
   "/workspace/controls/approvals": {
     eyebrow: "Workspace Controls",
     title: "Approvals",
-    description: "Set who must approve campaigns, content, assets, and system changes before release.",
+    description: "Review the planned approval controls for campaigns, content, assets, and system changes.",
   },
   "/workspace/controls/notifications": {
     eyebrow: "Workspace Controls",
     title: "Notifications",
-    description: "Choose which workspace events create alerts and how members receive them.",
+    description: "Choose the supported workspace notification mode.",
   },
   "/workspace/controls/integrations": {
     eyebrow: "Workspace Controls",
     title: "Integrations",
-    description: "Connect approved systems while preserving tenant-specific credentials and data boundaries.",
+    description: "Connect supported AI providers while preserving encrypted tenant-specific credentials and data boundaries.",
   },
   "/workspace/controls/data-privacy": {
     eyebrow: "Workspace Controls",
     title: "Data & Privacy",
-    description: "Review exports, retention, support access, and the privacy boundary around this workspace.",
+    description: "Review exports, visibility, support-access boundaries, and tenant privacy.",
   },
   "/workspace/controls/plan-billing": {
     eyebrow: "Workspace Controls",
@@ -138,8 +146,8 @@ export const ROUTE_META = {
   },
   "/workspace/controls/activity-log": {
     eyebrow: "Workspace Controls",
-    title: "Detailed Activity Log",
-    description: "Search workspace actions by member, module, action, and date.",
+    title: "Detailed Activity",
+    description: "Review the verified workspace activity summary without fabricating unavailable event history.",
   },
   "/workspace/controls/danger-zone": {
     eyebrow: "Owner Controls",
