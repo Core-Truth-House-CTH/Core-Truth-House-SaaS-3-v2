@@ -18,6 +18,9 @@ const requiredFiles = [
   "src/pages/workspace/WorkspaceShell.jsx",
   "src/pages/workspace/WorkspaceLibraryView.jsx",
   "src/pages/workspace/WorkspaceActiveWorkView.jsx",
+  "src/pages/workspace/WorkspaceDecisionsView.jsx",
+  "src/pages/workspace/WorkspaceActivityView.jsx",
+  "src/pages/workspace/WorkspacePrivacyControl.jsx",
   "src/pages/workspace/WorkspaceAccessControls.jsx",
   "src/pages/workspace/WorkspaceSettingsControls.jsx",
   "src/pages/workspace/WorkspacePlanControls.jsx",
@@ -85,11 +88,24 @@ expect(
 );
 
 const apiSource = read("src/pages/workspace/workspaceApi.js");
-expect(apiSource.includes('settings: "/api/settings"'), "Workspace settings must use /api/settings.");
-expect(apiSource.includes('tenantExport: "/api/tenant-data/full-export"'), "Tenant export contract is missing.");
-expect(apiSource.includes('openai: "/api/integrations/openai"'), "OpenAI integration contract is missing.");
-expect(apiSource.includes('fal: "/api/integrations/fal"'), "fal.ai integration contract is missing.");
-expect(apiSource.includes('higgsfield: "/api/integrations/higgsfield"'), "Higgsfield integration contract is missing.");
+const requiredApiContracts = [
+  ['settings: "/api/settings"', "Workspace settings"],
+  ['tenantExport: "/api/tenant-data/full-export"', "Tenant export"],
+  ['controls: "/api/workspace-controls"', "Workspace controls"],
+  ['workbench: "/api/workspace-controls/workbench"', "Shared workbench"],
+  ['decisions: "/api/workspace-controls/decisions"', "Decision queue"],
+  ['activity: "/api/workspace-controls/activity"', "Workspace activity"],
+  ['supportConsent: "/api/workspace-controls/support-consent"', "Support consent"],
+  ['clientWorkspaces: "/api/workspace-controls/client-workspaces"', "Client Workspace provisioning"],
+  ['deletionRequests: "/api/workspace-controls/deletion-requests"', "Deletion request"],
+  ['openai: "/api/integrations/openai"', "OpenAI integration"],
+  ['fal: "/api/integrations/fal"', "fal.ai integration"],
+  ['higgsfield: "/api/integrations/higgsfield"', "Higgsfield integration"],
+];
+
+for (const [contract, label] of requiredApiContracts) {
+  expect(apiSource.includes(contract), `${label} contract is missing.`);
+}
 
 const workspaceFiles = fs
   .readdirSync(path.join(root, "src/pages/workspace"))
@@ -102,6 +118,7 @@ const forbiddenContracts = [
   "/api/workspaces/${encodeURIComponent(data.activeWorkspaceId)}/exports",
   'navigate("/integrations")',
   'apiClient.post("/api/workspaces"',
+  "db.workspaces.delete",
 ];
 
 for (const contract of forbiddenContracts) {
@@ -113,6 +130,28 @@ expect(
   accessSource.includes("apiClient.put(API_PATHS.teams.memberRole"),
   "Member roles must use the backend PUT contract."
 );
+expect(
+  accessSource.includes("createClientWorkspace"),
+  "Estate client Workspace provisioning is not connected."
+);
+
+const activeWorkSource = read("src/pages/workspace/WorkspaceActiveWorkView.jsx");
+expect(
+  activeWorkSource.includes("patchWorkspaceWorkbench") && activeWorkSource.includes("DOMPurify.sanitize"),
+  "Shared workbench persistence must sanitize notes before storage."
+);
+
+const privacySource = read("src/pages/workspace/WorkspacePrivacyControl.jsx");
+expect(
+  privacySource.includes("updateSupportConsent"),
+  "Owner-authorized support consent is not connected."
+);
+
+const dangerSource = read("src/pages/workspace/WorkspacePlanControls.jsx");
+expect(
+  dangerSource.includes("requestWorkspaceDeletion") && dangerSource.includes("export_confirmed: true"),
+  "Retention-aware Workspace deletion requests are not connected."
+);
 
 const packageJson = JSON.parse(read("package.json"));
 const dependencies = packageJson.dependencies || {};
@@ -121,6 +160,7 @@ const requiredDependencies = [
   "react-router-dom",
   "@clerk/react",
   "axios",
+  "dompurify",
   "zod",
   "@tiptap/react",
   "@dnd-kit/core",
@@ -139,4 +179,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Workspace suite verification passed: ${expectedRoutes.length} routes and ${requiredFiles.length} required files checked.`);
+console.log(`Workspace suite verification passed: ${expectedRoutes.length} routes, ${requiredFiles.length} files, and ${requiredApiContracts.length} API contracts checked.`);
