@@ -4,6 +4,14 @@ export const WORKSPACE_ENDPOINTS = {
   settings: "/api/settings",
   tenantSummary: "/api/tenant-data/summary",
   tenantExport: "/api/tenant-data/full-export",
+  controls: "/api/workspace-controls",
+  workbench: "/api/workspace-controls/workbench",
+  decisions: "/api/workspace-controls/decisions",
+  decision: (decisionId) => `/api/workspace-controls/decisions/${encodeURIComponent(decisionId)}`,
+  activity: "/api/workspace-controls/activity",
+  supportConsent: "/api/workspace-controls/support-consent",
+  clientWorkspaces: "/api/workspace-controls/client-workspaces",
+  deletionRequests: "/api/workspace-controls/deletion-requests",
   integrations: {
     higgsfield: "/api/integrations/higgsfield",
     openai: "/api/integrations/openai",
@@ -45,6 +53,51 @@ export async function patchWorkspaceSettings(patch) {
 
 export async function getTenantSummary() {
   return apiClient.get(WORKSPACE_ENDPOINTS.tenantSummary);
+}
+
+export async function getWorkspaceControls() {
+  const payload = await apiClient.get(WORKSPACE_ENDPOINTS.controls);
+  return payload?.controls || payload || {};
+}
+
+export async function patchWorkspaceWorkbench(patch) {
+  const payload = await apiClient.patch(WORKSPACE_ENDPOINTS.workbench, patch);
+  return payload?.controls || payload || {};
+}
+
+export async function getWorkspaceDecisions() {
+  const payload = await apiClient.get(WORKSPACE_ENDPOINTS.decisions);
+  return Array.isArray(payload?.decisions) ? payload.decisions : [];
+}
+
+export async function createWorkspaceDecision(payload) {
+  const result = await apiClient.post(WORKSPACE_ENDPOINTS.decisions, payload);
+  return result?.decision || result;
+}
+
+export async function updateWorkspaceDecision(decisionId, patch) {
+  const result = await apiClient.patch(WORKSPACE_ENDPOINTS.decision(decisionId), patch);
+  return result?.decision || result;
+}
+
+export async function getWorkspaceActivity() {
+  const payload = await apiClient.get(WORKSPACE_ENDPOINTS.activity);
+  return Array.isArray(payload?.events) ? payload.events : [];
+}
+
+export async function updateSupportConsent(payload) {
+  const result = await apiClient.put(WORKSPACE_ENDPOINTS.supportConsent, payload);
+  return result?.support_consent || result;
+}
+
+export async function createClientWorkspace(payload) {
+  const result = await apiClient.post(WORKSPACE_ENDPOINTS.clientWorkspaces, payload);
+  return result?.workspace || result;
+}
+
+export async function requestWorkspaceDeletion(payload) {
+  const result = await apiClient.post(WORKSPACE_ENDPOINTS.deletionRequests, payload);
+  return result?.deletion_request || result;
 }
 
 export async function downloadTenantExport(workspaceName = "workspace") {
