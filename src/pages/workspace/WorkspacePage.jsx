@@ -3,9 +3,9 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import WorkspaceShell from "./WorkspaceShell";
 import WorkspaceLibraryView from "./WorkspaceLibraryView";
 import WorkspaceActiveWorkView from "./WorkspaceActiveWorkView";
+import WorkspaceDecisionsView from "./WorkspaceDecisionsView";
 import {
   ActivityView,
-  DecisionsView,
   MembersView,
   Overview,
   StorageView,
@@ -31,14 +31,16 @@ export default function WorkspacePage() {
   const views = {
     "/workspace/library": <WorkspaceLibraryView data={data} />,
     "/workspace/active-work": <WorkspaceActiveWorkView data={data} />,
-    "/workspace/decisions": <DecisionsView data={data} navigate={navigate} />,
+    "/workspace/decisions": <WorkspaceDecisionsView data={data} navigate={navigate} />,
     "/workspace/members": <MembersView data={data} navigate={navigate} />,
     "/workspace/activity": <ActivityView data={data} />,
     "/workspace/storage": <StorageView data={data} navigate={navigate} />,
   };
 
+  const shellError = [data.error, data.companionError].filter(Boolean).join(" · ");
+
   return (
-    <WorkspaceShell summary={data.summary} loading={data.loading} error={data.error} onRefresh={data.reload}>
+    <WorkspaceShell summary={data.summary} loading={data.loading} error={shellError} onRefresh={data.reload}>
       {data.loading && !data.detail ? (
         <div className="ws-loading"><CircleDot className="ws-pulse" size={20} /> Loading workspace…</div>
       ) : views[pathname] || (pathname === "/workspace" ? <Overview data={data} navigate={navigate} /> : <Navigate to="/workspace" replace />)}
