@@ -71,7 +71,8 @@
   "scripts": {
     "dev": "vite",
     "lint": "eslint src",
-    "prebuild": "eslint src",
+    "verify:workspace": "node scripts/verify-workspace-suite.mjs",
+    "prebuild": "eslint src && node scripts/verify-workspace-suite.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "postbuild": "node scripts/create-route-html.cjs && node scripts/inject-static-route-metadata.mjs"
@@ -80,7 +81,7 @@
     "production": [
       ">0.2%",
       "not dead",
-      "not op_mini all"
+      "not_op_mini all"
     ],
     "development": [
       "last 1 chrome version",
