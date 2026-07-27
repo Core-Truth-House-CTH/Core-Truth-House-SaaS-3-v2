@@ -8,7 +8,7 @@ import apiClient from "../../lib/apiClient";
 import { API_PATHS } from "../../lib/apiPaths";
 import { formatDateTime } from "./workspaceRoutes";
 import { Modal, Pill, Status, messageFor } from "./WorkspaceControlPrimitives";
-import { patchWorkspaceSettings } from "./workspaceApi";
+import { createClientWorkspace, patchWorkspaceSettings } from "./workspaceApi";
 
 const generalSchema = z.object({
   workspace_name: z.string().trim().min(2, "Add a workspace name."),
@@ -18,7 +18,12 @@ const generalSchema = z.object({
 });
 const inviteSchema = z.object({
   email: z.string().trim().email(),
-  role: z.enum(["viewer", "editor", "admin", "billing", "guest"]),
+  role: z.enum(["viewer", "member", "editor", "admin", "billing", "guest"]),
+});
+const clientSchema = z.object({
+  name: z.string().trim().min(2, "Add a client Workspace name.").max(200),
+  client_email: z.union([z.literal(""), z.string().trim().email("Enter a valid client email.")]),
+  template: z.enum(["blank", "service-brand", "founder-brand"]),
 });
 
 export function GeneralControl({ data }) {
@@ -139,23 +144,71 @@ export function ClientWorkspacesControl({ data }) {
   const { selectWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const clients = data.workspaces.filter((item) => item.id !== data.activeWorkspaceId);
+  const [form, setForm] = useState({ name: "", client_email: "", template: "blank" });
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const clients = data.workspaces.filter((item) =>
+    item.id !== data.activeWorkspaceId &&
+    (
+      item.raw?.parent_workspace_id === data.activeWorkspaceId ||
+      item.raw?.managed_by_workspace_id === data.activeWorkspaceId ||
+      item.raw?.workspace_type === "client"
+    )
+  );
 
   const enter = (workspace) => {
     selectWorkspace(workspace);
     navigate("/workspace");
   };
 
+  const create = async (event) => {
+    event.preventDefault();
+    setMessage("");
+    const parsed = clientSchema.safeParse(form);
+    if (!parsed.success) {
+      setMessage(parsed.error.issues[0]?.message || "Check the client Workspace details.");
+      return;
+    }
+    if (!data.companionAvailable) {
+      setMessage("Client Workspace provisioning is unavailable until the companion API is deployed.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await createClientWorkspace({
+        name: parsed.data.name,
+        client_email: parsed.data.client_email || null,
+        template: parsed.data.template,
+      });
+      setOpen(false);
+      setForm({ name: "", client_email: "", template: "blank" });
+      setMessage("Isolated client Workspace created.");
+      await data.refreshWorkspaces();
+      await data.reload();
+    } catch (error) {
+      setMessage(messageFor(error));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <article className="ws-panel">
-      <div className="ws-panel-head"><div><h2>Estate Client Workspaces</h2><p>Each client House has its own ID, members, integrations, and audit history.</p></div><button className="ws-btn primary" onClick={() => setOpen(true)}><UserPlus size={16} /> Create Client Workspace</button></div>
+      <div className="ws-panel-head"><div><h2>Estate Client Workspaces</h2><p>Each client House has its own ID, members, integrations, Brand Memory, and audit history.</p></div><button className="ws-btn primary" onClick={() => setOpen(true)}><UserPlus size={16} /> Create Client Workspace</button></div>
+      <Status>{message}</Status>
       {clients.length ? <div className="ws-client-grid">{clients.map((workspace) => (
-        <button key={workspace.id} className="ws-client-card" onClick={() => enter(workspace)}><span className="ws-avatar">{workspace.name.charAt(0).toUpperCase()}</span><div><strong>{workspace.name}</strong><p>{workspace.role || "member"} · {workspace.status || "active"}</p><small>Isolated tenant workspace</small></div><ArrowRight size={18} /></button>
-      ))}</div> : <div className="ws-empty"><Users size={22} /><h3>No client workspaces yet</h3><p>Existing client Houses will appear here as soon as they are provisioned.</p></div>}
-      <Modal open={open} onOpenChange={setOpen} title="Client Workspace Provisioning" description="The live backend does not yet expose an owner-safe client provisioning endpoint.">
-        <div className="ws-privacy-card"><ShieldCheck size={18} /><div><strong>No placeholder workspace will be created</strong><p>Provisioning must create a new workspace ID, owner membership, plan limits, Brand Memory, and audit boundary together.</p></div></div>
-        <Status>Frontend creation is intentionally blocked until that tenant-safe backend contract is deployed.</Status>
-        <div className="ws-dialog-actions"><Dialog.Close type="button" className="ws-btn primary">Close</Dialog.Close></div>
+        <button key={workspace.id} className="ws-client-card" onClick={() => enter(workspace)}><span className="ws-avatar">{workspace.name.charAt(0).toUpperCase()}</span><div><strong>{workspace.name}</strong><p>{workspace.role || "member"} · {workspace.status || "active"}</p><small>Isolated tenant Workspace</small></div><ArrowRight size={18} /></button>
+      ))}</div> : <div className="ws-empty"><Users size={22} /><h3>No client workspaces yet</h3><p>Create a separate client House without mixing client content into the parent Workspace.</p></div>}
+      <Modal open={open} onOpenChange={setOpen} title="Create Client Workspace" description="Estate-only provisioning creates a separate tenant boundary and owner membership.">
+        <form className="ws-form" onSubmit={create}>
+          <label><span>Client Workspace name</span><input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} /></label>
+          <label><span>Client email, optional</span><input type="email" value={form.client_email} onChange={(event) => setForm((current) => ({ ...current, client_email: event.target.value }))} /></label>
+          <label><span>Starting template</span><select value={form.template} onChange={(event) => setForm((current) => ({ ...current, template: event.target.value }))}><option value="blank">Blank Brand House</option><option value="service-brand">Service Brand</option><option value="founder-brand">Founder Brand</option></select></label>
+          <div className="ws-privacy-card"><ShieldCheck size={18} /><div><strong>Separate House</strong><p>The service creates a unique Workspace ID, owner membership, Brand Memory, settings, and audit boundary.</p></div></div>
+          <Status>{message}</Status>
+          <div className="ws-dialog-actions"><Dialog.Close type="button" className="ws-btn secondary">Cancel</Dialog.Close><button className="ws-btn primary" disabled={saving || !data.companionAvailable}>{saving ? "Creating…" : "Create Client Workspace"}</button></div>
+        </form>
       </Modal>
     </article>
   );
@@ -165,6 +218,7 @@ const roleRows = [
   ["Owner", "Full tenant ownership, billing, access, and critical controls"],
   ["Admin", "Members, modules, settings, and approvals"],
   ["Editor", "Create and update workspace content"],
+  ["Member", "Participate in supported Workspace modules"],
   ["Viewer", "Read-only access to approved workspace areas"],
   ["Billing", "Plan, invoices, and usage"],
   ["Guest", "Limited assigned-module access"],
