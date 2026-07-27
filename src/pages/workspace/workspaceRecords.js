@@ -42,3 +42,30 @@ export function workRecord(item, source, index) {
     raw: item,
   };
 }
+
+export function activityRecord(item, index) {
+  return {
+    id: String(item?.event_id || item?.id || `activity-${index}`),
+    actor: item?.actor_name || item?.user_name || item?.user_id || "Workspace member",
+    role: item?.role || "member",
+    action: item?.action || "updated the workspace",
+    module: item?.module || "workspace",
+    detail: item?.detail || "",
+    createdAt: item?.created_at || item?.timestamp || null,
+    metadata: item?.metadata || {},
+  };
+}
+
+export function decisionRecord(item, index) {
+  return {
+    id: String(item?.decision_id || item?.id || `decision-${index}`),
+    title: item?.title || "Untitled decision",
+    description: item?.description || "",
+    source: item?.source || "workspace",
+    status: item?.status || "open",
+    dueAt: item?.due_at || null,
+    createdAt: item?.created_at || null,
+    updatedAt: item?.updated_at || null,
+    createdBy: item?.created_by || "",
+  };
+}
