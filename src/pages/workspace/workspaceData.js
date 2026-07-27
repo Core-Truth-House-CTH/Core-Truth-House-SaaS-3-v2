@@ -3,21 +3,43 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 import apiClient from "../../lib/apiClient";
 import { API_PATHS } from "../../lib/apiPaths";
 import { formatBytes, normalizeList, normalizeNumber } from "./workspaceRoutes";
-import { documentRecord, errorText, memberRecord, workRecord } from "./workspaceRecords";
-import { getTenantSummary, getWorkspaceSettings } from "./workspaceApi";
+import {
+  activityRecord,
+  decisionRecord,
+  documentRecord,
+  errorText,
+  memberRecord,
+  workRecord,
+} from "./workspaceRecords";
+import {
+  getTenantSummary,
+  getWorkspaceActivity,
+  getWorkspaceControls,
+  getWorkspaceDecisions,
+  getWorkspaceSettings,
+} from "./workspaceApi";
 
 export function useWorkspaceSuiteData() {
-  const { activeWorkspaceId, activeWorkspace, workspaces } = useWorkspace();
+  const {
+    activeWorkspaceId,
+    activeWorkspace,
+    workspaces,
+    refreshWorkspaces,
+  } = useWorkspace();
   const [state, setState] = useState({
     loading: true,
     error: "",
+    companionError: "",
+    companionAvailable: false,
     detail: null,
     stats: null,
     settings: null,
+    controls: null,
     members: [],
     invites: [],
     activity: [],
     activitySummary: null,
+    decisions: [],
     documents: [],
     assets: [],
     workItems: [],
@@ -36,8 +58,8 @@ export function useWorkspaceSuiteData() {
       return;
     }
 
-    setState((current) => ({ ...current, loading: true, error: "" }));
-    const requests = {
+    setState((current) => ({ ...current, loading: true, error: "", companionError: "" }));
+    const coreRequests = {
       stats: apiClient.get(API_PATHS.workspace.stats(activeWorkspaceId)),
       settings: getWorkspaceSettings(),
       members: apiClient.get(API_PATHS.teams.members(activeWorkspaceId)),
@@ -51,28 +73,48 @@ export function useWorkspaceSuiteData() {
       usage: apiClient.get(API_PATHS.usage.summary),
       billing: apiClient.get(API_PATHS.billing.summary),
     };
-
+    const companionRequests = {
+      controls: getWorkspaceControls(),
+      decisions: getWorkspaceDecisions(),
+      activity: getWorkspaceActivity(),
+    };
+    const requests = { ...coreRequests, ...companionRequests };
     const keys = Object.keys(requests);
     const settled = await Promise.allSettled(Object.values(requests));
     const payload = {};
-    const failures = [];
+    const coreFailures = [];
+    const companionFailures = [];
+
     settled.forEach((result, index) => {
-      if (result.status === "fulfilled") payload[keys[index]] = result.value;
-      else failures.push(`${keys[index]}: ${errorText(result.reason)}`);
+      const key = keys[index];
+      if (result.status === "fulfilled") {
+        payload[key] = result.value;
+        return;
+      }
+      const description = `${key}: ${errorText(result.reason)}`;
+      if (Object.hasOwn(companionRequests, key)) companionFailures.push(description);
+      else coreFailures.push(description);
     });
 
     const campaigns = normalizeList(payload.campaigns, ["campaigns"]);
     const offers = normalizeList(payload.offers, ["offers"]);
+    const companionAvailable = Boolean(payload.controls);
     setState({
       loading: false,
-      error: failures.length ? `Some data is unavailable: ${failures.join(" · ")}` : "",
+      error: coreFailures.length ? `Some data is unavailable: ${coreFailures.join(" · ")}` : "",
+      companionError: companionFailures.length && companionAvailable
+        ? `Some Workspace controls are unavailable: ${companionFailures.join(" · ")}`
+        : "",
+      companionAvailable,
       detail: activeWorkspace?.raw || activeWorkspace || null,
       stats: payload.stats || null,
       settings: payload.settings || null,
+      controls: payload.controls || null,
       members: normalizeList(payload.members, ["members", "users"]).map(memberRecord),
       invites: normalizeList(payload.invites, ["invites", "pending_invites"]),
-      activity: [],
+      activity: normalizeList(payload.activity, ["events"]).map(activityRecord),
       activitySummary: payload.activitySummary || null,
+      decisions: normalizeList(payload.decisions, ["decisions"]).map(decisionRecord),
       documents: normalizeList(payload.documents, ["documents"]).map(documentRecord),
       assets: normalizeList(payload.assets, ["assets", "media_assets"]),
       workItems: [
@@ -102,7 +144,8 @@ export function useWorkspaceSuiteData() {
     memberCount: state.members.length,
     pendingInvites: state.invites.length,
     workCount: state.workItems.length,
-    reviewCount: state.workItems.filter((item) => item.status === "review").length,
+    reviewCount: state.decisions.filter((item) => !["resolved", "archived"].includes(item.status)).length ||
+      state.workItems.filter((item) => item.status === "review").length,
     storageLabel: formatBytes(storageUsed),
     storageLimitLabel: storageLimit ? formatBytes(storageLimit) : "",
   };
@@ -115,6 +158,7 @@ export function useWorkspaceSuiteData() {
     summary,
     storageUsed,
     storageLimit,
+    refreshWorkspaces,
     reload: load,
   };
 }
