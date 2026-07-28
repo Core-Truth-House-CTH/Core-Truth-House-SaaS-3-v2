@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
+  BriefcaseBusiness,
   BarChart3,
   Command,
   BookOpen,
@@ -18,35 +19,34 @@ import AuthShellContext, { AUTH_SHELL_OWNS_BELL } from "../context/AuthShellCont
 import "../styles/auth-shell.css";
 import "../styles/auth-shell-enhancements.css";
 
-// Served from public/; referenced by URL (not a module import).
 const CTH_LOGO = "/command-center-assets/cth-logo-seal.png";
 
-/*
- * Shared authenticated shell for the Command Center, Workspace, and Reports.
- * Full-width top bar + full-width page frame (responsive gutters, no max-width
- * wrapper, no sidebar). Nav, notifications, search, account, and plan are wired
- * to the app's real sources. Applied only to staged shell routes for now.
- */
-
-const NAV_ITEMS = [
-  { key: "command-center", label: "Command Center", icon: LayoutDashboard, path: "/command-center-next" },
-  // No primary Workspace tab: /workspace still renders only a placeholder and
-  // ignores the ?view=decisions|work|activity links, so promoting it in the
-  // shared shell would expose an unfinished route to every Reports user. The
-  // route itself, its gating and the Command Center links are untouched - the
-  // tab returns when the Workspace views are built.
+export const NAV_ITEMS = [
+  {
+    key: "command-center",
+    label: "Command Center",
+    icon: LayoutDashboard,
+    path: "/command-center-next",
+  },
+  {
+    key: "workspace",
+    label: "Workspace",
+    icon: BriefcaseBusiness,
+    path: "/workspace",
+  },
   { key: "reports", label: "Reports", icon: BarChart3, path: "/analytics" },
   { key: "signal-os", label: "Signal OS", icon: Command, path: "/signal-inbox" },
-  { key: "knowledge-base", label: "Knowledge Base", icon: BookOpen, path: "/knowledge-base" },
+  {
+    key: "knowledge-base",
+    label: "Knowledge Base",
+    icon: BookOpen,
+    path: "/knowledge-base",
+  },
 ];
 
-function planLabel(rawPlan) {
+export function planLabel(rawPlan) {
   const normalizedPlan = normalizePlan(rawPlan);
 
-  // normalizePlan and PLAN_ORDER both support "legacy", but PLAN_INFO carries no
-  // legacy entry (it holds pricing/positioning for the sellable plans). Label it
-  // explicitly here so legacy accounts are not mislabelled as Foundation. No
-  // legacy price, order or entitlement is invented.
   if (normalizedPlan === "legacy") {
     return "Legacy Plan";
   }
@@ -55,7 +55,19 @@ function planLabel(rawPlan) {
   return `${(info.name || "").replace(/^The\s+/, "")} Plan`;
 }
 
-export default function AuthShell({ activeNav, children }) {
+/*
+ * `variant` scopes the shell chrome without changing any route, destination, or
+ * auth behaviour.
+ *
+ * - "default"          the shared dark masthead every authenticated route uses.
+ * - "workspace-light"  the approved Workspace canvas. The masthead is omitted so
+ *                      the page can carry its own light, page-integrated top
+ *                      controls (real workspace selector, plan state, bell, and
+ *                      account menu live in WorkspaceTopControls). The provider
+ *                      still declares AUTH_SHELL_OWNS_BELL, because the tree
+ *                      does render exactly one bell - just not in this file.
+ */
+export default function AuthShell({ activeNav, children, variant = "default" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
@@ -105,133 +117,147 @@ export default function AuthShell({ activeNav, children }) {
     }
   };
 
-  return (
-    // This shell renders the notification bell for everything beneath it, so a
-    // legacy DashboardLayout embedded in one of these routes omits its own.
-    <AuthShellContext.Provider value={AUTH_SHELL_OWNS_BELL}>
-    <div className="cth-authshell">
-      <header className="as-topbar">
-        <button
-          type="button"
-          className="as-brand"
-          onClick={() => navigate("/command-center-next")}
-          aria-label="Core Truth House Command Center"
-        >
-          <img src={CTH_LOGO} alt="Core Truth House logo" />
-          <span className="as-brand-copy">
-            <strong>CORE TRUTH HOUSE</strong>
-            <span>COMMAND CENTER</span>
-          </span>
-        </button>
+  const workspaceLight = variant === "workspace-light";
 
-        <nav className="as-nav" aria-label="Primary">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const active = currentActive === item.key;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                className={`as-navbtn${active ? " active" : ""}`}
-                aria-current={active ? "page" : undefined}
-                onClick={() => navigate(item.path)}
-              >
-                <Icon size={15} aria-hidden="true" /> {item.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="as-actions">
-          <form
-            className="as-search"
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const query = searchValue.trim();
-              if (query) navigate(`/knowledge-base?q=${encodeURIComponent(query)}`);
-            }}
-          >
-            <Search size={15} aria-hidden="true" />
-            <input
-              type="search"
-              placeholder="Search the House..."
-              aria-label="Search the House"
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-            />
-          </form>
-
-          <span className="as-bell">
-            {/* Only this shell-owned bell gets the scoped class. Standalone
-                DashboardLayout and CRM bells pass nothing and are unaffected. */}
-            <NotificationBell panelClassName="as-notification-panel" />
-          </span>
-
-          <div ref={menuRef} style={{ position: "relative" }}>
-            <button
-              type="button"
-              className="as-profile"
-              onClick={() => setMenuOpen((value) => !value)}
-              aria-label="Open account menu"
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              aria-controls="as-account-menu"
-            >
-              <span className="as-avatar" aria-hidden={!avatarUrl}>
-                {avatarUrl ? <img src={avatarUrl} alt={`${displayName} profile`} /> : initials}
-              </span>
-              <span className="as-profile-copy">
-                <strong>{displayName}</strong>
-                <small>{planLabel(plan?.plan)}</small>
-              </span>
-              <ChevronDown size={15} aria-hidden="true" />
-            </button>
-
-            {menuOpen ? (
-              <div className="as-menu" id="as-account-menu" role="menu">
-                <div className="as-menu-head">
-                  <strong>{displayName}</strong>
-                  <span>{planLabel(plan?.plan)}</span>
-                </div>
-                <button
-                  type="button"
-                  className="as-menu-item"
-                  role="menuitem"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    navigate("/settings");
-                  }}
-                >
-                  <Settings size={15} aria-hidden="true" /> Account settings
-                </button>
-                <button
-                  type="button"
-                  className="as-menu-item"
-                  role="menuitem"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    navigate("/billing");
-                  }}
-                >
-                  <BarChart3 size={15} aria-hidden="true" /> Plan &amp; billing
-                </button>
-                <button
-                  type="button"
-                  className="as-menu-item danger"
-                  role="menuitem"
-                  onClick={handleSignOut}
-                >
-                  <LogOut size={15} aria-hidden="true" /> Sign out
-                </button>
-              </div>
-            ) : null}
-          </div>
+  if (workspaceLight) {
+    return (
+      <AuthShellContext.Provider value={AUTH_SHELL_OWNS_BELL}>
+        <div className="cth-authshell as-workspace-light">
+          <div className="as-frame">{children}</div>
         </div>
-      </header>
+      </AuthShellContext.Provider>
+    );
+  }
 
-      <div className="as-frame">{children}</div>
-    </div>
+  return (
+    <AuthShellContext.Provider value={AUTH_SHELL_OWNS_BELL}>
+      <div className="cth-authshell">
+        <header className="as-topbar">
+          <button
+            type="button"
+            className="as-brand"
+            onClick={() => navigate("/command-center-next")}
+            aria-label="Core Truth House Command Center"
+          >
+            <img src={CTH_LOGO} alt="Core Truth House logo" />
+            <span className="as-brand-copy">
+              <strong>CORE TRUTH HOUSE</strong>
+              <span>COMMAND CENTER</span>
+            </span>
+          </button>
+
+          <nav className="as-nav" aria-label="Primary">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const active = currentActive === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={`as-navbtn${active ? " active" : ""}`}
+                  aria-current={active ? "page" : undefined}
+                  onClick={() => navigate(item.path)}
+                >
+                  <Icon size={15} aria-hidden="true" /> {item.label}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="as-actions">
+            <form
+              className="as-search"
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const query = searchValue.trim();
+                if (query) {
+                  navigate(`/knowledge-base?q=${encodeURIComponent(query)}`);
+                }
+              }}
+            >
+              <Search size={15} aria-hidden="true" />
+              <input
+                type="search"
+                placeholder="Search the House..."
+                aria-label="Search the House"
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+              />
+            </form>
+
+            <span className="as-bell">
+              <NotificationBell panelClassName="as-notification-panel" />
+            </span>
+
+            <div ref={menuRef} style={{ position: "relative" }}>
+              <button
+                type="button"
+                className="as-profile"
+                onClick={() => setMenuOpen((value) => !value)}
+                aria-label="Open account menu"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-controls="as-account-menu"
+              >
+                <span className="as-avatar" aria-hidden={!avatarUrl}>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={`${displayName} profile`} />
+                  ) : (
+                    initials
+                  )}
+                </span>
+                <span className="as-profile-copy">
+                  <strong>{displayName}</strong>
+                  <small>{planLabel(plan?.plan)}</small>
+                </span>
+                <ChevronDown size={15} aria-hidden="true" />
+              </button>
+
+              {menuOpen ? (
+                <div className="as-menu" id="as-account-menu" role="menu">
+                  <div className="as-menu-head">
+                    <strong>{displayName}</strong>
+                    <span>{planLabel(plan?.plan)}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="as-menu-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate("/settings");
+                    }}
+                  >
+                    <Settings size={15} aria-hidden="true" /> Account settings
+                  </button>
+                  <button
+                    type="button"
+                    className="as-menu-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate("/billing");
+                    }}
+                  >
+                    <BarChart3 size={15} aria-hidden="true" /> Plan &amp; billing
+                  </button>
+                  <button
+                    type="button"
+                    className="as-menu-item danger"
+                    role="menuitem"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut size={15} aria-hidden="true" /> Sign out
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </header>
+
+        <div className="as-frame">{children}</div>
+      </div>
     </AuthShellContext.Provider>
   );
 }
