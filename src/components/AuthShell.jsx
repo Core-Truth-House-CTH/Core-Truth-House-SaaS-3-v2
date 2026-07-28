@@ -21,7 +21,7 @@ import "../styles/auth-shell-enhancements.css";
 
 const CTH_LOGO = "/command-center-assets/cth-logo-seal.png";
 
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   {
     key: "command-center",
     label: "Command Center",
@@ -44,7 +44,7 @@ const NAV_ITEMS = [
   },
 ];
 
-function planLabel(rawPlan) {
+export function planLabel(rawPlan) {
   const normalizedPlan = normalizePlan(rawPlan);
 
   if (normalizedPlan === "legacy") {
@@ -55,7 +55,19 @@ function planLabel(rawPlan) {
   return `${(info.name || "").replace(/^The\s+/, "")} Plan`;
 }
 
-export default function AuthShell({ activeNav, children }) {
+/*
+ * `variant` scopes the shell chrome without changing any route, destination, or
+ * auth behaviour.
+ *
+ * - "default"          the shared dark masthead every authenticated route uses.
+ * - "workspace-light"  the approved Workspace canvas. The masthead is omitted so
+ *                      the page can carry its own light, page-integrated top
+ *                      controls (real workspace selector, plan state, bell, and
+ *                      account menu live in WorkspaceTopControls). The provider
+ *                      still declares AUTH_SHELL_OWNS_BELL, because the tree
+ *                      does render exactly one bell - just not in this file.
+ */
+export default function AuthShell({ activeNav, children, variant = "default" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
@@ -104,6 +116,18 @@ export default function AuthShell({ activeNav, children }) {
       window.location.href = "/sign-in";
     }
   };
+
+  const workspaceLight = variant === "workspace-light";
+
+  if (workspaceLight) {
+    return (
+      <AuthShellContext.Provider value={AUTH_SHELL_OWNS_BELL}>
+        <div className="cth-authshell as-workspace-light">
+          <div className="as-frame">{children}</div>
+        </div>
+      </AuthShellContext.Provider>
+    );
+  }
 
   return (
     <AuthShellContext.Provider value={AUTH_SHELL_OWNS_BELL}>

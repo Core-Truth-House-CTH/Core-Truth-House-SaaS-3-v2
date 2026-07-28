@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowRight, KeyRound, LockKeyhole, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -8,14 +8,8 @@ import apiClient from "../../lib/apiClient";
 import { API_PATHS } from "../../lib/apiPaths";
 import { formatDateTime } from "./workspaceRoutes";
 import { Modal, Pill, Status, messageFor } from "./WorkspaceControlPrimitives";
-import { createClientWorkspace, patchWorkspaceSettings } from "./workspaceApi";
+import { createClientWorkspace } from "./workspaceApi";
 
-const generalSchema = z.object({
-  workspace_name: z.string().trim().min(2, "Add a workspace name."),
-  timezone: z.string().trim().min(2),
-  locale: z.string().trim().min(2),
-  brand_visibility: z.enum(["private", "internal", "public"]),
-});
 const inviteSchema = z.object({
   email: z.string().trim().email(),
   role: z.enum(["viewer", "member", "editor", "admin", "billing", "guest"]),
@@ -25,63 +19,6 @@ const clientSchema = z.object({
   client_email: z.union([z.literal(""), z.string().trim().email("Enter a valid client email.")]),
   template: z.enum(["blank", "service-brand", "founder-brand"]),
 });
-
-export function GeneralControl({ data }) {
-  const [form, setForm] = useState({
-    workspace_name: "",
-    timezone: "America/Chicago",
-    locale: "en-US",
-    brand_visibility: "private",
-  });
-  const [message, setMessage] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => setForm({
-    workspace_name: data.settings?.workspace_name || data.activeWorkspace?.name || "",
-    timezone: data.settings?.timezone || "America/Chicago",
-    locale: data.settings?.locale || "en-US",
-    brand_visibility: data.settings?.brand_visibility || "private",
-  }), [data.activeWorkspace, data.settings]);
-
-  const submit = async (event) => {
-    event.preventDefault();
-    const parsed = generalSchema.safeParse(form);
-    if (!parsed.success) {
-      setMessage(parsed.error.issues[0]?.message || "Check the workspace details.");
-      return;
-    }
-    setSaving(true);
-    try {
-      await patchWorkspaceSettings(parsed.data);
-      setMessage("Workspace settings saved.");
-      await data.reload();
-    } catch (error) {
-      setMessage(messageFor(error));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="ws-grid two">
-      <article className="ws-panel">
-        <div className="ws-panel-head"><div><h2>Workspace Identity</h2><p>These values are supported by the tenant settings service.</p></div><Pill tone="green">Private</Pill></div>
-        <form className="ws-form" onSubmit={submit}>
-          <label><span>Workspace name</span><input value={form.workspace_name} onChange={(event) => setForm((current) => ({ ...current, workspace_name: event.target.value }))} /></label>
-          <label><span>Timezone</span><select value={form.timezone} onChange={(event) => setForm((current) => ({ ...current, timezone: event.target.value }))}><option value="America/Chicago">Central Time</option><option value="America/New_York">Eastern Time</option><option value="America/Denver">Mountain Time</option><option value="America/Los_Angeles">Pacific Time</option><option value="UTC">UTC</option></select></label>
-          <label><span>Locale</span><select value={form.locale} onChange={(event) => setForm((current) => ({ ...current, locale: event.target.value }))}><option value="en-US">English (United States)</option></select></label>
-          <label><span>Brand visibility</span><select value={form.brand_visibility} onChange={(event) => setForm((current) => ({ ...current, brand_visibility: event.target.value }))}><option value="private">Private</option><option value="internal">Internal</option><option value="public">Public</option></select></label>
-          <Status>{message}</Status>
-          <button className="ws-btn primary" disabled={saving}>{saving ? "Saving…" : "Save General Settings"}</button>
-        </form>
-      </article>
-      <article className="ws-panel soft">
-        <div className="ws-panel-head"><div><h2>Tenant Boundary</h2><p>Workspace-scoped data remains isolated.</p></div><ShieldCheck size={21} /></div>
-        <div className="ws-detail-list"><div><span>Workspace ID</span><strong>{data.activeWorkspaceId ? `${data.activeWorkspaceId.slice(0, 8)}…` : "Unavailable"}</strong></div><div><span>Status</span><strong>{data.activeWorkspace?.status || "Active"}</strong></div><div><span>Role</span><strong>{data.activeWorkspace?.role || "Member"}</strong></div><div><span>Visibility</span><strong>{form.brand_visibility}</strong></div></div>
-      </article>
-    </div>
-  );
-}
 
 export function MembersControl({ data }) {
   const [open, setOpen] = useState(false);

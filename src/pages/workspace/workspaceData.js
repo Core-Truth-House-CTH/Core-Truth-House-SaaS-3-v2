@@ -46,6 +46,7 @@ export function useWorkspaceSuiteData() {
     tenantSummary: null,
     usage: null,
     billing: null,
+    brandMemory: null,
   });
 
   const load = useCallback(async () => {
@@ -78,7 +79,12 @@ export function useWorkspaceSuiteData() {
       decisions: getWorkspaceDecisions(),
       activity: getWorkspaceActivity(),
     };
-    const requests = { ...coreRequests, ...companionRequests };
+    // Optional reads back a panel that has an explicit disconnected state, so a
+    // failure here is not a workspace error - it just renders as "not connected".
+    const optionalRequests = {
+      brandMemory: apiClient.get(API_PATHS.persist.brandMemory),
+    };
+    const requests = { ...coreRequests, ...companionRequests, ...optionalRequests };
     const keys = Object.keys(requests);
     const settled = await Promise.allSettled(Object.values(requests));
     const payload = {};
@@ -91,6 +97,7 @@ export function useWorkspaceSuiteData() {
         payload[key] = result.value;
         return;
       }
+      if (Object.hasOwn(optionalRequests, key)) return;
       const description = `${key}: ${errorText(result.reason)}`;
       if (Object.hasOwn(companionRequests, key)) companionFailures.push(description);
       else coreFailures.push(description);
@@ -124,6 +131,7 @@ export function useWorkspaceSuiteData() {
       tenantSummary: payload.tenantSummary || null,
       usage: payload.usage || null,
       billing: payload.billing || null,
+      brandMemory: payload.brandMemory || null,
     });
   }, [activeWorkspace, activeWorkspaceId]);
 

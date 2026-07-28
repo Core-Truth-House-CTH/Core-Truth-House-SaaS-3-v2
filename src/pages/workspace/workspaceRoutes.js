@@ -4,6 +4,7 @@ import {
   Bell,
   Blocks,
   BookOpen,
+  CircleCheck,
   Compass,
   CreditCard,
   Database,
@@ -17,6 +18,7 @@ import {
   Settings,
   ShieldCheck,
   SlidersHorizontal,
+  TriangleAlert,
   Users,
   Workflow,
 } from "lucide-react";
@@ -54,6 +56,66 @@ export const CONTROL_TABS = [
   { path: "/workspace/controls/plan-billing", label: "Plan & Billing", icon: CreditCard },
   { path: "/workspace/controls/activity-log", label: "Activity Log", icon: BookOpen },
   { path: "/workspace/controls/danger-zone", label: "Danger Zone", icon: Archive, danger: true },
+];
+
+/*
+ * The eight approved Workspace Controls Center landing cards, in reference
+ * order. Activity Log is intentionally absent - it stays in the header action.
+ * Client Workspaces is also absent as a landing card; it stays reachable at
+ * /workspace/controls/client-workspaces and from the Members & Access page, so
+ * the Estate gate and its route are unchanged.
+ */
+export const CONTROLS_CENTER_CARDS = [
+  {
+    path: "/workspace/controls/members",
+    label: "Members & Access",
+    description: "Invite members and manage who can access your workspace.",
+    icon: Users,
+  },
+  {
+    path: "/workspace/controls/roles-permissions",
+    label: "Roles & Permissions",
+    description: "Create roles and set module-level permissions.",
+    icon: ShieldCheck,
+    estateOnly: true,
+  },
+  {
+    path: "/workspace/controls/approvals",
+    label: "Approvals",
+    description: "Set approval workflows for content and campaigns.",
+    icon: CircleCheck,
+  },
+  {
+    path: "/workspace/controls/notifications",
+    label: "Notifications",
+    description: "Choose what alerts you receive and how.",
+    icon: Bell,
+  },
+  {
+    path: "/workspace/controls/integrations",
+    label: "Integrations",
+    description: "Connect and manage your platform integrations.",
+    icon: Plug,
+  },
+  {
+    path: "/workspace/controls/data-privacy",
+    label: "Data & Privacy",
+    description: "Control your data, exports, and privacy settings.",
+    icon: LockKeyhole,
+  },
+  {
+    path: "/workspace/controls/plan-billing",
+    label: "Plan & Billing",
+    description: "Manage your plan, billing and usage.",
+    icon: CreditCard,
+  },
+  {
+    path: "/workspace/controls/danger-zone",
+    label: "Danger Zone",
+    description: "Manage critical actions and workspace deletion.",
+    icon: TriangleAlert,
+    danger: true,
+  },
 ];
 
 export const ROUTE_META = {
@@ -101,8 +163,9 @@ export const ROUTE_META = {
   },
   "/workspace/controls/general": {
     eyebrow: "Workspace Controls",
-    title: "General",
-    description: "Manage workspace identity, defaults, operating preferences, and active brand context.",
+    title: "Workspace Controls",
+    description:
+      "Manage how your workspace operates, who has access, and what requires approval.",
   },
   "/workspace/controls/members": {
     eyebrow: "Workspace Controls",

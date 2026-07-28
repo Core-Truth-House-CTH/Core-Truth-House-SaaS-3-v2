@@ -2,13 +2,17 @@ import * as ScrollArea from "@radix-ui/react-scroll-area";
 import {
   AlertCircle,
   ArrowLeft,
+  ArrowRight,
+  FolderKanban,
+  HardDrive,
   RefreshCw,
   Settings,
-  ShieldCheck,
+  Users,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AuthShell from "../../components/AuthShell";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import WorkspaceTopControls from "./WorkspaceTopControls";
 import {
   CONTROL_TABS,
   WORKSPACE_TABS,
@@ -48,13 +52,43 @@ function NavigationStrip({ items, pathname, onNavigate, ariaLabel }) {
   );
 }
 
-function SummaryCard({ label, value, detail, onClick }) {
+/*
+ * The approved summary card: icon tile, uppercase label, serif value, a short
+ * detail line, and one optional action. `dot` renders the reference status dot
+ * and is only ever passed a resolved tone - never an assumed healthy one.
+ */
+export function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  actionLabel,
+  onAction,
+  dot,
+  tone,
+}) {
   return (
-    <button type="button" className="ws-summary-card" onClick={onClick}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{detail}</small>
-    </button>
+    <article className={`ws-summary-card${tone ? ` ${tone}` : ""}`}>
+      {dot ? <span className={`ws-summary-dot ${dot}`} aria-hidden="true" /> : null}
+      <div className="ws-summary-body">
+        {Icon ? (
+          <span className="ws-summary-icon" aria-hidden="true">
+            <Icon size={20} />
+          </span>
+        ) : null}
+        <div className="ws-summary-copy">
+          <span className="ws-summary-label">{label}</span>
+          <strong className="ws-summary-value">{value}</strong>
+          {detail ? <small className="ws-summary-detail">{detail}</small> : null}
+        </div>
+      </div>
+      {actionLabel && onAction ? (
+        <button type="button" className="ws-summary-action" onClick={onAction}>
+          {actionLabel}
+          <ArrowRight size={14} aria-hidden="true" />
+        </button>
+      ) : null}
+    </article>
   );
 }
 
@@ -65,107 +99,143 @@ export default function WorkspaceShell({
   error,
   onRefresh,
   actions,
+  status,
+  summaryCards,
+  variant = "inner",
 }) {
   const navigate = useNavigate();
   const location = useLocation();
   const workspace = useWorkspace();
   const meta = routeMeta(location.pathname);
   const controls = routeIsControl(location.pathname);
+  const landing = variant === "landing";
   const currentWorkspace = workspace.activeWorkspace;
 
   const workspaceName = currentWorkspace?.name || "Active Workspace";
-  const plan = String(currentWorkspace?.plan || "foundation");
   const memberCount = summary?.memberCount ?? 0;
   const workCount = summary?.workCount ?? 0;
   const storageLabel = summary?.storageLabel || "0 B";
 
+  const backTo = controls && !landing ? "/workspace/controls/general" : "/workspace";
+  const backLabel =
+    controls && !landing ? "Back to Workspace Controls" : "Back to Workspace";
+  const showBack = location.pathname !== "/workspace";
+
   return (
-    <AuthShell activeNav="workspace">
+    <AuthShell activeNav="workspace" variant="workspace-light">
       <main className="ws-page">
-        <section className="ws-hero">
-          <div className="ws-hero-copy">
-            <div className="ws-eyebrow">{meta.eyebrow}</div>
+        <header className="ws-head">
+          <div className="ws-head-copy">
             <h1>{meta.title}</h1>
             <p>{meta.description}</p>
-            <div className="ws-privacy-note">
-              <ShieldCheck size={16} aria-hidden="true" />
-              <span>
-                Tenant content is isolated to <strong>{workspaceName}</strong>. Support access requires owner consent.
-              </span>
+          </div>
+
+          <div className="ws-head-controls">
+            <WorkspaceTopControls />
+            {actions || onRefresh ? (
+              <div className="ws-head-actions">
+                {actions}
+                {onRefresh ? (
+                  <button
+                    type="button"
+                    className="ws-btn secondary"
+                    onClick={onRefresh}
+                    disabled={loading}
+                  >
+                    <RefreshCw
+                      size={15}
+                      className={loading ? "ws-spin" : ""}
+                      aria-hidden="true"
+                    />
+                    Refresh
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            <div className="ws-head-status">
+              <span className="ws-head-status-slot">{status}</span>
+              {showBack ? (
+                <button
+                  type="button"
+                  className="ws-backlink"
+                  onClick={() => navigate(backTo)}
+                >
+                  <ArrowLeft size={14} aria-hidden="true" />
+                  {backLabel}
+                </button>
+              ) : null}
             </div>
           </div>
+        </header>
 
-          <div className="ws-hero-actions">
+        {landing ? null : (
+          <>
+            <NavigationStrip
+              items={WORKSPACE_TABS}
+              pathname={location.pathname}
+              onNavigate={navigate}
+              ariaLabel="Workspace sections"
+            />
             {controls ? (
-              <button type="button" className="ws-btn secondary" onClick={() => navigate("/workspace")}>
-                <ArrowLeft size={16} aria-hidden="true" />
-                Workspace
-              </button>
+              <NavigationStrip
+                items={CONTROL_TABS}
+                pathname={location.pathname}
+                onNavigate={navigate}
+                ariaLabel="Workspace controls"
+              />
             ) : null}
-            <button
-              type="button"
-              className="ws-btn secondary"
-              onClick={onRefresh}
-              disabled={loading}
-            >
-              <RefreshCw size={16} className={loading ? "ws-spin" : ""} aria-hidden="true" />
-              Refresh
-            </button>
-            {!controls ? (
-              <button
-                type="button"
-                className="ws-btn primary"
-                onClick={() => navigate("/workspace/controls/general")}
-              >
-                <Settings size={16} aria-hidden="true" />
-                Workspace Controls
-              </button>
-            ) : null}
-            {actions}
-          </div>
-        </section>
-
-        <NavigationStrip
-          items={WORKSPACE_TABS}
-          pathname={location.pathname}
-          onNavigate={navigate}
-          ariaLabel="Workspace sections"
-        />
-
-        {controls ? (
-          <NavigationStrip
-            items={CONTROL_TABS}
-            pathname={location.pathname}
-            onNavigate={navigate}
-            ariaLabel="Workspace controls"
-          />
-        ) : null}
+          </>
+        )}
 
         <section className="ws-summary-grid" aria-label="Workspace summary">
-          <SummaryCard
-            label="Current Workspace"
-            value={workspaceName}
-            detail={`${plan.charAt(0).toUpperCase()}${plan.slice(1)} · Private tenant`}
-            onClick={() => navigate("/workspace")}
-          />
-          <SummaryCard
-            label="Active Members"
-            value={memberCount}
-            detail={summary?.pendingInvites ? `${summary.pendingInvites} pending invitation${summary.pendingInvites === 1 ? "" : "s"}` : "No pending invitations"}
-            onClick={() => navigate("/workspace/members")}
-          />
-          <SummaryCard
-            label="Active Work"
-            value={workCount}
-            detail={summary?.reviewCount ? `${summary.reviewCount} awaiting review` : "No approvals waiting"}
-            onClick={() => navigate("/workspace/active-work")}
-          />
-          <SummaryCard
-            label="Storage"
-            value={storageLabel}
-            detail={summary?.storageLimitLabel ? `of ${summary.storageLimitLabel}` : "Workspace-scoped usage"}
-            onClick={() => navigate("/workspace/storage")}
-          />
+          {summaryCards || (
+            <>
+              <SummaryCard
+                icon={Settings}
+                label="Workspace"
+                value={workspaceName}
+                detail="Private tenant environment"
+                actionLabel="View Workspace"
+                onAction={() => navigate("/workspace")}
+              />
+              <SummaryCard
+                icon={Users}
+                label="Active Members"
+                value={memberCount}
+                detail={
+                  summary?.pendingInvites
+                    ? `${summary.pendingInvites} pending invitation${summary.pendingInvites === 1 ? "" : "s"}`
+                    : "No pending invitations"
+                }
+                actionLabel="Manage Members"
+                onAction={() => navigate("/workspace/members")}
+              />
+              <SummaryCard
+                icon={FolderKanban}
+                label="Active Work"
+                value={workCount}
+                detail={
+                  summary?.reviewCount
+                    ? `${summary.reviewCount} awaiting review`
+                    : "No approvals waiting"
+                }
+                actionLabel="Open Active Work"
+                onAction={() => navigate("/workspace/active-work")}
+              />
+              <SummaryCard
+                icon={HardDrive}
+                label="Storage"
+                value={storageLabel}
+                detail={
+                  summary?.storageLimitLabel
+                    ? `of ${summary.storageLimitLabel}`
+                    : "Workspace-scoped usage"
+                }
+                actionLabel="Review Storage"
+                onAction={() => navigate("/workspace/storage")}
+              />
+            </>
+          )}
         </section>
 
         {error ? (
