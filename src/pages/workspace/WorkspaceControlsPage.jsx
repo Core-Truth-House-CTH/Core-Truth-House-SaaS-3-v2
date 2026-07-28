@@ -55,6 +55,41 @@ function systemStatus(data) {
   };
 }
 
+const RENEWAL_UNAVAILABLE = "Renewal date unavailable";
+
+/*
+ * Billing may return a renewal as an ISO string, an epoch number, an empty
+ * value, or a placeholder like "N/A". Intl.DateTimeFormat throws a RangeError on
+ * an Invalid Date, and this app mounts no ErrorBoundary, so an unguarded format
+ * call here would unmount the whole tree. Anything unparseable degrades to a
+ * fixed sentence; a malformed backend string is never echoed to the user.
+ */
+export function renewalLabel(value) {
+  if (value === null || value === undefined || value === "") return RENEWAL_UNAVAILABLE;
+
+  let date;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return RENEWAL_UNAVAILABLE;
+    // Seconds-since-epoch is below this threshold; anything larger is millis.
+    date = new Date(value < 1e11 ? value * 1000 : value);
+  } else if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === "string") {
+    date = new Date(value);
+  } else {
+    return RENEWAL_UNAVAILABLE;
+  }
+
+  if (Number.isNaN(date.getTime())) return RENEWAL_UNAVAILABLE;
+
+  const formatted = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+  return `Renews ${formatted}`;
+}
+
 /* The saved line only claims a save once the settings service confirmed one. */
 function savedStatusFor(forms) {
   if (forms.dirty) {
@@ -79,14 +114,9 @@ function GeneralControlsLanding({ data }) {
   const workspaceName = data.activeWorkspace?.name || "Active Workspace";
   const rawPlan = data.activeWorkspace?.plan;
   const planName = rawPlan ? planLabel(rawPlan) : "Plan unavailable";
-  const renewal = data.billing?.renews_at || data.billing?.current_period_end;
-  const planDetail = renewal
-    ? `Renews ${new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }).format(new Date(renewal))}`
-    : "Renewal date unavailable";
+  const ready = data.dataReadyForActiveWorkspace;
+  const renewal = data.billing?.renews_at ?? data.billing?.current_period_end;
+  const planDetail = renewalLabel(renewal);
 
   const summaryCards = (
     <>
@@ -109,11 +139,13 @@ function GeneralControlsLanding({ data }) {
       <SummaryCard
         icon={Users}
         label="Active Members"
-        value={data.summary.memberCount}
+        value={ready ? data.summary.memberCount : "—"}
         detail={
-          data.summary.pendingInvites
-            ? `${data.summary.pendingInvites} Pending Invitation${data.summary.pendingInvites === 1 ? "" : "s"}`
-            : "No pending invitations"
+          !ready
+            ? "Loading members for this workspace"
+            : data.summary.pendingInvites
+              ? `${data.summary.pendingInvites} Pending Invitation${data.summary.pendingInvites === 1 ? "" : "s"}`
+              : "No pending invitations"
         }
         actionLabel="Manage Members"
         onAction={() => navigate("/workspace/controls/members")}
@@ -144,7 +176,7 @@ function GeneralControlsLanding({ data }) {
         type="button"
         className="ws-btn primary"
         onClick={() => void forms.save("all")}
-        disabled={forms.saving || !forms.dirty}
+        disabled={forms.saving || !forms.dirty || !forms.canSave}
       >
         {forms.saving ? "Saving…" : "Save Changes"}
       </button>

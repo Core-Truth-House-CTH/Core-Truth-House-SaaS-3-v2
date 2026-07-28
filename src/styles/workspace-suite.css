@@ -683,7 +683,11 @@
 
 /* ---------- responsive ---------- */
 
-@media (max-width: 1400px) {
+/* The approved layout is five Controls Center columns. Workspace.png is 1360px
+   wide, so this breakpoint must sit below 1360 or the authority's own width
+   would not reproduce the authority's own layout. 1600, 1440 and 1366 all stay
+   at five columns. */
+@media (max-width: 1279px) {
   .ws-center-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (max-width: 1200px) {

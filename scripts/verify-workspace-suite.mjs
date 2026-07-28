@@ -153,6 +153,81 @@ expect(
   "Retention-aware Workspace deletion requests are not connected."
 );
 
+/*
+ * Regression guards for the four blocking defects found in the post-visual
+ * audit of the Workspace shell. Each asserts the property that was broken, not
+ * a particular way of spelling the fix.
+ */
+
+// P1-1 - an Invalid Date passed straight to Intl.DateTimeFormat throws a
+// RangeError, and this app mounts no ErrorBoundary, so it unmounted the tree.
+const controlsPageSource = read("src/pages/workspace/WorkspaceControlsPage.jsx");
+expect(
+  !/\.format\(\s*new Date\(/.test(controlsPageSource),
+  "Workspace controls must not pass a raw new Date(...) straight into Intl format; use the guarded renewal formatter."
+);
+expect(
+  /Number\.isNaN\(\s*\w+\.getTime\(\)\s*\)/.test(controlsPageSource) &&
+    controlsPageSource.includes("Renewal date unavailable"),
+  "The renewal formatter must reject invalid dates and fall back to a fixed label."
+);
+
+// P1-2 - stale tenant payloads must never be presented or written through.
+const dataSource = read("src/pages/workspace/workspaceData.js");
+expect(
+  dataSource.includes("useRef") && /fetchSequenceRef/.test(dataSource),
+  "Workspace loading must use a monotonic stale-request guard."
+);
+expect(
+  dataSource.includes("loadedWorkspaceId"),
+  "Workspace state must record which workspace the committed payload belongs to."
+);
+expect(
+  /if \(!isCurrent\(\)\) return;/.test(dataSource),
+  "A superseded Workspace load must return before committing state."
+);
+expect(
+  dataSource.includes("EMPTY_TENANT_SLICES") &&
+    /trackedWorkspaceId !== activeWorkspaceId/.test(dataSource),
+  "Tenant-derived slices must be cleared as soon as the active workspace changes."
+);
+expect(
+  dataSource.includes("dataReadyForActiveWorkspace"),
+  "Workspace data must expose whether the committed payload belongs to the active workspace."
+);
+
+// P1-2 (write side) and P2-1 - writes gated on ownership, edits kept on refresh.
+const generalSource = read("src/pages/workspace/WorkspaceGeneralControls.jsx");
+expect(
+  generalSource.includes("dataReadyForActiveWorkspace") && generalSource.includes("canSave"),
+  "Workspace settings writes must be gated on data belonging to the active workspace."
+);
+expect(
+  /if \(!canSave\)/.test(generalSource),
+  "save() must refuse to PATCH before the active workspace's data is committed."
+);
+expect(
+  /disabled=\{saving \|\| !forms\.canSave \|\| !forms\.identityDirty\}/.test(generalSource) &&
+    /disabled=\{saving \|\| !forms\.canSave \|\| !forms\.regionalDirty\}/.test(generalSource),
+  "Both settings panels must disable Save while loading, cross-tenant, or unchanged."
+);
+expect(
+  generalSource.includes("seededWorkspaceId") && generalSource.includes("identityDirtyRef"),
+  "Settings forms must distinguish a tenant change from a same-tenant refresh so edits survive a reload."
+);
+
+// P2-2 - the approved five-column Controls Center must survive 1366px.
+const workspaceCss = read("src/styles/workspace-suite.css");
+const centreFourColumnBreakpoints = [
+  ...workspaceCss.matchAll(/@media \(max-width:\s*(\d+)px\)\s*\{[^}]*\.ws-center-grid[^}]*repeat\(4/g),
+].map((match) => Number(match[1]));
+for (const width of centreFourColumnBreakpoints) {
+  expect(
+    width < 1360,
+    `Controls Center drops to four columns at ${width}px; the approved layout is five columns down to 1360px.`
+  );
+}
+
 const packageJson = JSON.parse(read("package.json"));
 const dependencies = packageJson.dependencies || {};
 const requiredDependencies = [

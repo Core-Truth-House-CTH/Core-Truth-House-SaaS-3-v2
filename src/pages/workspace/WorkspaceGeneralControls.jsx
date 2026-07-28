@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   Building2,
@@ -38,6 +38,9 @@ const TIMEZONES = [
 
 const LOCALES = [["en-US", "English (US)"]];
 
+const EMPTY_IDENTITY = { workspace_name: "", brand_visibility: "private", logo_url: "" };
+const EMPTY_REGIONAL = { timezone: "", locale: "" };
+
 const identityFrom = (settings, activeWorkspace) => ({
   workspace_name: settings?.workspace_name || activeWorkspace?.name || "",
   brand_visibility: settings?.brand_visibility || "private",
@@ -57,28 +60,96 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
  * Nothing here reports success it did not get from the settings service.
  */
 export function useGeneralControlsForms(data) {
-  const { settings, activeWorkspace, reload } = data;
-  const [identity, setIdentity] = useState(() => identityFrom(settings, activeWorkspace));
-  const [regional, setRegional] = useState(() => regionalFrom(settings));
+  const {
+    settings,
+    activeWorkspace,
+    activeWorkspaceId,
+    dataReadyForActiveWorkspace,
+    reload,
+  } = data;
+
+  const [identity, setIdentity] = useState(EMPTY_IDENTITY);
+  const [regional, setRegional] = useState(EMPTY_REGIONAL);
+  const [baseIdentity, setBaseIdentity] = useState(EMPTY_IDENTITY);
+  const [baseRegional, setBaseRegional] = useState(EMPTY_REGIONAL);
+  // The workspace whose values are currently seeded into these forms.
+  const [seededWorkspaceId, setSeededWorkspaceId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState("default");
   const [savedAt, setSavedAt] = useState(null);
 
-  const baseIdentity = useMemo(
-    () => identityFrom(settings, activeWorkspace),
-    [settings, activeWorkspace]
-  );
-  const baseRegional = useMemo(() => regionalFrom(settings), [settings]);
-
-  useEffect(() => {
-    setIdentity(baseIdentity);
-    setRegional(baseRegional);
-  }, [baseIdentity, baseRegional]);
+  /*
+   * A tenant change wipes the forms during render, before paint, so the previous
+   * tenant's name, visibility, logo, or time zone is never editable - and never
+   * sendable - under the new tenant's selector. Edits are deliberately not
+   * carried across a switch.
+   */
+  const [trackedWorkspaceId, setTrackedWorkspaceId] = useState(activeWorkspaceId);
+  if (trackedWorkspaceId !== activeWorkspaceId) {
+    setTrackedWorkspaceId(activeWorkspaceId);
+    setSeededWorkspaceId(null);
+    setIdentity(EMPTY_IDENTITY);
+    setRegional(EMPTY_REGIONAL);
+    setBaseIdentity(EMPTY_IDENTITY);
+    setBaseRegional(EMPTY_REGIONAL);
+    setMessage("");
+    setTone("default");
+    setSavedAt(null);
+  }
 
   const identityDirty = !same(identity, baseIdentity);
   const regionalDirty = !same(regional, baseRegional);
   const dirty = identityDirty || regionalDirty;
+
+  // Read the live dirty flags inside the seeding effect without making it
+  // re-run on every keystroke.
+  const identityDirtyRef = useRef(identityDirty);
+  identityDirtyRef.current = identityDirty;
+  const regionalDirtyRef = useRef(regionalDirty);
+  regionalDirtyRef.current = regionalDirty;
+
+  /*
+   * Seeding rules:
+   *  - first payload for a tenant: seed both groups.
+   *  - same-tenant refresh: always advance the baseline to the newest server
+   *    values, but only overwrite a group's editable values when that group is
+   *    clean. A dirty Identity panel therefore keeps the user's typing while a
+   *    clean Regional panel still adopts fresh data.
+   */
+  useEffect(() => {
+    if (!dataReadyForActiveWorkspace) return;
+
+    const nextIdentity = identityFrom(settings, activeWorkspace);
+    const nextRegional = regionalFrom(settings);
+
+    if (seededWorkspaceId !== activeWorkspaceId) {
+      setBaseIdentity(nextIdentity);
+      setIdentity(nextIdentity);
+      setBaseRegional(nextRegional);
+      setRegional(nextRegional);
+      setSeededWorkspaceId(activeWorkspaceId);
+      return;
+    }
+
+    setBaseIdentity(nextIdentity);
+    if (!identityDirtyRef.current) setIdentity(nextIdentity);
+    setBaseRegional(nextRegional);
+    if (!regionalDirtyRef.current) setRegional(nextRegional);
+  }, [
+    dataReadyForActiveWorkspace,
+    settings,
+    activeWorkspace,
+    activeWorkspaceId,
+    seededWorkspaceId,
+  ]);
+
+  // Writes are only ever allowed against a tenant whose data is committed and
+  // seeded. This is what makes a cross-tenant PATCH unreachable.
+  const canSave =
+    Boolean(dataReadyForActiveWorkspace) &&
+    seededWorkspaceId === activeWorkspaceId &&
+    Boolean(activeWorkspaceId);
 
   const resetIdentity = useCallback(() => {
     setIdentity(baseIdentity);
@@ -94,6 +165,12 @@ export function useGeneralControlsForms(data) {
 
   const save = useCallback(
     async (scope = "all") => {
+      if (!canSave) {
+        setTone("danger");
+        setMessage("Workspace data is still loading. Nothing was sent.");
+        return false;
+      }
+
       const patch = {};
 
       if (scope === "identity" || scope === "all") {
@@ -134,7 +211,7 @@ export function useGeneralControlsForms(data) {
         setSaving(false);
       }
     },
-    [reload, identity, regional]
+    [canSave, reload, identity, regional]
   );
 
   return {
@@ -152,6 +229,7 @@ export function useGeneralControlsForms(data) {
     message,
     tone,
     savedAt,
+    canSave,
   };
 }
 
@@ -291,7 +369,10 @@ export function WorkspaceIdentityPanel({ data, forms }) {
           >
             Cancel
           </button>
-          <button className="ws-btn primary" disabled={saving}>
+          <button
+            className="ws-btn primary"
+            disabled={saving || !forms.canSave || !forms.identityDirty}
+          >
             {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>
@@ -361,7 +442,10 @@ export function RegionalDefaultsPanel({ data, forms }) {
           >
             Cancel
           </button>
-          <button className="ws-btn primary" disabled={saving}>
+          <button
+            className="ws-btn primary"
+            disabled={saving || !forms.canSave || !forms.regionalDirty}
+          >
             {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>
@@ -451,11 +535,15 @@ export function ActiveBrandProfilePanel({ data }) {
         <button
           type="button"
           className="ws-textlink"
-          onClick={data.reload}
-          disabled={data.loading}
+          onClick={() => void (data.refreshBrandMemory ? data.refreshBrandMemory() : data.reload())}
+          disabled={data.loading || data.brandMemoryRefreshing}
         >
           Refresh Brand Memory
-          <RefreshCw size={14} className={data.loading ? "ws-spin" : ""} aria-hidden="true" />
+          <RefreshCw
+            size={14}
+            className={data.brandMemoryRefreshing || data.loading ? "ws-spin" : ""}
+            aria-hidden="true"
+          />
         </button>
       </div>
     </article>
