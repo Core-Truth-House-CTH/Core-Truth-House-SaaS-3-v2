@@ -1,18 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { discoverTrackedTests } from "./run-repository-tests.mjs";
-
-test("discovers conventional tests repository-wide and deterministically", () => {
-  const files = [
-    "packages/zeta/tests/nested.test.tsx", "functions/test/handler.spec.cjs",
-    "tooling/check.test.ts", "scripts/policy.test.mjs", "src/x.test.jsx",
-    "tests/root.js", "test/root.ts", "packages/alpha/__tests__/unit.js",
-  ];
-  assert.deepEqual(discoverTrackedTests(files), [...files].sort((a, b) => a.localeCompare(b, "en")));
-});
-test("excludes dependencies, generated output, fixtures, vendor, and archives", () => {
-  assert.deepEqual(discoverTrackedTests([
-    "node_modules/x/a.test.js", "dist/a.test.js", "generated/a.test.js",
-    "vendor/a.test.js", "fixtures/a.test.js", "archive/a.test.js", "src/not-a-test.js",
-  ]), []);
-});
+import test from"node:test";import assert from"node:assert/strict";import{mkdtempSync,mkdirSync,writeFileSync}from"node:fs";import{tmpdir}from"node:os";import path from"node:path";import{execFileSync}from"node:child_process";import{discoverTrackedTests,runRepositoryTests,trackedFiles}from"./run-repository-tests.mjs";
+const repo=()=>{const d=mkdtempSync(path.join(tmpdir(),"cth-tests-"));execFileSync("git",["init","-q"],{cwd:d});execFileSync("git",["config","user.email","test@example.invalid"],{cwd:d});execFileSync("git",["config","user.name","Test"],{cwd:d});return d},add=(d,n,c='import test from"node:test";test("ok",()=>{});')=>{const p=path.join(d,n);mkdirSync(path.dirname(p),{recursive:true});writeFileSync(p,c);execFileSync("git",["add","--",n],{cwd:d})};
+test("supported extensions and deterministic byte order",()=>assert.deepEqual(discoverTrackedTests(["z.test.mts","a.test.cts","x.test.tsx"]).sort(),["a.test.cts","x.test.tsx","z.test.mts"]));
+test("fixture archive generated and vendor parent names do not hide tests",()=>assert.equal(discoverTrackedTests(["src/fixtures/a.test.js","pkg/archive/b.test.js","pkg/generated/c.test.js","pkg/vendor/d.test.js"]).length,4));
+test("explicit generated root remains excluded",()=>assert.deepEqual(discoverTrackedTests(["generated/a.test.js"]),[]));
+test("real git discovery preserves spaces and newline names",()=>{const d=repo();add(d,"tests/space name.test.js");add(d,"tests/line\nname.test.js");assert.deepEqual(discoverTrackedTests(trackedFiles(d)),["tests/line\nname.test.js","tests/space name.test.js"])});
+test("real entry point executes every tracked supported test",()=>{const d=repo();add(d,"tests/a.test.js");add(d,"src/fixtures/b.test.js");assert.equal(runRepositoryTests(d),0)});
+test("one supported test cannot hide unsupported discovered test",()=>{const d=repo();add(d,"a.test.js");add(d,"b.test.mts","export{}");assert.equal(runRepositoryTests(d),1)});

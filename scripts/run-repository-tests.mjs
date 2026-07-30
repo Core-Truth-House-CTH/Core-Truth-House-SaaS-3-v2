@@ -1,58 +1,7 @@
-import { execFileSync, spawnSync } from "node:child_process";
-import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const extensions = new Set([".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"]);
-const executable = new Set([".js", ".mjs", ".cjs"]);
-const excludedSegments = new Set(["node_modules", "dist", "build", "coverage", "generated", "vendor", "vendored", "fixtures", "__fixtures__", "archive", "archived"]);
-
-export function isTestPath(file) {
-  const normalized = file.replaceAll("\\", "/");
-  const segments = normalized.split("/");
-  if (segments.some((segment) => excludedSegments.has(segment.toLowerCase()))) return false;
-  const extension = path.posix.extname(normalized);
-  if (!extensions.has(extension)) return false;
-  const basename = path.posix.basename(normalized);
-  return /\.(?:test|spec)\.(?:js|jsx|mjs|cjs|ts|tsx)$/.test(basename)
-    || segments.some((segment) => ["test", "tests", "__tests__"].includes(segment.toLowerCase()));
-}
-
-export function discoverTrackedTests(trackedFiles) {
-  return [...new Set(trackedFiles.filter(isTestPath))].sort((a, b) => a.localeCompare(b, "en"));
-}
-
-function trackedFiles(repositoryRoot) {
-  return execFileSync("git", ["ls-files", "-z"], { cwd: repositoryRoot })
-    .toString("utf8").split("\0").filter(Boolean);
-}
-
-export function runRepositoryTests(repositoryRoot = root) {
-  let tests;
-  try {
-    tests = discoverTrackedTests(trackedFiles(repositoryRoot));
-  } catch (error) {
-    console.error(`TEST DISCOVERY FAILED: git ls-files failed: ${error.message}`);
-    return 1;
-  }
-  if (!tests.length) {
-    console.error("TEST DISCOVERY FAILED: no tracked repository test files matched supported conventions.");
-    return 1;
-  }
-  console.log(`Discovered ${tests.length} tracked repository test files:`);
-  for (const file of tests) console.log(`DISCOVERED: ${file}`);
-  const unsupported = tests.filter((file) => !executable.has(path.posix.extname(file)));
-  if (unsupported.length) {
-    for (const file of unsupported) console.error(`UNSUPPORTED TEST RUNNER: ${file} is tracked and discoverable, but Node cannot execute ${path.posix.extname(file)} tests without an approved runner.`);
-    return 1;
-  }
-  for (const file of tests) console.log(`EXECUTING: ${file}`);
-  const result = spawnSync(process.execPath, ["--test", ...tests], { cwd: repositoryRoot, stdio: "inherit", env: process.env });
-  if (result.error) {
-    console.error(`TEST EXECUTION FAILED: ${result.error.message}`);
-    return 1;
-  }
-  return result.status ?? 1;
-}
-
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) process.exitCode = runRepositoryTests();
+import{execFileSync,spawnSync}from"node:child_process";import path from"node:path";import{fileURLToPath,pathToFileURL}from"node:url";
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),".."),extensions=new Set([".js",".jsx",".mjs",".cjs",".ts",".tsx",".mts",".cts"]),executable=new Set([".js",".mjs",".cjs"]),excludedRoots=["node_modules/","dist/","build/","coverage/",".archive/","generated/"];
+export function isTestPath(file){const n=file.replaceAll("\\\\","/");if(excludedRoots.some(x=>n.startsWith(x)))return false;const ext=path.posix.extname(n);if(!extensions.has(ext))return false;const base=path.posix.basename(n);return/\.(?:test|spec)\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/.test(base)||n.split("/").some(x=>["test","tests","__tests__"].includes(x.toLowerCase()))}
+export function discoverTrackedTests(files){return[...new Set(files.filter(isTestPath))].sort((a,b)=>Buffer.from(a).compare(Buffer.from(b)))}
+export function trackedFiles(repo){return execFileSync("git",["ls-files","-z"],{cwd:repo}).toString("utf8").split("\0").filter(Boolean)}
+export function runRepositoryTests(repo=root){let tests;try{tests=discoverTrackedTests(trackedFiles(repo))}catch(x){console.error("TEST DISCOVERY FAILED: "+x.message);return 1}if(!tests.length){console.error("TEST DISCOVERY FAILED: no tracked tests.");return 1}const governance=tests.filter(x=>x.startsWith("scripts/")||x.startsWith(".github/")),product=tests.filter(x=>!governance.includes(x));console.log("Governance test files discovered: "+governance.length);console.log("Product test files discovered: "+product.length);console.log("Total test files executed: "+tests.length);for(const f of tests)console.log("DISCOVERED: "+JSON.stringify(f));const unsupported=tests.filter(x=>!executable.has(path.posix.extname(x)));if(unsupported.length){for(const f of unsupported)console.error("UNSUPPORTED TEST RUNNER: "+JSON.stringify(f));return 1}const{NODE_TEST_CONTEXT,...childEnv}=process.env;const r=spawnSync(process.execPath,["--test",...tests],{cwd:repo,stdio:"inherit",env:childEnv});if(r.error){console.error("TEST EXECUTION FAILED: "+r.error.message);return 1}return r.status??1}
+if(import.meta.url===pathToFileURL(process.argv[1]??"").href)process.exitCode=runRepositoryTests();
