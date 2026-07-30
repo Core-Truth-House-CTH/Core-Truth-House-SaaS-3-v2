@@ -11,6 +11,7 @@ Before changing Foundation, Structure, House, Command Center, Workspace, Reports
 - `docs/builds/foundation-truth/ROUTE-MATRIX.md`
 - `docs/builds/foundation-truth/ACCEPTANCE-CRITERIA.md`
 - `docs/builds/foundation-truth/UI-CONTRACT.md`
+- `docs/builds/foundation-truth/FOUNDATION-DATA-CONTRACT.json`
 
 ## Shared infrastructure
 
@@ -62,6 +63,8 @@ Positioning, Messaging, Audience, and Identity must not maintain competing autho
 
 Use one workspace identifier and one canonical Foundation record. A locked version is immutable. Editing a locked Foundation creates a draft revision.
 
+All Foundation persistence must flow through `src/features/foundation/api/foundationApi.js`. That adapter must use `src/lib/apiClient.js`, the `/api/foundation` endpoint family, the shared workspace header, explicit locked and draft reads, version reads, review, approval, lock, and revision operations. Foundation pages and helpers may not call an API, browser storage, or the shared client directly.
+
 ## Route requirements
 
 The canonical Foundation route family is:
@@ -74,6 +77,8 @@ The canonical Foundation route family is:
 - `/foundation/messaging`
 - `/foundation/expression`
 - `/foundation/review`
+
+Every canonical Foundation route requires the `foundation` plan and `page` gate metadata.
 
 Legacy routes must remain functional through explicit redirects or approved compatibility handling until all internal links are migrated. Do not silently delete or repurpose existing routes.
 
@@ -98,6 +103,7 @@ Every active route must be registered in `src/config/appRoutes.js` and `src/navi
 - Do not install dependencies or run builds on the production VPS.
 - Do not alter dependencies or `yarn.lock` without documenting the reason and receiving explicit approval.
 - Do not mix feature implementation, deployment changes, database migration, or cleanup in one pull request.
+- Operational and deployment files may change only in a separate release-control pull request using the allowlisted immutable-artifact workflow.
 - Preserve unrelated routes, files, data, and legacy behavior unless removal is explicitly authorized.
 
 ## Required validation
@@ -106,13 +112,14 @@ Before a pull request can move out of Draft:
 
 1. locked dependency install
 2. lint
-3. automated tests
+3. repository-wide automatic test discovery and execution
 4. route contract verification
-5. architecture boundary verification
-6. production build
-7. review of unresolved pull request threads
-8. staging smoke test when the change affects runtime behavior
-9. visual comparison when an approved reference exists
+5. architecture boundary and reachable-import verification
+6. deployment policy verification
+7. production build
+8. review of unresolved pull request threads
+9. staging smoke test when the change affects runtime behavior
+10. visual comparison when an approved reference exists
 
 A build passing static checks is not proof of product completion.
 
