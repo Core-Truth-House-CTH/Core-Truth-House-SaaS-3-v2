@@ -1,0 +1,23 @@
+{
+  "featureRoot": "src/features/foundation",
+  "adapterPath": "src/features/foundation/api/foundationApi.js",
+  "sharedClientPath": "src/lib/apiClient.js",
+  "routeImportPrefix": "../features/foundation/",
+  "endpointPrefix": "/api/foundation",
+  "requiredExports": [
+    "getFoundation",
+    "getFoundationVersion",
+    "saveFoundationDraft",
+    "submitFoundationForReview",
+    "approveFoundation",
+    "lockFoundation",
+    "createFoundationRevision"
+  ],
+  "requiredReadModes": [
+    "locked",
+    "draft",
+    "version"
+  ],
+  "workspaceScope": "X-Workspace-ID through the shared API client",
+  "lockedMutationRule": "A locked version is immutable; changes create a draft revision."
+}
