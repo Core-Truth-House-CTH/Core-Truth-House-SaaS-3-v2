@@ -63,6 +63,9 @@ jobs:
       - name: Verify architecture boundaries
         run: yarn check:architecture
 
+      - name: Verify deployment policy
+        run: yarn check:deployment
+
       - name: Build production artifact
         run: yarn build
 
