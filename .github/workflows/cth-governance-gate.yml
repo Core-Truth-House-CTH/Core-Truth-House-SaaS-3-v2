@@ -1,0 +1,78 @@
+name: CTH Governance Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+      - release/core-truth-house-production
+      - "integration/**"
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  workflow_dispatch:
+
+concurrency:
+  group: cth-governance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Locked install, tests, contracts, and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: yarn
+
+      - name: Activate repository Yarn version
+        run: |
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
+          yarn --version
+
+      - name: Install locked dependencies
+        run: yarn install --frozen-lockfile --non-interactive
+
+      - name: Verify lockfile stability
+        run: git diff --exit-code -- yarn.lock
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Run automated tests
+        run: yarn test:ci
+
+      - name: Verify route contract
+        run: yarn check:routes
+
+      - name: Verify architecture boundaries
+        run: yarn check:architecture
+
+      - name: Build production artifact
+        run: yarn build
+
+      - name: Verify build output
+        run: test -f dist/index.html
+
+      - name: Upload tested artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cth-frontend-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
