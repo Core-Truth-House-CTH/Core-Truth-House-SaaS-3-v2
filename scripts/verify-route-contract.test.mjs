@@ -1,39 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import contractBase from "../docs/builds/foundation-truth/FOUNDATION-DATA-CONTRACT.json" with { type: "json" };
-import { validateRouteContract } from "./verify-route-contract.mjs";
-
-const canonical = contractBase.canonicalRoutes;
-const legacyApp = contractBase.legacyCompatibility.map(({ route }) => ({ path: route, block: `{ path: "${route}" }` }));
-const legacyRegistry = (phase) => contractBase.legacyCompatibility.map((entry) => ({
-  path: entry.route,
-  component: phase === "contract-only" ? entry.contractOnlyComponent : entry.implementationActiveComponent,
-}));
-const route = (path) => ({ path, block: `{ path: "${path}", requiredPlan: "foundation", gateType: "page" }` });
-const redirects = new Map(contractBase.legacyCompatibility.filter((x) => x.approvedRedirect).map((x) => [x.implementationActiveComponent, x.approvedRedirect]));
-const errors = (phase, count, options = {}) => validateRouteContract({
-  contract: { ...contractBase, implementationPhase: phase },
-  app: [...legacyApp, ...canonical.slice(0, count).map(route), ...(options.extraApp ?? [])],
-  registry: [...legacyRegistry(phase), ...canonical.slice(0, count).map((path) => ({ path, component: "Page" })), ...(options.extraRegistry ?? [])],
-  redirects,
-});
-
-test("contract-only accepts zero and rejects every partial or complete family", () => {
-  assert.deepEqual(errors("contract-only", 0), []);
-  for (let count = 1; count <= 8; count += 1) assert.notEqual(errors("contract-only", count).length, 0);
-});
-test("implementation-active requires all eight exact gated routes", () => {
-  for (let count = 0; count < 8; count += 1) assert.notEqual(errors("implementation-active", count).length, 0);
-  assert.deepEqual(errors("implementation-active", 8), []);
-});
-test("duplicates and unexpected variants fail", () => {
-  assert.match(errors("implementation-active", 8, { extraApp: [route("/foundation")] }).join("\n"), /Duplicate/);
-  assert.match(errors("implementation-active", 8, { extraRegistry: [{ path: "/foundation/other", component: "Page" }] }).join("\n"), /Unexpected/);
-});
-test("every protected legacy route has one phase-specific exact target", () => {
-  for (const migration of contractBase.legacyCompatibility) {
-    const bad = legacyRegistry("implementation-active").map((entry) => entry.path === migration.route ? { ...entry, component: "Wrong" } : entry);
-    const result = validateRouteContract({ contract: { ...contractBase, implementationPhase: "implementation-active" }, app: [...legacyApp, ...canonical.map(route)], registry: [...bad, ...canonical.map((path) => ({ path, component: "Page" }))], redirects });
-    assert.match(result.join("\n"), new RegExp(migration.route.replaceAll("/", "\\/")));
-  }
-});
+import {readFileSync} from "node:fs";
+import contract from "../docs/builds/foundation-truth/FOUNDATION-DATA-CONTRACT.json" with {type:"json"};
+import {parseRoutes,validateRouteContract} from "./verify-route-contract.mjs";
+const realApp=readFileSync("src/config/appRoutes.js","utf8"),realRegistry=readFileSync("src/navigation/pageRegistry.jsx","utf8");
+const check=(app=realApp,registry=realRegistry,c=contract)=>validateRouteContract({contract:c,...parseRoutes(app,registry)});
+test("real contract-only production sources pass",()=>assert.deepEqual(check(),[]));
+test("comments and dead route arrays do not register",()=>{const p=parseRoutes("const dead=[{path:\"/foundation\"}];/* path: \"/foundation\" */export const APP_ROUTES=[];","const X=lazy(()=>import(\"../x\"));const unused={\"/foundation\":X};const pageRegistry={};export{pageRegistry};export default pageRegistry;");assert.deepEqual(p.app,[]);assert.deepEqual(p.registry,[])});
+test("computed, spread, and duplicate APP_ROUTES data fail",()=>{for(const source of ["const x={path:\"/x\"};export const APP_ROUTES=[{...x}];","export const APP_ROUTES=[{[\"path\"]:\"/x\"}];","export const APP_ROUTES=[{path:\"/x\",path:\"/y\"}];"])assert.throws(()=>parseRoutes(source,realRegistry))});
+test("computed, spread, and duplicate registry keys fail",()=>{for(const body of ["{[\"/x\"]:X}","{...{\"/x\":X}}","{\"/x\":X,\"/x\":X}"])assert.throws(()=>parseRoutes("export const APP_ROUTES=[];","const X=lazy(()=>import(\"../x\"));const pageRegistry="+body+";export{pageRegistry};export default pageRegistry;"))});
+test("nested fake gate metadata does not satisfy canonical route",()=>{const a=realApp.replace("path: \"/brand-foundation\"","path: \"/foundation\"").replace("requiredPlan: null,\n    gateType: null","meta:{requiredPlan:\"foundation\",gateType:\"page\"},\n    requiredPlan:null,\n    gateType:null");assert.notEqual(check(a,realRegistry,{...contract,implementationPhase:"implementation-active"}).length,0)});
+test("all partial contract-only families fail",()=>{for(const route of contract.canonicalRoutes){const a=realApp.replace("path: \"/brand-foundation\"","path: \""+route+"\"");assert.match(check(a).join("\n"),/zero Foundation/)}});
+test("unchanged legacy identifier with changed import fails",()=>assert.match(check(realApp,realRegistry.replace('import("../pages/BrandFoundation")','import("../pages/Evil")')).join("\n"),/imports/));
+test("unused approved binding cannot mask malicious live binding",()=>{const r=realRegistry.replace('const BrandFoundation = lazy(() => import("../pages/BrandFoundation"));','const ApprovedBrandFoundation = lazy(() => import("../pages/BrandFoundation"));\nconst BrandFoundation = lazy(() => import("../pages/Evil"));');assert.match(check(realApp,r).join("\n"),/imports/)});
+test("dead or alternate exports fail",()=>assert.throws(()=>parseRoutes("const APP_ROUTES=[];export const OTHER=[];",realRegistry)));
+test("every protected legacy route has exact current binding and module",()=>{const parsed=parseRoutes(realApp,realRegistry);for(const m of contract.legacyCompatibility){const x=parsed.registry.find(r=>r.path===m.route);assert.equal(x.component,m.contractOnlyComponent);assert.equal(x.modulePath,m.contractOnlyModule)}});

@@ -36,17 +36,107 @@
     "gateType": "page"
   },
   "legacyCompatibility": [
-    { "route": "/command-center", "contractOnlyComponent": "CommandCenterNext", "implementationActiveComponent": "CommandCenterNext", "behavior": "preserve" },
-    { "route": "/brand-house", "contractOnlyComponent": "BrandHouse", "implementationActiveComponent": "BrandHouse", "behavior": "preserve" },
-    { "route": "/workspace", "contractOnlyComponent": "WorkspacePage", "implementationActiveComponent": "WorkspacePage", "behavior": "preserve" },
-    { "route": "/brand-audit", "contractOnlyComponent": "BrandAudit", "implementationActiveComponent": "BrandAudit", "behavior": "preserve", "approvedFoundationLink": "/foundation/diagnostic" },
-    { "route": "/brand-foundation", "contractOnlyComponent": "BrandFoundation", "implementationActiveComponent": "FoundationHomeLegacyRedirect", "behavior": "redirect", "approvedRedirect": "/foundation" },
-    { "route": "/audience", "contractOnlyComponent": "Audience", "implementationActiveComponent": "FoundationAudienceLegacyRedirect", "behavior": "redirect", "approvedRedirect": "/foundation/audience" },
-    { "route": "/brand-positioning", "contractOnlyComponent": "BrandPositioning", "implementationActiveComponent": "FoundationPositioningLegacyRedirect", "behavior": "redirect", "approvedRedirect": "/foundation/positioning" },
-    { "route": "/messaging-structure", "contractOnlyComponent": "MessagingStructure", "implementationActiveComponent": "FoundationMessagingLegacyRedirect", "behavior": "redirect", "approvedRedirect": "/foundation/messaging" },
-    { "route": "/identity-studio", "contractOnlyComponent": "IdentityStudio", "implementationActiveComponent": "IdentityStudio", "behavior": "preserve", "approvedFoundationLink": "/foundation/expression" },
-    { "route": "/systems-builder", "contractOnlyComponent": "SystemsBuilder", "implementationActiveComponent": "SystemsBuilder", "behavior": "preserve" },
-    { "route": "/content-studio", "contractOnlyComponent": "CSDashboard", "implementationActiveComponent": "CSDashboard", "behavior": "preserve" },
-    { "route": "/brand-memory", "contractOnlyComponent": "BrandFoundation", "implementationActiveComponent": "BrandFoundation", "behavior": "preserve" }
+    {
+      "route": "/command-center",
+      "contractOnlyComponent": "CommandCenterNext",
+      "implementationActiveComponent": "CommandCenterNext",
+      "behavior": "preserve",
+      "contractOnlyModule": "../pages/CommandCenterNext",
+      "implementationActiveModule": "../pages/CommandCenterNext"
+    },
+    {
+      "route": "/brand-house",
+      "contractOnlyComponent": "BrandHouse",
+      "implementationActiveComponent": "BrandHouse",
+      "behavior": "preserve",
+      "contractOnlyModule": "../pages/BrandHouse",
+      "implementationActiveModule": "../pages/BrandHouse"
+    },
+    {
+      "route": "/workspace",
+      "contractOnlyComponent": "WorkspacePage",
+      "implementationActiveComponent": "WorkspacePage",
+      "behavior": "preserve",
+      "contractOnlyModule": "../pages/WorkspacePage",
+      "implementationActiveModule": "../pages/WorkspacePage"
+    },
+    {
+      "route": "/brand-audit",
+      "contractOnlyComponent": "BrandAudit",
+      "implementationActiveComponent": "BrandAudit",
+      "behavior": "preserve",
+      "approvedFoundationLink": "/foundation/diagnostic",
+      "contractOnlyModule": "../pages/BrandAudit",
+      "implementationActiveModule": "../pages/BrandAudit"
+    },
+    {
+      "route": "/brand-foundation",
+      "contractOnlyComponent": "BrandFoundation",
+      "implementationActiveComponent": "FoundationHomeLegacyRedirect",
+      "behavior": "redirect",
+      "approvedRedirect": "/foundation",
+      "contractOnlyModule": "../pages/BrandFoundation",
+      "implementationActiveModule": null
+    },
+    {
+      "route": "/audience",
+      "contractOnlyComponent": "Audience",
+      "implementationActiveComponent": "FoundationAudienceLegacyRedirect",
+      "behavior": "redirect",
+      "approvedRedirect": "/foundation/audience",
+      "contractOnlyModule": "../pages/Audience",
+      "implementationActiveModule": null
+    },
+    {
+      "route": "/brand-positioning",
+      "contractOnlyComponent": "BrandPositioning",
+      "implementationActiveComponent": "FoundationPositioningLegacyRedirect",
+      "behavior": "redirect",
+      "approvedRedirect": "/foundation/positioning",
+      "contractOnlyModule": "../pages/BrandPositioning",
+      "implementationActiveModule": null
+    },
+    {
+      "route": "/messaging-structure",
+      "contractOnlyComponent": "MessagingStructure",
+      "implementationActiveComponent": "FoundationMessagingLegacyRedirect",
+      "behavior": "redirect",
+      "approvedRedirect": "/foundation/messaging",
+      "contractOnlyModule": "../pages/MessagingStructure",
+      "implementationActiveModule": null
+    },
+    {
+      "route": "/identity-studio",
+      "contractOnlyComponent": "IdentityStudio",
+      "implementationActiveComponent": "IdentityStudio",
+      "behavior": "preserve",
+      "approvedFoundationLink": "/foundation/expression",
+      "contractOnlyModule": "../pages/IdentityStudio",
+      "implementationActiveModule": "../pages/IdentityStudio"
+    },
+    {
+      "route": "/systems-builder",
+      "contractOnlyComponent": "SystemsBuilder",
+      "implementationActiveComponent": "SystemsBuilder",
+      "behavior": "preserve",
+      "contractOnlyModule": "../pages/SystemsBuilder",
+      "implementationActiveModule": "../pages/SystemsBuilder"
+    },
+    {
+      "route": "/content-studio",
+      "contractOnlyComponent": "CSDashboard",
+      "implementationActiveComponent": "CSDashboard",
+      "behavior": "preserve",
+      "contractOnlyModule": "../features/contentStudio/pages/DashboardPage",
+      "implementationActiveModule": "../features/contentStudio/pages/DashboardPage"
+    },
+    {
+      "route": "/brand-memory",
+      "contractOnlyComponent": "BrandFoundation",
+      "implementationActiveComponent": "BrandFoundation",
+      "behavior": "preserve",
+      "contractOnlyModule": "../pages/BrandFoundation",
+      "implementationActiveModule": "../pages/BrandFoundation"
+    }
   ]
 }
