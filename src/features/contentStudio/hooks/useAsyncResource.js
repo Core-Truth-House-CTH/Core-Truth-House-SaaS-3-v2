@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useWorkspace } from "../../../context/WorkspaceContext";
 import { classifyApiError } from "../utilities/errors";
 
 /**
@@ -8,10 +9,15 @@ import { classifyApiError } from "../utilities/errors";
  * Deliberate behaviours:
  *  - On failure `data` is left at its initial value. It NEVER substitutes
  *    placeholder or mock records, so a failed call cannot masquerade as data.
+ *  - Every resource is automatically scoped to the active workspace. A
+ *    workspace change invalidates the previous request, clears its data, and
+ *    starts a replacement request for the new workspace.
  *  - A sequence guard discards stale responses after a workspace or filter
  *    change, preventing an older request from overwriting a newer one.
  */
 export function useAsyncResource(loader, deps = [], { initialData = null, enabled = true } = {}) {
+  const workspace = useWorkspace() || {};
+  const workspaceId = workspace.activeWorkspaceId || workspace.workspaceId || null;
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(Boolean(enabled));
   const [error, setError] = useState(null);
@@ -26,13 +32,19 @@ export function useAsyncResource(loader, deps = [], { initialData = null, enable
   }, []);
 
   const run = useCallback(async () => {
+    const current = ++seq.current;
+
+    // Clear records before the replacement request begins so data from the
+    // previous workspace cannot remain visible during a tenant switch.
+    setData(initialData);
+    setError(null);
+
     if (!enabled) {
       setLoading(false);
       return null;
     }
-    const current = ++seq.current;
+
     setLoading(true);
-    setError(null);
     try {
       const result = await loader();
       if (!mounted.current || current !== seq.current) return null;
@@ -45,9 +57,10 @@ export function useAsyncResource(loader, deps = [], { initialData = null, enable
     } finally {
       if (mounted.current && current === seq.current) setLoading(false);
     }
-    // loader identity is controlled by the caller's dep list
+    // loader identity is controlled by the caller's dep list. workspaceId is
+    // always included because every Content Studio API call is tenant-scoped.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, ...deps]);
+  }, [enabled, initialData, workspaceId, ...deps]);
 
   useEffect(() => {
     run();
