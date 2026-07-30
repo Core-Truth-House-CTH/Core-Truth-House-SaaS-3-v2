@@ -1,55 +1,58 @@
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(scriptDir, "..");
-const searchRoots = ["src", "scripts"];
-const testPattern = /\.(?:test|spec)\.(?:js|mjs|cjs)$/;
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const extensions = new Set([".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"]);
+const executable = new Set([".js", ".mjs", ".cjs"]);
+const excludedSegments = new Set(["node_modules", "dist", "build", "coverage", "generated", "vendor", "vendored", "fixtures", "__fixtures__", "archive", "archived"]);
 
-function collect(relativePath) {
-  const absolutePath = path.join(root, relativePath);
-  if (!existsSync(absolutePath)) return [];
+export function isTestPath(file) {
+  const normalized = file.replaceAll("\\", "/");
+  const segments = normalized.split("/");
+  if (segments.some((segment) => excludedSegments.has(segment.toLowerCase()))) return false;
+  const extension = path.posix.extname(normalized);
+  if (!extensions.has(extension)) return false;
+  const basename = path.posix.basename(normalized);
+  return /\.(?:test|spec)\.(?:js|jsx|mjs|cjs|ts|tsx)$/.test(basename)
+    || segments.some((segment) => ["test", "tests", "__tests__"].includes(segment.toLowerCase()));
+}
 
-  const stat = statSync(absolutePath);
-  if (stat.isFile()) {
-    return testPattern.test(absolutePath) ? [absolutePath] : [];
+export function discoverTrackedTests(trackedFiles) {
+  return [...new Set(trackedFiles.filter(isTestPath))].sort((a, b) => a.localeCompare(b, "en"));
+}
+
+function trackedFiles(repositoryRoot) {
+  return execFileSync("git", ["ls-files", "-z"], { cwd: repositoryRoot })
+    .toString("utf8").split("\0").filter(Boolean);
+}
+
+export function runRepositoryTests(repositoryRoot = root) {
+  let tests;
+  try {
+    tests = discoverTrackedTests(trackedFiles(repositoryRoot));
+  } catch (error) {
+    console.error(`TEST DISCOVERY FAILED: git ls-files failed: ${error.message}`);
+    return 1;
   }
-
-  return readdirSync(absolutePath, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.name === "node_modules" || entry.name === "dist") return [];
-    const child = path.join(relativePath, entry.name);
-    return entry.isDirectory()
-      ? collect(child)
-      : testPattern.test(entry.name)
-        ? [path.join(root, child)]
-        : [];
-  });
+  if (!tests.length) {
+    console.error("TEST DISCOVERY FAILED: no tracked repository test files matched supported conventions.");
+    return 1;
+  }
+  console.log(`Discovered ${tests.length} tracked repository test files:`);
+  for (const file of tests) console.log(`DISCOVERED: ${file}`);
+  const unsupported = tests.filter((file) => !executable.has(path.posix.extname(file)));
+  if (unsupported.length) {
+    for (const file of unsupported) console.error(`UNSUPPORTED TEST RUNNER: ${file} is tracked and discoverable, but Node cannot execute ${path.posix.extname(file)} tests without an approved runner.`);
+    return 1;
+  }
+  for (const file of tests) console.log(`EXECUTING: ${file}`);
+  const result = spawnSync(process.execPath, ["--test", ...tests], { cwd: repositoryRoot, stdio: "inherit", env: process.env });
+  if (result.error) {
+    console.error(`TEST EXECUTION FAILED: ${result.error.message}`);
+    return 1;
+  }
+  return result.status ?? 1;
 }
 
-const tests = searchRoots
-  .flatMap(collect)
-  .map((absolutePath) => path.relative(root, absolutePath).replaceAll(path.sep, "/"))
-  .sort();
-
-if (tests.length === 0) {
-  console.error("TEST DISCOVERY FAILED: no repository test files were found.");
-  process.exit(1);
-}
-
-console.log(`Discovered ${tests.length} repository test files:`);
-for (const test of tests) console.log(`- ${test}`);
-
-const result = spawnSync(process.execPath, ["--test", ...tests], {
-  cwd: root,
-  stdio: "inherit",
-  env: process.env,
-});
-
-if (result.error) {
-  console.error(`TEST EXECUTION FAILED: ${result.error.message}`);
-  process.exit(1);
-}
-
-process.exit(result.status ?? 1);
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) process.exitCode = runRepositoryTests();
