@@ -1,0 +1,423 @@
+/*
+ * Content Studio scoped design tokens.
+ *
+ * These are deliberately scoped to `.cth-cs` rather than :root. The shared
+ * command-center palette (--cth-command-*) drifts from the approved brand
+ * values (crimson #af002a vs approved #AF0024, ivory #f8f4f2 vs #F8F1EC).
+ * Rewriting those globally would touch all 60 app routes, so Content Studio
+ * carries its own exact values until a separate reconciliation pass.
+ *
+ * Approved palette only. Do not add #AF002A, #5D0012, or arbitrary
+ * blue/green/gray branding here.
+ */
+
+.cth-cs {
+  /* Core */
+  --cs-crimson: #af0024;
+  --cs-deep-purple: #33033c;
+  --cs-night: #0d0010;
+  --cs-gold: #c4a95b;
+  --cs-cinnabar: #e04e35;
+
+  /* Light grounds */
+  --cs-ivory: #f8f1ec;
+  --cs-blush: #efe3df;
+  --cs-panel: #fffaf5;
+
+  /* Text */
+  --cs-ink: #33033c;
+  --cs-ruby: #763b5b;
+  --cs-tuscany: #c7a09d;
+
+  /* Derived, all from approved values */
+  --cs-border: rgba(51, 3, 60, 0.12);
+  --cs-border-strong: rgba(51, 3, 60, 0.22);
+  --cs-crimson-soft: rgba(175, 0, 36, 0.08);
+  --cs-crimson-hover: #8e001d;
+  --cs-gold-soft: rgba(196, 169, 91, 0.16);
+  --cs-shadow: 0 1px 2px rgba(51, 3, 60, 0.04), 0 8px 24px rgba(51, 3, 60, 0.05);
+  --cs-shadow-sm: 0 1px 2px rgba(51, 3, 60, 0.05);
+
+  /* Type */
+  --cs-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --cs-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Rhythm */
+  --cs-radius: 10px;
+  --cs-radius-lg: 14px;
+  --cs-radius-pill: 999px;
+  --cs-gutter: 32px;
+  --cs-max: 1360px;
+
+  /* Semantic status. Retained for accessibility only; never used as brand
+     surface color. Deep tones chosen to sit inside the warm palette. */
+  --cs-status-active: #2d6a4f;
+  --cs-status-paused: #9a6a1f;
+  --cs-status-error: #a4232c;
+
+  font-family: var(--cs-sans);
+  color: var(--cs-ink);
+  background: var(--cs-ivory);
+}
+
+/* Screen-reader-only text. Tailwind's sr-only is not guaranteed to be emitted
+   here, so Content Studio defines its own scoped copy. */
+.cth-cs .sr-only,
+.cth-cs .cs-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip link, visible on focus. */
+.cth-cs .cs-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 40;
+  background: var(--cs-panel);
+  color: var(--cs-crimson);
+  padding: 10px 16px;
+  border-radius: var(--cs-radius);
+  border: 1px solid var(--cs-crimson);
+  font-size: 13px;
+}
+
+.cth-cs .cs-skip-link:focus {
+  left: 16px;
+}
+
+@keyframes cs-spin { to { transform: rotate(360deg); } }
+.cth-cs [style*="animation: spin"] { animation-name: cs-spin !important; }
+
+/* ---------- Layout primitives ---------- */
+
+.cth-cs .cs-page {
+  max-width: var(--cs-max);
+  margin: 0 auto;
+  padding: 28px var(--cs-gutter) 72px;
+}
+
+.cth-cs .cs-title {
+  font-family: var(--cs-serif);
+  font-weight: 500;
+  font-size: 40px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--cs-ink);
+  margin: 0;
+}
+
+.cth-cs .cs-subtitle {
+  font-size: 13px;
+  color: var(--cs-ruby);
+  margin: 6px 0 0;
+}
+
+.cth-cs .cs-h2 {
+  font-family: var(--cs-serif);
+  font-weight: 500;
+  font-size: 22px;
+  color: var(--cs-ink);
+  margin: 0;
+}
+
+.cth-cs .cs-h3 {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cs-ruby);
+  margin: 0;
+}
+
+.cth-cs .cs-card {
+  background: var(--cs-panel);
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-lg);
+  box-shadow: var(--cs-shadow-sm);
+}
+
+.cth-cs .cs-card-pad {
+  padding: 20px;
+}
+
+/* ---------- Controls ---------- */
+
+.cth-cs .cs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: var(--cs-radius);
+  border: 1px solid transparent;
+  font-family: var(--cs-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.cth-cs .cs-btn-primary {
+  background: var(--cs-crimson);
+  color: #fff;
+}
+
+.cth-cs .cs-btn-primary:hover:not(:disabled) {
+  background: var(--cs-crimson-hover);
+}
+
+.cth-cs .cs-btn-secondary {
+  background: transparent;
+  border-color: var(--cs-border-strong);
+  color: var(--cs-ink);
+}
+
+.cth-cs .cs-btn-secondary:hover:not(:disabled) {
+  background: var(--cs-blush);
+}
+
+.cth-cs .cs-btn-ghost {
+  background: transparent;
+  color: var(--cs-ruby);
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+.cth-cs .cs-btn-ghost:hover:not(:disabled) {
+  color: var(--cs-crimson);
+}
+
+.cth-cs .cs-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cth-cs .cs-input,
+.cth-cs .cs-select,
+.cth-cs .cs-textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  border-radius: var(--cs-radius);
+  border: 1px solid var(--cs-border-strong);
+  background: var(--cs-panel);
+  color: var(--cs-ink);
+  font-family: var(--cs-sans);
+  font-size: 13px;
+}
+
+.cth-cs .cs-textarea {
+  min-height: 108px;
+  resize: vertical;
+}
+
+.cth-cs .cs-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cs-ruby);
+  margin-bottom: 6px;
+}
+
+.cth-cs .cs-field {
+  margin-bottom: 16px;
+}
+
+.cth-cs .cs-error-text {
+  display: block;
+  font-size: 12px;
+  color: var(--cs-status-error);
+  margin-top: 5px;
+}
+
+/* Visible focus everywhere. Never remove without replacement. */
+.cth-cs :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--cs-crimson);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Badges & pills ---------- */
+
+.cth-cs .cs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--cs-radius-pill);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--cs-border);
+  background: var(--cs-blush);
+  color: var(--cs-ruby);
+}
+
+.cth-cs .cs-badge-category {
+  background: var(--cs-crimson-soft);
+  color: var(--cs-crimson);
+  border-color: rgba(175, 0, 36, 0.18);
+}
+
+.cth-cs .cs-badge-gold {
+  background: var(--cs-gold-soft);
+  color: #7a6320;
+  border-color: rgba(196, 169, 91, 0.35);
+}
+
+.cth-cs .cs-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* ---------- Grids ---------- */
+
+.cth-cs .cs-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.cth-cs .cs-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cth-cs .cs-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cth-cs .cs-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.cth-cs .cs-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.cth-cs .cs-triple {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Horizontal scroll containers never push the page wide. */
+.cth-cs .cs-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.cth-cs .cs-table-wrap {
+  overflow-x: auto;
+}
+
+.cth-cs table.cs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 720px;
+}
+
+.cth-cs .cs-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--cs-ruby);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--cs-border);
+}
+
+.cth-cs .cs-table td {
+  padding: 13px 12px;
+  border-bottom: 1px solid var(--cs-border);
+  color: var(--cs-ink);
+}
+
+/* ---------- Responsive: deliberate adaptation, not scaling ---------- */
+
+@media (max-width: 1280px) {
+  .cth-cs { --cs-gutter: 24px; }
+  .cth-cs .cs-title { font-size: 34px; }
+}
+
+@media (max-width: 1024px) {
+  .cth-cs .cs-triple { grid-template-columns: 220px minmax(0, 1fr); }
+  .cth-cs .cs-triple > .cs-triple-aside { grid-column: 1 / -1; }
+  .cth-cs .cs-grid-4 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cth-cs .cs-split { grid-template-columns: minmax(0, 1fr) 280px; }
+}
+
+@media (max-width: 768px) {
+  .cth-cs { --cs-gutter: 18px; }
+  .cth-cs .cs-page { padding-top: 20px; }
+  .cth-cs .cs-title { font-size: 28px; }
+  .cth-cs .cs-split,
+  .cth-cs .cs-triple { grid-template-columns: minmax(0, 1fr); }
+  .cth-cs .cs-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cth-cs .cs-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .cth-cs .cs-grid-4,
+  .cth-cs .cs-grid-3,
+  .cth-cs .cs-grid-2 { grid-template-columns: minmax(0, 1fr); }
+  .cth-cs .cs-title { font-size: 25px; }
+
+  /* Touch targets: 44px minimum on coarse pointers. */
+  .cth-cs .cs-btn { min-height: 44px; }
+  .cth-cs .cs-btn-ghost { min-height: 40px; }
+  .cth-cs .cs-input,
+  .cth-cs .cs-select { min-height: 44px; }
+}
+
+/* Tables become stacked cards on small screens where a row would be
+   unreadable. Applied opt-in via .cs-table-stack. */
+@media (max-width: 640px) {
+  .cth-cs .cs-table-stack,
+  .cth-cs .cs-table-stack tbody,
+  .cth-cs .cs-table-stack tr,
+  .cth-cs .cs-table-stack td { display: block; width: 100%; }
+
+  .cth-cs .cs-table-stack { min-width: 0; }
+  .cth-cs .cs-table-stack thead { display: none; }
+
+  .cth-cs .cs-table-stack tr {
+    border: 1px solid var(--cs-border);
+    border-radius: var(--cs-radius);
+    background: var(--cs-panel);
+    margin-bottom: 12px;
+    padding: 6px 4px;
+  }
+
+  .cth-cs .cs-table-stack td {
+    border-bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 7px 12px;
+  }
+
+  .cth-cs .cs-table-stack td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--cs-ruby);
+    flex-shrink: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cth-cs * { transition: none !important; animation: none !important; }
+}
