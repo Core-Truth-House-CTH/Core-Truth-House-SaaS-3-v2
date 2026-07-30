@@ -1,147 +1,110 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(scriptDir, "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const contractPath = "docs/builds/foundation-truth/FOUNDATION-DATA-CONTRACT.json";
 
-function read(relativePath) {
-  return readFileSync(path.join(root, relativePath), "utf8");
-}
-
-function fail(message) {
-  console.error(`ROUTE CONTRACT FAILED: ${message}`);
-  process.exitCode = 1;
+export function parseRoutes(appSource, registrySource) {
+  const app = [...appSource.matchAll(/\bpath\s*:\s*["'`]([^"'`]+)["'`]/g)].map((match) => ({
+    path: match[1],
+    block: appSource.slice(match.index, appSource.indexOf("}", match.index) + 1),
+  }));
+  const body = registrySource.match(/const\s+pageRegistry\s*=\s*\{([\s\S]*?)\n\};/)?.[1];
+  if (body === undefined) throw new Error("Could not locate the pageRegistry object.");
+  const registry = [...body.matchAll(/["'`]([^"'`]+)["'`]\s*:\s*([A-Za-z_$][\w$]*)/g)]
+    .filter((match) => match[1].startsWith("/"))
+    .map((match) => ({ path: match[1], component: match[2], offset: match.index }));
+  const redirects = new Map(
+    [...registrySource.matchAll(/const\s+([A-Za-z_$][\w$]*)\s*=\s*\([^)]*\)\s*=>\s*<Navigate\s+[^>]*\bto=["'`]([^"'`]+)["'`]/g)]
+      .map((match) => [match[1], match[2]]),
+  );
+  return { app, registry, redirects };
 }
 
 function duplicates(values) {
   const seen = new Set();
-  const repeated = new Set();
-  for (const value of values) {
-    if (seen.has(value)) repeated.add(value);
-    seen.add(value);
-  }
-  return [...repeated].sort();
+  return [...new Set(values.filter((value) => seen.has(value) || !seen.add(value)))].sort();
 }
 
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+export function validateRouteContract({ contract, app, registry, redirects = new Map() }) {
+  const errors = [];
+  const appPaths = app.map((entry) => entry.path);
+  const registryPaths = registry.map((entry) => entry.path);
+  for (const route of duplicates(appPaths)) errors.push(`Duplicate APP_ROUTES path: ${route}`);
+  for (const route of duplicates(registryPaths)) errors.push(`Duplicate pageRegistry path: ${route}`);
 
-function routeBlock(source, route) {
-  const lines = source.split("\n");
-  const pathPattern = new RegExp(`\\bpath\\s*:\\s*["'\`]${escapeRegex(route)}["'\`]`);
-  const pathLine = lines.findIndex((line) => pathPattern.test(line));
-  if (pathLine < 0) return null;
-
-  let start = pathLine;
-  while (start >= 0 && !/^\s*\{\s*$/.test(lines[start])) start -= 1;
-
-  let end = pathLine;
-  while (end < lines.length && !/^\s*\},?\s*$/.test(lines[end])) end += 1;
-
-  if (start < 0 || end >= lines.length) return null;
-  return lines.slice(start, end + 1).join("\n");
-}
-
-const appRoutesSource = read("src/config/appRoutes.js");
-const registrySource = read("src/navigation/pageRegistry.jsx");
-
-const appRoutes = [...appRoutesSource.matchAll(/\bpath\s*:\s*["'`]([^"'`]+)["'`]/g)].map(
-  (match) => match[1],
-);
-
-const registryBodyMatch = registrySource.match(/const\s+pageRegistry\s*=\s*\{([\s\S]*?)\n\};/);
-if (!registryBodyMatch) {
-  fail("Could not locate the pageRegistry object.");
-  process.exit(1);
-}
-
-const registryBody = registryBodyMatch[1];
-const registryEntries = [...registryBody.matchAll(/["'`]([^"'`]+)["'`]\s*:\s*([A-Za-z_$][\w$]*)/g)]
-  .filter((match) => match[1].startsWith("/"));
-const registryRoutes = registryEntries.map((match) => match[1]);
-const registryComponents = new Map(registryEntries.map((match) => [match[1], match[2]]));
-
-for (const route of duplicates(appRoutes)) fail(`Duplicate APP_ROUTES path: ${route}`);
-for (const route of duplicates(registryRoutes)) fail(`Duplicate pageRegistry path: ${route}`);
-
-const legacyRouteContract = new Map([
-  ["/command-center", ["CommandCenterNext"]],
-  ["/brand-house", ["BrandHouse"]],
-  ["/workspace", ["WorkspacePage"]],
-  ["/brand-audit", ["BrandAudit"]],
-  ["/brand-foundation", ["BrandFoundation", "FoundationHomeLegacyRedirect"]],
-  ["/audience", ["Audience", "FoundationAudienceLegacyRedirect"]],
-  ["/brand-positioning", ["BrandPositioning", "FoundationPositioningLegacyRedirect"]],
-  ["/messaging-structure", ["MessagingStructure", "FoundationMessagingLegacyRedirect"]],
-  ["/identity-studio", ["IdentityStudio"]],
-  ["/systems-builder", ["SystemsBuilder"]],
-  ["/content-studio", ["CSDashboard"]],
-  ["/brand-memory", ["BrandFoundation"]],
-]);
-
-for (const [route, allowedComponents] of legacyRouteContract) {
-  if (!appRoutes.includes(route)) fail(`${route} is missing from APP_ROUTES.`);
-  const actualComponent = registryComponents.get(route);
-  if (!actualComponent) {
-    fail(`${route} is missing from pageRegistry.`);
-  } else if (!allowedComponents.includes(actualComponent)) {
-    fail(
-      `${route} resolves to ${actualComponent}; allowed compatibility target(s): ${allowedComponents.join(", ")}.`,
-    );
-  }
-}
-
-const foundationRoutes = [
-  "/foundation",
-  "/foundation/diagnostic",
-  "/foundation/core-truth",
-  "/foundation/audience",
-  "/foundation/positioning",
-  "/foundation/messaging",
-  "/foundation/expression",
-  "/foundation/review",
-];
-
-const foundationImplementationStarted = foundationRoutes.some(
-  (route) => appRoutes.includes(route) || registryRoutes.includes(route),
-);
-
-if (foundationImplementationStarted) {
-  for (const route of foundationRoutes) {
-    if (!appRoutes.includes(route)) fail(`${route} is missing from APP_ROUTES.`);
-    if (!registryRoutes.includes(route)) fail(`${route} is missing from pageRegistry.`);
-
-    const block = routeBlock(appRoutesSource, route);
-    if (!block) {
-      fail(`Could not parse APP_ROUTES metadata for ${route}.`);
-      continue;
-    }
-
-    if (!/requiredPlan\s*:\s*["'`]foundation["'`]/.test(block)) {
-      fail(`${route} must declare requiredPlan: "foundation".`);
-    }
-
-    if (!/gateType\s*:\s*["'`]page["'`]/.test(block)) {
-      fail(`${route} must declare gateType: "page".`);
-    }
+  if (!["contract-only", "implementation-active"].includes(contract.implementationPhase)) {
+    errors.push(`Unsupported implementationPhase: ${contract.implementationPhase}`);
+    return errors;
   }
 
-  const wildcardMatch = registryEntries.find((match) => match[1] === "/foundation/*");
-  if (wildcardMatch) {
-    const wildcardIndex = registryBody.indexOf(wildcardMatch[0]);
-    for (const route of foundationRoutes) {
-      const entry = registryEntries.find((match) => match[1] === route);
-      if (!entry || registryBody.indexOf(entry[0]) > wildcardIndex) {
-        fail(`/foundation/* must be registered after the defined route ${route}.`);
+  const expected = new Set(contract.canonicalRoutes);
+  const actualApp = appPaths.filter((route) => route === "/foundation" || route.startsWith("/foundation/"));
+  const actualRegistry = registryPaths.filter((route) => route === "/foundation" || route.startsWith("/foundation/"))
+    .filter((route) => route !== "/foundation/*");
+  const unexpected = [...new Set([...actualApp, ...actualRegistry].filter((route) => !expected.has(route)))];
+  for (const route of unexpected.sort()) errors.push(`Unexpected Foundation route variant: ${route}`);
+
+  if (contract.implementationPhase === "contract-only") {
+    if (actualApp.length || actualRegistry.length) {
+      errors.push("contract-only requires zero canonical Foundation routes in both route registries; change the phase in the same reviewed change as the complete route family.");
+    }
+  } else {
+    for (const route of contract.canonicalRoutes) {
+      const appEntries = app.filter((entry) => entry.path === route);
+      const registryEntries = registry.filter((entry) => entry.path === route);
+      if (appEntries.length !== 1) errors.push(`${route} must appear exactly once in APP_ROUTES.`);
+      if (registryEntries.length !== 1) errors.push(`${route} must appear exactly once in pageRegistry.`);
+      if (appEntries.length === 1) {
+        const block = appEntries[0].block;
+        if (!new RegExp("requiredPlan\\s*:\\s*[\"'\\x60]" + contract.routeGate.requiredPlan + "[\"'\\x60]").test(block)) {
+          errors.push(`${route} must declare requiredPlan: "${contract.routeGate.requiredPlan}".`);
+        }
+        if (!new RegExp("gateType\\s*:\\s*[\"'\\x60]" + contract.routeGate.gateType + "[\"'\\x60]").test(block)) {
+          errors.push(`${route} must declare gateType: "${contract.routeGate.gateType}".`);
+        }
+      }
+    }
+    const wildcard = registry.find((entry) => entry.path === "/foundation/*");
+    if (wildcard) {
+      for (const route of contract.canonicalRoutes) {
+        const entry = registry.find((candidate) => candidate.path === route);
+        if (!entry || entry.offset > wildcard.offset) errors.push(`/foundation/* must be registered after ${route}.`);
       }
     }
   }
+
+  const componentByRoute = new Map(registry.map(({ path: route, component }) => [route, component]));
+  for (const migration of contract.legacyCompatibility) {
+    if (!appPaths.includes(migration.route)) errors.push(`${migration.route} is missing from APP_ROUTES.`);
+    const expectedComponent = contract.implementationPhase === "contract-only"
+      ? migration.contractOnlyComponent : migration.implementationActiveComponent;
+    const actual = componentByRoute.get(migration.route);
+    if (actual !== expectedComponent) {
+      errors.push(`${migration.route} resolves to ${actual ?? "nothing"}; exact ${contract.implementationPhase} target is ${expectedComponent}.`);
+    }
+    if (contract.implementationPhase === "implementation-active" && migration.behavior === "redirect") {
+      const destination = redirects.get(expectedComponent);
+      if (destination !== migration.approvedRedirect) {
+        errors.push(`${migration.route} must redirect exactly to ${migration.approvedRedirect}; found ${destination ?? "no static redirect"}.`);
+      }
+    }
+  }
+  return errors;
 }
 
-if (!process.exitCode) {
-  console.log(
-    `Route contract passed: ${appRoutes.length} APP_ROUTES entries and ${registryRoutes.length} pageRegistry entries checked.`,
+export function runRouteContract(repositoryRoot = root) {
+  const contract = JSON.parse(readFileSync(path.join(repositoryRoot, contractPath), "utf8"));
+  const parsed = parseRoutes(
+    readFileSync(path.join(repositoryRoot, "src/config/appRoutes.js"), "utf8"),
+    readFileSync(path.join(repositoryRoot, "src/navigation/pageRegistry.jsx"), "utf8"),
   );
+  const errors = validateRouteContract({ contract, ...parsed });
+  for (const error of errors) console.error(`ROUTE CONTRACT FAILED: ${error}`);
+  if (errors.length) return 1;
+  console.log(`Route contract passed in ${contract.implementationPhase} phase: ${parsed.app.length} APP_ROUTES entries and ${parsed.registry.length} pageRegistry entries checked.`);
+  return 0;
 }
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) process.exitCode = runRouteContract();

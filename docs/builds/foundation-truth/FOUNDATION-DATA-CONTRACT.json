@@ -1,4 +1,5 @@
 {
+  "implementationPhase": "contract-only",
   "featureRoot": "src/features/foundation",
   "adapterPath": "src/features/foundation/api/foundationApi.js",
   "sharedClientPath": "src/lib/apiClient.js",
@@ -19,5 +20,33 @@
     "version"
   ],
   "workspaceScope": "X-Workspace-ID through the shared API client",
-  "lockedMutationRule": "A locked version is immutable; changes create a draft revision."
+  "lockedMutationRule": "A locked version is immutable; changes create a draft revision.",
+  "canonicalRoutes": [
+    "/foundation",
+    "/foundation/diagnostic",
+    "/foundation/core-truth",
+    "/foundation/audience",
+    "/foundation/positioning",
+    "/foundation/messaging",
+    "/foundation/expression",
+    "/foundation/review"
+  ],
+  "routeGate": {
+    "requiredPlan": "foundation",
+    "gateType": "page"
+  },
+  "legacyCompatibility": [
+    { "route": "/command-center", "contractOnlyComponent": "CommandCenterNext", "implementationActiveComponent": "CommandCenterNext", "behavior": "preserve" },
+    { "route": "/brand-house", "contractOnlyComponent": "BrandHouse", "implementationActiveComponent": "BrandHouse", "behavior": "preserve" },
+    { "route": "/workspace", "contractOnlyComponent": "WorkspacePage", "implementationActiveComponent": "WorkspacePage", "behavior": "preserve" },
+    { "route": "/brand-audit", "contractOnlyComponent": "BrandAudit", "implementationActiveComponent": "BrandAudit", "behavior": "preserve", "approvedFoundationLink": "/foundation/diagnostic" },
+    { "route": "/brand-foundation", "contractOnlyComponent": "BrandFoundation", "implementationActiveComponent": "FoundationHomeLegacyRedirect", "behavior": "redirect", "approvedRedirect": "/foundation" },
+    { "route": "/audience", "contractOnlyComponent": "Audience", "implementationActiveComponent": "FoundationAudienceLegacyRedirect", "behavior": "redirect", "approvedRedirect": "/foundation/audience" },
+    { "route": "/brand-positioning", "contractOnlyComponent": "BrandPositioning", "implementationActiveComponent": "FoundationPositioningLegacyRedirect", "behavior": "redirect", "approvedRedirect": "/foundation/positioning" },
+    { "route": "/messaging-structure", "contractOnlyComponent": "MessagingStructure", "implementationActiveComponent": "FoundationMessagingLegacyRedirect", "behavior": "redirect", "approvedRedirect": "/foundation/messaging" },
+    { "route": "/identity-studio", "contractOnlyComponent": "IdentityStudio", "implementationActiveComponent": "IdentityStudio", "behavior": "preserve", "approvedFoundationLink": "/foundation/expression" },
+    { "route": "/systems-builder", "contractOnlyComponent": "SystemsBuilder", "implementationActiveComponent": "SystemsBuilder", "behavior": "preserve" },
+    { "route": "/content-studio", "contractOnlyComponent": "CSDashboard", "implementationActiveComponent": "CSDashboard", "behavior": "preserve" },
+    { "route": "/brand-memory", "contractOnlyComponent": "BrandFoundation", "implementationActiveComponent": "BrandFoundation", "behavior": "preserve" }
+  ]
 }
