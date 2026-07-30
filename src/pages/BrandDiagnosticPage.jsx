@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
  ArrowRight,
  CheckCircle2,
+ Clock,
+ Compass,
  Lock,
  ShieldCheck,
  Sparkles,
@@ -13,11 +15,20 @@ import {
  buildLiveDimensions,
  buildNextMoves,
 } from "../utils/diagnosticDimensions";
+import PublicHeader from "../components/public/PublicHeader";
+import PublicFooter from "../components/public/PublicFooter";
+import { getStoredAttribution } from "../lib/utmCapture";
 
 const A = {
  logo: "/brand-assets/logo/cth-logo-seal.png",
  heroFrame: "/brand-diagnostic-assets/cth-brand-diagnostic-hero-architectural-frame.png",
  ctaBuilding: "/brand-diagnostic-assets/cth-brand-diagnostic-cta-building-line-art.webp",
+ heroBuilding: "/brand-diagnostic-assets/diagnostic-hero-building.webp",
+ band: "/brand-diagnostic-assets/dark-blueprint-band.webp",
+ finalCta: "/brand-diagnostic-assets/final-cta-building-line-art.webp",
+ trustTarget: "/brand-diagnostic-assets/gold-target-icon.webp",
+ trustCube: "/brand-diagnostic-assets/gold-cube-icon.webp",
+ trustCompass: "/brand-diagnostic-assets/gold-compass-icon.webp",
  positioning: "/brand-diagnostic-assets/cth-brand-diagnostic-positioning-icon.png",
  messaging: "/brand-diagnostic-assets/cth-brand-diagnostic-messaging-icon.png",
  offer: "/brand-diagnostic-assets/cth-brand-diagnostic-offer-clarity-icon.png",
@@ -153,26 +164,6 @@ function getRecommendation(score) {
  };
 }
 
-function Header({ onStart }) {
- return (
- <header className="bdx-header">
- <div className="bdx-crumbs">
- <span>Brand Audit</span>
- <b>›</b>
- <strong>Brand Diagnostic</strong>
- </div>
-
- <div className="bdx-actions">
- <a className="bdx-brand-mini" href="/">
- <img src={A.logo} alt="" />
- Core Truth House
- </a>
- <button type="button" onClick={onStart} className="bdx-mode primary">Start</button>
- </div>
- </header>
- );
-}
-
 function ScoreRing({ score = 72, total = 100 }) {
  return (
  <div className="bdx-ring">
@@ -243,6 +234,8 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  status,
  consent: Boolean(leadInfo.consent),
  source: "brand_diagnostic",
+ // First-touch UTM/referrer/landing set captured at app entry.
+ ...getStoredAttribution(),
  };
  }
 
@@ -543,171 +536,255 @@ export default function BrandDiagnosticPage() {
  ];
 
  return (
- <main className="bdx-page">
- <Header onStart={openDiagnostic} />
+    <main className="bdx-page">
+      <PublicHeader active="diagnostic" />
 
- <section className="bdx-wrap">
- <div className="bdx-hero">
- <div className="bdx-title">
- <h1>Brand Diagnostic</h1>
- <p>Find the disconnect. Name the truth. Clarify the next move.</p>
+      {/* ---------- hero ---------- */}
+      <section className="bdx-hero-wrap">
+        <div className="bdx-blueprint" aria-hidden="true" />
+        <div className="bdx-inner bdx-hero">
+          <div className="bdx-title">
+            <span className="bdx-eyebrow">Brand Audit</span>
+            <h1>
+              Brand Diagnostic.
+              <em>Your Blueprint for What&apos;s Next.</em>
+            </h1>
+            <span className="bdx-title-rule" aria-hidden="true" />
+            <p>Find the disconnect. Name the truth. Clarify the next move.</p>
 
- <div className="bdx-hero-buttons">
- <button type="button" onClick={openDiagnostic} className="bdx-primary-btn">
- Start the Brand Diagnostic
- <ArrowRight size={16} />
- </button>
- <button
- type="button"
- onClick={() => {
- const target = document.getElementById("score-explainer");
- if (target) {
- target.scrollIntoView({ behavior: "smooth", block: "center" });
- }
- }}
- className="bdx-secondary-btn"
- >
- How the Score Works
- </button>
- </div>
- </div>
+            <div className="bdx-hero-buttons">
+              <button type="button" onClick={openDiagnostic} className="bdx-primary-btn">
+                Start the Brand Diagnostic
+                <ArrowRight size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const target = document.getElementById("score-explainer");
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }
+                }}
+                className="bdx-secondary-btn"
+              >
+                How the Score Works
+              </button>
+            </div>
 
- <div className="bdx-score-panel">
- <div>
- <p className="bdx-kicker">Brand Readiness Score</p>
- <ScoreRing score={displayScore} total={displayTotal} />
- </div>
+            <div className="bdx-trust">
+              <div>
+                <Clock size={22} />
+                <div>
+                  <strong>8-10 Minutes</strong>
+                  <span>Instant results.</span>
+                </div>
+              </div>
+              <div>
+                <CheckCircle2 size={22} />
+                <div>
+                  <strong>Fact-Based</strong>
+                  <span>Not fluff.</span>
+                </div>
+              </div>
+              <div>
+                <Lock size={22} />
+                <div>
+                  <strong>100% Confidential</strong>
+                  <span>Your insight is safe.</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
- <div>
- <h2>{displaySummary}</h2>
- <button type="button" onClick={openDiagnostic}>Take the full diagnostic <ArrowRight size={13} /></button>
- </div>
+          <div className="bdx-hero-art">
+            <img src={A.heroBuilding} alt="Architectural rendering of the Core Truth House" />
+          </div>
+        </div>
+      </section>
 
- <div className="bdx-pathway">
- {pathwaySteps.map(([n, label, state]) => (
- <article className={state} key={`${n}-${label}`}>
- <span>{n}</span>
- <strong>{label}</strong>
- </article>
- ))}
- </div>
+      {/* ---------- clarity band ---------- */}
+      <section className="bdx-band">
+        <div className="bdx-inner bdx-band-inner">
+          <div className="bdx-band-lead">
+            <Compass size={44} strokeWidth={1.4} />
+            <div>
+              <strong>Clarity Changes Everything.</strong>
+              <p>Founders who start with clarity build faster, grow stronger, and lead with confidence.</p>
+            </div>
+          </div>
+          <div className="bdx-band-stats">
+            <div>
+              <strong>100+</strong>
+              <span>Brands Clarified</span>
+            </div>
+            <div>
+              <strong>5</strong>
+              <span>Core Areas Evaluated</span>
+            </div>
+            <div>
+              <strong>8-10</strong>
+              <span>Minutes to Complete</span>
+            </div>
+            <div>
+              <em>Instant</em>
+              <span>Diagnostic Report</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
- <img src={A.heroFrame} alt="" className="bdx-score-art" />
- </div>
- </div>
+      <section className="bdx-wrap">
+        <div className="bdx-score-panel">
+          <div>
+            <p className="bdx-kicker">Brand Readiness Score</p>
+            <ScoreRing score={displayScore} total={displayTotal} />
+          </div>
 
- <div className="bdx-grid">
- <section className="bdx-card bdx-dimensions">
- <div className="bdx-card-head">
- <h2>Diagnostic Dimensions</h2>
- <p>Overall Average <strong>{overallAverage}/{resultSnapshot?.score ? "100" : "100"}</strong></p>
- </div>
- <div className="bdx-dim-grid">
- {liveDimensions.map(([name, score, text, icon]) => (
- <article key={name}>
- <img src={icon} alt="" />
- <h3>{name}</h3>
- <strong>{score}<span>/100</span></strong>
- <i><b style={{ width: `${score}%` }} /></i>
- <p>{text}</p>
- </article>
- ))}
- </div>
- </section>
+          <div>
+            <h2>{displaySummary}</h2>
+            <button type="button" onClick={openDiagnostic}>Take the full diagnostic <ArrowRight size={13} /></button>
+          </div>
 
- <section className="bdx-card bdx-gap" id="score-explainer">
- <div className="bdx-card-head">
- <h2>Structural Gap Map</h2>
- <p>{resultSnapshot ? "Live Result" : "Preview Mode"}</p>
- </div>
+          <div className="bdx-pathway">
+            {pathwaySteps.map(([n, label, state]) => (
+              <article className={state} key={`${n}-${label}`}>
+                <span>{n}</span>
+                <strong>{label}</strong>
+              </article>
+            ))}
+          </div>
+        </div>
 
- <div className="bdx-score-explainer">
- <div>
- <p className="bdx-kicker">How the score works</p>
- <h3>{displayTier}</h3>
- <span>
- The diagnostic scores 15 questions across five categories. Lower scores reveal the areas creating the most friction in trust, clarity, and conversion.
- </span>
- </div>
- <strong>{resultSnapshot ? `${resultSnapshot.score}/60` : "72/100"}</strong>
- </div>
+        <div className="bdx-grid">
+          <section className="bdx-card bdx-dimensions">
+            <div className="bdx-card-head">
+              <h2>Diagnostic Dimensions</h2>
+              <p>Overall Average <strong>{overallAverage}/{resultSnapshot?.score ? "100" : "100"}</strong></p>
+            </div>
+            <div className="bdx-dim-grid">
+              {liveDimensions.map(([name, score, text, icon]) => (
+                <article key={name}>
+                  <img src={icon} alt="" />
+                  <h3>{name}</h3>
+                  <strong>{score}<span>/100</span></strong>
+                  <i><b style={{ width: `${score}%` }} /></i>
+                  <p>{text}</p>
+                </article>
+              ))}
+            </div>
+          </section>
 
- <div className="bdx-radar-shell">
- <div className="bdx-radar">
- <span style={{ clipPath: radarPolygon }} />
- <em>Trust</em>
- <em>Message</em>
- <em>Offer</em>
- <em>Audience</em>
- <em>Content</em>
- </div>
- <div className="bdx-severity">
- {severityRows.map(([name, level]) => (
- <p key={name} className={level.toLowerCase()}><i />{name}<strong>{level}</strong></p>
- ))}
- </div>
- </div>
- </section>
+          <section className="bdx-card bdx-gap" id="score-explainer">
+            <div className="bdx-card-head">
+              <h2>Structural Gap Map</h2>
+              <p>{resultSnapshot ? "Live Result" : "Preview Mode"}</p>
+            </div>
 
- <aside className="bdx-card bdx-next">
- <div className="bdx-next-head">
- <Sparkles size={22} />
- <h2>Next Best Move</h2>
- </div>
+            <div className="bdx-score-explainer">
+              <div>
+                <p className="bdx-kicker">How the score works</p>
+                <h3>{displayTier}</h3>
+                <span>
+                  The diagnostic scores 15 questions across five categories. Lower scores reveal the areas creating the most friction in trust, clarity, and conversion.
+                </span>
+              </div>
+              <strong>{resultSnapshot ? `${resultSnapshot.score}/60` : "72/100"}</strong>
+            </div>
 
- {nextMoves.map(([title, text, icon], index) => (
- <article key={title}>
- <span>{index + 1}</span>
- <img src={icon} alt="" />
- <div>
- <h3>{title}</h3>
- <p>{text}</p>
- </div>
- </article>
- ))}
+            <div className="bdx-radar-shell">
+              <div className="bdx-radar">
+                <span style={{ clipPath: radarPolygon }} />
+                <em>Trust</em>
+                <em>Message</em>
+                <em>Offer</em>
+                <em>Audience</em>
+                <em>Content</em>
+              </div>
+              <div className="bdx-severity">
+                {severityRows.map(([name, level]) => (
+                  <p key={name} className={level.toLowerCase()}><i />{name}<strong>{level}</strong></p>
+                ))}
+              </div>
+            </div>
+          </section>
 
- <button type="button" onClick={openDiagnostic} className="bdx-outline-btn">
- View Full Recommendation
- <ArrowRight size={14} />
- </button>
- </aside>
- </div>
+          <aside className="bdx-card bdx-next">
+            <div className="bdx-next-head">
+              <Sparkles size={22} />
+              <h2>Next Best Move</h2>
+            </div>
 
- <div className="bdx-bottom">
- <section className="bdx-card bdx-after">
- <p>What Happens After the Score</p>
- <div>
- {afterScore.map(([title, text, icon], index) => (
- <article key={title}>
- <span>{index + 1}</span>
- <img src={icon} alt="" />
- <h3>{title}</h3>
- <small>{text}</small>
- </article>
- ))}
- </div>
- </section>
+            {nextMoves.map(([title, text, icon], index) => (
+              <article key={title}>
+                <span>{index + 1}</span>
+                <img src={icon} alt="" />
+                <div>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </div>
+              </article>
+            ))}
 
- <section className="bdx-impact">
- <img src={A.ctaBuilding} alt="" />
- <p>Your Next Step</p>
- <h2>Turn Insight Into Impact</h2>
- <span>You’ve identified the gaps. Now let’s close them with a clear plan and expert guidance.</span>
- <button type="button" onClick={openDiagnostic}>Start the Diagnostic <ArrowRight size={14} /></button>
+            <button type="button" onClick={openDiagnostic} className="bdx-outline-btn">
+              View Full Recommendation
+              <ArrowRight size={14} />
+            </button>
+          </aside>
+        </div>
 
- <small><ShieldCheck size={14} /> Trusted by founders and teams worldwide.</small>
- </section>
- </div>
- </section>
+        <div className="bdx-bottom">
+          <section className="bdx-card bdx-after">
+            <p>What Happens After the Score</p>
+            <div>
+              {afterScore.map(([title, text, icon], index) => (
+                <article key={title}>
+                  <span>{index + 1}</span>
+                  <img src={icon} alt="" />
+                  <h3>{title}</h3>
+                  <small>{text}</small>
+                </article>
+              ))}
+            </div>
+          </section>
 
- <footer className="bdx-footer">
- <span>© 2026 Core Truth House. All rights reserved.</span>
- <img src={A.logo} alt="" />
- <div>
- <a href="/privacy">Privacy Policy</a>
- <a href="/terms">Terms of Service</a>
- </div>
- </footer>
+          <section className="bdx-impact">
+            <img src={A.ctaBuilding} alt="" />
+            <p>Your Next Step</p>
+            <h2>Turn Insight Into Impact</h2>
+            <span>You&rsquo;ve identified the gaps. Now let&rsquo;s close them with a clear plan and expert guidance.</span>
+            <button type="button" onClick={openDiagnostic}>Start the Diagnostic <ArrowRight size={14} /></button>
+
+            <small><ShieldCheck size={14} /> Trusted by founders and teams worldwide.</small>
+          </section>
+        </div>
+
+        {/* ---------- assurance row ---------- */}
+        <div className="bdx-assure">
+          <div><Lock size={20} /><div><strong>Private &amp; Secure</strong><span>Your information is always protected.</span></div></div>
+          <div><Sparkles size={20} /><div><strong>Instant Results</strong><span>Get your personalized report right away.</span></div></div>
+          <div><Target size={20} /><div><strong>Focused &amp; Strategic</strong><span>Built for founders who want real clarity.</span></div></div>
+          <div><CheckCircle2 size={20} /><div><strong>Built by Experts</strong><span>Backed by the Core Truth House methodology.</span></div></div>
+          <div><ShieldCheck size={20} /><div><strong>Founder First</strong><span>Created by founders, for founders.</span></div></div>
+        </div>
+      </section>
+
+      {/* ---------- final CTA ---------- */}
+      <section className="bdx-final">
+        <div className="bdx-final-art" aria-hidden="true">
+          <img src={A.finalCta} alt="" />
+        </div>
+        <div className="bdx-inner bdx-final-inner">
+          <p className="bdx-final-eyebrow">The best brands start with truth.</p>
+          <h2>Ready to See the Truth About Your Brand?</h2>
+          <button type="button" onClick={openDiagnostic} className="bdx-final-btn">
+            Start the Brand Diagnostic
+            <ArrowRight size={16} />
+          </button>
+          <small>Takes 8-10 Minutes · Instant Results · 100% Confidential</small>
+        </div>
+      </section>
+
+      <PublicFooter />
 
  <ModalDiagnostic
  key={modalKey}
@@ -963,14 +1040,15 @@ export default function BrandDiagnosticPage() {
 
  .bdx-pathway {
  display: flex;
+ flex-wrap: wrap;
  justify-content: center;
- gap: 12px;
+ gap: 14px 8px;
  position: relative;
  z-index: 2;
  }
 
  .bdx-pathway article {
- width: 65px;
+ width: 58px;
  display: grid;
  justify-items: center;
  gap: 6px;
@@ -1738,6 +1816,107 @@ export default function BrandDiagnosticPage() {
  }
  }
  `}</style>
+
+      <style>{`
+        /* ===== estate redesign — hero, clarity band, assurance, final CTA ===== */
+        .bdx-inner { width: min(1240px, calc(100% - 64px)); margin: 0 auto; }
+
+        .bdx-hero-wrap { position: relative; background: linear-gradient(180deg, #fffaf6 0%, #f4ece6 100%); overflow: hidden; }
+        .bdx-blueprint {
+          position: absolute; inset: 0; opacity: 0.32; pointer-events: none;
+          background-image:
+            linear-gradient(rgba(51,3,60,0.07) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(51,3,60,0.07) 1px, transparent 1px);
+          background-size: 56px 56px;
+          -webkit-mask-image: linear-gradient(to right, transparent, #000 34%);
+          mask-image: linear-gradient(to right, transparent, #000 34%);
+        }
+        .bdx-page .bdx-hero {
+          position: relative; z-index: 1;
+          display: grid; grid-template-columns: 0.94fr 1.06fr; align-items: center; gap: 50px;
+          padding: 60px 0 54px; margin: 0 auto; width: min(1240px, calc(100% - 64px));
+        }
+        .bdx-eyebrow {
+          display: inline-block; margin: 0 0 16px;
+          color: #af0024; font-family: "DM Sans", sans-serif; font-size: 12px; font-weight: 700;
+          letter-spacing: 0.2em; text-transform: uppercase;
+        }
+        .bdx-page .bdx-title h1 {
+          margin: 0; color: #33033c;
+          font-family: "Playfair Display", Georgia, serif; font-weight: 600;
+          font-size: clamp(2.9rem, 5vw, 4.6rem); line-height: 1.0; letter-spacing: -0.03em;
+          text-wrap: balance;
+        }
+        .bdx-page .bdx-title h1 em { display: block; color: #af0024; font-style: italic; }
+        .bdx-title-rule { display: block; width: 64px; height: 2px; margin: 26px 0; background: #c4a95b; }
+        .bdx-page .bdx-title > p {
+          max-width: 440px; margin: 0; color: #6d5866;
+          font-family: "DM Sans", sans-serif; font-size: 1.05rem; line-height: 1.6;
+        }
+        .bdx-page .bdx-hero-buttons { margin-top: 28px; }
+        .bdx-trust { display: flex; flex-wrap: wrap; gap: 26px 34px; margin-top: 40px; }
+        .bdx-trust > div { display: flex; align-items: center; gap: 12px; }
+        .bdx-trust svg { color: #c4a95b; flex-shrink: 0; }
+        .bdx-trust strong { display: block; color: #33033c; font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+        .bdx-trust span { display: block; color: #8a7480; font-size: 12px; }
+        .bdx-hero-art img { width: 100%; max-height: 560px; object-fit: contain; }
+
+        /* clarity band */
+        .bdx-band { position: relative; background-color: #0d0010; color: #f4ecdf; overflow: hidden; }
+        .bdx-band::before {
+          content: ""; position: absolute; inset: 0; opacity: 0.5; pointer-events: none;
+          background-image:
+            linear-gradient(rgba(196,169,91,0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(196,169,91,0.06) 1px, transparent 1px);
+          background-size: 60px 60px;
+        }
+        .bdx-band-inner { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 34px 44px; padding: 40px 0; }
+        .bdx-band-lead { display: flex; align-items: center; gap: 20px; max-width: 480px; }
+        .bdx-band-lead svg { color: #c4a95b; flex-shrink: 0; }
+        .bdx-band-lead strong { display: block; color: #c4a95b; font-family: "Playfair Display", Georgia, serif; font-weight: 600; font-size: 1.4rem; letter-spacing: -0.01em; }
+        .bdx-band-lead p { margin: 6px 0 0; color: rgba(244,236,223,0.72); font-size: 0.92rem; line-height: 1.5; }
+        .bdx-band-stats { display: flex; flex-wrap: wrap; gap: 30px; }
+        .bdx-band-stats > div { padding-left: 28px; border-left: 1px solid rgba(196,169,91,0.28); }
+        .bdx-band-stats > div:first-child { border-left: 0; padding-left: 0; }
+        .bdx-band-stats strong, .bdx-band-stats em { display: block; color: #f4ecdf; font-family: "Playfair Display", Georgia, serif; font-weight: 600; font-style: normal; font-size: 2rem; line-height: 1; }
+        .bdx-band-stats span { display: block; margin-top: 8px; color: rgba(244,236,223,0.6); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+
+        /* assurance row */
+        .bdx-assure { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; margin: 8px 0 20px; padding: 34px 0 0; border-top: 1px solid rgba(51,3,60,0.12); }
+        .bdx-assure > div { display: flex; align-items: flex-start; gap: 12px; }
+        .bdx-assure svg { color: #c4a95b; flex-shrink: 0; margin-top: 2px; }
+        .bdx-assure strong { display: block; color: #33033c; font-family: "DM Sans", sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+        .bdx-assure span { display: block; margin-top: 5px; color: #6d5866; font-size: 12.5px; line-height: 1.45; }
+
+        /* final CTA */
+        .bdx-final { position: relative; overflow: hidden; background: linear-gradient(160deg, #33033c 0%, #0d0010 100%); color: #f4ecdf; text-align: center; }
+        .bdx-final-art { position: absolute; inset: 0 auto 0 0; width: 46%; opacity: 0.16; pointer-events: none; }
+        .bdx-final-art img { height: 100%; width: 100%; object-fit: cover; object-position: left center; }
+        .bdx-final-inner { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 84px 0; }
+        .bdx-final-eyebrow { margin: 0; color: #c4a95b; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+        .bdx-final h2 { margin: 8px 0 6px; max-width: 720px; color: #fff; font-family: "Playfair Display", Georgia, serif; font-weight: 600; font-size: clamp(2.1rem, 4vw, 3.4rem); line-height: 1.05; letter-spacing: -0.02em; text-wrap: balance; }
+        .bdx-final-btn { display: inline-flex; align-items: center; gap: 10px; margin-top: 18px; padding: 15px 30px; border: 0; border-radius: 4px; background: #c4a95b; color: #33033c; font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: transform 0.15s ease; }
+        .bdx-final-btn:hover { transform: translateY(-1px); }
+        .bdx-final small { margin-top: 16px; color: rgba(244,236,223,0.6); font-size: 12px; letter-spacing: 0.04em; }
+
+        @media (max-width: 960px) {
+          .bdx-page .bdx-hero { grid-template-columns: 1fr; gap: 32px; padding: 46px 0 40px; }
+          .bdx-hero-art { max-width: 620px; }
+          .bdx-band-inner { flex-direction: column; align-items: flex-start; }
+          .bdx-assure { grid-template-columns: repeat(2, 1fr); gap: 24px 20px; }
+        }
+        @media (max-width: 560px) {
+          .bdx-inner, .bdx-page .bdx-hero { width: min(100% - 36px, 1240px); }
+          .bdx-band-stats { gap: 20px; }
+          .bdx-band-stats > div { padding-left: 20px; }
+          .bdx-assure { grid-template-columns: 1fr; }
+          .bdx-final-inner { padding: 60px 0; }
+          .bdx-final-art { width: 70%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .bdx-final-btn { transition: none; }
+        }
+      `}</style>
  </main>
  );
 }

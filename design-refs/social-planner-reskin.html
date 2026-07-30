@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Core Truth House | Social Planner</title>
+  <meta name="description" content="Core Truth House Social Planner prototype" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --cth-crimson: #af0024;
+      --cth-crimson-deep: #8f001e;
+      --cth-purple-deep: #33033c;
+      --cth-purple-black: #0d0010;
+      --cth-gold: #c4a95b;
+      --cth-cinnabar: #e04e35;
+      --cth-ivory: #f8f1ec;
+      --cth-blush: #efe3df;
+      --cth-panel: #fffaf5;
+      --cth-panel-white: #fffdfb;
+      --cth-ink: #33033c;
+      --cth-ruby: #763b5b;
+      --cth-tuscany: #c7a09d;
+      --cth-muted: #7c6f78;
+      --cth-border: #eadfd9;
+      --cth-green: #238a57;
+      --cth-shadow: 0 12px 28px rgba(51, 3, 60, 0.07);
+      --cth-shadow-strong: 0 24px 60px rgba(13, 0, 16, 0.18);
+      --serif: "Cormorant Garamond", Georgia, serif;
+      --sans: "DM Sans", Arial, sans-serif;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 5%, rgba(196,169,91,.08), transparent 22%),
+        linear-gradient(180deg, #fffefd 0%, var(--cth-ivory) 100%);
+      color: var(--cth-ink);
+      font-family: var(--sans);
+      font-size: 14px;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+    a { color: inherit; }
+    .hidden { display: none !important; }
+    .muted { color: var(--cth-muted); }
+
+    .app-shell {
+      width: min(1500px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 26px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .header-copy { max-width: 630px; }
+    .eyebrow {
+      color: var(--cth-crimson);
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 700;
+      font-size: 10px;
+      margin-bottom: 5px;
+    }
+
+    h1, h2, h3, h4 { font-family: var(--serif); margin: 0; }
+    h1 {
+      font-size: clamp(38px, 4vw, 58px);
+      line-height: .95;
+      font-weight: 600;
+      letter-spacing: .015em;
+      color: var(--cth-purple-deep);
+    }
+    .subtitle {
+      margin: 10px 0 0;
+      max-width: 620px;
+      color: #4e414a;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 11px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      padding-top: 8px;
+    }
+
+    .btn {
+      border: 1px solid var(--cth-ruby);
+      background: rgba(255,255,255,.62);
+      min-height: 42px;
+      padding: 10px 17px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: .18s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(51,3,60,.08); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cth-crimson) 0%, #c30a39 100%);
+      color: white;
+      border-color: var(--cth-crimson);
+      box-shadow: 0 8px 18px rgba(175,0,36,.18);
+    }
+    .btn-secondary { background: var(--cth-panel-white); }
+    .btn-ghost { border-color: var(--cth-border); background: transparent; }
+    .btn-small { min-height: 34px; padding: 7px 11px; font-size: 12px; }
+    .btn-icon { width: 38px; padding: 0; }
+    .btn-danger { color: var(--cth-crimson); border-color: rgba(175,0,36,.35); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .metric-card {
+      min-width: 150px;
+      background: rgba(255,253,251,.96);
+      border: 1px solid var(--cth-border);
+      box-shadow: var(--cth-shadow);
+      border-radius: var(--radius);
+      padding: 16px 16px 14px;
+      min-height: 110px;
+      position: relative;
+    }
+    .metric-card .metric-icon {
+      position: absolute;
+      right: 15px;
+      top: 17px;
+      color: #9f7d84;
+    }
+    .metric-label { font-size: 11px; font-weight: 700; color: #3e2837; }
+    .metric-value {
+      display: block;
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 600;
+      margin: 8px 0 2px;
+      line-height: 1;
+    }
+    .metric-note { font-size: 11px; color: #4f4049; }
+
+    .primary-tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--cth-border);
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    .primary-tab {
+      padding: 10px 15px 12px;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 600;
+      color: #4f4049;
+      position: relative;
+      white-space: nowrap;
+    }
+    .primary-tab.active { color: var(--cth-purple-deep); }
+    .primary-tab.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 2px;
+      background: var(--cth-purple-deep);
+    }
+
+    .view-pane { display: none; animation: fadeIn .18s ease; }
+    .view-pane.active { display: block; }
+    @keyframes fadeIn { from { opacity: .45; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .segmented {
+      display: inline-flex;
+      background: var(--cth-panel-white);
+      border: 1px solid var(--cth-border);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .segment {
+      border: 0;
+      border-right: 1px solid var(--cth-border);
+      background: transparent;
+      padding: 8px 17px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .segment:last-child { border-right: 0; }
+    .segment.active { background: var(--cth-crimson); color: white; }
+    .month-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      min-width: 210px;
+      margin-right: auto;
+    }
+    .month-control strong { font-family: var(--serif); font-size: 24px; }
+    .icon-btn {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+    }
+    .icon-btn:hover { background: var(--cth-blush); }
+    .control {
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--cth-border);
+      border-radius: 5px;
+      color: #4c3b46;
+      background: var(--cth-panel-white);
+      outline: none;
+    }
+
+    .calendar-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 255px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .calendar-card, .panel {
+      background: rgba(255,253,251,.96);
+      border: 1px solid var(--cth-border);
+      border-radius: var(--radius);
+      box-shadow: var(--cth-shadow);
+    }
+    .calendar-card { overflow: hidden; }
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: linear-gradient(90deg, #3c063f, #53094f);
+      color: white;
+      text-transform: uppercase;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .weekday { padding: 7px 3px; }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: repeat(5, minmax(118px, 1fr));
+    }
+    .day-cell {
+      min-width: 0;
+      border-right: 1px solid var(--cth-border);
+      border-bottom: 1px solid var(--cth-border);
+      padding: 7px;
+      position: relative;
+      background: rgba(255,255,255,.45);
+    }
+    .day-cell:nth-child(7n) { border-right: 0; }
+    .day-cell:nth-last-child(-n + 7) { border-bottom: 0; }
+    .day-cell.outside { color: #a798a0; background: rgba(248,241,236,.65); }
+    .day-number { font-size: 12px; margin-bottom: 5px; }
+    .post-card {
+      background: linear-gradient(180deg, #fffdfa 0%, #fbf4ef 100%);
+      border: 1px solid #e9ddd6;
+      border-radius: 5px;
+      padding: 7px;
+      font-size: 10px;
+      line-height: 1.25;
+      margin-top: 4px;
+      cursor: pointer;
+      transition: .16s ease;
+      position: relative;
+    }
+    .post-card:hover { transform: translateY(-1px); box-shadow: 0 7px 14px rgba(51,3,60,.09); }
+    .post-top { display: flex; align-items: center; gap: 5px; font-weight: 700; margin-bottom: 5px; }
+    .post-title { font-size: 10px; }
+    .status-dot {
+      width: 5px; height: 5px; border-radius: 50%; margin-left: auto; flex: 0 0 auto;
+    }
+    .platform-mark {
+      width: 14px; height: 14px; border-radius: 3px; color: white; display: inline-grid; place-items: center; font-size: 8px; font-weight: 700;
+    }
+    .ig { background: linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045); }
+    .fb { background: #1877f2; }
+    .li { background: #0a66c2; }
+    .tt { background: #111; }
+
+    .calendar-mode-view { display: none; animation: fadeIn .18s ease; }
+    .calendar-mode-view.active { display: block; }
+
+    .week-calendar {
+      display: grid;
+      grid-template-columns: 76px repeat(7, minmax(130px, 1fr));
+      min-width: 1040px;
+      background: rgba(255,253,251,.96);
+    }
+    .week-header-spacer,
+    .week-day-header {
+      min-height: 62px;
+      border-right: 1px solid var(--cth-border);
+      border-bottom: 1px solid var(--cth-border);
+      background: linear-gradient(180deg, #fffdfa 0%, #fbf4ef 100%);
+    }
+    .week-header-spacer { display: grid; place-items: center; color: var(--cth-muted); }
+    .week-day-header { padding: 10px 8px; text-align: center; }
+    .week-day-header:last-child { border-right: 0; }
+    .week-day-name { display: block; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--cth-ruby); }
+    .week-day-number { display: block; margin-top: 4px; font-family: var(--serif); font-size: 24px; line-height: 1; color: var(--cth-purple-deep); }
+    .week-day-header.today { background: rgba(175,0,36,.06); }
+    .week-day-header.today .week-day-number { color: var(--cth-crimson); }
+    .week-time {
+      min-height: 112px;
+      padding: 10px 8px;
+      border-right: 1px solid var(--cth-border);
+      border-bottom: 1px solid var(--cth-border);
+      color: var(--cth-muted);
+      font-size: 10px;
+      text-align: right;
+      background: rgba(248,241,236,.58);
+    }
+    .week-slot {
+      min-height: 112px;
+      padding: 7px;
+      border-right: 1px solid var(--cth-border);
+      border-bottom: 1px solid var(--cth-border);
+      background: rgba(255,255,255,.4);
+      position: relative;
+    }
+    .week-slot:nth-child(8n) { border-right: 0; }
+    .week-slot.is-today { background: rgba(175,0,36,.025); }
+    .week-event {
+      height: 100%;
+      min-height: 72px;
+      border: 1px solid #e5d6cf;
+      border-left: 3px solid var(--cth-crimson);
+      border-radius: 6px;
+      padding: 9px;
+      background: linear-gradient(180deg, #fffdfa 0%, #fbf4ef 100%);
+      box-shadow: 0 6px 14px rgba(51,3,60,.06);
+      cursor: pointer;
+      transition: .16s ease;
+    }
+    .week-event:hover { transform: translateY(-1px); box-shadow: 0 10px 18px rgba(51,3,60,.11); }
+    .week-event.gold { border-left-color: var(--cth-gold); }
+    .week-event.purple { border-left-color: #7b2ca7; }
+    .week-event.green { border-left-color: var(--cth-green); }
+    .week-event.blue { border-left-color: #0a66c2; }
+    .week-event-time { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 800; margin-bottom: 7px; }
+    .week-event-title { font-size: 11px; font-weight: 700; line-height: 1.3; color: var(--cth-purple-deep); }
+    .week-event-meta { margin-top: 6px; font-size: 9px; color: var(--cth-muted); }
+    .week-empty-cta {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      color: var(--cth-crimson);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s ease, background .15s ease;
+    }
+    .week-slot:hover .week-empty-cta { opacity: 1; background: rgba(175,0,36,.025); }
+
+    .list-calendar { display: grid; gap: 12px; padding: 14px; }
+    .list-date-group {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--cth-border);
+    }
+    .list-date-group:last-child { border-bottom: 0; padding-bottom: 0; }
+    .list-date-heading { position: sticky; top: 12px; padding: 10px 12px; border-radius: 6px; background: var(--cth-blush); }
+    .list-date-day { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--cth-ruby); }
+    .list-date-number { font-family: var(--serif); font-size: 25px; font-weight: 700; color: var(--cth-purple-deep); margin: 2px 0; }
+    .list-date-count { font-size: 9px; color: var(--cth-muted); }
+    .list-posts { display: grid; gap: 8px; }
+    .list-post {
+      display: grid;
+      grid-template-columns: 74px 34px minmax(160px, 1.5fr) minmax(110px, .8fr) minmax(105px, .7fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid var(--cth-border);
+      border-radius: 6px;
+      background: linear-gradient(180deg, #fffdfa 0%, #fbf6f2 100%);
+      cursor: pointer;
+      transition: .16s ease;
+    }
+    .list-post:hover { border-color: rgba(175,0,36,.32); transform: translateY(-1px); box-shadow: 0 8px 18px rgba(51,3,60,.07); }
+    .list-time { font-size: 10px; font-weight: 800; color: var(--cth-purple-deep); }
+    .list-title { font-size: 11px; font-weight: 700; color: var(--cth-purple-deep); }
+    .list-subtitle { display: block; margin-top: 3px; font-size: 9px; font-weight: 400; color: var(--cth-muted); }
+    .list-meta-label { display: block; font-size: 8px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--cth-ruby); margin-bottom: 3px; }
+    .status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 999px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+    .status-pill.scheduled { color: #5f2669; background: rgba(123,44,167,.1); border: 1px solid rgba(123,44,167,.2); }
+    .status-pill.published { color: #16733d; background: rgba(91,172,118,.12); border: 1px solid rgba(91,172,118,.24); }
+    .status-pill.approval { color: #805d08; background: rgba(196,169,91,.18); border: 1px solid rgba(196,169,91,.35); }
+    .list-actions { display: flex; justify-content: flex-end; gap: 4px; }
+    .list-empty-day { padding: 16px; border: 1px dashed var(--cth-border); border-radius: 6px; color: var(--cth-muted); font-size: 10px; text-align: center; }
+
+    .right-rail { display: grid; gap: 12px; }
+    .rail-card { padding: 14px; }
+    .rail-card-title {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 12px;
+    }
+    .focus-list { display: grid; gap: 11px; }
+    .focus-label { font-size: 10px; font-weight: 700; color: var(--cth-ruby); margin-bottom: 2px; }
+    .focus-value { font-size: 11px; line-height: 1.35; }
+    .key-date { display: grid; grid-template-columns: 18px 38px 1fr; gap: 7px; align-items: center; margin: 9px 0; font-size: 10px; }
+    .key-date i { color: var(--cth-cinnabar); }
+    .inline-link { border: 0; background: transparent; color: var(--cth-crimson); font-weight: 700; cursor: pointer; font-size: 11px; }
+    .idea-item { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0; font-size: 10px; }
+    .idea-item i { color: var(--cth-gold); flex: 0 0 auto; }
+
+    .lower-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .content-guide, .performance-card { padding: 14px; }
+    .section-kicker { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 11px; }
+    .guide-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .guide-card { padding: 14px; border-radius: 5px; border: 1px solid var(--cth-border); min-height: 138px; }
+    .guide-card.purple { background: #fbf7ff; border-color: #e2cef2; }
+    .guide-card.red { background: #fff8f7; border-color: #f0d1cb; }
+    .guide-card.gold { background: #fffaf0; border-color: #ead9aa; }
+    .guide-head { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 11px; margin-bottom: 10px; }
+    .guide-card p { font-size: 10px; line-height: 1.45; margin: 0 0 9px; }
+    .guide-card .examples { font-size: 9px; color: #5c4b55; }
+
+    .performance-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; align-items: start; }
+    .performance-item { padding: 2px 14px 8px; min-height: 72px; border-right: 1px solid var(--cth-border); }
+    .performance-item:last-child { border-right: 0; }
+    .performance-label { font-size: 9px; font-weight: 700; margin-bottom: 8px; }
+    .performance-value { font-family: var(--serif); font-size: 24px; font-weight: 700; }
+    .trend-up { color: var(--cth-green); font-size: 10px; margin-top: 5px; }
+    .performance-footer { margin-top: 10px; text-align: center; }
+
+    /* Generic inner-page panels */
+    .inner-page {
+      background: rgba(255,253,251,.96);
+      border: 1px solid var(--cth-border);
+      border-radius: var(--radius);
+      box-shadow: var(--cth-shadow);
+      padding: 20px;
+    }
+    .inner-header { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-bottom: 18px; }
+    .inner-title { font-size: 30px; line-height: 1; }
+    .inner-subtitle { margin: 5px 0 0; color: var(--cth-muted); font-size: 12px; }
+
+    /* Instagram grid */
+    .ig-layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 22px; }
+    .profile-card { background: #fff; border: 1px solid var(--cth-border); border-radius: 6px; padding: 20px; }
+    .profile-top { display: flex; gap: 15px; align-items: center; }
+    .avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--cth-crimson), var(--cth-purple-deep)); color: var(--cth-gold); display: grid; place-items: center; font-family: var(--serif); font-size: 26px; border: 4px solid #f3d9df; }
+    .profile-name { font-family: var(--serif); font-size: 24px; font-weight: 700; }
+    .profile-handle { color: var(--cth-muted); font-size: 12px; }
+    .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 18px 0; text-align: center; }
+    .profile-stat strong { font-family: var(--serif); display: block; font-size: 22px; }
+    .profile-stat span { font-size: 10px; color: var(--cth-muted); }
+    .bio { font-size: 12px; line-height: 1.5; }
+    .grid-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .grid-tile { aspect-ratio: 1; position: relative; overflow: hidden; cursor: pointer; background: #efe7e2; }
+    .grid-tile img { width: 100%; height: 100%; object-fit: cover; transition: .2s ease; }
+    .grid-tile:hover img { transform: scale(1.03); }
+    .grid-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(13,0,16,.6)); opacity: 0; transition: .2s ease; color: white; display: flex; align-items: flex-end; padding: 10px; font-size: 10px; }
+    .grid-tile:hover .grid-overlay { opacity: 1; }
+    .planned-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; background: var(--cth-gold); color: var(--cth-purple-black); padding: 3px 6px; border-radius: 99px; font-weight: 700; }
+
+    /* Posts */
+    .post-filters { display: grid; grid-template-columns: minmax(180px, 1.5fr) repeat(5, minmax(120px, .7fr)); gap: 9px; margin-bottom: 14px; }
+    .search-wrap { position: relative; }
+    .search-wrap i { position: absolute; left: 11px; top: 10px; color: var(--cth-muted); }
+    .search-wrap input { padding-left: 35px; }
+    .posts-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .posts-table th { text-align: left; padding: 10px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--cth-muted); border-bottom: 1px solid var(--cth-border); }
+    .posts-table td { padding: 12px 8px; border-bottom: 1px solid var(--cth-border); vertical-align: middle; }
+    .posts-table tbody tr:hover { background: #fff9f6; }
+    .thumb { width: 52px; height: 52px; border-radius: 4px; object-fit: cover; }
+    .status-pill { display: inline-flex; padding: 4px 8px; border-radius: 99px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .status-scheduled { color: var(--cth-purple-deep); background: #efe3f1; }
+    .status-published { color: #176c47; background: #e4f4eb; }
+    .status-draft { color: #6f6268; background: #f0ece9; }
+    .status-approval { color: #765c0f; background: #f7edc6; }
+
+    /* Best times */
+    .best-times-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) 340px; gap: 18px; }
+    .heatmap { overflow-x: auto; }
+    .heatmap-grid { display: grid; grid-template-columns: 72px repeat(7, minmax(84px, 1fr)); gap: 5px; min-width: 760px; }
+    .heatmap-cell { min-height: 44px; border-radius: 5px; display: grid; place-items: center; font-size: 10px; border: 1px solid rgba(51,3,60,.04); }
+    .heatmap-head { background: transparent; font-weight: 700; }
+    .h1 { background: #fbf3f5; }
+    .h2 { background: #f5dce2; }
+    .h3 { background: #e8b1c0; }
+    .h4 { background: #ca6680; color: white; }
+    .h5 { background: var(--cth-crimson); color: white; }
+    .recommend-card { padding: 17px; margin-bottom: 10px; border: 1px solid var(--cth-border); border-radius: 6px; background: #fffdfa; }
+    .recommend-card strong { font-family: var(--serif); font-size: 20px; display: block; margin-bottom: 4px; }
+    .recommend-card small { color: var(--cth-muted); }
+
+    /* Drawers and modal */
+    .overlay { position: fixed; inset: 0; background: rgba(13,0,16,.48); z-index: 50; opacity: 0; pointer-events: none; transition: .2s ease; }
+    .overlay.open { opacity: 1; pointer-events: auto; }
+    .drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: min(540px, 94vw); background: var(--cth-panel-white); z-index: 60; box-shadow: var(--cth-shadow-strong); transform: translateX(105%); transition: .25s ease; display: flex; flex-direction: column;
+    }
+    .drawer.open { transform: none; }
+    .drawer-header { padding: 20px; border-bottom: 1px solid var(--cth-border); display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; }
+    .drawer-title { font-size: 32px; line-height: 1; }
+    .drawer-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .drawer-footer { padding: 15px 20px; border-top: 1px solid var(--cth-border); display: flex; justify-content: flex-end; gap: 10px; }
+    .close-btn { border: 0; background: transparent; cursor: pointer; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; }
+    .close-btn:hover { background: var(--cth-blush); }
+
+    .modal-shell { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 20px; opacity: 0; pointer-events: none; transition: .2s ease; }
+    .modal-shell.open { opacity: 1; pointer-events: auto; }
+    .modal {
+      width: min(1180px, 96vw); max-height: 92vh; overflow: hidden; background: var(--cth-panel-white); border: 1px solid var(--cth-border); border-radius: 8px; box-shadow: var(--cth-shadow-strong); display: flex; flex-direction: column; transform: translateY(12px) scale(.99); transition: .2s ease;
+    }
+    .modal-shell.open .modal { transform: none; }
+    .modal-header { padding: 18px 22px; border-bottom: 1px solid var(--cth-border); display: flex; justify-content: space-between; align-items: flex-start; }
+    .modal-body { padding: 20px 22px; overflow-y: auto; }
+    .modal-footer { padding: 15px 22px; border-top: 1px solid var(--cth-border); display: flex; justify-content: flex-end; gap: 10px; background: #fffaf7; }
+    .composer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .field { display: grid; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--cth-ruby); }
+    .field input, .field select, .field textarea {
+      width: 100%; border: 1px solid var(--cth-border); border-radius: 5px; padding: 10px 11px; outline: none; background: white; color: var(--cth-ink);
+    }
+    .field textarea { min-height: 112px; resize: vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--cth-ruby); box-shadow: 0 0 0 3px rgba(118,59,91,.08); }
+    .platform-select { display: flex; gap: 8px; flex-wrap: wrap; }
+    .platform-chip { border: 1px solid var(--cth-border); background: white; padding: 8px 10px; border-radius: 5px; display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 11px; }
+    .platform-chip.selected { border-color: var(--cth-crimson); background: #fff2f5; color: var(--cth-crimson); }
+    .preview-panel { border: 1px solid var(--cth-border); border-radius: 7px; background: white; overflow: hidden; }
+    .preview-tabs { display: flex; gap: 2px; padding: 8px; background: #f8f1ec; border-bottom: 1px solid var(--cth-border); overflow-x: auto; }
+    .preview-tab { border: 0; background: transparent; padding: 8px 10px; border-radius: 5px; cursor: pointer; white-space: nowrap; font-size: 11px; }
+    .preview-tab.active { background: var(--cth-purple-deep); color: var(--cth-gold); }
+    .preview-content { padding: 18px; min-height: 410px; }
+    .social-preview { max-width: 430px; margin: 0 auto; border: 1px solid #e6e1de; border-radius: 8px; overflow: hidden; background: white; }
+    .social-preview-head { padding: 11px; display: flex; align-items: center; gap: 8px; }
+    .mini-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--cth-purple-deep); color: var(--cth-gold); display: grid; place-items: center; font-family: var(--serif); }
+    .social-preview-media { aspect-ratio: 4/3; background: linear-gradient(135deg,#35063f,#af0024); display: grid; place-items: center; color: rgba(255,255,255,.7); }
+    .social-preview-copy { padding: 12px; font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
+
+
+    /* Platform media fit */
+    .media-upload-zone {
+      position: relative;
+      border: 1px dashed var(--cth-tuscany);
+      border-radius: 6px;
+      padding: 18px;
+      text-align: center;
+      background: #fffaf7;
+      cursor: pointer;
+      transition: border-color .18s ease, background .18s ease, transform .18s ease;
+    }
+    .media-upload-zone:hover,
+    .media-upload-zone.dragging {
+      border-color: var(--cth-crimson);
+      background: #fff3f6;
+      transform: translateY(-1px);
+    }
+    .media-upload-zone input { display: none; }
+    .media-file-summary {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 9px;
+      padding: 10px 12px;
+      border: 1px solid var(--cth-border);
+      border-radius: 5px;
+      background: white;
+      font-size: 11px;
+    }
+    .media-file-summary.visible { display: flex; }
+    .media-file-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .media-file-meta { color: var(--cth-muted); margin-top: 2px; font-size: 9px; }
+    .media-fit-section {
+      margin-top: 17px;
+      padding: 16px;
+      border: 1px solid var(--cth-border);
+      border-radius: 7px;
+      background: linear-gradient(180deg, #fffdfa 0%, #fff8f5 100%);
+    }
+    .media-fit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 13px;
+    }
+    .media-fit-header h3 { font-size: 24px; line-height: 1; }
+    .media-fit-header p { margin: 5px 0 0; color: var(--cth-muted); font-size: 10px; line-height: 1.45; max-width: 520px; }
+    .media-fit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+    }
+    .media-fit-empty {
+      grid-column: 1 / -1;
+      border: 1px dashed var(--cth-border);
+      border-radius: 6px;
+      padding: 22px;
+      text-align: center;
+      color: var(--cth-muted);
+      background: rgba(255,255,255,.7);
+      font-size: 11px;
+    }
+    .media-fit-card {
+      border: 1px solid var(--cth-border);
+      border-radius: 6px;
+      padding: 11px;
+      background: white;
+      min-width: 0;
+    }
+    .media-fit-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+    .media-fit-platform { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 11px; }
+    .media-fit-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 99px;
+      padding: 4px 7px;
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+    .media-fit-status.ready { background: #e4f4eb; color: #176c47; }
+    .media-fit-status.warning { background: #fff0d8; color: #8b5a00; }
+    .media-fit-status.empty { background: #f0ece9; color: #6f6268; }
+    .media-preset-select {
+      width: 100%;
+      height: 34px;
+      border: 1px solid var(--cth-border);
+      border-radius: 5px;
+      background: #fffdfa;
+      color: var(--cth-ink);
+      padding: 0 9px;
+      font-size: 10px;
+      margin-bottom: 9px;
+    }
+    .media-frame-wrap {
+      min-height: 190px;
+      display: grid;
+      place-items: center;
+      padding: 10px;
+      border-radius: 5px;
+      background:
+        linear-gradient(45deg, #f3ece8 25%, transparent 25%),
+        linear-gradient(-45deg, #f3ece8 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f3ece8 75%),
+        linear-gradient(-45deg, transparent 75%, #f3ece8 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      overflow: hidden;
+    }
+    .media-fit-frame {
+      position: relative;
+      width: 100%;
+      max-height: 250px;
+      max-width: 100%;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--cth-purple-deep), var(--cth-crimson));
+      box-shadow: 0 9px 24px rgba(51,3,60,.16);
+    }
+    .media-fit-frame img { width: 100%; height: 100%; display: block; object-position: center; }
+    .media-frame-placeholder {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,.72);
+      text-align: center;
+      padding: 16px;
+      font-size: 9px;
+      line-height: 1.4;
+    }
+    .media-safe-zone {
+      position: absolute;
+      inset: 9%;
+      border: 1px dashed rgba(255,255,255,.82);
+      pointer-events: none;
+      box-shadow: 0 0 0 999px rgba(13,0,16,.08);
+    }
+    .media-safe-zone.vertical { inset: 12% 8% 15%; }
+    .safe-zone-label {
+      position: absolute;
+      left: 7px;
+      bottom: 6px;
+      padding: 3px 5px;
+      background: rgba(13,0,16,.7);
+      color: white;
+      border-radius: 3px;
+      font-size: 7px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .media-dimension-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      padding: 4px 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,.88);
+      color: var(--cth-purple-deep);
+      font-size: 8px;
+      font-weight: 700;
+    }
+    .media-fit-details {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--cth-muted);
+      font-size: 9px;
+    }
+    .media-fit-warning { color: #9a5d00; font-size: 9px; margin-top: 7px; line-height: 1.35; }
+    .media-fit-actions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 9px; }
+    .fit-mode-btn,
+    .media-card-action {
+      border: 1px solid var(--cth-border);
+      border-radius: 4px;
+      background: white;
+      color: var(--cth-ink);
+      padding: 6px 8px;
+      font-size: 9px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .fit-mode-btn.active { background: var(--cth-purple-deep); color: var(--cth-gold); border-color: var(--cth-purple-deep); }
+    .media-card-action:hover,
+    .fit-mode-btn:hover { border-color: var(--cth-ruby); }
+    .preview-size-badge {
+      position: absolute;
+      right: 9px;
+      top: 9px;
+      z-index: 2;
+      border-radius: 4px;
+      padding: 4px 7px;
+      background: rgba(255,255,255,.9);
+      color: var(--cth-purple-deep);
+      font-size: 8px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(13,0,16,.12);
+    }
+    .social-preview-media { position: relative; }
+    .social-preview-media img { width: 100%; height: 100%; display: block; object-position: center; }
+
+    /* Library */
+    .drawer-tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid var(--cth-border); }
+    .drawer-tab { border: 0; background: transparent; padding: 9px 12px; cursor: pointer; font-weight: 700; font-size: 12px; position: relative; }
+    .drawer-tab.active::after { content: ""; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--cth-crimson); }
+    .library-pane { display: none; }
+    .library-pane.active { display: block; }
+    .library-card { padding: 14px; border: 1px solid var(--cth-border); border-radius: 6px; margin-bottom: 10px; background: white; }
+    .library-card-top { display: flex; justify-content: space-between; gap: 12px; }
+    .library-card-title { font-weight: 700; margin-bottom: 5px; }
+    .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .tag { display: inline-flex; padding: 4px 7px; border-radius: 99px; background: var(--cth-blush); color: var(--cth-ruby); font-size: 9px; font-weight: 700; }
+
+    /* Ask house */
+    .chat-window { display: flex; flex-direction: column; gap: 12px; }
+    .message { max-width: 88%; padding: 12px 14px; border-radius: 8px; line-height: 1.5; font-size: 12px; }
+    .message.house { align-self: flex-start; background: #f2e9f3; color: var(--cth-purple-deep); }
+    .message.user { align-self: flex-end; background: var(--cth-purple-deep); color: white; }
+    .chat-compose { display: flex; gap: 8px; margin-top: 14px; }
+    .chat-compose textarea { flex: 1; min-height: 74px; resize: none; border: 1px solid var(--cth-border); padding: 11px; border-radius: 6px; }
+
+    /* Connections */
+    .connection-card { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 14px; border: 1px solid var(--cth-border); border-radius: 6px; margin-bottom: 10px; background: white; }
+    .connection-left { display: flex; align-items: center; gap: 12px; }
+    .platform-logo { width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; color: white; font-weight: 700; }
+    .connection-name { font-weight: 700; }
+    .connection-note { color: var(--cth-muted); font-size: 10px; margin-top: 3px; }
+    .connection-state { font-size: 10px; color: var(--cth-green); font-weight: 700; }
+
+    .toast {
+      position: fixed; right: 24px; bottom: 24px; z-index: 100; background: var(--cth-purple-black); color: white; padding: 12px 16px; border-radius: 6px; box-shadow: var(--cth-shadow-strong); transform: translateY(20px); opacity: 0; pointer-events: none; transition: .2s ease; font-size: 12px;
+    }
+    .toast.show { opacity: 1; transform: none; }
+
+    @media (max-width: 1180px) {
+      .calendar-layout { grid-template-columns: 1fr; }
+      .right-rail { grid-template-columns: repeat(3, 1fr); }
+      .best-times-layout { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(7, 170px); }
+    }
+    @media (max-width: 920px) {
+      .app-shell { width: min(100% - 24px, 1500px); padding-top: 20px; }
+      .page-header { flex-direction: column; }
+      .header-actions { justify-content: flex-start; }
+      .calendar-card { overflow-x: auto; }
+      .weekdays, .calendar-grid { min-width: 900px; }
+      .week-view-scroll { overflow-x: auto; }
+      .list-post { grid-template-columns: 64px 30px minmax(170px, 1.4fr) minmax(100px, .7fr) auto; }
+      .list-post .list-campaign { display: none; }
+      .lower-grid { grid-template-columns: 1fr; }
+      .guide-grid { grid-template-columns: 1fr; }
+      .ig-layout { grid-template-columns: 1fr; }
+      .post-filters { grid-template-columns: repeat(2, 1fr); }
+      .posts-table { min-width: 920px; }
+      .table-scroll { overflow-x: auto; }
+      .composer-grid { grid-template-columns: 1fr; }
+      .media-fit-grid { grid-template-columns: 1fr; }
+      .right-rail { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .app-shell { width: min(100% - 16px, 1500px); }
+      h1 { font-size: 42px; }
+      .header-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+      .btn { width: 100%; }
+      .toolbar { align-items: stretch; }
+      .month-control { width: 100%; order: -1; }
+      .form-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      .performance-grid { grid-template-columns: repeat(2, 1fr); }
+      .performance-item { border-right: 0; border-bottom: 1px solid var(--cth-border); }
+      .post-filters { grid-template-columns: 1fr; }
+      .media-fit-header { flex-direction: column; }
+      .list-date-group { grid-template-columns: 1fr; }
+      .list-date-heading { position: static; }
+      .list-post { grid-template-columns: 58px 26px minmax(0, 1fr) auto; gap: 8px; }
+      .list-post .list-job, .list-post .list-campaign { display: none; }
+      .list-actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="page-header">
+      <div class="header-copy">
+        <div class="eyebrow">Core Truth House</div>
+        <h1>Social Planner</h1>
+        <p class="subtitle">Turn your brand strategy into a clear publishing rhythm. Plan the message, shape it for each platform, and move it from idea to published content.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" data-open-modal="composer"><i data-lucide="plus" size="16"></i>Create Post</button>
+        <button class="btn btn-secondary" data-open-drawer="ask"><i data-lucide="sparkles" size="16"></i>Ask the House</button>
+        <button class="btn btn-secondary" data-open-drawer="libraries"><i data-lucide="book-open" size="16"></i>Libraries</button>
+        <button class="btn btn-secondary" data-open-drawer="connections"><i data-lucide="link" size="16"></i>Connections</button>
+      </div>
+    </header>
+
+    <section class="metrics" aria-label="Social planner metrics">
+      <article class="metric-card"><i class="metric-icon" data-lucide="calendar-days" size="22"></i><span class="metric-label">Planned</span><strong class="metric-value">48</strong><span class="metric-note">Posts this month</span></article>
+      <article class="metric-card"><i class="metric-icon" data-lucide="clock-3" size="22"></i><span class="metric-label">Scheduled</span><strong class="metric-value">26</strong><span class="metric-note">Posts</span></article>
+      <article class="metric-card"><i class="metric-icon" data-lucide="send" size="22"></i><span class="metric-label">Published</span><strong class="metric-value">19</strong><span class="metric-note">Posts</span></article>
+      <article class="metric-card"><i class="metric-icon" data-lucide="pencil" size="22"></i><span class="metric-label">Drafts</span><strong class="metric-value">8</strong><span class="metric-note">Posts</span></article>
+      <article class="metric-card"><i class="metric-icon" data-lucide="user-round" size="22"></i><span class="metric-label">Needs Approval</span><strong class="metric-value">3</strong><span class="metric-note">Posts</span></article>
+      <article class="metric-card"><i class="metric-icon" data-lucide="chart-no-axes-column-increasing" size="22"></i><span class="metric-label">Publishing Rhythm</span><strong class="metric-value">3.2</strong><span class="metric-note">Posts per active day</span></article>
+      <article class="metric-card"><i class="metric-icon" data-lucide="heart" size="22"></i><span class="metric-label">Engagement</span><strong class="metric-value">5.6%</strong><span class="metric-note">This month</span></article>
+    </section>
+
+    <nav class="primary-tabs" aria-label="Social planner pages">
+      <button class="primary-tab active" data-view="calendar">Publish Calendar</button>
+      <button class="primary-tab" data-view="grid">Instagram Grid</button>
+      <button class="primary-tab" data-view="posts">Posts</button>
+      <button class="primary-tab" data-view="times">Best Times</button>
+    </nav>
+
+    <!-- Publish Calendar -->
+    <section id="view-calendar" class="view-pane active">
+      <div class="toolbar">
+        <div class="segmented" aria-label="Calendar preview mode"><button class="segment active" data-calendar-mode="month">Month</button><button class="segment" data-calendar-mode="week">Week</button><button class="segment" data-calendar-mode="list">List</button></div>
+        <div class="month-control"><button class="icon-btn" aria-label="Previous period" data-calendar-nav="previous"><i data-lucide="chevron-left" size="18"></i></button><strong id="calendar-period-label">July 2026</strong><button class="icon-btn" aria-label="Next period" data-calendar-nav="next"><i data-lucide="chevron-right" size="18"></i></button></div>
+        <select class="control"><option>Platform: All</option><option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>TikTok</option></select>
+        <select class="control"><option>Status: All</option><option>Draft</option><option>Scheduled</option><option>Published</option><option>Needs Approval</option></select>
+        <select class="control"><option>Content Job: All</option><option>Generate Demand</option><option>Convert Demand</option><option>Build Loyalty</option></select>
+        <select class="control"><option>Campaign: All</option><option>Brand Operating System</option><option>Founding Cohort</option></select>
+        <select class="control"><option>Pillar: All</option><option>Brand Strategy</option><option>Leadership</option><option>Founder Growth</option></select>
+      </div>
+
+      <div class="calendar-layout">
+        <div>
+          <div id="calendar-month-view" class="calendar-mode-view active">
+          <div class="calendar-card">
+            <div class="weekdays"><div class="weekday">Sun</div><div class="weekday">Mon</div><div class="weekday">Tue</div><div class="weekday">Wed</div><div class="weekday">Thu</div><div class="weekday">Fri</div><div class="weekday">Sat</div></div>
+            <div class="calendar-grid">
+              <div class="day-cell outside"><div class="day-number">28</div></div>
+              <div class="day-cell outside"><div class="day-number">29</div></div>
+              <div class="day-cell outside"><div class="day-number">30</div></div>
+              <div class="day-cell"><div class="day-number">1</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark ig">◎</span><span>9:00 AM</span><span class="status-dot" style="background:#efa800"></span></div><div class="post-title">Behind the Scenes<br><span class="muted">Carousel</span></div></div></div>
+              <div class="day-cell"><div class="day-number">2</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark li">in</span><span>12:00 PM</span><span class="status-dot" style="background:#23a4b3"></span></div><div class="post-title">Brand Strategy Tip<br><span class="muted">Text Post</span></div></div></div>
+              <div class="day-cell"><div class="day-number">3</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark tt">♪</span><span>10:00 AM</span><span class="status-dot" style="background:#7b2ca7"></span></div><div class="post-title">Founder Insight<br><span class="muted">Video</span></div></div></div>
+              <div class="day-cell"><div class="day-number">4</div></div>
+              <div class="day-cell"><div class="day-number">5</div></div>
+              <div class="day-cell"><div class="day-number">6</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark fb">f</span><span>1:00 PM</span><span class="status-dot" style="background:#5bac76"></span></div><div class="post-title">Client Success Story<br><span class="muted">Image</span></div></div></div>
+              <div class="day-cell"><div class="day-number">7</div></div>
+              <div class="day-cell"><div class="day-number">8</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark ig">◎</span><span>9:00 AM</span><span class="status-dot" style="background:#5bac76"></span></div><div class="post-title">Strategy Framework<br><span class="muted">Carousel</span></div></div></div>
+              <div class="day-cell"><div class="day-number">9</div></div>
+              <div class="day-cell"><div class="day-number">10</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark li">in</span><span>3:00 PM</span><span class="status-dot" style="background:#438b89"></span></div><div class="post-title">Industry Insight<br><span class="muted">Article</span></div></div></div>
+              <div class="day-cell"><div class="day-number">11</div></div>
+              <div class="day-cell"><div class="day-number">12</div></div>
+              <div class="day-cell"><div class="day-number">13</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark ig">◎</span><span>10:00 AM</span><span class="status-dot" style="background:#5bac76"></span></div><div class="post-title">Quick Tip<br><span class="muted">Reel</span></div></div></div>
+              <div class="day-cell"><div class="day-number">14</div></div>
+              <div class="day-cell"><div class="day-number">15</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark tt">♪</span><span>12:00 PM</span><span class="status-dot" style="background:#788b38"></span></div><div class="post-title">Myth vs Fact<br><span class="muted">Video</span></div></div></div>
+              <div class="day-cell"><div class="day-number">16</div></div>
+              <div class="day-cell"><div class="day-number">17</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark li">in</span><span>9:00 AM</span><span class="status-dot" style="background:#438b89"></span></div><div class="post-title">Leadership Lesson<br><span class="muted">Text Post</span></div></div></div>
+              <div class="day-cell"><div class="day-number">18</div></div>
+              <div class="day-cell"><div class="day-number">19</div></div>
+              <div class="day-cell"><div class="day-number">20</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark fb">f</span><span>1:00 PM</span><span class="status-dot" style="background:#5bac76"></span></div><div class="post-title">Event Announcement<br><span class="muted">Image</span></div></div></div>
+              <div class="day-cell"><div class="day-number">21</div></div>
+              <div class="day-cell"><div class="day-number">22</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark ig">◎</span><span>9:00 AM</span><span class="status-dot" style="background:#7b2ca7"></span></div><div class="post-title">Q&amp;A<br><span class="muted">Stories</span></div></div></div>
+              <div class="day-cell"><div class="day-number">23</div></div>
+              <div class="day-cell"><div class="day-number">24</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark li">in</span><span>11:00 AM</span><span class="status-dot" style="background:#438b89"></span></div><div class="post-title">Resource Share<br><span class="muted">Document</span></div></div></div>
+              <div class="day-cell"><div class="day-number">25</div></div>
+              <div class="day-cell"><div class="day-number">26</div></div>
+              <div class="day-cell"><div class="day-number">27</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark tt">♪</span><span>10:00 AM</span><span class="status-dot" style="background:#7b2ca7"></span></div><div class="post-title">Quick Tip<br><span class="muted">Video</span></div></div></div>
+              <div class="day-cell"><div class="day-number">28</div></div>
+              <div class="day-cell"><div class="day-number">29</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark li">in</span><span>12:00 PM</span><span class="status-dot" style="background:#438b89"></span></div><div class="post-title">Brand Building<br><span class="muted">Article</span></div></div></div>
+              <div class="day-cell"><div class="day-number">30</div></div>
+              <div class="day-cell"><div class="day-number">31</div><div class="post-card" data-edit-post><div class="post-top"><span class="platform-mark ig">◎</span><span>3:00 PM</span><span class="status-dot" style="background:#7b2ca7"></span></div><div class="post-title">Weekend Wisdom<br><span class="muted">Image</span></div></div></div>
+              <div class="day-cell outside"><div class="day-number">1</div></div>
+            </div>
+          </div>
+          </div>
+
+          <div id="calendar-week-view" class="calendar-mode-view">
+            <div class="calendar-card week-view-scroll">
+              <div class="week-calendar" aria-label="Week of July 5 through July 11, 2026">
+                <div class="week-header-spacer"><i data-lucide="clock-3" size="15"></i></div>
+                <div class="week-day-header"><span class="week-day-name">Sun</span><span class="week-day-number">5</span></div>
+                <div class="week-day-header"><span class="week-day-name">Mon</span><span class="week-day-number">6</span></div>
+                <div class="week-day-header"><span class="week-day-name">Tue</span><span class="week-day-number">7</span></div>
+                <div class="week-day-header today"><span class="week-day-name">Wed</span><span class="week-day-number">8</span></div>
+                <div class="week-day-header"><span class="week-day-name">Thu</span><span class="week-day-number">9</span></div>
+                <div class="week-day-header"><span class="week-day-name">Fri</span><span class="week-day-number">10</span></div>
+                <div class="week-day-header"><span class="week-day-name">Sat</span><span class="week-day-number">11</span></div>
+
+                <div class="week-time">8:00 AM</div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot is-today"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+
+                <div class="week-time">10:00 AM</div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot is-today"><div class="week-event green" data-edit-post><div class="week-event-time"><span class="platform-mark ig">◎</span>9:00 AM</div><div class="week-event-title">Strategy Framework</div><div class="week-event-meta">Carousel · Generate Demand</div></div></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+
+                <div class="week-time">12:00 PM</div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot is-today"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+
+                <div class="week-time">2:00 PM</div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><div class="week-event green" data-edit-post><div class="week-event-time"><span class="platform-mark fb">f</span>1:00 PM</div><div class="week-event-title">Client Success Story</div><div class="week-event-meta">Image · Build Loyalty</div></div></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot is-today"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><div class="week-event blue" data-edit-post><div class="week-event-time"><span class="platform-mark li">in</span>3:00 PM</div><div class="week-event-title">Industry Insight</div><div class="week-event-meta">Article · Generate Demand</div></div></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+
+                <div class="week-time">4:00 PM</div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot is-today"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+                <div class="week-slot"><button class="week-empty-cta" data-open-modal="composer">+ Add post</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="calendar-list-view" class="calendar-mode-view">
+            <div class="calendar-card list-calendar" aria-label="July 2026 scheduled content list">
+              <section class="list-date-group">
+                <div class="list-date-heading"><div class="list-date-day">Wednesday</div><div class="list-date-number">July 1</div><div class="list-date-count">1 planned post</div></div>
+                <div class="list-posts">
+                  <article class="list-post" data-edit-post><div class="list-time">9:00 AM</div><span class="platform-mark ig">◎</span><div class="list-title">Behind the Scenes<span class="list-subtitle">Carousel · Brand Strategy</span></div><div class="list-job"><span class="list-meta-label">Content Job</span>Build Loyalty</div><div class="list-campaign"><span class="list-meta-label">Campaign</span>Brand Operating System</div><span class="status-pill approval"><span class="status-dot" style="background:#c4a95b"></span>Needs Approval</span><div class="list-actions"><button class="icon-btn" aria-label="Edit post"><i data-lucide="pencil" size="13"></i></button></div></article>
+                </div>
+              </section>
+              <section class="list-date-group">
+                <div class="list-date-heading"><div class="list-date-day">Thursday</div><div class="list-date-number">July 2</div><div class="list-date-count">1 scheduled post</div></div>
+                <div class="list-posts">
+                  <article class="list-post" data-edit-post><div class="list-time">12:00 PM</div><span class="platform-mark li">in</span><div class="list-title">Brand Strategy Tip<span class="list-subtitle">Text Post · Brand Strategy</span></div><div class="list-job"><span class="list-meta-label">Content Job</span>Generate Demand</div><div class="list-campaign"><span class="list-meta-label">Campaign</span>Brand Operating System</div><span class="status-pill scheduled"><span class="status-dot" style="background:#7b2ca7"></span>Scheduled</span><div class="list-actions"><button class="icon-btn" aria-label="Edit post"><i data-lucide="pencil" size="13"></i></button></div></article>
+                </div>
+              </section>
+              <section class="list-date-group">
+                <div class="list-date-heading"><div class="list-date-day">Monday</div><div class="list-date-number">July 6</div><div class="list-date-count">1 published post</div></div>
+                <div class="list-posts">
+                  <article class="list-post" data-edit-post><div class="list-time">1:00 PM</div><span class="platform-mark fb">f</span><div class="list-title">Client Success Story<span class="list-subtitle">Image · Client Results</span></div><div class="list-job"><span class="list-meta-label">Content Job</span>Build Loyalty</div><div class="list-campaign"><span class="list-meta-label">Campaign</span>Founding Cohort</div><span class="status-pill published"><span class="status-dot" style="background:#5bac76"></span>Published</span><div class="list-actions"><button class="icon-btn" aria-label="View post"><i data-lucide="eye" size="13"></i></button></div></article>
+                </div>
+              </section>
+              <section class="list-date-group">
+                <div class="list-date-heading"><div class="list-date-day">Wednesday</div><div class="list-date-number">July 8</div><div class="list-date-count">1 scheduled post</div></div>
+                <div class="list-posts">
+                  <article class="list-post" data-edit-post><div class="list-time">9:00 AM</div><span class="platform-mark ig">◎</span><div class="list-title">Strategy Framework<span class="list-subtitle">Carousel · Brand Strategy</span></div><div class="list-job"><span class="list-meta-label">Content Job</span>Generate Demand</div><div class="list-campaign"><span class="list-meta-label">Campaign</span>Brand Operating System</div><span class="status-pill scheduled"><span class="status-dot" style="background:#7b2ca7"></span>Scheduled</span><div class="list-actions"><button class="icon-btn" aria-label="Edit post"><i data-lucide="pencil" size="13"></i></button></div></article>
+                </div>
+              </section>
+              <section class="list-date-group">
+                <div class="list-date-heading"><div class="list-date-day">Friday</div><div class="list-date-number">July 10</div><div class="list-date-count">1 scheduled post</div></div>
+                <div class="list-posts">
+                  <article class="list-post" data-edit-post><div class="list-time">3:00 PM</div><span class="platform-mark li">in</span><div class="list-title">Industry Insight<span class="list-subtitle">Article · Leadership</span></div><div class="list-job"><span class="list-meta-label">Content Job</span>Generate Demand</div><div class="list-campaign"><span class="list-meta-label">Campaign</span>Brand Operating System</div><span class="status-pill scheduled"><span class="status-dot" style="background:#438b89"></span>Scheduled</span><div class="list-actions"><button class="icon-btn" aria-label="Edit post"><i data-lucide="pencil" size="13"></i></button></div></article>
+                </div>
+              </section>
+              <section class="list-date-group">
+                <div class="list-date-heading"><div class="list-date-day">Monday</div><div class="list-date-number">July 13</div><div class="list-date-count">1 scheduled post</div></div>
+                <div class="list-posts">
+                  <article class="list-post" data-edit-post><div class="list-time">10:00 AM</div><span class="platform-mark ig">◎</span><div class="list-title">Quick Tip<span class="list-subtitle">Reel · Founder Growth</span></div><div class="list-job"><span class="list-meta-label">Content Job</span>Generate Demand</div><div class="list-campaign"><span class="list-meta-label">Campaign</span>Founding Cohort</div><span class="status-pill scheduled"><span class="status-dot" style="background:#7b2ca7"></span>Scheduled</span><div class="list-actions"><button class="icon-btn" aria-label="Edit post"><i data-lucide="pencil" size="13"></i></button></div></article>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div class="lower-grid">
+            <section class="panel content-guide">
+              <div class="section-kicker">Content Job Guide</div>
+              <div class="guide-grid">
+                <article class="guide-card purple"><div class="guide-head"><i data-lucide="sparkles" size="22" style="color:#9a2de4"></i>Generate Demand</div><p>Create recognition, relevance, curiosity, and problem ownership.</p><div class="examples">Examples: Tips, education, stories, insights, awareness content.</div></article>
+                <article class="guide-card red"><div class="guide-head"><i data-lucide="rocket" size="22" style="color:#f0472e"></i>Convert Demand</div><p>Move people toward an offer, inquiry, registration, purchase, or next step.</p><div class="examples">Examples: Case studies, demos, offers, testimonials, objections.</div></article>
+                <article class="guide-card gold"><div class="guide-head"><i data-lucide="heart-handshake" size="22" style="color:#d99d1e"></i>Build Loyalty</div><p>Strengthen trust, community, retention, advocacy, and client relationships.</p><div class="examples">Examples: Behind the scenes, values, client wins, Q&amp;A, loyalty content.</div></article>
+              </div>
+            </section>
+
+            <section class="panel performance-card">
+              <div class="section-kicker">Performance Snapshot <span class="muted">(This Month)</span></div>
+              <div class="performance-grid">
+                <div class="performance-item"><div class="performance-label">Reach</div><div class="performance-value">28.4K</div><div class="trend-up">↑ 18%</div></div>
+                <div class="performance-item"><div class="performance-label">Engagement</div><div class="performance-value">1.6K</div><div class="trend-up">↑ 22%</div></div>
+                <div class="performance-item"><div class="performance-label">Clicks</div><div class="performance-value">412</div><div class="trend-up">↑ 15%</div></div>
+                <div class="performance-item"><div class="performance-label">Best Post</div><div style="display:flex;gap:7px"><span class="platform-mark ig">◎</span><span style="font-size:10px">Strategy Framework<br>Carousel</span></div></div>
+                <div class="performance-item"><div class="performance-label">Top Platform</div><div style="display:flex;gap:7px"><span class="platform-mark ig">◎</span><span style="font-size:10px">Engagement<br>5.8%</span></div></div>
+              </div>
+              <div class="performance-footer"><button class="btn btn-secondary btn-small" data-view-jump="times">Open Full Social Analytics <i data-lucide="arrow-right" size="13"></i></button></div>
+            </section>
+          </div>
+        </div>
+
+        <aside class="right-rail">
+          <section class="panel rail-card">
+            <div class="rail-card-title">Monthly Focus <button class="icon-btn" title="Edit monthly focus" data-open-modal="focus"><i data-lucide="pencil" size="13"></i></button></div>
+            <div class="focus-list"><div><div class="focus-label">Primary Offer</div><div class="focus-value">Brand Operating System Implementation</div></div><div><div class="focus-label">Audience</div><div class="focus-value">Established founders building scalable brands</div></div><div><div class="focus-label">Core Message</div><div class="focus-value">Build a brand that performs, compounds, and creates freedom.</div></div><div><div class="focus-label">Success Target</div><div class="focus-value">25 qualified discovery calls</div></div></div>
+          </section>
+          <section class="panel rail-card">
+            <div class="rail-card-title">Key Dates <button class="inline-link" data-open-modal="keydate">+ Add</button></div>
+            <div class="key-date"><i data-lucide="landmark" size="13"></i><strong>Jul 4</strong><span>Independence Day</span></div>
+            <div class="key-date"><i data-lucide="heart" size="13"></i><strong>Jul 10</strong><span>Live Workshop</span></div>
+            <div class="key-date"><i data-lucide="users" size="13"></i><strong>Jul 15</strong><span>Client Cohort Starts</span></div>
+            <div class="key-date"><i data-lucide="calendar-days" size="13"></i><strong>Jul 22</strong><span>Strategy Sprint Deadline</span></div>
+            <div class="key-date"><i data-lucide="clipboard-check" size="13"></i><strong>Jul 31</strong><span>Monthly Review</span></div>
+          </section>
+          <section class="panel rail-card">
+            <div class="rail-card-title">Unscheduled Ideas <button class="inline-link" data-open-drawer="libraries">View All</button></div>
+            <div class="idea-item"><i data-lucide="lightbulb" size="13"></i><span>How to create a compelling offer</span></div>
+            <div class="idea-item"><i data-lucide="lightbulb" size="13"></i><span>Systems over hustle</span></div>
+            <div class="idea-item"><i data-lucide="lightbulb" size="13"></i><span>Behind the scenes: client win</span></div>
+            <div class="idea-item"><i data-lucide="lightbulb" size="13"></i><span>Founder mindset shift</span></div>
+            <div class="idea-item"><i data-lucide="lightbulb" size="13"></i><span>Brand clarity checklist</span></div>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Instagram Grid -->
+    <section id="view-grid" class="view-pane">
+      <div class="inner-page">
+        <div class="inner-header"><div><div class="eyebrow">Visual Planning</div><h2 class="inner-title">Instagram Grid</h2><p class="inner-subtitle">Preview the next nine posts as a complete visual story before they publish.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-small"><i data-lucide="refresh-cw" size="14"></i>Sync Profile</button><button class="btn btn-primary btn-small" data-open-modal="composer"><i data-lucide="plus" size="14"></i>Add Grid Post</button></div></div>
+        <div class="ig-layout">
+          <aside class="profile-card">
+            <div class="profile-top"><div class="avatar">CTH</div><div><div class="profile-name">Core Truth House</div><div class="profile-handle">@coretruthhouse</div></div></div>
+            <div class="profile-stats"><div class="profile-stat"><strong>164</strong><span>Posts</span></div><div class="profile-stat"><strong>12.8K</strong><span>Followers</span></div><div class="profile-stat"><strong>428</strong><span>Following</span></div></div>
+            <div class="bio"><strong>Brand Operating System™</strong><br>Where serious brands are built.<br>Truth before tactics. Structure before scale.<br><span style="color:var(--cth-crimson)">coretruthhouse.com</span></div>
+            <hr style="border:0;border-top:1px solid var(--cth-border);margin:18px 0">
+            <div class="section-kicker">Grid Controls</div>
+            <div class="field"><label>Preview from</label><input type="date" value="2026-07-01"></div>
+            <div class="field" style="margin-top:10px"><label>Campaign</label><select><option>All Campaigns</option><option>Brand Operating System</option><option>Founding Cohort</option></select></div>
+            <p class="muted" style="font-size:10px;line-height:1.5;margin-top:12px">Drag planned tiles to test the visual order. Published posts remain locked.</p>
+          </aside>
+          <div class="grid-preview">
+            <div class="grid-tile"><img alt="Brand strategy desk" src="https://images.unsplash.com/photo-1456324504439-367cee3b3c32?auto=format&fit=crop&w=800&q=80"><span class="planned-badge">Planned</span><div class="grid-overlay">Behind the Scenes</div></div>
+            <div class="grid-tile"><img alt="Laptop and notes" src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80"><span class="planned-badge">Planned</span><div class="grid-overlay">Strategy Framework</div></div>
+            <div class="grid-tile"><img alt="Leadership portrait silhouette" src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80"><span class="planned-badge">Planned</span><div class="grid-overlay">Founder Insight</div></div>
+            <div class="grid-tile"><img alt="Architectural detail" src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=800&q=80"><div class="grid-overlay">Build the Structure</div></div>
+            <div class="grid-tile"><img alt="Notebook" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80"><div class="grid-overlay">Client Story</div></div>
+            <div class="grid-tile"><img alt="Purple abstract" src="https://images.unsplash.com/photo-1557682250-33bd709cbe85?auto=format&fit=crop&w=800&q=80"><div class="grid-overlay">Core Truth</div></div>
+            <div class="grid-tile"><img alt="Team meeting" src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=800&q=80"><div class="grid-overlay">Build Loyalty</div></div>
+            <div class="grid-tile"><img alt="Gold architectural lines" src="https://images.unsplash.com/photo-1542626991-cbc4e32524cc?auto=format&fit=crop&w=800&q=80"><div class="grid-overlay">Brand Clarity</div></div>
+            <div class="grid-tile"><img alt="City office" src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=800&q=80"><div class="grid-overlay">Command Center</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Posts -->
+    <section id="view-posts" class="view-pane">
+      <div class="inner-page">
+        <div class="inner-header"><div><div class="eyebrow">Publishing Queue</div><h2 class="inner-title">Posts</h2><p class="inner-subtitle">Review drafts, scheduled posts, approval requests, and published content in one place.</p></div><button class="btn btn-primary btn-small" data-open-modal="composer"><i data-lucide="plus" size="14"></i>Create Post</button></div>
+        <div class="post-filters">
+          <div class="search-wrap"><i data-lucide="search" size="14"></i><input class="control" style="width:100%" placeholder="Search posts"></div>
+          <select class="control"><option>Platform: All</option><option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>TikTok</option></select>
+          <select class="control"><option>Status: All</option><option>Draft</option><option>Scheduled</option><option>Published</option><option>Needs Approval</option></select>
+          <select class="control"><option>Content Job: All</option><option>Generate Demand</option><option>Convert Demand</option><option>Build Loyalty</option></select>
+          <select class="control"><option>Campaign: All</option><option>Brand Operating System</option><option>Founding Cohort</option></select>
+          <select class="control"><option>Sort: Most Recent</option><option>Most Likes</option><option>Most Shares</option><option>Most Clicks</option></select>
+        </div>
+        <div class="table-scroll">
+          <table class="posts-table">
+            <thead><tr><th><input type="checkbox"></th><th>Post</th><th>Platform</th><th>Content Job</th><th>Campaign</th><th>Scheduled</th><th>Status</th><th>Performance</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><input type="checkbox"></td><td><div style="display:flex;gap:10px;align-items:center"><img class="thumb" src="https://images.unsplash.com/photo-1456324504439-367cee3b3c32?auto=format&fit=crop&w=180&q=80"><div><strong>Behind the Scenes</strong><div class="muted">How the Brand Operating System is built</div></div></div></td><td><span class="platform-mark ig">◎</span> Instagram</td><td>Generate Demand</td><td>Brand OS</td><td>Jul 1, 9:00 AM</td><td><span class="status-pill status-scheduled">Scheduled</span></td><td>Preview</td><td><button class="icon-btn" data-edit-post><i data-lucide="more-horizontal" size="16"></i></button></td></tr>
+              <tr><td><input type="checkbox"></td><td><div style="display:flex;gap:10px;align-items:center"><img class="thumb" src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=180&q=80"><div><strong>Strategy Framework</strong><div class="muted">Five signals of a structurally sound brand</div></div></div></td><td><span class="platform-mark ig">◎</span> Instagram</td><td>Convert Demand</td><td>Brand OS</td><td>Jul 8, 9:00 AM</td><td><span class="status-pill status-published">Published</span></td><td>5.8% ER</td><td><button class="icon-btn"><i data-lucide="more-horizontal" size="16"></i></button></td></tr>
+              <tr><td><input type="checkbox"></td><td><div style="display:flex;gap:10px;align-items:center"><img class="thumb" src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=180&q=80"><div><strong>Founder Insight</strong><div class="muted">What serious founders stop outsourcing</div></div></div></td><td><span class="platform-mark tt">♪</span> TikTok</td><td>Generate Demand</td><td>Authority Series</td><td>Jul 3, 10:00 AM</td><td><span class="status-pill status-approval">Needs Approval</span></td><td>Pending</td><td><button class="icon-btn" data-edit-post><i data-lucide="more-horizontal" size="16"></i></button></td></tr>
+              <tr><td><input type="checkbox"></td><td><div style="display:flex;gap:10px;align-items:center"><img class="thumb" src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=180&q=80"><div><strong>Client Success Story</strong><div class="muted">From scattered messaging to a clear sales path</div></div></div></td><td><span class="platform-mark fb">f</span> Facebook</td><td>Build Loyalty</td><td>Client Proof</td><td>Unscheduled</td><td><span class="status-pill status-draft">Draft</span></td><td>—</td><td><button class="icon-btn" data-edit-post><i data-lucide="more-horizontal" size="16"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Best Times -->
+    <section id="view-times" class="view-pane">
+      <div class="inner-page">
+        <div class="inner-header"><div><div class="eyebrow">Performance Intelligence</div><h2 class="inner-title">Best Times</h2><p class="inner-subtitle">Use your audience behavior to schedule content when attention and response are most likely.</p></div><select class="control"><option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>TikTok</option></select></div>
+        <div class="best-times-layout">
+          <div>
+            <div class="section-kicker">Audience Activity Heatmap</div>
+            <div class="heatmap"><div class="heatmap-grid" id="heatmap"></div></div>
+          </div>
+          <aside>
+            <div class="section-kicker">Recommended Publishing Windows</div>
+            <div class="recommend-card"><strong>Tuesday · 9:00 AM</strong><small>Highest engagement opportunity. Strong for educational carousels and authority content.</small></div>
+            <div class="recommend-card"><strong>Thursday · 12:00 PM</strong><small>Best midweek conversion window. Strong for offers, case studies, and calls to action.</small></div>
+            <div class="recommend-card"><strong>Sunday · 7:00 PM</strong><small>Strong reflection window. Best for founder stories, values, and community content.</small></div>
+            <button class="btn btn-primary" style="width:100%" data-open-modal="composer"><i data-lucide="calendar-plus" size="15"></i>Schedule at a Best Time</button>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="overlay" class="overlay"></div>
+
+  <!-- Ask the House drawer -->
+  <aside id="drawer-ask" class="drawer" aria-hidden="true">
+    <div class="drawer-header"><div><div class="eyebrow">Core Truth Intelligence</div><h2 class="drawer-title">Ask the House</h2><p class="inner-subtitle">Develop an idea, strengthen the hook, or adapt a post for another platform.</p></div><button class="close-btn" data-close><i data-lucide="x" size="20"></i></button></div>
+    <div class="drawer-body"><div class="chat-window"><div class="message house">Your calendar is strongest on education, but the month needs more conversion content. I would turn “Systems over hustle” into a founder story that leads into the Brand Operating System offer.</div><div class="message user">Give me a hook for Facebook.</div><div class="message house">“You are not overwhelmed because your business is growing. You are overwhelmed because the growth has no structure to land on.”</div></div><div class="chat-compose"><textarea placeholder="Ask about your content plan..."></textarea><button class="btn btn-primary btn-icon" id="send-chat"><i data-lucide="send" size="16"></i></button></div></div>
+    <div class="drawer-footer"><button class="btn btn-secondary btn-small" data-close>Close</button><button class="btn btn-primary btn-small" data-open-modal="composer">Use in New Post</button></div>
+  </aside>
+
+  <!-- Libraries drawer -->
+  <aside id="drawer-libraries" class="drawer" aria-hidden="true">
+    <div class="drawer-header"><div><div class="eyebrow">Reusable Content Assets</div><h2 class="drawer-title">Libraries</h2><p class="inner-subtitle">Develop ideas and reuse platform-appropriate hashtag sets.</p></div><button class="close-btn" data-close><i data-lucide="x" size="20"></i></button></div>
+    <div class="drawer-body">
+      <div class="drawer-tabs"><button class="drawer-tab active" data-library="ideas">Idea Bank</button><button class="drawer-tab" data-library="hashtags">Hashtag Library</button></div>
+      <div id="library-ideas" class="library-pane active">
+        <div class="library-card"><div class="library-card-top"><div><div class="library-card-title">How to create a compelling offer</div><div class="muted" style="font-size:10px">Turn offer clarity into a short carousel.</div></div><button class="btn btn-small btn-secondary" data-open-modal="composer">Create Post</button></div><div class="tag-row"><span class="tag">Convert Demand</span><span class="tag">Carousel</span><span class="tag">Offer Builder</span></div></div>
+        <div class="library-card"><div class="library-card-top"><div><div class="library-card-title">Systems over hustle</div><div class="muted" style="font-size:10px">A founder story about capacity and structure.</div></div><button class="btn btn-small btn-secondary" data-open-modal="composer">Create Post</button></div><div class="tag-row"><span class="tag">Generate Demand</span><span class="tag">Founder Story</span></div></div>
+        <div class="library-card"><div class="library-card-top"><div><div class="library-card-title">Behind the scenes: client win</div><div class="muted" style="font-size:10px">Show the change from scattered messaging to a unified system.</div></div><button class="btn btn-small btn-secondary" data-open-modal="composer">Create Post</button></div><div class="tag-row"><span class="tag">Build Loyalty</span><span class="tag">Case Study</span></div></div>
+        <button class="btn btn-primary btn-small" style="width:100%"><i data-lucide="plus" size="14"></i>Add New Idea</button>
+      </div>
+      <div id="library-hashtags" class="library-pane">
+        <div class="library-card"><div class="library-card-title">Brand Operating System</div><div class="muted" style="font-size:10px">Instagram and TikTok</div><div class="tag-row"><span class="tag">#CoreTruthHouse</span><span class="tag">#BrandOperatingSystem</span><span class="tag">#BrandStrategy</span><span class="tag">#FounderBrand</span></div></div>
+        <div class="library-card"><div class="library-card-title">Founder Authority</div><div class="muted" style="font-size:10px">LinkedIn and Facebook</div><div class="tag-row"><span class="tag">#ThoughtLeadership</span><span class="tag">#FounderGrowth</span><span class="tag">#BusinessStrategy</span></div></div>
+        <div class="library-card"><div class="library-card-title">Client Transformation</div><div class="muted" style="font-size:10px">Instagram</div><div class="tag-row"><span class="tag">#ClientSuccess</span><span class="tag">#BrandClarity</span><span class="tag">#BusinessTransformation</span></div></div>
+        <button class="btn btn-primary btn-small" style="width:100%"><i data-lucide="plus" size="14"></i>Create Hashtag Set</button>
+      </div>
+    </div>
+    <div class="drawer-footer"><button class="btn btn-secondary btn-small" data-close>Close</button></div>
+  </aside>
+
+  <!-- Connections drawer -->
+  <aside id="drawer-connections" class="drawer" aria-hidden="true">
+    <div class="drawer-header"><div><div class="eyebrow">Publishing Channels</div><h2 class="drawer-title">Connections</h2><p class="inner-subtitle">Connect the platforms the Social Planner can publish to.</p></div><button class="close-btn" data-close><i data-lucide="x" size="20"></i></button></div>
+    <div class="drawer-body">
+      <div class="connection-card"><div class="connection-left"><div class="platform-logo ig">◎</div><div><div class="connection-name">Instagram</div><div class="connection-note">Posting and profile sync</div></div></div><div style="text-align:right"><div class="connection-state">Connected</div><button class="inline-link connect-toggle">Disconnect</button></div></div>
+      <div class="connection-card"><div class="connection-left"><div class="platform-logo fb">f</div><div><div class="connection-name">Facebook</div><div class="connection-note">Page posting</div></div></div><div style="text-align:right"><div class="connection-state">Connected</div><button class="inline-link connect-toggle">Disconnect</button></div></div>
+      <div class="connection-card"><div class="connection-left"><div class="platform-logo li">in</div><div><div class="connection-name">LinkedIn</div><div class="connection-note">Personal share</div></div></div><button class="btn btn-secondary btn-small connect-toggle">Connect</button></div>
+      <div class="connection-card"><div class="connection-left"><div class="platform-logo tt">♪</div><div><div class="connection-name">TikTok</div><div class="connection-note">Video posting</div></div></div><button class="btn btn-secondary btn-small connect-toggle">Connect</button></div>
+      <div class="connection-card"><div class="connection-left"><div class="platform-logo" style="background:#e60023">P</div><div><div class="connection-name">Pinterest</div><div class="connection-note">Pin publishing</div></div></div><button class="btn btn-secondary btn-small connect-toggle">Connect</button></div>
+      <div class="connection-card"><div class="connection-left"><div class="platform-logo" style="background:#111">@</div><div><div class="connection-name">Threads</div><div class="connection-note">Thread posting</div></div></div><button class="btn btn-secondary btn-small connect-toggle">Connect</button></div>
+      <div class="connection-card"><div class="connection-left"><div class="platform-logo" style="background:#4285f4">G</div><div><div class="connection-name">Google Business</div><div class="connection-note">Local posts</div></div></div><button class="btn btn-secondary btn-small connect-toggle">Connect</button></div>
+    </div>
+    <div class="drawer-footer"><button class="btn btn-secondary btn-small" data-close>Done</button></div>
+  </aside>
+
+  <!-- Create post modal -->
+  <div id="modal-composer" class="modal-shell" aria-hidden="true">
+    <div class="modal">
+      <div class="modal-header"><div><div class="eyebrow">Social Planner</div><h2 class="drawer-title">Create Post</h2><p class="inner-subtitle">Build one strategic content brief and shape the final version for each platform.</p></div><button class="close-btn" data-close><i data-lucide="x" size="20"></i></button></div>
+      <div class="modal-body">
+        <div class="composer-grid">
+          <div>
+            <div class="section-kicker">Content Brief</div>
+            <div class="form-grid">
+              <div class="field"><label>Campaign</label><select><option>Brand Operating System</option><option>Founding Cohort</option><option>Authority Series</option></select></div>
+              <div class="field"><label>Content Pillar</label><select><option>Brand Strategy</option><option>Founder Leadership</option><option>Client Transformation</option></select></div>
+              <div class="field"><label>Content Job</label><select><option>Generate Demand</option><option>Convert Demand</option><option>Build Loyalty</option></select></div>
+              <div class="field"><label>Format</label><select><option>Carousel</option><option>Text Post</option><option>Short-form Video</option><option>Static Graphic</option><option>Story</option></select></div>
+              <div class="field full"><label>Topic</label><input id="post-topic" value="Why your brand feels harder to manage than it should"></div>
+              <div class="field full"><label>Hook</label><input id="post-hook" value="Your brand is not too complicated. It is carrying too many disconnected decisions."></div>
+              <div class="field full"><label>Caption</label><textarea id="post-caption">A growing brand starts to feel heavy when every message, campaign, and sales decision is being rebuilt from scratch. Structure gives the work somewhere to live. That is what a Brand Operating System is designed to do.</textarea></div>
+              <div class="field"><label>CTA</label><input value="Start with the Brand Diagnostic"></div>
+              <div class="field"><label>CTA Link</label><input value="https://coretruthhouse.com/brand-diagnostic"></div>
+              <div class="field"><label>Schedule Date</label><input type="date" value="2026-07-22"></div>
+              <div class="field"><label>Schedule Time</label><input type="time" value="09:00"></div>
+              <div class="field full"><label>Platforms</label><div class="platform-select"><button type="button" class="platform-chip selected" data-platform="instagram"><span class="platform-mark ig">◎</span>Instagram</button><button type="button" class="platform-chip" data-platform="facebook"><span class="platform-mark fb">f</span>Facebook</button><button type="button" class="platform-chip" data-platform="linkedin"><span class="platform-mark li">in</span>LinkedIn</button><button type="button" class="platform-chip" data-platform="tiktok"><span class="platform-mark tt">♪</span>TikTok</button><button type="button" class="platform-chip" data-platform="pinterest"><span class="platform-mark" style="background:#e60023">P</span>Pinterest</button><button type="button" class="platform-chip" data-platform="google_business"><span class="platform-mark" style="background:#4285f4">G</span>Google Business</button><button type="button" class="platform-chip" data-platform="threads"><span class="platform-mark" style="background:#101010">@</span>Threads</button></div></div>
+              <div class="field full"><label>Media</label><div id="media-upload-zone" class="media-upload-zone" tabindex="0"><input id="master-media-input" type="file" accept="image/png,image/jpeg,image/webp"><i data-lucide="upload" size="24" style="color:var(--cth-ruby)"></i><div style="font-weight:700;margin-top:6px">Upload or choose a brand asset</div><div class="muted" style="font-size:10px;margin-top:3px">PNG, JPG, or WebP. The planner will check and preview every selected platform size.</div></div><div id="media-file-summary" class="media-file-summary"><div style="min-width:0"><div id="media-file-name" class="media-file-name">No file selected</div><div id="media-file-meta" class="media-file-meta"></div></div><button type="button" class="inline-link" id="remove-master-media">Remove</button></div><input id="platform-media-input" type="file" accept="image/png,image/jpeg,image/webp" hidden></div>
+            </div>
+            <section class="media-fit-section" aria-label="Platform media fit">
+              <div class="media-fit-header">
+                <div><div class="section-kicker">Media Fit</div><h3>Platform Sizes &amp; Safe Zones</h3><p>Use one master image, then adjust the crop, preset, or replacement for each selected publishing channel.</p></div>
+                <button type="button" class="btn btn-secondary btn-small" id="apply-master-all"><i data-lucide="copy" size="13"></i>Apply Master to All</button>
+              </div>
+              <div id="media-fit-grid" class="media-fit-grid"></div>
+            </section>
+          </div>
+          <div>
+            <div class="section-kicker">Platform Preview</div>
+            <div class="preview-panel"><div class="preview-tabs"><button class="preview-tab active" data-preview-platform="instagram">Instagram</button><button class="preview-tab" data-preview-platform="facebook">Facebook</button><button class="preview-tab" data-preview-platform="linkedin">LinkedIn</button><button class="preview-tab" data-preview-platform="tiktok">TikTok</button><button class="preview-tab" data-preview-platform="pinterest">Pinterest</button><button class="preview-tab" data-preview-platform="google_business">Google Business</button><button class="preview-tab" data-preview-platform="threads">Threads</button></div><div class="preview-content"><div class="social-preview"><div class="social-preview-head"><div class="mini-avatar">CTH</div><div><strong>Core Truth House</strong><div class="muted" style="font-size:9px">Sponsored preview · @coretruthhouse</div></div></div><div id="social-preview-media" class="social-preview-media"><div id="preview-size-badge" class="preview-size-badge">1080 × 1350 · 4:5</div><div id="preview-media-placeholder"><i data-lucide="image" size="38"></i></div></div><div class="social-preview-copy"><strong id="preview-hook">Your brand is not too complicated. It is carrying too many disconnected decisions.</strong><br><br><span id="preview-caption">A growing brand starts to feel heavy when every message, campaign, and sales decision is being rebuilt from scratch. Structure gives the work somewhere to live. That is what a Brand Operating System is designed to do.</span><br><br><span style="color:#666">#CoreTruthHouse #BrandOperatingSystem #BrandStrategy</span></div></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" data-close>Cancel</button><button class="btn btn-secondary" data-save="draft">Save Draft</button><button class="btn btn-secondary" data-save="approval">Send for Approval</button><button class="btn btn-primary" data-save="schedule"><i data-lucide="calendar-check" size="15"></i>Schedule</button></div>
+    </div>
+  </div>
+
+  <!-- Focus modal -->
+  <div id="modal-focus" class="modal-shell" aria-hidden="true"><div class="modal" style="width:min(620px,96vw)"><div class="modal-header"><div><div class="eyebrow">Monthly Direction</div><h2 class="drawer-title">Edit Monthly Focus</h2></div><button class="close-btn" data-close><i data-lucide="x"></i></button></div><div class="modal-body"><div class="form-grid"><div class="field full"><label>Primary Offer</label><input value="Brand Operating System Implementation"></div><div class="field full"><label>Audience</label><textarea>Established founders building scalable brands</textarea></div><div class="field full"><label>Core Message</label><textarea>Build a brand that performs, compounds, and creates freedom.</textarea></div><div class="field full"><label>Success Target</label><input value="25 qualified discovery calls"></div></div></div><div class="modal-footer"><button class="btn btn-secondary" data-close>Cancel</button><button class="btn btn-primary" data-save="focus">Save Focus</button></div></div></div>
+
+  <!-- Key date modal -->
+  <div id="modal-keydate" class="modal-shell" aria-hidden="true"><div class="modal" style="width:min(620px,96vw)"><div class="modal-header"><div><div class="eyebrow">Calendar Marker</div><h2 class="drawer-title">Add Key Date</h2></div><button class="close-btn" data-close><i data-lucide="x"></i></button></div><div class="modal-body"><div class="form-grid"><div class="field"><label>Date</label><input type="date" value="2026-07-25"></div><div class="field"><label>Type</label><select><option>Campaign Deadline</option><option>Launch</option><option>Event</option><option>Holiday</option></select></div><div class="field full"><label>Title</label><input placeholder="Add a meaningful date"></div><div class="field full"><label>Notes</label><textarea placeholder="Add the context the team needs"></textarea></div></div></div><div class="modal-footer"><button class="btn btn-secondary" data-close>Cancel</button><button class="btn btn-primary" data-save="keydate">Add Date</button></div></div></div>
+
+  <div id="toast" class="toast">Saved</div>
+
+  <script>
+    const $ = (selector, scope = document) => scope.querySelector(selector);
+    const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
+
+    function refreshIcons() { if (window.lucide) lucide.createIcons(); }
+    refreshIcons();
+
+    // Main page views
+    $$('.primary-tab').forEach(tab => tab.addEventListener('click', () => {
+      $$('.primary-tab').forEach(t => t.classList.remove('active'));
+      $$('.view-pane').forEach(v => v.classList.remove('active'));
+      tab.classList.add('active');
+      $(`#view-${tab.dataset.view}`).classList.add('active');
+    }));
+
+    $$('[data-view-jump]').forEach(button => button.addEventListener('click', () => {
+      const tab = $(`.primary-tab[data-view="${button.dataset.viewJump}"]`);
+      if (tab) tab.click();
+    }));
+
+    // Calendar Month, Week, and List previews
+    const calendarPeriodLabels = {
+      month: 'July 2026',
+      week: 'July 5 – 11, 2026',
+      list: 'July 2026'
+    };
+    let activeCalendarMode = 'month';
+
+    function setCalendarMode(mode) {
+      activeCalendarMode = mode;
+      $$('.segmented .segment[data-calendar-mode]').forEach(button => {
+        button.classList.toggle('active', button.dataset.calendarMode === mode);
+      });
+      $$('.calendar-mode-view').forEach(view => view.classList.remove('active'));
+      const nextView = $(`#calendar-${mode}-view`);
+      if (nextView) nextView.classList.add('active');
+      const label = $('#calendar-period-label');
+      if (label) label.textContent = calendarPeriodLabels[mode] || 'July 2026';
+      refreshIcons();
+      showToast(`${mode.charAt(0).toUpperCase() + mode.slice(1)} calendar selected`);
+    }
+
+    $$('.segmented .segment[data-calendar-mode]').forEach(segment => {
+      segment.addEventListener('click', () => setCalendarMode(segment.dataset.calendarMode));
+    });
+
+    $$('[data-calendar-nav]').forEach(button => button.addEventListener('click', () => {
+      const direction = button.dataset.calendarNav === 'next' ? 'Next' : 'Previous';
+      showToast(`${direction} ${activeCalendarMode} preview`);
+    }));
+
+    // Global overlay helpers
+    const overlay = $('#overlay');
+    function openLayer(element) {
+      closeLayers(false);
+      overlay.classList.add('open');
+      element.classList.add('open');
+      element.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLayers(resetBody = true) {
+      $$('.drawer.open, .modal-shell.open').forEach(el => {
+        el.classList.remove('open');
+        el.setAttribute('aria-hidden', 'true');
+      });
+      overlay.classList.remove('open');
+      if (resetBody) document.body.style.overflow = '';
+    }
+
+    $$('[data-open-drawer]').forEach(btn => btn.addEventListener('click', () => openLayer($(`#drawer-${btn.dataset.openDrawer}`))));
+    $$('[data-open-modal]').forEach(btn => btn.addEventListener('click', () => openLayer($(`#modal-${btn.dataset.openModal}`))));
+    $$('[data-close]').forEach(btn => btn.addEventListener('click', () => closeLayers()));
+    overlay.addEventListener('click', () => closeLayers());
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLayers(); });
+    $$('[data-edit-post]').forEach(btn => btn.addEventListener('click', () => openLayer($('#modal-composer'))));
+
+    // Libraries
+    $$('.drawer-tab').forEach(tab => tab.addEventListener('click', () => {
+      $$('.drawer-tab').forEach(t => t.classList.remove('active'));
+      $$('.library-pane').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $(`#library-${tab.dataset.library}`).classList.add('active');
+    }));
+
+    // Platform chips, media sizing, and preview
+    const PLATFORM_MEDIA_PRESETS = {
+      instagram: {
+        label: 'Instagram', mark: '◎', markClass: 'ig', defaultPreset: 'feed-portrait',
+        presets: [
+          { id: 'feed-portrait', label: 'Feed Portrait', width: 1080, height: 1350, ratio: '4:5' },
+          { id: 'feed-tall', label: 'Feed Tall Portrait', width: 1080, height: 1440, ratio: '3:4' },
+          { id: 'feed-square', label: 'Feed Square', width: 1080, height: 1080, ratio: '1:1' },
+          { id: 'feed-landscape', label: 'Feed Landscape', width: 1080, height: 566, ratio: '1.91:1' },
+          { id: 'story-reel', label: 'Story / Reel', width: 1080, height: 1920, ratio: '9:16', vertical: true },
+          { id: 'reel-cover', label: 'Reel Cover', width: 420, height: 654, ratio: '1:1.55', vertical: true }
+        ]
+      },
+      facebook: {
+        label: 'Facebook', mark: 'f', markClass: 'fb', defaultPreset: 'feed-landscape',
+        presets: [
+          { id: 'feed-landscape', label: 'Feed Landscape', width: 1200, height: 630, ratio: '1.91:1' },
+          { id: 'feed-square', label: 'Feed Square', width: 1080, height: 1080, ratio: '1:1' },
+          { id: 'feed-portrait', label: 'Feed Portrait', width: 1080, height: 1350, ratio: '4:5' },
+          { id: 'story-reel', label: 'Story / Reel', width: 1080, height: 1920, ratio: '9:16', vertical: true }
+        ]
+      },
+      linkedin: {
+        label: 'LinkedIn', mark: 'in', markClass: 'li', defaultPreset: 'feed-square',
+        presets: [
+          { id: 'feed-square', label: 'Square Post', width: 1200, height: 1200, ratio: '1:1' },
+          { id: 'feed-landscape', label: 'Landscape Post', width: 1200, height: 627, ratio: '1.91:1' },
+          { id: 'feed-portrait', label: 'Portrait Post', width: 1200, height: 1500, ratio: '4:5' }
+        ]
+      },
+      tiktok: {
+        label: 'TikTok', mark: '♪', markClass: 'tt', defaultPreset: 'vertical-video',
+        presets: [
+          { id: 'vertical-video', label: 'Vertical Video / Image', width: 1080, height: 1920, ratio: '9:16', vertical: true },
+          { id: 'portrait-card', label: 'Portrait Card', width: 720, height: 960, ratio: '3:4', vertical: true }
+        ]
+      },
+      pinterest: {
+        label: 'Pinterest', mark: 'P', markColor: '#e60023', defaultPreset: 'standard-pin',
+        presets: [
+          { id: 'standard-pin', label: 'Standard Pin', width: 1000, height: 1500, ratio: '2:3', vertical: true },
+          { id: 'square-pin', label: 'Square Pin', width: 1000, height: 1000, ratio: '1:1' },
+          { id: 'video-pin', label: 'Full-screen Video Pin', width: 1080, height: 1920, ratio: '9:16', vertical: true }
+        ]
+      },
+      google_business: {
+        label: 'Google Business', mark: 'G', markColor: '#4285f4', defaultPreset: 'business-post',
+        presets: [
+          { id: 'business-post', label: 'Business Post', width: 1200, height: 900, ratio: '4:3' },
+          { id: 'business-square', label: 'Square Post', width: 1200, height: 1200, ratio: '1:1' }
+        ]
+      },
+      threads: {
+        label: 'Threads', mark: '@', markColor: '#101010', defaultPreset: 'feed-portrait',
+        presets: [
+          { id: 'feed-portrait', label: 'Portrait Post', width: 1080, height: 1350, ratio: '4:5' },
+          { id: 'feed-square', label: 'Square Post', width: 1080, height: 1080, ratio: '1:1' },
+          { id: 'feed-landscape', label: 'Landscape Post', width: 1080, height: 566, ratio: '1.91:1' }
+        ]
+      }
+    };
+
+    let masterMedia = null;
+    let pendingOverridePlatform = null;
+    let activePreviewPlatform = 'instagram';
+    const platformMediaState = {};
+
+    function selectedPlatforms() {
+      return $$('.platform-chip.selected').map(chip => chip.dataset.platform).filter(Boolean);
+    }
+
+    function getPlatformState(platform) {
+      const config = PLATFORM_MEDIA_PRESETS[platform];
+      if (!platformMediaState[platform]) {
+        platformMediaState[platform] = { presetId: config.defaultPreset, mode: 'cover', override: null };
+      }
+      return platformMediaState[platform];
+    }
+
+    function getPreset(platform) {
+      const config = PLATFORM_MEDIA_PRESETS[platform];
+      const state = getPlatformState(platform);
+      return config.presets.find(preset => preset.id === state.presetId) || config.presets[0];
+    }
+
+    function platformMark(config) {
+      const style = config.markColor ? ` style="background:${config.markColor}"` : '';
+      const klass = config.markClass ? ` ${config.markClass}` : '';
+      return `<span class="platform-mark${klass}"${style}>${config.mark}</span>`;
+    }
+
+    function assetForPlatform(platform) {
+      return getPlatformState(platform).override || masterMedia;
+    }
+
+    function readiness(platform) {
+      const asset = assetForPlatform(platform);
+      const preset = getPreset(platform);
+      if (!asset) return { tone: 'empty', label: 'Add media', message: 'Upload a master image or add a platform-specific replacement.' };
+      if (asset.width < preset.width || asset.height < preset.height) {
+        return {
+          tone: 'warning',
+          label: 'Check size',
+          message: `This image is ${asset.width} × ${asset.height}. Recommended: ${preset.width} × ${preset.height}. It may soften when published.`
+        };
+      }
+      return { tone: 'ready', label: 'Ready', message: '' };
+    }
+
+    function renderMediaFitCards() {
+      const grid = $('#media-fit-grid');
+      const platforms = selectedPlatforms();
+      if (!platforms.length) {
+        grid.innerHTML = '<div class="media-fit-empty">Choose at least one publishing platform to see its media size and crop preview.</div>';
+        return;
+      }
+
+      grid.innerHTML = platforms.map(platform => {
+        const config = PLATFORM_MEDIA_PRESETS[platform];
+        const state = getPlatformState(platform);
+        const preset = getPreset(platform);
+        const asset = assetForPlatform(platform);
+        const ready = readiness(platform);
+        const aspect = `${preset.width} / ${preset.height}`;
+        const img = asset
+          ? `<img src="${asset.url}" alt="${config.label} media preview" style="object-fit:${state.mode}">`
+          : `<div class="media-frame-placeholder"><div><i data-lucide="image" size="24"></i><br>Upload media to preview the final crop.</div></div>`;
+        const overrideLabel = state.override ? '<span class="tag">Custom media</span>' : '<span class="tag">Master media</span>';
+
+        return `<article class="media-fit-card" data-media-card="${platform}">
+          <div class="media-fit-card-head">
+            <div><div class="media-fit-platform">${platformMark(config)} ${config.label}</div><div style="margin-top:5px">${overrideLabel}</div></div>
+            <span class="media-fit-status ${ready.tone}">${ready.label}</span>
+          </div>
+          <select class="media-preset-select" data-preset-platform="${platform}">
+            ${config.presets.map(item => `<option value="${item.id}" ${item.id === preset.id ? 'selected' : ''}>${item.label} · ${item.width} × ${item.height}</option>`).join('')}
+          </select>
+          <div class="media-frame-wrap">
+            <div class="media-fit-frame" style="aspect-ratio:${aspect}">
+              ${img}
+              <div class="media-safe-zone ${preset.vertical ? 'vertical' : ''}"><span class="safe-zone-label">Text + logo safe area</span></div>
+              <span class="media-dimension-badge">${preset.width} × ${preset.height}</span>
+            </div>
+          </div>
+          <div class="media-fit-details"><span>${preset.label}</span><span>${preset.ratio}</span></div>
+          ${ready.message ? `<div class="media-fit-warning"><i data-lucide="alert-triangle" size="11"></i> ${ready.message}</div>` : ''}
+          <div class="media-fit-actions">
+            <button type="button" class="fit-mode-btn ${state.mode === 'cover' ? 'active' : ''}" data-fit-mode="cover" data-platform="${platform}">Fill frame</button>
+            <button type="button" class="fit-mode-btn ${state.mode === 'contain' ? 'active' : ''}" data-fit-mode="contain" data-platform="${platform}">Fit full image</button>
+            <button type="button" class="media-card-action" data-replace-platform="${platform}">${state.override ? 'Replace custom' : 'Use different image'}</button>
+            ${state.override ? `<button type="button" class="media-card-action" data-use-master="${platform}">Use master</button>` : ''}
+          </div>
+        </article>`;
+      }).join('');
+      refreshIcons();
+      updateMainPreview();
+    }
+
+    function setMediaSummary() {
+      const summary = $('#media-file-summary');
+      if (!masterMedia) {
+        summary.classList.remove('visible');
+        $('#media-file-name').textContent = 'No file selected';
+        $('#media-file-meta').textContent = '';
+        return;
+      }
+      summary.classList.add('visible');
+      $('#media-file-name').textContent = masterMedia.name;
+      $('#media-file-meta').textContent = `${masterMedia.width} × ${masterMedia.height} · ${masterMedia.sizeLabel}`;
+    }
+
+    function readImageFile(file, callback) {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('Choose a PNG, JPG, or WebP image');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const image = new Image();
+        image.onload = () => callback({
+          name: file.name,
+          url: reader.result,
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+          size: file.size,
+          sizeLabel: file.size >= 1048576 ? `${(file.size / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(file.size / 1024))} KB`
+        });
+        image.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setMasterMedia(file) {
+      readImageFile(file, asset => {
+        masterMedia = asset;
+        setMediaSummary();
+        renderMediaFitCards();
+        showToast('Master media added and checked for every selected platform');
+      });
+    }
+
+    function updateMainPreview() {
+      const config = PLATFORM_MEDIA_PRESETS[activePreviewPlatform] || PLATFORM_MEDIA_PRESETS.instagram;
+      const preset = getPreset(activePreviewPlatform);
+      const state = getPlatformState(activePreviewPlatform);
+      const asset = assetForPlatform(activePreviewPlatform);
+      const media = $('#social-preview-media');
+      if (!media) return;
+      media.style.aspectRatio = `${preset.width} / ${preset.height}`;
+      media.innerHTML = `<div id="preview-size-badge" class="preview-size-badge">${preset.width} × ${preset.height} · ${preset.ratio}</div>` +
+        (asset
+          ? `<img src="${asset.url}" alt="${config.label} post preview" style="object-fit:${state.mode}">`
+          : '<div id="preview-media-placeholder" style="position:absolute;inset:0;display:grid;place-items:center"><i data-lucide="image" size="38"></i></div>');
+      refreshIcons();
+    }
+
+    $$('.platform-chip').forEach(chip => chip.addEventListener('click', () => {
+      chip.classList.toggle('selected');
+      const platforms = selectedPlatforms();
+      if (!platforms.includes(activePreviewPlatform) && platforms.length) {
+        activePreviewPlatform = platforms[0];
+        $$('.preview-tab').forEach(t => t.classList.toggle('active', t.dataset.previewPlatform === activePreviewPlatform));
+      }
+      renderMediaFitCards();
+    }));
+
+    const uploadZone = $('#media-upload-zone');
+    const masterMediaInput = $('#master-media-input');
+    const platformMediaInput = $('#platform-media-input');
+    uploadZone.addEventListener('click', () => masterMediaInput.click());
+    uploadZone.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') masterMediaInput.click(); });
+    uploadZone.addEventListener('dragover', event => { event.preventDefault(); uploadZone.classList.add('dragging'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragging'));
+    uploadZone.addEventListener('drop', event => {
+      event.preventDefault();
+      uploadZone.classList.remove('dragging');
+      const file = event.dataTransfer.files?.[0];
+      if (file) setMasterMedia(file);
+    });
+    masterMediaInput.addEventListener('change', event => {
+      const file = event.target.files?.[0];
+      if (file) setMasterMedia(file);
+      event.target.value = '';
+    });
+    platformMediaInput.addEventListener('change', event => {
+      const file = event.target.files?.[0];
+      if (!file || !pendingOverridePlatform) return;
+      const platform = pendingOverridePlatform;
+      readImageFile(file, asset => {
+        getPlatformState(platform).override = asset;
+        renderMediaFitCards();
+        showToast(`${PLATFORM_MEDIA_PRESETS[platform].label} custom media added`);
+      });
+      event.target.value = '';
+      pendingOverridePlatform = null;
+    });
+    $('#remove-master-media').addEventListener('click', () => {
+      masterMedia = null;
+      setMediaSummary();
+      renderMediaFitCards();
+      showToast('Master media removed');
+    });
+    $('#apply-master-all').addEventListener('click', () => {
+      selectedPlatforms().forEach(platform => { getPlatformState(platform).override = null; });
+      renderMediaFitCards();
+      showToast(masterMedia ? 'Master media applied to all selected platforms' : 'Upload a master image first');
+    });
+
+    $('#media-fit-grid').addEventListener('change', event => {
+      const select = event.target.closest('[data-preset-platform]');
+      if (!select) return;
+      getPlatformState(select.dataset.presetPlatform).presetId = select.value;
+      renderMediaFitCards();
+    });
+    $('#media-fit-grid').addEventListener('click', event => {
+      const fitButton = event.target.closest('[data-fit-mode]');
+      if (fitButton) {
+        getPlatformState(fitButton.dataset.platform).mode = fitButton.dataset.fitMode;
+        renderMediaFitCards();
+        return;
+      }
+      const replaceButton = event.target.closest('[data-replace-platform]');
+      if (replaceButton) {
+        pendingOverridePlatform = replaceButton.dataset.replacePlatform;
+        platformMediaInput.click();
+        return;
+      }
+      const masterButton = event.target.closest('[data-use-master]');
+      if (masterButton) {
+        getPlatformState(masterButton.dataset.useMaster).override = null;
+        renderMediaFitCards();
+        showToast(`${PLATFORM_MEDIA_PRESETS[masterButton.dataset.useMaster].label} returned to master media`);
+      }
+    });
+
+    const hookInput = $('#post-hook');
+    const captionInput = $('#post-caption');
+    hookInput.addEventListener('input', () => $('#preview-hook').textContent = hookInput.value || 'Your hook will appear here.');
+    captionInput.addEventListener('input', () => $('#preview-caption').textContent = captionInput.value || 'Your caption will appear here.');
+    $$('.preview-tab').forEach(tab => tab.addEventListener('click', () => {
+      $$('.preview-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activePreviewPlatform = tab.dataset.previewPlatform || 'instagram';
+      updateMainPreview();
+      showToast(`${tab.textContent} preview selected`);
+    }));
+
+    renderMediaFitCards();
+
+    // Save actions
+    $$('[data-save]').forEach(button => button.addEventListener('click', () => {
+      const messages = {
+        draft: 'Post saved as a draft',
+        approval: 'Post sent for approval',
+        schedule: 'Post scheduled for July 22 at 9:00 AM',
+        focus: 'Monthly focus updated',
+        keydate: 'Key date added to the calendar'
+      };
+      closeLayers();
+      showToast(messages[button.dataset.save] || 'Saved');
+    }));
+
+    // Connections mock interaction
+    $$('.connect-toggle').forEach(button => button.addEventListener('click', () => {
+      const card = button.closest('.connection-card');
+      const state = $('.connection-state', card);
+      if (button.textContent.trim() === 'Connect') {
+        button.outerHTML = '<div style="text-align:right"><div class="connection-state">Connected</div><button class="inline-link connect-toggle">Disconnect</button></div>';
+        showToast('Platform connected');
+      } else {
+        if (state) state.textContent = 'Disconnected';
+        button.textContent = 'Connect';
+        button.className = 'btn btn-secondary btn-small connect-toggle';
+        showToast('Platform disconnected');
+      }
+    }));
+
+    // Chat
+    $('#send-chat').addEventListener('click', () => {
+      const textarea = $('.chat-compose textarea');
+      if (!textarea.value.trim()) return;
+      const windowEl = $('.chat-window');
+      const userMessage = document.createElement('div');
+      userMessage.className = 'message user';
+      userMessage.textContent = textarea.value.trim();
+      windowEl.appendChild(userMessage);
+      textarea.value = '';
+      setTimeout(() => {
+        const reply = document.createElement('div');
+        reply.className = 'message house';
+        reply.textContent = 'I would connect this idea to your monthly focus, then adapt the hook to each platform before scheduling it.';
+        windowEl.appendChild(reply);
+        $('.drawer-body', $('#drawer-ask')).scrollTop = 99999;
+      }, 450);
+    });
+
+    // Heatmap generation
+    const heatmap = $('#heatmap');
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const times = ['8 AM','9 AM','12 PM','3 PM','6 PM','9 PM'];
+    heatmap.innerHTML = '<div class="heatmap-cell heatmap-head"></div>' + days.map(d => `<div class="heatmap-cell heatmap-head">${d}</div>`).join('');
+    const matrix = [
+      [2,3,2,2,1,1,1],
+      [3,5,3,4,2,1,2],
+      [2,4,3,5,3,2,2],
+      [1,2,2,3,2,2,2],
+      [2,3,2,3,2,4,4],
+      [1,2,1,2,2,4,5]
+    ];
+    times.forEach((time, row) => {
+      heatmap.insertAdjacentHTML('beforeend', `<div class="heatmap-cell heatmap-head">${time}</div>`);
+      matrix[row].forEach((level, col) => heatmap.insertAdjacentHTML('beforeend', `<div class="heatmap-cell h${level}" title="${days[col]} ${time}">${level >= 4 ? 'High' : level === 3 ? 'Good' : ''}</div>`));
+    });
+
+    // Simple toast
+    let toastTimer;
+    function showToast(message) {
+      const toast = $('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    refreshIcons();
+  </script>
+</body>
+</html>

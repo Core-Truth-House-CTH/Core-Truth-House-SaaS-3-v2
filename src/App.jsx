@@ -7,23 +7,27 @@ import "./index.css";
 
 import { Toaster } from "./components/ui/toaster";
 import ScrollToTop from "./components/ScrollToTop";
-import TiersPage from "./pages/TiersPage";
 
 const ProtectedApp = lazy(() => import("./ProtectedApp"));
 
-const LandingPage = lazy(() => import("./pages/LandingPage"));
-const MethodologyPage = lazy(() => import("./pages/MethodologyPage"));
-const AboutPage = lazy(() => import("./pages/AboutPage"));
-const ContactPage = lazy(() => import("./pages/ContactPage"));
+// Approved architectural-editorial marketing site (shared shell + pages)
+const EstateShell = lazy(() => import("./pages/estate/EstateShell"));
+const EstateHome = lazy(() => import("./pages/estate/EstateHome"));
+const EstateMethodologyPage = lazy(() => import("./pages/estate/EstateMethodologyPage"));
+const EstateAboutPage = lazy(() => import("./pages/estate/EstateAboutPage"));
+const EstateTiersPage = lazy(() => import("./pages/estate/EstateTiersPage"));
+const EstateContactPage = lazy(() => import("./pages/estate/EstateContactPage"));
+const EstateCohortPage = lazy(() => import("./pages/estate/EstateCohortPage"));
+const EstateStorePage = lazy(() => import("./pages/estate/EstateStorePage"));
+
+// Functional public pages (auth, lead funnel, cohort flow, legal, content) — unchanged
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const BlogJournalPage = lazy(() => import("./pages/BlogJournalPage"));
-const StorefrontPage = lazy(() => import("./pages/StorefrontPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const BrandDiagnosticPage = lazy(() => import("./pages/BrandDiagnosticPage"));
 const PublicDiagnosticResults = lazy(() => import("./pages/PublicDiagnosticResults"));
 const PublicOfferPage = lazy(() => import("./pages/PublicOfferPage"));
 const ScorecardPage = lazy(() => import("./pages/ScorecardPage"));
-const CohortPage = lazy(() => import("./pages/CohortPage"));
 const CohortApplyPage = lazy(() => import("./pages/CohortApplyPage"));
 const CohortWelcomePage = lazy(() => import("./pages/CohortWelcomePage"));
 const CohortJoinPage = lazy(() => import("./pages/CohortJoinPage"));
@@ -40,7 +44,20 @@ function PublicRoutes() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        {/* Approved marketing site — shared cinematic shell (nav, footer, transitions) */}
+        <Route element={<EstateShell />}>
+          <Route path="/" element={<EstateHome />} />
+          <Route path="/methodology" element={<EstateMethodologyPage />} />
+          <Route path="/methodology/*" element={<EstateMethodologyPage />} />
+          <Route path="/tiers" element={<EstateTiersPage />} />
+          <Route path="/pricing" element={<EstateTiersPage />} />
+          <Route path="/about" element={<EstateAboutPage />} />
+          <Route path="/contact" element={<EstateContactPage />} />
+          <Route path="/cohort" element={<EstateCohortPage />} />
+          <Route path="/store" element={<EstateStorePage />} />
+        </Route>
+
+        {/* Functional public routes — auth handled by ProtectedApp catch-all below */}
         <Route path="/brand-diagnostic" element={<BrandDiagnosticPage />} />
         <Route path="/brand-diagnostic/" element={<BrandDiagnosticPage />} />
         <Route path="/diagnostic-results/:token" element={<PublicDiagnosticResults />} />
@@ -49,19 +66,11 @@ function PublicRoutes() {
         <Route path="/offers/:offerSlug" element={<PublicOfferPage />} />
         <Route path="/scorecard" element={<ScorecardPage />} />
         <Route path="/scorecard/" element={<ScorecardPage />} />
-        <Route path="/cohort" element={<CohortPage />} />
         <Route path="/cohort/apply" element={<CohortApplyPage />} />
         <Route path="/cohort/welcome" element={<CohortWelcomePage />} />
         <Route path="/cohort/join/:token" element={<CohortJoinPage />} />
-        <Route path="/tiers" element={<TiersPage />} />
-        <Route path="/pricing" element={<TiersPage />} />
-        <Route path="/methodology" element={<MethodologyPage />} />
-        <Route path="/methodology/*" element={<MethodologyPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
         <Route path="/blog" element={<BlogJournalPage />} />
         <Route path="/blog/:slug" element={<BlogJournalPage />} />
-        <Route path="/store" element={<StorefrontPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsOfServicePage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />

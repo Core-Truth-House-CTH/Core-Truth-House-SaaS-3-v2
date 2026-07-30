@@ -31,25 +31,53 @@ Expected status: `200`.
 
 The VPS tree has drifted from GitHub in the past. Reconcile with `git fetch`, never `git pull` or rebase directly in the production working tree. Capture the pre-merge production `main` SHA before any change.
 
-## Required now
+## `GET /api/command-center/overview` — DEPLOYED
 
-- [ ] Grant the connected GitHub installation access to `Sha1427/Core-Truth-House-Backend-`, or run the backend section through Claude Code on the VPS.
-- [ ] Inspect backend `main`, current production VPS SHA, and working-tree drift before editing.
-- [ ] Create a backend feature branch from the reconciled source.
-- [ ] Implement `GET /api/command-center/overview` in the backend source repository.
-- [ ] Register the router in `app.main:app` using the backend's existing router conventions.
-- [ ] Enforce authenticated workspace membership server-side.
-- [ ] Enforce role and plan access server-side.
-- [ ] Add response-schema validation.
-- [ ] Add tests for two isolated tenant workspaces.
+**This endpoint is live in the production runtime. It is no longer outstanding
+work.** Earlier revisions of this file listed it as unimplemented; that was stale
+and caused an automated review to conclude the frontend should treat a generic
+`404` as route absence. It must not.
+
+Verified read-only on the VPS on 2026-07-26:
+
+- [x] Route implemented — `/var/www/coretruthhouse-backend/app/backend/routes/command_center.py`,
+      `router = APIRouter(prefix="/api/command-center")` with
+      `@router.get("/overview", response_model=CommandCenterOverviewResponse)`.
+- [x] Router registered — listed as `"backend.routes.command_center"` in
+      `/var/www/coretruthhouse-backend/app/app/routers/api.py`.
+- [x] Backend test present — `/var/www/coretruthhouse-backend/app/tests/test_command_center_overview.py`
+      asserts `any(route.path == "/api/command-center/overview" ...)`.
+- [x] Live route registered — unauthenticated
+      `https://api.coretruthhouse.com/api/command-center/overview` returns `401`;
+      an unregistered FastAPI route would return `404`.
+- [x] Authenticated response — the reconcile session received `200` with a
+      workspace-scoped payload for the active workspace.
+- [x] `https://api.coretruthhouse.com/health` returns `200`.
+
+**Not claimed:** no backend Git commit, branch or source-repository state is
+asserted here. Only the deployed runtime state listed above was verified, and it
+was verified read-only — no backend file was modified and the service was not
+restarted. The backend source repository `Sha1427/Core-Truth-House-Backend-`
+remains outside this session's access.
+
+### Status-code contract (see `command-center-overview.md`)
+
+- `404` — the validated workspace does not exist. A **real error**; it must reach
+  the page.
+- `501` — the endpoint is not implemented in this deployment. The **only** signal
+  that permits frontend legacy fallback.
+
+`src/lib/commandCenterOverview.js` falls back on `error?.status === 501` alone and
+rethrows everything else. The legacy fallback is defensive compatibility for a
+pre-endpoint deployment, not the normal production path.
+
+## Still outstanding for this endpoint
+
+- [ ] Verify the endpoint against two different tenant workspaces (only one
+      authorized workspace exists in the current environment, so cross-tenant
+      isolation remains unverified here).
 - [ ] Add tests confirming super administrators cannot read tenant content by default.
 - [ ] Add workspace-aware cache keys.
-- [ ] Run backend tests before production reconciliation.
-- [ ] Merge the approved backend branch into the VPS local `main` without pulling or rebasing the production tree.
-- [ ] Restart with `sudo systemctl restart coretruthhouse-backend.service`.
-- [ ] Confirm `https://api.coretruthhouse.com/health` returns `200`.
-- [ ] Verify the endpoint with two different tenant workspaces.
-- [ ] Preserve the captured pre-merge SHA for one-step rollback.
 
 ## Later routes
 

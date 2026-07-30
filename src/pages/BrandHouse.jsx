@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Home, RefreshCw } from "lucide-react";
 
@@ -32,58 +32,115 @@ export default function BrandHouse() {
   const [overview, setOverview] = useState(null);
   const [stats, setStats] = useState(null);
 
+  // Which source the percentages on screen came from: "pending" until a request
+  // resolves, then "overview" (authoritative) or "stats" (the verified 501
+  // fallback), or "error"/"empty" when there is nothing to show. Percentages are
+  // derived only from the two resolved sources, so a slow load or a retry can
+  // never be mistaken for genuine completion data.
+  const [dataSource, setDataSource] = useState("pending");
+
+  // Monotonic id of the latest Brand House load; see the stale-response guard
+  // below. Same reviewed pattern the Command Center uses.
+  const loadRequestRef = useRef(0);
+
   const load = useCallback(async () => {
+    // Claim the generation before anything else - including the no-workspace
+    // branch - so switching away from a workspace also invalidates whatever is
+    // still in flight for the previous one. Only the newest load may write
+    // state; a slower earlier request would otherwise resolve last and show the
+    // previous workspace's metrics under the current workspace's heading.
+    const requestId = loadRequestRef.current + 1;
+    loadRequestRef.current = requestId;
+    const isStale = () => loadRequestRef.current !== requestId;
+
     if (!activeWorkspaceId) {
       setLoading(false);
+      setError("");
       setOverview(null);
       setStats(null);
+      setDataSource("empty");
       return;
     }
 
     setLoading(true);
     setError("");
+    // Every load - including a retry over data already on screen - starts
+    // unresolved, so nothing is derived until a source actually answers.
+    setDataSource("pending");
 
     try {
       const result = await fetchCommandCenterOverview(activeWorkspaceId);
+      if (isStale()) return;
 
       if (result.available) {
         setOverview(result.data);
         setStats(null);
+        setDataSource("overview");
         return;
       }
 
       // Same verified fallback source the Command Center uses, so both views
-      // report identical completion percentages.
+      // report identical completion percentages. A failure here is deliberately
+      // NOT swallowed: normalising it to null rendered every level as 0%, so a
+      // backend outage looked like a genuinely empty Brand House. Letting it
+      // throw reaches the outer catch, which clears stale data and shows the
+      // error instead of fabricating zero completion.
+      const workspaceStats = await apiClient.get(
+        API_PATHS.workspace.stats(activeWorkspaceId)
+      );
+      if (isStale()) return;
+
       setOverview(null);
-      const workspaceStats = await apiClient
-        .get(API_PATHS.workspace.stats(activeWorkspaceId))
-        .catch(() => null);
       setStats(workspaceStats);
+      setDataSource("stats");
     } catch (requestError) {
+      if (isStale()) return;
+
       setOverview(null);
       setStats(null);
+      setDataSource("error");
       setError(requestError?.message || "The Brand House could not be loaded.");
     } finally {
-      setLoading(false);
+      if (!isStale()) setLoading(false);
     }
   }, [activeWorkspaceId]);
 
   useEffect(() => {
     load();
+
+    // Invalidate the in-flight generation on unmount so a late response cannot
+    // write to an unmounted Brand House. This only retires the generation - no
+    // request is cancelled and no shared/global fetch behaviour changes.
+    return () => {
+      loadRequestRef.current += 1;
+    };
   }, [load]);
 
   // Real backend completion percentages - never prototype sample numbers.
   const levels = useMemo(() => {
-    if (overview?.brandHouse) return authoritativeHouseLevels(overview.brandHouse);
+    // Percentages require a resolved source. While the load is still pending -
+    // on first mount and immediately after a retry - `overview` and `stats` are
+    // both null, so the fallback would convert empty inputs plus whatever the
+    // independently cached Brand Health context holds into mostly-zero or
+    // partially cached floors, before the request has established anything. The
+    // same applies once a load has failed. Only an authoritative overview or a
+    // successful stats fallback may produce levels; everything else renders no
+    // card at all, leaving just the hero, the error alert and Refresh.
+    if (loading) return null;
+    if (dataSource === "overview") {
+      return overview?.brandHouse ? authoritativeHouseLevels(overview.brandHouse) : null;
+    }
+    if (dataSource !== "stats") return null;
+
     return fallbackHouseLevels({
       modules: healthData?.modules || {},
       stats: stats || {},
       score: Math.round(Number(healthData?.overall_score) || 0),
     });
-  }, [overview, healthData, stats]);
+  }, [loading, dataSource, overview, healthData, stats]);
 
   // Approved order runs top floor first: Estate down to Foundation.
-  const levelsTopDown = useMemo(() => [...levels].reverse(), [levels]);
+  const levelsTopDown = useMemo(() => (levels ? [...levels].reverse() : []), [levels]);
 
   return (
     <AuthShell>
@@ -105,6 +162,7 @@ export default function BrandHouse() {
 
         {error ? <div className="bh-alert" role="alert">{error}</div> : null}
 
+        {levels ? (
         <section className="bh-card">
           <div className="bh-levels">
             {levelsTopDown.map((level) => (
@@ -143,6 +201,7 @@ export default function BrandHouse() {
             })}
           </div>
         </section>
+        ) : null}
       </main>
     </AuthShell>
   );

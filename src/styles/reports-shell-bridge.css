@@ -16,9 +16,33 @@
   background: transparent;
 }
 
+/* The shared AuthShell owns Reports navigation. DashboardLayout stays mounted
+   for the report body and its Ask the House integration, so suppress all three
+   pieces of its legacy navigation UI: the sidebar, the mobile trigger and the
+   mobile backdrop. Hiding the sidebar alone left a second fixed hamburger over
+   the shared shell that opened only a dark backdrop, because Layout renders the
+   trigger and backdrop as siblings of the <aside> rather than inside it.
+
+   The legacy global-controls row deliberately stays: it carries the Ask the
+   House trigger that Reports has always had, and the shared top bar does not
+   provide one. Its NotificationBell is already unmounted inside AuthShell (see
+   AuthShellContext), so keeping that row visible does not reintroduce a second
+   bell. Every selector stays scoped to .as-embedded-reports, so standalone
+   DashboardLayout and CRM navigation are unaffected. */
 .cth-authshell .as-embedded-reports [data-testid="sidebar"],
-.cth-authshell .as-embedded-reports .cth-global-controls {
+.cth-authshell .as-embedded-reports [data-testid="mobile-menu-btn"],
+.cth-authshell .as-embedded-reports [data-testid="mobile-menu-backdrop"] {
   display: none !important;
+}
+
+/* Lift the controls out of the app-wide fixed layer so they cannot float over
+   the shared top bar, and present them as a normal right-aligned Reports
+   control row above the report body. */
+.cth-authshell .as-embedded-reports .cth-global-controls {
+  position: static;
+  z-index: auto;
+  justify-content: flex-end;
+  padding: 0 0 12px;
 }
 
 .cth-authshell .as-embedded-reports .cth-app-main,

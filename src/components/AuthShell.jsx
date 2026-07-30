@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
-  LayoutGrid,
   BarChart3,
   Command,
   BookOpen,
@@ -15,6 +14,7 @@ import { useUser, useClerk } from "../hooks/useAuth";
 import { usePlan } from "../context/PlanContext";
 import { PLAN_INFO, normalizePlan } from "../config/planAccess";
 import { NotificationBell } from "./NotificationBell";
+import AuthShellContext, { AUTH_SHELL_OWNS_BELL } from "../context/AuthShellContext";
 import "../styles/auth-shell.css";
 import "../styles/auth-shell-enhancements.css";
 
@@ -30,14 +30,28 @@ const CTH_LOGO = "/command-center-assets/cth-logo-seal.png";
 
 const NAV_ITEMS = [
   { key: "command-center", label: "Command Center", icon: LayoutDashboard, path: "/command-center-next" },
-  { key: "workspace", label: "Workspace", icon: LayoutGrid, path: "/workspace" },
+  // No primary Workspace tab: /workspace still renders only a placeholder and
+  // ignores the ?view=decisions|work|activity links, so promoting it in the
+  // shared shell would expose an unfinished route to every Reports user. The
+  // route itself, its gating and the Command Center links are untouched - the
+  // tab returns when the Workspace views are built.
   { key: "reports", label: "Reports", icon: BarChart3, path: "/analytics" },
   { key: "signal-os", label: "Signal OS", icon: Command, path: "/signal-inbox" },
   { key: "knowledge-base", label: "Knowledge Base", icon: BookOpen, path: "/knowledge-base" },
 ];
 
 function planLabel(rawPlan) {
-  const info = PLAN_INFO[normalizePlan(rawPlan)] || PLAN_INFO.foundation;
+  const normalizedPlan = normalizePlan(rawPlan);
+
+  // normalizePlan and PLAN_ORDER both support "legacy", but PLAN_INFO carries no
+  // legacy entry (it holds pricing/positioning for the sellable plans). Label it
+  // explicitly here so legacy accounts are not mislabelled as Foundation. No
+  // legacy price, order or entitlement is invented.
+  if (normalizedPlan === "legacy") {
+    return "Legacy Plan";
+  }
+
+  const info = PLAN_INFO[normalizedPlan] || PLAN_INFO.foundation;
   return `${(info.name || "").replace(/^The\s+/, "")} Plan`;
 }
 
@@ -92,6 +106,9 @@ export default function AuthShell({ activeNav, children }) {
   };
 
   return (
+    // This shell renders the notification bell for everything beneath it, so a
+    // legacy DashboardLayout embedded in one of these routes omits its own.
+    <AuthShellContext.Provider value={AUTH_SHELL_OWNS_BELL}>
     <div className="cth-authshell">
       <header className="as-topbar">
         <button
@@ -146,7 +163,9 @@ export default function AuthShell({ activeNav, children }) {
           </form>
 
           <span className="as-bell">
-            <NotificationBell />
+            {/* Only this shell-owned bell gets the scoped class. Standalone
+                DashboardLayout and CRM bells pass nothing and are unaffected. */}
+            <NotificationBell panelClassName="as-notification-panel" />
           </span>
 
           <div ref={menuRef} style={{ position: "relative" }}>
@@ -213,5 +232,6 @@ export default function AuthShell({ activeNav, children }) {
 
       <div className="as-frame">{children}</div>
     </div>
+    </AuthShellContext.Provider>
   );
 }

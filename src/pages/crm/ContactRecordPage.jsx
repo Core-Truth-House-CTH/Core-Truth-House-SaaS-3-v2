@@ -18,7 +18,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Mail, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Mail, Pencil, Trash2 } from "lucide-react";
 
 import { DashboardLayout } from "../../components/Layout";
 import apiClient from "../../lib/apiClient";
@@ -30,6 +30,7 @@ import {
  PAGE_STYLE,
  PANEL_STYLE,
  EYEBROW_STYLE,
+ INPUT_STYLE,
  PRIMARY_BUTTON_STYLE,
  SECONDARY_BUTTON_STYLE,
  DESTRUCTIVE_OUTLINE_STYLE,
@@ -39,6 +40,7 @@ import {
  daysWaiting,
  EmptyValue,
  DetailField,
+ FieldLabel,
  buildStageIndex,
  Chip,
 } from "./crmUi";
@@ -53,6 +55,15 @@ const CONTENT_MAX = 880;
 // These are the server's crm_contacts.status values.
 const CONTACT_LIFECYCLE = ["lead", "prospect", "customer"];
 const INACTIVE_STATUS = "inactive";
+const CONTACT_STATUS_OPTIONS = ["lead", "prospect", "customer", "inactive"];
+
+// ISO / date value -> yyyy-mm-dd for a <input type="date">; "" when absent/bad.
+function toDateInput(value) {
+ if (!value) return "";
+ const d = new Date(value);
+ if (Number.isNaN(d.getTime())) return "";
+ return d.toISOString().slice(0, 10);
+}
 
 function ContactStageBar({ status }) {
  const value = String(status || "").toLowerCase();
@@ -358,6 +369,10 @@ export default function ContactRecordPage() {
  const [toast, setToast] = useState(null);
  const [confirmOpen, setConfirmOpen] = useState(false);
  const [deleteBusy, setDeleteBusy] = useState(false);
+ const [editing, setEditing] = useState(false);
+ const [editForm, setEditForm] = useState(null);
+ const [saving, setSaving] = useState(false);
+ const [saveError, setSaveError] = useState("");
 
  const load = useCallback(async () => {
  setLoading(true);
@@ -438,6 +453,61 @@ export default function ContactRecordPage() {
  setDeleteBusy(false);
  }
  };
+
+ const startEdit = () => {
+ setEditForm({
+ name: contact.name || "",
+ phone: contact.phone || "",
+ company: contact.company || "",
+ status: contact.status || "lead",
+ website: contact.website || "",
+ industry: contact.industry || "",
+ start_date: toDateInput(contact.start_date),
+ });
+ setSaveError("");
+ setTab("overview"); // the edit form lives in the Overview panel
+ setEditing(true);
+ };
+
+ const cancelEdit = () => {
+ setEditing(false);
+ setSaveError("");
+ };
+
+ // email is deliberately not editable: it is the crm_contacts upsert key and
+ // ContactPatch (extra="forbid") rejects it. Everything else PATCHes; only the
+ // changed fields are sent.
+ const saveEdit = async () => {
+ const f = editForm;
+ const changed = {};
+ if (f.name.trim() !== (contact.name || "")) changed.name = f.name.trim();
+ if (f.phone.trim() !== (contact.phone || "")) changed.phone = f.phone.trim();
+ if (f.company.trim() !== (contact.company || "")) changed.company = f.company.trim();
+ if (f.status !== (contact.status || "lead")) changed.status = f.status;
+ if (f.website.trim() !== (contact.website || "")) changed.website = f.website.trim();
+ if (f.industry.trim() !== (contact.industry || "")) changed.industry = f.industry.trim();
+ if (f.start_date !== toDateInput(contact.start_date)) changed.start_date = f.start_date || null;
+
+ if (Object.keys(changed).length === 0) {
+ setEditing(false);
+ return;
+ }
+ setSaving(true);
+ setSaveError("");
+ try {
+ await apiClient.patch(API_PATHS.crm.contactById(contact.id), changed);
+ await load(); // re-fetch the record so the page shows saved values
+ setToast("Contact updated");
+ setEditing(false);
+ } catch (err) {
+ // Keep the user in edit mode with their input intact.
+ setSaveError(err?.message || "Could not save this contact.");
+ } finally {
+ setSaving(false);
+ }
+ };
+
+ const setEditField = (key) => (e) => setEditForm((s) => ({ ...s, [key]: e.target.value }));
 
  const backControl = (
  <button
@@ -527,6 +597,12 @@ export default function ContactRecordPage() {
  <Mail size={14} />
  Send email
  </button>
+ {!editing ? (
+ <button type="button" onClick={startEdit} style={SECONDARY_BUTTON_STYLE}>
+ <Pencil size={14} />
+ Edit
+ </button>
+ ) : null}
  <button type="button" onClick={() => setConfirmOpen(true)} style={DESTRUCTIVE_OUTLINE_STYLE}>
  <Trash2 size={14} />
  Delete contact
@@ -552,6 +628,84 @@ export default function ContactRecordPage() {
 
  <div style={{ paddingTop: 20 }}>
  {tab === "overview" ? (
+ editing ? (
+ <div style={{ ...PANEL_STYLE, borderRadius: 8, padding: "22px 24px" }}>
+ {saveError ? (
+ <div
+ style={{
+ marginBottom: 16,
+ padding: "10px 14px",
+ borderRadius: 8,
+ background: "color-mix(in srgb, var(--cth-command-crimson) 10%, var(--cth-command-panel))",
+ border: "1px solid var(--cth-command-crimson)",
+ color: "var(--cth-command-crimson)",
+ fontFamily: SANS,
+ fontSize: 13,
+ }}
+ >
+ {saveError}
+ </div>
+ ) : null}
+ <div style={{ display: "grid", gap: 14 }}>
+ <div>
+ <FieldLabel>Name</FieldLabel>
+ <input value={editForm.name} onChange={setEditField("name")} style={INPUT_STYLE} placeholder="Contact name" />
+ </div>
+ <div>
+ <FieldLabel>Email (not editable)</FieldLabel>
+ <input
+ value={contact.email || ""}
+ readOnly
+ disabled
+ style={{ ...INPUT_STYLE, background: "var(--cth-command-panel-soft)", color: "var(--cth-command-muted)" }}
+ />
+ </div>
+ <div>
+ <FieldLabel>Phone</FieldLabel>
+ <input value={editForm.phone} onChange={setEditField("phone")} style={INPUT_STYLE} placeholder="Phone" />
+ </div>
+ <div>
+ <FieldLabel>Company</FieldLabel>
+ <input value={editForm.company} onChange={setEditField("company")} style={INPUT_STYLE} placeholder="Company" />
+ </div>
+ <div>
+ <FieldLabel>Status</FieldLabel>
+ <select value={editForm.status} onChange={setEditField("status")} style={INPUT_STYLE}>
+ {CONTACT_STATUS_OPTIONS.map((opt) => (
+ <option key={opt} value={opt}>
+ {opt}
+ </option>
+ ))}
+ </select>
+ </div>
+ <div>
+ <FieldLabel>Website</FieldLabel>
+ <input value={editForm.website} onChange={setEditField("website")} style={INPUT_STYLE} placeholder="example.com" />
+ </div>
+ <div>
+ <FieldLabel>Industry</FieldLabel>
+ <input value={editForm.industry} onChange={setEditField("industry")} style={INPUT_STYLE} placeholder="Industry" />
+ </div>
+ <div>
+ <FieldLabel>Start date</FieldLabel>
+ <input type="date" value={editForm.start_date} onChange={setEditField("start_date")} style={INPUT_STYLE} />
+ </div>
+ <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 4 }}>
+ <button type="button" onClick={cancelEdit} disabled={saving} style={SECONDARY_BUTTON_STYLE}>
+ Cancel
+ </button>
+ <button
+ type="button"
+ onClick={saveEdit}
+ disabled={saving}
+ style={{ ...PRIMARY_BUTTON_STYLE, opacity: saving ? 0.7 : 1 }}
+ >
+ {saving ? "Saving…" : "Save"}
+ </button>
+ </div>
+ </div>
+ </div>
+ ) : (
  <div style={{ ...PANEL_STYLE, borderRadius: 8, padding: "22px 24px" }}>
  <DetailField label="Name">{contact.name || <EmptyValue />}</DetailField>
  <DetailField label="Email">{contact.email || <EmptyValue />}</DetailField>
@@ -560,10 +714,16 @@ export default function ContactRecordPage() {
  <DetailField label="Status">
  {contact.status ? <Chip>{contact.status}</Chip> : <EmptyValue />}
  </DetailField>
+ <DetailField label="Website">{contact.website || <EmptyValue />}</DetailField>
+ <DetailField label="Industry">{contact.industry || <EmptyValue />}</DetailField>
+ <DetailField label="Start date">
+ {contact.start_date ? formatDate(contact.start_date) : <EmptyValue />}
+ </DetailField>
  <DetailField label="Created">
  {contact.created_at ? formatDate(contact.created_at) : <EmptyValue />}
  </DetailField>
  </div>
+ )
  ) : null}
 
  {tab === "deals" ? (

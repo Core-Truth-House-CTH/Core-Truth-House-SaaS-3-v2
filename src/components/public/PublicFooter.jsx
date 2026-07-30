@@ -17,17 +17,14 @@ const footerGroups = [
  {
  heading: "Studios",
  links: [
+ { label: "The Store", to: "/store" },
  { label: "AI Headshot Generator", to: "/store" },
- { label: "Studio 2", to: "/store", muted: true },
- { label: "Studio 3", to: "/store", muted: true },
- { label: "All Studios", to: "/store" },
  ],
  },
  {
  heading: "Resources",
  links: [
  { label: "Field Notes", to: "/blog" },
- { label: "Brand Glossary", to: "/blog" },
  ],
  newsletter: true,
  },
@@ -36,8 +33,6 @@ const footerGroups = [
  links: [
  { label: "Contact", to: "/contact" },
  { label: "Member Login", to: "/sign-in" },
- { label: "Support / Help", to: "/contact" },
- { label: "Affiliate Program", to: "/contact" },
  ],
  social: true,
  },
@@ -46,8 +41,7 @@ const footerGroups = [
 const socialLinks = [
  { label: "Instagram", icon: "/brand-assets/social-icons/instagram.png", href: "https://www.instagram.com/coretruthhouse/", external: true },
  { label: "Facebook", icon: "/brand-assets/social-icons/facebook.png", href: "https://www.facebook.com/profile.php?id=61589383311165", external: true },
- { label: "TikTok", icon: "/brand-assets/social-icons/tiktok.png", href: "#", external: true },
- { label: "Email", icon: "/brand-assets/social-icons/email.png", href: "mailto:hello@coretruthhouse.com", external: false },
+ { label: "TikTok", icon: "/brand-assets/social-icons/tiktok.png", href: "https://www.tiktok.com/@coretruthhouse", external: true },
 ];
 
 function FooterLink({ link }) {
