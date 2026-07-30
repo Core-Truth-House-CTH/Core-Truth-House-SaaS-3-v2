@@ -71,7 +71,7 @@
   "scripts": {
     "dev": "vite",
     "lint": "eslint src",
-    "test:content-studio": "node --test src/features/contentStudio/__tests__/",
+    "test:content-studio": "node --test src/features/contentStudio/__tests__/contentStudio.contracts.test.mjs src/features/contentStudio/__tests__/contentStudio.logic.test.mjs",
     "test:ci": "yarn test:content-studio",
     "check:routes": "node scripts/verify-route-contract.mjs",
     "check:architecture": "node scripts/verify-system-boundaries.mjs",
