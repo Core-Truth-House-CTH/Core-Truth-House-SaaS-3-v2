@@ -105,9 +105,12 @@ function AgentDetailInner() {
                 Delete
               </button>
             ) : null}
-            <button type="button" className="cs-btn cs-btn-primary">
+            <Link
+              to={`/content-studio/composer?agentId=${encodeURIComponent(agent.id)}`}
+              className="cs-btn cs-btn-primary"
+            >
               Start Session
-            </button>
+            </Link>
           </>
         }
       />
