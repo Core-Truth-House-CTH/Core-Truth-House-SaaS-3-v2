@@ -125,3 +125,7 @@ Before production promotion, the pull request or release record contains:
 - visual comparison evidence
 - rollback artifact or commit
 - owner approval reference
+
+## Static-analysis boundary
+
+Frontend governance proves route shape, import reachability, and use of the approved authenticated client. It does not prove backend role, plan, tenant authorization, locked-version immutability, or version-transition correctness. Those guarantees require separate backend contract and isolation tests before implementation-active may be approved.

@@ -3,3 +3,5 @@ const setup=()=>{const d=mkdtempSync(path.join(tmpdir(),"cth-artifact-"));mkdirS
 test("manifest round trip and tamper rejection",()=>{const{d,env}=setup();const m=createManifest(d,env);assert.equal(m.headSha,env.CTH_HEAD_SHA);assert.deepEqual(verifyManifest(d,env),m);writeFileSync(path.join(d,"dist","index.html"),"tampered");assert.throws(()=>verifyManifest(d,env),/artifactContentDigest/)});
 test("artifact name must bind head",()=>{const{d,env}=setup();env.CTH_ARTIFACT_NAME="mutable";assert.throws(()=>createManifest(d,env),/bind head/)});
 test("missing identity fails closed",()=>{const{d,env}=setup();delete env.CTH_BASE_SHA;assert.throws(()=>createManifest(d,env),/baseSha/)});
+
+test("head merge base run and digest mismatches all fail",()=>{for(const key of["CTH_HEAD_SHA","CTH_MERGE_SHA","CTH_BASE_SHA","GITHUB_RUN_ID"]){const{d,env}=setup();createManifest(d,env);env[key]=key==="GITHUB_RUN_ID"?"9":"d".repeat(40);assert.throws(()=>verifyManifest(d,env),/mismatch/)}});
