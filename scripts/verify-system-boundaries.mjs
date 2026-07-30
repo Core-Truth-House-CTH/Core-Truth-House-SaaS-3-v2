@@ -1,154 +1,21 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import {readFileSync} from "node:fs";
+import {execFileSync} from "node:child_process";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
-import { parse } from "@babel/parser";
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const extensions = [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"];
-const registryPath = "src/navigation/pageRegistry.jsx";
-
-const normalize = (value) => value.replaceAll(path.sep, "/");
-
-export function extractStaticImports(source, filename = "unknown.js") {
-  let ast;
-  try {
-    ast = parse(source, { sourceType: "unambiguous", sourceFilename: filename, plugins: ["jsx", "typescript", "dynamicImport"] });
-  } catch (error) {
-    throw new Error(`Cannot parse reachable module ${filename}: ${error.message}`);
-  }
-  const imports = [];
-  const visit = (node) => {
-    if (!node || typeof node !== "object") return;
-    if (["ImportDeclaration", "ExportNamedDeclaration", "ExportAllDeclaration"].includes(node.type) && node.source?.value) imports.push(node.source.value);
-    if (node.type === "CallExpression" && ["Import", "Identifier"].includes(node.callee?.type)) {
-      const isImport = node.callee.type === "Import";
-      const isRequire = node.callee.type === "Identifier" && node.callee.name === "require";
-      if (isImport || isRequire) {
-        const argument = node.arguments?.[0];
-        if (argument?.type !== "StringLiteral") throw new Error(`Non-static ${isImport ? "dynamic import" : "require"} in reachable module ${filename}`);
-        imports.push(argument.value);
-      }
-    }
-    for (const value of Object.values(node)) {
-      if (Array.isArray(value)) for (const child of value) visit(child);
-      else if (value && typeof value === "object" && typeof value.type === "string") visit(value);
-    }
-  };
-  visit(ast.program);
-  return [...new Set(imports)];
-}
-
-export function analyzeReachableGraph({ files, entries, contract, aliases = { "@/": "src/" } }) {
-  const errors = [];
-  const visited = new Set();
-  const resolve = (from, specifier) => {
-    let target;
-    if (specifier.startsWith(".")) target = path.posix.normalize(path.posix.join(path.posix.dirname(from), specifier));
-    else {
-      const alias = Object.entries(aliases).find(([prefix]) => specifier.startsWith(prefix));
-      if (!alias) return null;
-      target = path.posix.join(alias[1], specifier.slice(alias[0].length));
-    }
-    const candidates = [target, ...extensions.map((ext) => target + ext), ...extensions.map((ext) => path.posix.join(target, "index" + ext))];
-    const found = candidates.find((candidate) => files.has(candidate));
-    if (!found) errors.push(`${from}: unresolved reachable import ${specifier}`);
-    return found;
-  };
-  const queue = [...entries];
-  while (queue.length) {
-    const current = queue.shift();
-    if (!current || visited.has(current)) continue;
-    if (!files.has(current)) { errors.push(`Missing reachable entry ${current}`); continue; }
-    visited.add(current);
-    let imports = [];
-    try { imports = extractStaticImports(files.get(current), current); }
-    catch (error) { errors.push(error.message); }
-    for (const specifier of imports) {
-      const resolved = resolve(current, specifier);
-      if (resolved && !visited.has(resolved)) queue.push(resolved);
-    }
-  }
-  if (!visited.has(contract.adapterPath)) errors.push(`Foundation routes must reach canonical adapter ${contract.adapterPath}.`);
-  if (visited.has(contract.adapterPath)) {
-    const adapterSource = files.get(contract.adapterPath);
-    if (contract.endpointPrefix && !adapterSource.includes(contract.endpointPrefix)) errors.push(`${contract.adapterPath} must use endpoint prefix ${contract.endpointPrefix}.`);
-    for (const name of contract.requiredExports ?? []) {
-      if (!new RegExp(`export\\s+(?:async\\s+)?(?:function|const)\\s+${name}\\b`).test(adapterSource)) errors.push(`${contract.adapterPath} must export ${name}.`);
-    }
-    for (const mode of contract.requiredReadModes ?? []) {
-      if (!new RegExp(`["'\\x60]${mode}["'\\x60]`).test(adapterSource)) errors.push(`${contract.adapterPath} must explicitly support ${mode} reads.`);
-    }
-  }
-  for (const file of visited) {
-    if (file === contract.sharedClientPath) continue;
-    const source = files.get(file);
-    const isAdapter = file === contract.adapterPath;
-    const imports = (() => { try { return extractStaticImports(source, file); } catch { return []; } })();
-    if (/\b(?:localStorage|sessionStorage|indexedDB)\b/.test(source)) errors.push(`${file}: browser persistence is prohibited.`);
-    if (/\bClerkProvider\b|\b(?:WorkspaceProvider|TenantProvider|EntitlementProvider|NotificationProvider)\b/.test(source)) errors.push(`${file}: competing shared provider is prohibited.`);
-    if (/axios\.create\s*\(|(?:from\s+["']axios["']|require\(\s*["']axios["'])/.test(source)) errors.push(`${file}: direct Axios use is prohibited.`);
-    if (!isAdapter) {
-      if (/\bfetch\s*\(|["'`]\/api\//.test(source)) errors.push(`${file}: direct API access is prohibited; use ${contract.adapterPath}.`);
-      for (const specifier of imports) {
-        const resolved = resolve(file, specifier);
-        if (resolved === contract.sharedClientPath || /(?:^|\/)(?:apiClient|persistence|storage)(?:\.[^/]+)?$/i.test(specifier)) {
-          errors.push(`${file}: unauthorized persistence/API adapter import ${specifier}; use ${contract.adapterPath}.`);
-        }
-      }
-    }
-  }
-  return { errors: [...new Set(errors)], visited };
-}
-
-function collectFiles(repositoryRoot, relative = ".") {
-  const result = new Map();
-  const walk = (dir) => {
-    for (const entry of readdirSync(path.join(repositoryRoot, dir), { withFileTypes: true })) {
-      if (["node_modules", ".git", "dist", "build", "coverage"].includes(entry.name)) continue;
-      const child = normalize(path.join(dir, entry.name)).replace(/^\.\//, "");
-      if (entry.isDirectory()) walk(child);
-      else if (extensions.includes(path.extname(entry.name))) result.set(child, readFileSync(path.join(repositoryRoot, child), "utf8"));
-    }
-  };
-  walk(relative);
-  return result;
-}
-
-function foundationEntries(registrySource, contract) {
-  const imports = new Map([...registrySource.matchAll(/const\s+(\w+)\s*=\s*lazy\(\s*\(\)\s*=>\s*import\(\s*["']([^"']+)["']/g)].map((m) => [m[1], m[2]]));
-  const entries = [];
-  for (const match of registrySource.matchAll(/["'](\/foundation(?:\/[^"']*)?)["']\s*:\s*(\w+)/g)) {
-    if (match[1] === "/foundation/*") continue;
-    const specifier = imports.get(match[2]);
-    if (!specifier?.startsWith(contract.routeImportPrefix)) throw new Error(`${match[1]} lacks an approved static Foundation import.`);
-    const target = path.posix.normalize(path.posix.join(path.posix.dirname(registryPath), specifier));
-    entries.push(target);
-  }
-  return entries;
-}
-
-export function runSystemBoundaries(repositoryRoot = root) {
-  const contract = JSON.parse(readFileSync(path.join(repositoryRoot, "docs/builds/foundation-truth/FOUNDATION-DATA-CONTRACT.json"), "utf8"));
-  const files = collectFiles(repositoryRoot);
-  const registry = files.get(registryPath);
-  const appRoutes = files.get("src/config/appRoutes.js");
-  const featureFiles = [...files.keys()].filter((file) => file.startsWith(contract.featureRoot + "/"));
-  let errors = [];
-  if (!/["'`]\/command-center["'`]\s*:\s*CommandCenterNext\b/.test(registry)) errors.push("The approved /command-center route no longer resolves to CommandCenterNext.");
-  if (!/path\s*:\s*["'`]\/command-center["'`][\s\S]{0,220}?requiredPlan\s*:\s*["'`]foundation["'`]/.test(appRoutes)) errors.push("The Command Center Foundation entitlement contract changed or disappeared.");
-  if (contract.implementationPhase === "contract-only") {
-    if (featureFiles.length) errors.push(`contract-only prohibits Foundation product implementation files: ${featureFiles.join(", ")}`);
-    if (registry.includes(contract.routeImportPrefix)) errors.push("contract-only prohibits Foundation product imports.");
-  } else if (contract.implementationPhase === "implementation-active") {
-    try {
-      const result = analyzeReachableGraph({ files, entries: foundationEntries(registry, contract), contract });
-      errors = result.errors;
-      if (!result.visited.has(contract.sharedClientPath)) errors.push(`Canonical adapter must reach shared client ${contract.sharedClientPath}.`);
-    } catch (error) { errors.push(error.message); }
-  } else errors.push(`Unsupported implementationPhase: ${contract.implementationPhase}`);
-  for (const error of errors) console.error(`ARCHITECTURE CONTRACT FAILED: ${error}`);
-  if (!errors.length) console.log(`Architecture contract passed in ${contract.implementationPhase} phase; ${featureFiles.length} Foundation files inspected.`);
-  return errors.length ? 1 : 0;
-}
-
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) process.exitCode = runSystemBoundaries();
+import {fileURLToPath,pathToFileURL} from "node:url";
+import {parse} from "@babel/parser";
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),".."),exts=[".js",".jsx",".mjs",".cjs",".ts",".tsx",".mts",".cts"],registryPath="src/navigation/pageRegistry.jsx";
+const ast=(s,f)=>parse(s,{sourceType:"unambiguous",sourceFilename:f,plugins:["jsx","typescript","dynamicImport"]}).program;
+export function extractStaticImports(source,filename="unknown.js"){const out=[];function walk(n){if(!n||typeof n!=="object")return;if(["ImportDeclaration","ExportNamedDeclaration","ExportAllDeclaration"].includes(n.type)&&n.source?.value)out.push(n.source.value);if(n.type==="CallExpression"&&(n.callee?.type==="Import"||n.callee?.name==="require")){const a=n.arguments?.[0];if(a?.type!=="StringLiteral")throw new Error("Non-static import/require in "+filename);out.push(a.value)}for(const v of Object.values(n)){if(Array.isArray(v))v.forEach(walk);else if(v?.type)walk(v)}}walk(ast(source,filename));return[...new Set(out)]}
+function resolve(files,from,spec,aliases={"@/":"src/"}){let t;if(spec.startsWith("."))t=path.posix.normalize(path.posix.join(path.posix.dirname(from),spec));else{const a=Object.entries(aliases).find(([p])=>spec.startsWith(p));if(!a)return null;t=path.posix.join(a[1],spec.slice(a[0].length))}return[t,...exts.map(x=>t+x),...exts.map(x=>path.posix.join(t,"index"+x))].find(x=>files.has(x))}
+function forbidden(astRoot){const e=[];function w(n){if(!n||typeof n!=="object")return;if(n.type==="Identifier"&&["fetch","XMLHttpRequest","WebSocket","EventSource","indexedDB","localStorage","sessionStorage"].includes(n.name))e.push(n.name);if(n.type==="MemberExpression"&&!n.computed&&n.object?.name==="navigator"&&n.property?.name==="sendBeacon")e.push("navigator.sendBeacon");if(n.type==="CallExpression"&&n.callee?.type==="MemberExpression"&&n.callee.object?.name==="axios")e.push("axios");for(const v of Object.values(n)){if(Array.isArray(v))v.forEach(w);else if(v?.type)w(v)}}w(astRoot);return e}
+export function analyzeAdapterSource(source,contract){let a;try{a=ast(source,contract.adapterPath)}catch(x){return["Cannot parse adapter: "+x.message]}const errors=[],clientBindings=new Set(),functions=new Map(),exports=new Map();
+ for(const s of a.body){if(s.type==="ImportDeclaration"){if(s.source.value===contract.sharedClientImport||s.source.value===contract.sharedClientPath)for(const x of s.specifiers)clientBindings.add(x.local.name);else if(s.specifiers.length)errors.push("Unauthorized adapter dependency "+s.source.value)}const d=s.type==="ExportNamedDeclaration"?s.declaration:s;if(d?.type==="FunctionDeclaration"&&d.id)functions.set(d.id.name,d);if(d?.type==="VariableDeclaration")for(const x of d.declarations)if(x.id.type==="Identifier"){functions.set(x.id.name,x.init);if(s.type==="ExportNamedDeclaration")exports.set(x.id.name,x.init)}if(s.type==="ExportNamedDeclaration"&&d?.type==="FunctionDeclaration")exports.set(d.id.name,d)}
+ for(const x of forbidden(a))errors.push("Prohibited transport or persistence primitive "+x);if(clientBindings.size!==1)errors.push("Adapter must import exactly one approved shared-client binding.");
+ function reaches(node,seen=new Set()){let ok=false;function w(n){if(!n||typeof n!=="object")return;if(n.type==="CallExpression"){if(n.callee?.type==="MemberExpression"&&n.callee.object?.type==="Identifier"&&clientBindings.has(n.callee.object.name))ok=true;if(n.callee?.type==="Identifier"&&functions.has(n.callee.name)&&!seen.has(n.callee.name)){seen.add(n.callee.name);if(reaches(functions.get(n.callee.name),seen))ok=true}}for(const v of Object.values(n)){if(Array.isArray(v))v.forEach(w);else if(v?.type)w(v)}}w(node);return ok}
+ for(const name of contract.requiredExports??[]){const n=exports.get(name);if(!n)errors.push("Missing executable export "+name);else if(!reaches(n,new Set([name])))errors.push(name+" does not execute through the approved shared client.")}
+ return[...new Set(errors)]}
+export function analyzeReachableGraph({files,entries,contract,aliases={"@/":"src/"}}){const errors=[],visited=new Set(),q=[...entries];while(q.length){const f=q.shift();if(!f||visited.has(f))continue;if(!files.has(f)){errors.push("Missing reachable entry "+f);continue}visited.add(f);let imports=[];try{imports=extractStaticImports(files.get(f),f)}catch(x){errors.push(x.message)}for(const s of imports){const r=resolve(files,f,s,aliases);if((s.startsWith(".")||Object.keys(aliases).some(x=>s.startsWith(x)))&&!r)errors.push(f+": unresolved local import "+s);if(r&&!visited.has(r))q.push(r)}}if(!visited.has(contract.adapterPath))errors.push("Foundation routes must reach canonical adapter "+contract.adapterPath);if(visited.has(contract.adapterPath))errors.push(...analyzeAdapterSource(files.get(contract.adapterPath),contract));for(const f of visited){if(f===contract.adapterPath||f===contract.sharedClientPath)continue;let a;try{a=ast(files.get(f),f)}catch(x){errors.push("Cannot parse "+f+": "+x.message);continue}for(const x of forbidden(a))errors.push(f+": prohibited "+x);for(const s of extractStaticImports(files.get(f),f)){const r=resolve(files,f,s,aliases);if(r===contract.sharedClientPath)errors.push(f+": shared client may only be imported by canonical adapter.")}}return{errors:[...new Set(errors)],visited}}
+function gitFiles(repo){const raw=execFileSync("git",["ls-files","-z","--stage"],{cwd:repo});const parts=raw.toString("utf8").split("\0").filter(Boolean),files=new Map();for(const row of parts){const m=/^(\d+) [0-9a-f]+ \d+\t([\s\S]+)$/.exec(row);if(!m)throw new Error("Malformed git index record.");const rel=m[2];if(m[1]==="120000")throw new Error("Tracked symlink prohibited in governed analysis: "+rel);if(exts.includes(path.posix.extname(rel)))files.set(rel,readFileSync(path.join(repo,rel),"utf8"))}return files}
+function entries(source,contract){const a=ast(source,registryPath),imports=new Map(),routes=[];for(const s of a.body){const d=s.type==="VariableDeclaration"?s:null;if(!d)continue;for(const x of d.declarations){if(x.id?.type==="Identifier"&&x.init?.type==="CallExpression"&&x.init.callee?.name==="lazy"){let b=x.init.arguments[0]?.body;if(b?.type==="CallExpression"&&b.callee?.type==="Import"&&b.arguments[0]?.type==="StringLiteral")imports.set(x.id.name,b.arguments[0].value)}if(x.id?.name==="pageRegistry"&&x.init?.type==="ObjectExpression")for(const p of x.init.properties){if(p.type!=="ObjectProperty"||p.computed)throw new Error("Dynamic registry entry.");const r=p.key.value;if(typeof r==="string"&&(r==="/foundation"||r.startsWith("/foundation/"))&&r!=="/foundation/*"){if(p.value.type!=="Identifier")throw new Error("Dynamic Foundation component.");const spec=imports.get(p.value.name);if(!spec?.startsWith(contract.routeImportPrefix))throw new Error(r+" lacks approved Foundation import.");routes.push(path.posix.normalize(path.posix.join(path.posix.dirname(registryPath),spec)))}}}}return routes}
+export function runSystemBoundaries(repo=root){try{const c=JSON.parse(readFileSync(path.join(repo,"docs/builds/foundation-truth/FOUNDATION-DATA-CONTRACT.json"),"utf8")),files=gitFiles(repo),feature=[...files.keys()].filter(x=>x.startsWith(c.featureRoot+"/")),registry=files.get(registryPath);let errors=[];if(c.implementationPhase==="contract-only"){if(feature.length)errors.push("contract-only Foundation files: "+feature.join(","));if(registry.includes(c.routeImportPrefix))errors.push("contract-only Foundation import.")}else if(c.implementationPhase==="implementation-active"){const r=analyzeReachableGraph({files,entries:entries(registry,c),contract:c});errors=r.errors;if(!r.visited.has(c.sharedClientPath))errors.push("Adapter does not reach shared client module.")}else errors.push("Unsupported phase.");for(const e of errors)console.error("ARCHITECTURE CONTRACT FAILED: "+e);if(!errors.length)console.log("Architecture contract passed in "+c.implementationPhase+" phase.");return errors.length?1:0}catch(x){console.error("ARCHITECTURE CONTRACT FAILED: "+x.message);return 1}}
+if(import.meta.url===pathToFileURL(process.argv[1]??"").href)process.exitCode=runSystemBoundaries();

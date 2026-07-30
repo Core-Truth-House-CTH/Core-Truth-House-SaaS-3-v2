@@ -138,5 +138,6 @@
       "contractOnlyModule": "../pages/BrandFoundation",
       "implementationActiveModule": "../pages/BrandFoundation"
     }
-  ]
+  ],
+  "sharedClientImport": "@/lib/apiClient"
 }

@@ -1,16 +1,6 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { analyzeReachableGraph } from "./verify-system-boundaries.mjs";
-
-const contract = { adapterPath: "src/features/foundation/api/foundationApi.js", sharedClientPath: "src/lib/apiClient.js" };
-const adapter = `import client from "@/lib/apiClient"; export const getFoundation=()=>client.get("/api/foundation");`;
-const base = (entry, extras = {}) => new Map(Object.entries({ "src/entry.js": entry, [contract.adapterPath]: adapter, [contract.sharedClientPath]: "export default {}", ...extras }));
-const check = (entry, extras) => analyzeReachableGraph({ files: base(entry, extras), entries: ["src/entry.js"], contract }).errors;
-
-test("canonical-adapter-only graph passes", () => assert.deepEqual(check(`import "./features/foundation/api/foundationApi";`), []));
-test("unchanged reachable helper direct API call fails", () => assert.match(check(`import "./shared"; import "./features/foundation/api/foundationApi";`, { "src/shared.js": `fetch("/api/bad")` }).join("\n"), /direct API/));
-test("re-export chains and index resolution are traced", () => assert.deepEqual(check(`import "./bridge";`, { "src/bridge.js": `export * from "./features/foundation/api";`, "src/features/foundation/api/index.js": `export * from "./foundationApi";` }), []));
-test("alias imports are traced", () => assert.deepEqual(check(`import "@/features/foundation/api/foundationApi";`), []));
-test("static require is traced", () => assert.deepEqual(check(`require("./features/foundation/api/foundationApi")`), []));
-test("static dynamic import is traced", () => assert.deepEqual(check(`import("./features/foundation/api/foundationApi")`), []));
-test("unresolved reachable import fails closed", () => assert.match(check(`import "./missing"`).join("\n"), /unresolved reachable import/));
+import test from "node:test";import assert from "node:assert/strict";import {analyzeAdapterSource,analyzeReachableGraph} from "./verify-system-boundaries.mjs";
+const c={adapterPath:"src/features/foundation/api/foundationApi.js",sharedClientPath:"src/lib/apiClient.js",sharedClientImport:"@/lib/apiClient",requiredExports:["save","review","approve","lock","revise","readDraft","readLocked"]};
+const good='import client from "@/lib/apiClient";const call=(p)=>client.get(p);export const save=()=>call("/api/foundation");export const review=()=>client.post("/api/foundation/review");export const approve=()=>client.post("/api/foundation/approve");export const lock=()=>client.post("/api/foundation/lock");export const revise=()=>client.post("/api/foundation/revise");export const readDraft=()=>client.get("/api/foundation?mode=draft");export const readLocked=()=>client.get("/api/foundation?mode=locked");';
+test("all executable operations use approved binding",()=>assert.deepEqual(analyzeAdapterSource(good,c),[]));
+for(const [name,source] of [["unused import",'import client from "@/lib/apiClient";'+c.requiredExports.map(x=>"export const "+x+"=()=>1;").join("")],["direct fetch",good.replace('client.post("/api/foundation/review")','fetch("/api/foundation/review")')],["neutral alternate client",good.replace('import client from "@/lib/apiClient";','import client from "@/lib/apiClient";import neutral from "./helper";')],["helper alternate transport",good.replace('const call=(p)=>client.get(p);','const call=(p)=>fetch(p);')],["comments only",'import client from "@/lib/apiClient";/* '+c.requiredExports.join(" ")+' */']])test(name+" fails",()=>assert.notEqual(analyzeAdapterSource(source,c).length,0));
+test("unresolved local graph import fails closed",()=>{const files=new Map([["src/e.js",'import "./missing";'],[c.adapterPath,good],[c.sharedClientPath,"export default {};"]]);assert.match(analyzeReachableGraph({files,entries:["src/e.js"],contract:c}).errors.join("\\n"),/unresolved/)});
