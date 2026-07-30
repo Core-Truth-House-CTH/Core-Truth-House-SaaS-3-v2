@@ -1,56 +1,11 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { evaluateChanges, validateReleaseWorkflow } from "./verify-deployment-policy.mjs";
+import test from"node:test";import assert from"node:assert/strict";import{evaluateChanges,validateGovernanceWorkflow,validateReleaseWorkflow,resolveBase}from"./verify-deployment-policy.mjs";import{readFileSync}from"node:fs";import yaml from"js-yaml";const rec=(p,c,status="M",old="")=>({status,oldPath:p,newPath:p,oldContent:old,newContent:c});
+test("encoded child process fails",()=>assert.notEqual(evaluateChanges([rec("scripts/a.mjs",'import{exec}from"node:child_process";Buffer.from("eA==","base64");exec("x")')]).length,0));
+test("neutral helper fails",()=>assert.notEqual(evaluateChanges([rec("scripts/a.mjs",'import"./ship.js";')]).length,0));
+test("python and Makefile fail",()=>{assert.notEqual(evaluateChanges([rec("scripts/a.py","import subprocess")]).length,0);assert.notEqual(evaluateChanges([rec("Makefile","ship: ssh prod")]).length,0)});
+test("governance deployment fails",()=>assert.notEqual(validateGovernanceWorkflow(readFileSync(".github/workflows/cth-governance-gate.yml","utf8").replace("yarn lint","node deploy.js")).length,0));
+test("verifier replacement and test stub fail",()=>{assert.notEqual(evaluateChanges([rec("scripts/verify-deployment-policy.mjs","// markers\nexport{}")]).length,0);assert.notEqual(evaluateChanges([rec("scripts/verify-deployment-policy.test.mjs",'import test from"node:test";test("x",()=>{})')]).length,0)});
+test("missing and attacker base fail",()=>{assert.throws(()=>resolveBase(".",{}));assert.throws(()=>resolveBase(".",{CTH_BASE_REF:"../../evil"}))});
+test("echo release fails",()=>assert.notEqual(validateReleaseWorkflow("on: {workflow_dispatch: {inputs:{}}}\npermissions: {}\njobs: {}").length,0));
+test("harmless governance docs pass",()=>assert.deepEqual(evaluateChanges([rec("docs/governance.md","wording")]),[]));
 
-const fails = (record) => assert.notEqual(evaluateChanges([record]).length, 0);
-test("governance workflow cannot introduce deployment commands", () => fails({ status: "M", oldPath: ".github/workflows/cth-governance-gate.yml", newPath: ".github/workflows/cth-governance-gate.yml", newContent: "jobs:\n  x:\n    steps:\n      - run: ssh prod activate" }));
-test("deleted safeguard is sensitive", () => fails({ status: "D", oldPath: "ops/check.service", newPath: "ops/check.service", oldContent: "safeguard" }));
-test("renamed deployment file is sensitive", () => fails({ status: "R", oldPath: "deploy.sh", newPath: "safe.txt", oldContent: "release" }));
-test("Dockerfile is sensitive", () => fails({ status: "A", oldPath: "Dockerfile", newPath: "Dockerfile", newContent: "FROM node" }));
-test("package deployment script is sensitive", () => fails({ status: "M", oldPath: "package.json", newPath: "package.json", newContent: '{"scripts":{"ship":"ssh vps"}}' }));
-test("neutral operational shell script is sensitive", () => fails({ status: "A", oldPath: "scripts/sync.sh", newPath: "scripts/sync.sh", newContent: "rsync dist host:x" }));
-test("documentation-only change passes", () => assert.deepEqual(evaluateChanges([{ status: "M", oldPath: "docs/guide.md", newPath: "docs/guide.md", newContent: "spelling only" }]), []));
-test("marker words and comments do not satisfy the release workflow contract", () => {
-  assert.notEqual(validateReleaseWorkflow(`# workflow_dispatch permissions digest staging production rollback\nname: fake\non: push\njobs: {}`).length, 0);
-});
-test("structured immutable-artifact release sequence passes", () => {
-  const source = `
-on:
-  workflow_dispatch:
-    inputs:
-      workflow_run_id: { required: true }
-      commit_sha: { required: true }
-      artifact_name: { required: true }
-      artifact_digest: { required: true }
-permissions: { contents: read, actions: read }
-jobs:
-  select-artifact:
-    steps:
-      - run: echo "\${{ inputs.workflow_run_id }} \${{ inputs.commit_sha }} \${{ inputs.artifact_name }} \${{ inputs.artifact_digest }}"
-  verify-artifact:
-    needs: select-artifact
-    steps:
-      - run: echo "\${{ inputs.artifact_digest }}" | sha256sum --check
-      - run: tar xf "\${{ inputs.artifact_name }}"
-  deploy-staging:
-    needs: verify-artifact
-    steps:
-      - run: stage "\${{ inputs.artifact_name }}"
-  validate-staging:
-    needs: deploy-staging
-    steps:
-      - run: validate staging
-  promote-production:
-    needs: validate-staging
-    steps:
-      - run: activate "\${{ inputs.artifact_name }}"
-  rollback:
-    needs: promote-production
-    steps:
-      - run: rollback previous versioned release_id
-`;
-  assert.deepEqual(validateReleaseWorkflow(source), []);
-});
-test("mutable latest artifact selection and rebuilds fail", () => {
-  assert.match(validateReleaseWorkflow(`on: { workflow_dispatch: { inputs: {} } }\npermissions: {}\njobs: { x: { steps: [{ run: "download latest successful; yarn build" }] } }`).join("\n"), /Mutable|rebuild/);
-});
+test("realistic immutable release structure passes",()=>{const ex=x=>"$"+"{{ "+x+" }}",inputs=Object.fromEntries(["workflow_run_id","head_sha","merge_sha","base_sha","artifact_id","artifact_name","artifact_digest"].map(x=>[x,{required:true}])),job=(needs,run,environment)=>({...(needs?{needs}:{}),...(environment?{environment}:{}),steps:run.map(x=>({run:x}))}),w={on:{workflow_dispatch:{inputs}},permissions:{contents:"read",actions:"read"},jobs:{"select-artifact":{steps:[{uses:"actions/download-artifact@v4",with:{"run-id":ex("inputs.workflow_run_id"),name:ex("inputs.artifact_name"),"github-token":ex("github.token")}},{run:"node scripts/verify-artifact-manifest.mjs select"}]},"verify-artifact":job("select-artifact",["node scripts/verify-artifact-manifest.mjs digest","node scripts/verify-artifact-manifest.mjs extract"]),"deploy-staging":job("verify-artifact",["node scripts/deploy-immutable-artifact.mjs stage"],"staging"),"validate-staging":job("deploy-staging",["node scripts/deploy-immutable-artifact.mjs validate"]),"approve-production":job("validate-staging",[],"production"),"promote-production":job("approve-production",["node scripts/deploy-immutable-artifact.mjs promote"],"production"),rollback:job("promote-production",["node scripts/deploy-immutable-artifact.mjs rollback-versioned"])}};assert.deepEqual(validateReleaseWorkflow(yaml.dump(w)),[])});

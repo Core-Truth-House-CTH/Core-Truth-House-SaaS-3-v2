@@ -197,3 +197,7 @@ Connect Command Center, Structure, Content Studio, Offer Builder, Signal OS, and
 - source builds on the production VPS
 - direct feature-branch deployment
 - cleanup during the initial release
+
+## Governance trust boundary
+
+Repository-controlled verification cannot prove its own integrity. GitHub branch protection and required owner review must independently protect governance workflow, verifier, and test changes. The repository gate structurally classifies executable changes and fails closed; external repository policy remains the root of trust.
