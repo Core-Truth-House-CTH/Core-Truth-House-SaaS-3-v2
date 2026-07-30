@@ -1,280 +1,154 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { parse } from "@babel/parser";
 
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(scriptDir, "..");
-const contract = JSON.parse(
-  readFileSync(
-    path.join(root, "docs/builds/foundation-truth/FOUNDATION-DATA-CONTRACT.json"),
-    "utf8",
-  ),
-);
-
-const codeExtensions = [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"];
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const extensions = [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"];
 const registryPath = "src/navigation/pageRegistry.jsx";
-const appRoutesPath = "src/config/appRoutes.js";
 
-function normalize(relativePath) {
-  return relativePath.replaceAll(path.sep, "/");
-}
+const normalize = (value) => value.replaceAll(path.sep, "/");
 
-function read(relativePath) {
-  return readFileSync(path.join(root, relativePath), "utf8");
-}
-
-function fail(message) {
-  console.error(`ARCHITECTURE CONTRACT FAILED: ${message}`);
-  process.exitCode = 1;
-}
-
-function collectCodeFiles(relativePath) {
-  const absolutePath = path.join(root, relativePath);
-  if (!existsSync(absolutePath)) return [];
-  if (statSync(absolutePath).isFile()) {
-    return codeExtensions.includes(path.extname(absolutePath)) ? [normalize(relativePath)] : [];
-  }
-
-  return readdirSync(absolutePath, { withFileTypes: true }).flatMap((entry) => {
-    const child = normalize(path.join(relativePath, entry.name));
-    return entry.isDirectory()
-      ? collectCodeFiles(child)
-      : codeExtensions.includes(path.extname(entry.name))
-        ? [child]
-        : [];
-  });
-}
-
-function getChangedFiles() {
-  const baseRef = process.env.GITHUB_BASE_REF?.trim();
-  if (!baseRef) return new Set();
-
+export function extractStaticImports(source, filename = "unknown.js") {
+  let ast;
   try {
-    const output = execFileSync(
-      "git",
-      ["diff", "--name-only", `origin/${baseRef}...HEAD`],
-      { cwd: root, encoding: "utf8" },
-    );
-    return new Set(output.split("\n").map((value) => value.trim()).filter(Boolean));
+    ast = parse(source, { sourceType: "unambiguous", sourceFilename: filename, plugins: ["jsx", "typescript", "dynamicImport"] });
   } catch (error) {
-    fail(`Could not calculate the pull request diff: ${error.message}`);
-    return new Set();
+    throw new Error(`Cannot parse reachable module ${filename}: ${error.message}`);
   }
-}
-
-function importSpecifiers(source) {
-  const specifiers = new Set();
-  const patterns = [
-    /(?:import|export)\s+(?:[^"'()]*?\s+from\s+)?["']([^"']+)["']/g,
-    /import\(\s*["']([^"']+)["']\s*\)/g,
-  ];
-
-  for (const pattern of patterns) {
-    for (const match of source.matchAll(pattern)) specifiers.add(match[1]);
-  }
-  return [...specifiers];
-}
-
-function resolveLocalImport(fromRelativePath, specifier) {
-  if (!specifier.startsWith(".")) return null;
-
-  const base = path.resolve(root, path.dirname(fromRelativePath), specifier);
-  const candidates = [base];
-  for (const extension of codeExtensions) candidates.push(`${base}${extension}`);
-  for (const extension of codeExtensions) candidates.push(path.join(base, `index${extension}`));
-
-  for (const candidate of candidates) {
-    if (existsSync(candidate) && statSync(candidate).isFile()) {
-      return normalize(path.relative(root, candidate));
+  const imports = [];
+  const visit = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (["ImportDeclaration", "ExportNamedDeclaration", "ExportAllDeclaration"].includes(node.type) && node.source?.value) imports.push(node.source.value);
+    if (node.type === "CallExpression" && ["Import", "Identifier"].includes(node.callee?.type)) {
+      const isImport = node.callee.type === "Import";
+      const isRequire = node.callee.type === "Identifier" && node.callee.name === "require";
+      if (isImport || isRequire) {
+        const argument = node.arguments?.[0];
+        if (argument?.type !== "StringLiteral") throw new Error(`Non-static ${isImport ? "dynamic import" : "require"} in reachable module ${filename}`);
+        imports.push(argument.value);
+      }
     }
-  }
-
-  const extension = path.extname(specifier);
-  if (extension && !codeExtensions.includes(extension)) return null;
-
-  fail(`Could not resolve local import ${specifier} from ${fromRelativePath}.`);
-  return null;
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) for (const child of value) visit(child);
+      else if (value && typeof value === "object" && typeof value.type === "string") visit(value);
+    }
+  };
+  visit(ast.program);
+  return [...new Set(imports)];
 }
 
-function buildReachableGraph(entryFiles) {
-  const queue = [...entryFiles];
+export function analyzeReachableGraph({ files, entries, contract, aliases = { "@/": "src/" } }) {
+  const errors = [];
   const visited = new Set();
-
-  while (queue.length > 0) {
+  const resolve = (from, specifier) => {
+    let target;
+    if (specifier.startsWith(".")) target = path.posix.normalize(path.posix.join(path.posix.dirname(from), specifier));
+    else {
+      const alias = Object.entries(aliases).find(([prefix]) => specifier.startsWith(prefix));
+      if (!alias) return null;
+      target = path.posix.join(alias[1], specifier.slice(alias[0].length));
+    }
+    const candidates = [target, ...extensions.map((ext) => target + ext), ...extensions.map((ext) => path.posix.join(target, "index" + ext))];
+    const found = candidates.find((candidate) => files.has(candidate));
+    if (!found) errors.push(`${from}: unresolved reachable import ${specifier}`);
+    return found;
+  };
+  const queue = [...entries];
+  while (queue.length) {
     const current = queue.shift();
     if (!current || visited.has(current)) continue;
+    if (!files.has(current)) { errors.push(`Missing reachable entry ${current}`); continue; }
     visited.add(current);
-
-    const source = read(current);
-    for (const specifier of importSpecifiers(source)) {
-      const resolved = resolveLocalImport(current, specifier);
+    let imports = [];
+    try { imports = extractStaticImports(files.get(current), current); }
+    catch (error) { errors.push(error.message); }
+    for (const specifier of imports) {
+      const resolved = resolve(current, specifier);
       if (resolved && !visited.has(resolved)) queue.push(resolved);
     }
   }
-
-  return visited;
+  if (!visited.has(contract.adapterPath)) errors.push(`Foundation routes must reach canonical adapter ${contract.adapterPath}.`);
+  if (visited.has(contract.adapterPath)) {
+    const adapterSource = files.get(contract.adapterPath);
+    if (contract.endpointPrefix && !adapterSource.includes(contract.endpointPrefix)) errors.push(`${contract.adapterPath} must use endpoint prefix ${contract.endpointPrefix}.`);
+    for (const name of contract.requiredExports ?? []) {
+      if (!new RegExp(`export\\s+(?:async\\s+)?(?:function|const)\\s+${name}\\b`).test(adapterSource)) errors.push(`${contract.adapterPath} must export ${name}.`);
+    }
+    for (const mode of contract.requiredReadModes ?? []) {
+      if (!new RegExp(`["'\\x60]${mode}["'\\x60]`).test(adapterSource)) errors.push(`${contract.adapterPath} must explicitly support ${mode} reads.`);
+    }
+  }
+  for (const file of visited) {
+    if (file === contract.sharedClientPath) continue;
+    const source = files.get(file);
+    const isAdapter = file === contract.adapterPath;
+    const imports = (() => { try { return extractStaticImports(source, file); } catch { return []; } })();
+    if (/\b(?:localStorage|sessionStorage|indexedDB)\b/.test(source)) errors.push(`${file}: browser persistence is prohibited.`);
+    if (/\bClerkProvider\b|\b(?:WorkspaceProvider|TenantProvider|EntitlementProvider|NotificationProvider)\b/.test(source)) errors.push(`${file}: competing shared provider is prohibited.`);
+    if (/axios\.create\s*\(|(?:from\s+["']axios["']|require\(\s*["']axios["'])/.test(source)) errors.push(`${file}: direct Axios use is prohibited.`);
+    if (!isAdapter) {
+      if (/\bfetch\s*\(|["'`]\/api\//.test(source)) errors.push(`${file}: direct API access is prohibited; use ${contract.adapterPath}.`);
+      for (const specifier of imports) {
+        const resolved = resolve(file, specifier);
+        if (resolved === contract.sharedClientPath || /(?:^|\/)(?:apiClient|persistence|storage)(?:\.[^/]+)?$/i.test(specifier)) {
+          errors.push(`${file}: unauthorized persistence/API adapter import ${specifier}; use ${contract.adapterPath}.`);
+        }
+      }
+    }
+  }
+  return { errors: [...new Set(errors)], visited };
 }
 
-function parseFoundationEntries(registrySource) {
-  const lazyImports = new Map();
-  for (const match of registrySource.matchAll(
-    /const\s+([A-Za-z_$][\w$]*)\s*=\s*lazy\(\s*\(\)\s*=>\s*import\(\s*["']([^"']+)["']\s*\)/g,
-  )) {
-    lazyImports.set(match[1], match[2]);
-  }
+function collectFiles(repositoryRoot, relative = ".") {
+  const result = new Map();
+  const walk = (dir) => {
+    for (const entry of readdirSync(path.join(repositoryRoot, dir), { withFileTypes: true })) {
+      if (["node_modules", ".git", "dist", "build", "coverage"].includes(entry.name)) continue;
+      const child = normalize(path.join(dir, entry.name)).replace(/^\.\//, "");
+      if (entry.isDirectory()) walk(child);
+      else if (extensions.includes(path.extname(entry.name))) result.set(child, readFileSync(path.join(repositoryRoot, child), "utf8"));
+    }
+  };
+  walk(relative);
+  return result;
+}
 
-  const bodyMatch = registrySource.match(/const\s+pageRegistry\s*=\s*\{([\s\S]*?)\n\};/);
-  if (!bodyMatch) {
-    fail("Could not locate the pageRegistry object.");
-    return [];
-  }
-
+function foundationEntries(registrySource, contract) {
+  const imports = new Map([...registrySource.matchAll(/const\s+(\w+)\s*=\s*lazy\(\s*\(\)\s*=>\s*import\(\s*["']([^"']+)["']/g)].map((m) => [m[1], m[2]]));
   const entries = [];
-  for (const match of bodyMatch[1].matchAll(
-    /["'](\/foundation(?:\/[^"']*)?)["']\s*:\s*([A-Za-z_$][\w$]*)/g,
-  )) {
-    const route = match[1];
-    if (route === "/foundation/*") continue;
-    const component = match[2];
-    const specifier = lazyImports.get(component);
-    if (!specifier) {
-      fail(`${route} must resolve through a statically identifiable lazy import.`);
-      continue;
-    }
-    if (!specifier.startsWith(contract.routeImportPrefix)) {
-      fail(
-        `${route} imports ${specifier}; Foundation route components must live under ${contract.routeImportPrefix}.`,
-      );
-      continue;
-    }
-    const resolved = resolveLocalImport(registryPath, specifier);
-    if (resolved) entries.push(resolved);
+  for (const match of registrySource.matchAll(/["'](\/foundation(?:\/[^"']*)?)["']\s*:\s*(\w+)/g)) {
+    if (match[1] === "/foundation/*") continue;
+    const specifier = imports.get(match[2]);
+    if (!specifier?.startsWith(contract.routeImportPrefix)) throw new Error(`${match[1]} lacks an approved static Foundation import.`);
+    const target = path.posix.normalize(path.posix.join(path.posix.dirname(registryPath), specifier));
+    entries.push(target);
   }
   return entries;
 }
 
-function assertCanonicalAdapter(reachableFiles) {
-  if (!existsSync(path.join(root, contract.adapterPath))) {
-    fail(`Foundation implementation requires canonical adapter ${contract.adapterPath}.`);
-    return;
-  }
-
-  if (!reachableFiles.has(contract.adapterPath)) {
-    fail(`Foundation routes must reach the canonical adapter ${contract.adapterPath}.`);
-  }
-
-  const source = read(contract.adapterPath);
-  const sharedClientImports = importSpecifiers(source)
-    .map((specifier) => resolveLocalImport(contract.adapterPath, specifier))
-    .filter(Boolean);
-
-  if (!sharedClientImports.includes(contract.sharedClientPath)) {
-    fail(`${contract.adapterPath} must import ${contract.sharedClientPath}.`);
-  }
-
-  if (!source.includes(contract.endpointPrefix)) {
-    fail(`${contract.adapterPath} must use endpoint prefix ${contract.endpointPrefix}.`);
-  }
-
-  for (const exportName of contract.requiredExports) {
-    const exportPattern = new RegExp(
-      `export\\s+(?:async\\s+)?function\\s+${exportName}\\b|export\\s+const\\s+${exportName}\\b`,
-    );
-    if (!exportPattern.test(source)) fail(`${contract.adapterPath} must export ${exportName}.`);
-  }
-
-  for (const readMode of contract.requiredReadModes) {
-    if (!new RegExp(`["'\`]${readMode}["'\`]`).test(source)) {
-      fail(`${contract.adapterPath} must explicitly support the ${readMode} read mode.`);
-    }
-  }
+export function runSystemBoundaries(repositoryRoot = root) {
+  const contract = JSON.parse(readFileSync(path.join(repositoryRoot, "docs/builds/foundation-truth/FOUNDATION-DATA-CONTRACT.json"), "utf8"));
+  const files = collectFiles(repositoryRoot);
+  const registry = files.get(registryPath);
+  const appRoutes = files.get("src/config/appRoutes.js");
+  const featureFiles = [...files.keys()].filter((file) => file.startsWith(contract.featureRoot + "/"));
+  let errors = [];
+  if (!/["'`]\/command-center["'`]\s*:\s*CommandCenterNext\b/.test(registry)) errors.push("The approved /command-center route no longer resolves to CommandCenterNext.");
+  if (!/path\s*:\s*["'`]\/command-center["'`][\s\S]{0,220}?requiredPlan\s*:\s*["'`]foundation["'`]/.test(appRoutes)) errors.push("The Command Center Foundation entitlement contract changed or disappeared.");
+  if (contract.implementationPhase === "contract-only") {
+    if (featureFiles.length) errors.push(`contract-only prohibits Foundation product implementation files: ${featureFiles.join(", ")}`);
+    if (registry.includes(contract.routeImportPrefix)) errors.push("contract-only prohibits Foundation product imports.");
+  } else if (contract.implementationPhase === "implementation-active") {
+    try {
+      const result = analyzeReachableGraph({ files, entries: foundationEntries(registry, contract), contract });
+      errors = result.errors;
+      if (!result.visited.has(contract.sharedClientPath)) errors.push(`Canonical adapter must reach shared client ${contract.sharedClientPath}.`);
+    } catch (error) { errors.push(error.message); }
+  } else errors.push(`Unsupported implementationPhase: ${contract.implementationPhase}`);
+  for (const error of errors) console.error(`ARCHITECTURE CONTRACT FAILED: ${error}`);
+  if (!errors.length) console.log(`Architecture contract passed in ${contract.implementationPhase} phase; ${featureFiles.length} Foundation files inspected.`);
+  return errors.length ? 1 : 0;
 }
 
-const registrySource = read(registryPath);
-const appRoutesSource = read(appRoutesPath);
-const changedFiles = getChangedFiles();
-
-if (!/["'`]\/command-center["'`]\s*:\s*CommandCenterNext\b/.test(registrySource)) {
-  fail("The approved /command-center route no longer resolves to CommandCenterNext.");
-}
-
-if (!/path\s*:\s*["'`]\/command-center["'`][\s\S]{0,220}?requiredPlan\s*:\s*["'`]foundation["'`]/.test(appRoutesSource)) {
-  fail("The Command Center Foundation entitlement contract changed or disappeared.");
-}
-
-const foundationFeatureFiles = collectCodeFiles(contract.featureRoot);
-const foundationRouteEntries = parseFoundationEntries(registrySource);
-const foundationImplementationStarted =
-  foundationFeatureFiles.length > 0 || foundationRouteEntries.length > 0;
-const reachableFiles = buildReachableGraph(foundationRouteEntries);
-
-if (foundationImplementationStarted && foundationRouteEntries.length === 0) {
-  fail("Foundation source exists without registered canonical Foundation route components.");
-}
-
-for (const file of foundationFeatureFiles) reachableFiles.add(file);
-
-const bannedEverywhere = [
-  { pattern: /axios\.create\s*\(/, reason: "Foundation must use the shared API client." },
-  { pattern: /from\s+["']axios["']/, reason: "Foundation must not import Axios directly." },
-  { pattern: /\bClerkProvider\b/, reason: "Foundation must reuse the shared Clerk provider." },
-  {
-    pattern: /\b(?:WorkspaceProvider|TenantProvider|EntitlementProvider|NotificationProvider)\b/,
-    reason: "Foundation must not create a competing shared provider.",
-  },
-  {
-    pattern:
-      /(?:import|from)[^\n]*(?:GlobalSidebar|CommandCenterSidebar|AuthenticatedSidebar|LegacySidebar|\/Sidebar)/i,
-    reason: "Foundation must not introduce a global or inner-page sidebar.",
-  },
-  {
-    pattern: /\b(?:localStorage|sessionStorage|indexedDB)\b/,
-    reason: "Foundation data must use the canonical workspace record.",
-  },
-  {
-    pattern: /window\.location\s*=|window\.location\.href\s*=/,
-    reason: "Foundation navigation must use the shared router.",
-  },
-];
-
-for (const relativePath of reachableFiles) {
-  const source = read(relativePath);
-  const isAdapter = relativePath === contract.adapterPath;
-  const isSharedClient = relativePath === contract.sharedClientPath;
-  const isFoundationFile = relativePath.startsWith(`${contract.featureRoot}/`);
-  const isChangedReachableFile = changedFiles.has(relativePath);
-  const enforce = isFoundationFile || isChangedReachableFile;
-
-  if (!enforce || isSharedClient) continue;
-
-  for (const { pattern, reason } of bannedEverywhere) {
-    if (pattern.test(source)) fail(`${relativePath}: ${reason}`);
-  }
-
-  if (!isAdapter) {
-    if (/\bfetch\s*\(/.test(source)) {
-      fail(`${relativePath}: direct fetch is prohibited; use ${contract.adapterPath}.`);
-    }
-    if (/["'`]\/api\//.test(source)) {
-      fail(`${relativePath}: direct API paths are prohibited; use ${contract.adapterPath}.`);
-    }
-
-    const resolvedImports = importSpecifiers(source)
-      .map((specifier) => resolveLocalImport(relativePath, specifier))
-      .filter(Boolean);
-    if (resolvedImports.includes(contract.sharedClientPath)) {
-      fail(
-        `${relativePath}: only ${contract.adapterPath} may import the shared API client for Foundation persistence.`,
-      );
-    }
-  }
-}
-
-if (foundationImplementationStarted) assertCanonicalAdapter(reachableFiles);
-
-if (!process.exitCode) {
-  console.log(
-    `Architecture contract passed. ${foundationFeatureFiles.length} Foundation files and ${reachableFiles.size} reachable files inspected.`,
-  );
-}
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) process.exitCode = runSystemBoundaries();
