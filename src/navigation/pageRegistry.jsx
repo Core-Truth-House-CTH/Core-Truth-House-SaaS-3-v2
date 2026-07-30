@@ -28,6 +28,34 @@ const MailSuite = lazy(() => import("../pages/MailSuite"));
 const EmailSettings = lazy(() => import("../pages/EmailSettings"));
 const TenantDataDashboardV2 = lazy(() => import("../pages/TenantDataDashboardV2"));
 const ContentStudio = lazy(() => import("../pages/ContentStudio"));
+
+// Approved Content Studio feature (src/features/contentStudio).
+// The legacy prompt-generator page above is retained and still reachable at
+// /content-studio/prompt-generator so its behaviour is not lost.
+const CSDashboard = lazy(() => import("../features/contentStudio/pages/DashboardPage"));
+const CSAgents = lazy(() => import("../features/contentStudio/pages/AgentsPage"));
+const CSAgentDetail = lazy(() => import("../features/contentStudio/pages/AgentDetailPage"));
+const CSAgentCreate = lazy(() => import("../features/contentStudio/pages/AgentCreatePage"));
+const CSAutomations = lazy(() => import("../features/contentStudio/pages/AutomationsPage"));
+const CSAutomationDetail = lazy(() => import("../features/contentStudio/pages/AutomationDetailPage"));
+const CSStoryboards = lazy(() => import("../features/contentStudio/pages/StoryboardsPage"));
+const CSEditRequests = lazy(() => import("../features/contentStudio/pages/EditRequestsPage"));
+const CSNotFound = lazy(() => import("../features/contentStudio/pages/NotFoundPage"));
+const CSComposer = lazy(() =>
+  import("../features/contentStudio/pages/plannedScreens").then((m) => ({ default: m.ComposerPage })),
+);
+const CSImageGenerator = lazy(() =>
+  import("../features/contentStudio/pages/plannedScreens").then((m) => ({ default: m.ImageGeneratorPage })),
+);
+const CSMediaLibrary = lazy(() =>
+  import("../features/contentStudio/pages/plannedScreens").then((m) => ({ default: m.MediaLibraryPage })),
+);
+const CSMediaViewer = lazy(() =>
+  import("../features/contentStudio/pages/plannedScreens").then((m) => ({ default: m.MediaViewerPage })),
+);
+const CSMediaUpload = lazy(() =>
+  import("../features/contentStudio/pages/plannedScreens").then((m) => ({ default: m.MediaUploadPage })),
+);
 const CampaignBuilder = lazy(() => import("../pages/CampaignBuilder"));
 const CampaignSetup = lazy(() => import("../pages/CampaignSetup"));
 const IdentityStudio = lazy(() => import("../pages/IdentityStudio"));
@@ -80,7 +108,24 @@ const pageRegistry = {
   "/signal-inbox": SignalInbox,
   "/customer-journey": CustomerJourney,
 
-  "/content-studio": ContentStudio,
+  // Approved Content Studio. The dashboard replaces the legacy prompt
+  // generator at this path; the legacy page is preserved one level down so no
+  // existing behaviour is removed.
+  "/content-studio": CSDashboard,
+  "/content-studio/prompt-generator": ContentStudio,
+  "/content-studio/composer": CSComposer,
+  "/content-studio/agents": CSAgents,
+  "/content-studio/agents/new": CSAgentCreate,
+  "/content-studio/agents/:agentId": CSAgentDetail,
+  "/content-studio/automations": CSAutomations,
+  "/content-studio/automations/:automationId": CSAutomationDetail,
+  "/content-studio/images/generate": CSImageGenerator,
+  "/content-studio/media": CSMediaLibrary,
+  "/content-studio/media/upload": CSMediaUpload,
+  "/content-studio/media/:mediaId": CSMediaViewer,
+  "/content-studio/storyboards": CSStoryboards,
+  "/content-studio/edit-requests/new": CSEditRequests,
+  "/content-studio/*": CSNotFound,
   "/studios": Studios,
   "/studios/headshot": StudiosHeadshot,
   "/studios/visual": StudiosVisual,

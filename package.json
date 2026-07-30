@@ -71,6 +71,7 @@
   "scripts": {
     "dev": "vite",
     "lint": "eslint src",
+    "test:content-studio": "node --test src/features/contentStudio/__tests__/",
     "prebuild": "eslint src",
     "build": "vite build",
     "preview": "vite preview",
