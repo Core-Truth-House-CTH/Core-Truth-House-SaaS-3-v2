@@ -2,6 +2,12 @@
 
 ## Target routes
 
+The machine-readable phase and exact route/migration targets live in
+`FOUNDATION-DATA-CONTRACT.json`. During `contract-only`, none of the canonical
+routes may be registered and the existing legacy components remain exact.
+During `implementation-active`, the complete eight-route family and every
+exact approved redirect destination are mandatory.
+
 All canonical Foundation routes require `requiredPlan: "foundation"` and `gateType: "page"`.
 
 | Route | Screen | Canonical responsibility | Required shell | Planned component | Status |

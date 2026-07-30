@@ -14,6 +14,10 @@ A screen is not complete because it renders. Completion requires verified produc
 
 ## Route integrity
 
+- The machine-readable Foundation phase is changed only with the complete
+  canonical route family.
+- Contract-only governance contains no Foundation product route or product import.
+
 - All eight `/foundation` routes are registered in both route systems where required.
 - Defined child routes resolve before any Foundation wildcard.
 - Legacy routes remain functional through explicit compatibility handling.

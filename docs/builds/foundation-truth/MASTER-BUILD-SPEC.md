@@ -113,6 +113,14 @@ Reports retain the Foundation version identifier used when a report was generate
 
 ## Build order
 
+## Machine-readable implementation phase
+
+The authoritative phase is `implementationPhase` in
+`FOUNDATION-DATA-CONTRACT.json`. It is `contract-only` during governance and
+must change to `implementation-active` in the same reviewed change that adds
+all eight canonical routes and their complete Foundation import graph. Route
+presence must never be used to infer this phase.
+
 ### Phase 0: Governance and CI
 
 - repository instructions
