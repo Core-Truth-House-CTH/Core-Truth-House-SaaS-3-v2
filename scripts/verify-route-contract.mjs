@@ -17,13 +17,31 @@ function fail(message) {
 function duplicates(values) {
   const seen = new Set();
   const repeated = new Set();
-
   for (const value of values) {
     if (seen.has(value)) repeated.add(value);
     seen.add(value);
   }
-
   return [...repeated].sort();
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function routeBlock(source, route) {
+  const lines = source.split("\n");
+  const pathPattern = new RegExp(`\\bpath\\s*:\\s*["'\`]${escapeRegex(route)}["'\`]`);
+  const pathLine = lines.findIndex((line) => pathPattern.test(line));
+  if (pathLine < 0) return null;
+
+  let start = pathLine;
+  while (start >= 0 && !/^\s*\{\s*$/.test(lines[start])) start -= 1;
+
+  let end = pathLine;
+  while (end < lines.length && !/^\s*\},?\s*$/.test(lines[end])) end += 1;
+
+  if (start < 0 || end >= lines.length) return null;
+  return lines.slice(start, end + 1).join("\n");
 }
 
 const appRoutesSource = read("src/config/appRoutes.js");
@@ -40,39 +58,39 @@ if (!registryBodyMatch) {
 }
 
 const registryBody = registryBodyMatch[1];
-const registryRoutes = [...registryBody.matchAll(/["'`]([^"'`]+)["'`]\s*:/g)]
-  .map((match) => match[1])
-  .filter((value) => value.startsWith("/"));
+const registryEntries = [...registryBody.matchAll(/["'`]([^"'`]+)["'`]\s*:\s*([A-Za-z_$][\w$]*)/g)]
+  .filter((match) => match[1].startsWith("/"));
+const registryRoutes = registryEntries.map((match) => match[1]);
+const registryComponents = new Map(registryEntries.map((match) => [match[1], match[2]]));
 
-for (const route of duplicates(appRoutes)) {
-  fail(`Duplicate APP_ROUTES path: ${route}`);
-}
+for (const route of duplicates(appRoutes)) fail(`Duplicate APP_ROUTES path: ${route}`);
+for (const route of duplicates(registryRoutes)) fail(`Duplicate pageRegistry path: ${route}`);
 
-for (const route of duplicates(registryRoutes)) {
-  fail(`Duplicate pageRegistry path: ${route}`);
-}
+const legacyRouteContract = new Map([
+  ["/command-center", ["CommandCenterNext"]],
+  ["/brand-house", ["BrandHouse"]],
+  ["/workspace", ["WorkspacePage"]],
+  ["/brand-audit", ["BrandAudit"]],
+  ["/brand-foundation", ["BrandFoundation", "FoundationHomeLegacyRedirect"]],
+  ["/audience", ["Audience", "FoundationAudienceLegacyRedirect"]],
+  ["/brand-positioning", ["BrandPositioning", "FoundationPositioningLegacyRedirect"]],
+  ["/messaging-structure", ["MessagingStructure", "FoundationMessagingLegacyRedirect"]],
+  ["/identity-studio", ["IdentityStudio"]],
+  ["/systems-builder", ["SystemsBuilder"]],
+  ["/content-studio", ["CSDashboard"]],
+  ["/brand-memory", ["BrandFoundation"]],
+]);
 
-const protectedSharedRoutes = [
-  "/command-center",
-  "/brand-house",
-  "/workspace",
-  "/brand-audit",
-  "/brand-foundation",
-  "/audience",
-  "/brand-positioning",
-  "/messaging-structure",
-  "/identity-studio",
-  "/systems-builder",
-  "/content-studio",
-];
-
-for (const route of protectedSharedRoutes) {
+for (const [route, allowedComponents] of legacyRouteContract) {
   if (!appRoutes.includes(route)) fail(`${route} is missing from APP_ROUTES.`);
-  if (!registryRoutes.includes(route)) fail(`${route} is missing from pageRegistry.`);
-}
-
-if (!/["'`]\/command-center["'`]\s*:\s*CommandCenterNext\b/.test(registryBody)) {
-  fail("/command-center must continue to resolve to CommandCenterNext.");
+  const actualComponent = registryComponents.get(route);
+  if (!actualComponent) {
+    fail(`${route} is missing from pageRegistry.`);
+  } else if (!allowedComponents.includes(actualComponent)) {
+    fail(
+      `${route} resolves to ${actualComponent}; allowed compatibility target(s): ${allowedComponents.join(", ")}.`,
+    );
+  }
 }
 
 const foundationRoutes = [
@@ -94,24 +112,32 @@ if (foundationImplementationStarted) {
   for (const route of foundationRoutes) {
     if (!appRoutes.includes(route)) fail(`${route} is missing from APP_ROUTES.`);
     if (!registryRoutes.includes(route)) fail(`${route} is missing from pageRegistry.`);
+
+    const block = routeBlock(appRoutesSource, route);
+    if (!block) {
+      fail(`Could not parse APP_ROUTES metadata for ${route}.`);
+      continue;
+    }
+
+    if (!/requiredPlan\s*:\s*["'`]foundation["'`]/.test(block)) {
+      fail(`${route} must declare requiredPlan: "foundation".`);
+    }
+
+    if (!/gateType\s*:\s*["'`]page["'`]/.test(block)) {
+      fail(`${route} must declare gateType: "page".`);
+    }
   }
 
-  const wildcardIndex = registryBody.search(/["'`]\/foundation\/\*["'`]\s*:/);
-  if (wildcardIndex >= 0) {
+  const wildcardMatch = registryEntries.find((match) => match[1] === "/foundation/*");
+  if (wildcardMatch) {
+    const wildcardIndex = registryBody.indexOf(wildcardMatch[0]);
     for (const route of foundationRoutes) {
-      const routeIndex = registryBody.indexOf(`"${route}"`);
-      const singleQuoteIndex = registryBody.indexOf(`'${route}'`);
-      const resolvedIndex = routeIndex >= 0 ? routeIndex : singleQuoteIndex;
-      if (resolvedIndex < 0 || resolvedIndex > wildcardIndex) {
+      const entry = registryEntries.find((match) => match[1] === route);
+      if (!entry || registryBody.indexOf(entry[0]) > wildcardIndex) {
         fail(`/foundation/* must be registered after the defined route ${route}.`);
       }
     }
   }
-}
-
-const unresolvedLegacyRoute = "/brand-memory";
-if (!appRoutes.includes(unresolvedLegacyRoute) || !registryRoutes.includes(unresolvedLegacyRoute)) {
-  fail("/brand-memory must remain registered until its existing product ownership is resolved.");
 }
 
 if (!process.exitCode) {
