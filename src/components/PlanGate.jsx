@@ -5,18 +5,26 @@ import { useColors } from '../context/ThemeContext';
 import { DashboardLayout } from './Layout';
 import { Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { getRoute, PLAN_LABELS } from '../config/routeConfig';
-import { PLAN_INFO } from '../config/planAccess';
+import { canAccess, PLAN_INFO } from '../config/planAccess';
 
 /**
  * Route-level gate that blocks access to pages
  * the user's plan doesn't include.
  */
 export function PlanGate({ route, children }) {
-  const { canAccess, getUpgradeInfo, loading, isSuperAdmin } = usePlan();
+  const { plan, getUpgradeInfo, authorityLoading, authoritySettled, hasActivePlan, isSuperAdmin } = usePlan();
   const colors = useColors();
   const navigate = useNavigate();
+  const accessDecision = getPlanGateDecision({
+    authorityLoading,
+    authoritySettled,
+    hasActivePlan,
+    plan,
+    route,
+    isSuperAdmin,
+  });
 
-  if (loading) {
+  if (accessDecision === 'loading') {
   return (
     <DashboardLayout>
       <div
@@ -66,7 +74,7 @@ export function PlanGate({ route, children }) {
     );
   }
 
-  if (canAccess(route)) {
+  if (accessDecision === 'allowed') {
     return children;
   }
 
@@ -124,5 +132,22 @@ export function PlanGate({ route, children }) {
       </div>
     </DashboardLayout>
   );
+}
+
+const RECOGNIZED_GATE_PLANS = new Set(['free', 'audit', 'foundation', 'structure', 'house', 'estate', 'legacy']);
+
+export function getPlanGateDecision({
+  authorityLoading,
+  authoritySettled,
+  hasActivePlan,
+  plan,
+  route,
+  isSuperAdmin = false,
+}) {
+  if (authorityLoading) return 'loading';
+  if (!authoritySettled || !hasActivePlan) return 'denied';
+  const normalizedPlan = typeof plan === 'string' ? plan.trim().toLowerCase() : '';
+  if (!RECOGNIZED_GATE_PLANS.has(normalizedPlan)) return 'denied';
+  return canAccess(normalizedPlan, route, isSuperAdmin) ? 'allowed' : 'denied';
 }
 

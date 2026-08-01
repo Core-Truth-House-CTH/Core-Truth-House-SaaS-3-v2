@@ -3,14 +3,35 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useUser } from "../hooks/useAuth";
 import { usePlan } from "../context/PlanContext";
 
-const WALL_WHITELIST = new Set(["/billing", "/lock-screen"]);
+export const WALL_WHITELIST = new Set([
+  "/billing",
+  "/help",
+]);
 
-function isWhitelisted(pathname) {
-  if (!pathname) return false;
-  if (WALL_WHITELIST.has(pathname)) return true;
-  return Array.from(WALL_WHITELIST).some((allowed) =>
-    pathname === allowed || pathname.startsWith(`${allowed}/`)
-  );
+export function canonicalWallPath(pathname) {
+  const withoutQueryOrHash = String(pathname || "").split(/[?#]/, 1)[0];
+  if (withoutQueryOrHash.length > 1 && withoutQueryOrHash.endsWith("/")) {
+    return withoutQueryOrHash.slice(0, -1);
+  }
+  return withoutQueryOrHash;
+}
+
+export function isWhitelisted(pathname) {
+  return WALL_WHITELIST.has(canonicalWallPath(pathname));
+}
+
+export function getBillingWallDecision({
+  authLoaded,
+  isSignedIn,
+  pathname,
+  authorityLoading,
+  hasActivePlan,
+}) {
+  if (!authLoaded) return "loading";
+  if (!isSignedIn) return "content";
+  if (isWhitelisted(pathname)) return "content";
+  if (authorityLoading) return "loading";
+  return hasActivePlan ? "content" : "redirect";
 }
 
 function WallLoading() {
@@ -31,28 +52,17 @@ function WallLoading() {
 
 export default function BillingWall({ children }) {
   const { isLoaded, isSignedIn } = useUser();
-  const { loading, hasActivePlan, planResolved } = usePlan();
+  const { authorityLoading, hasActivePlan } = usePlan();
   const location = useLocation();
+  const decision = getBillingWallDecision({
+    authLoaded: isLoaded,
+    isSignedIn,
+    pathname: location.pathname,
+    authorityLoading,
+    hasActivePlan,
+  });
 
-  if (!isLoaded) {
-    return <WallLoading />;
-  }
-
-  if (!isSignedIn) {
-    return children;
-  }
-
-  if (loading || !planResolved) {
-    return <WallLoading />;
-  }
-
-  if (hasActivePlan) {
-    return children;
-  }
-
-  if (isWhitelisted(location.pathname)) {
-    return children;
-  }
-
+  if (decision === "loading") return <WallLoading />;
+  if (decision === "content") return children;
   return <Navigate to="/billing" replace />;
 }
