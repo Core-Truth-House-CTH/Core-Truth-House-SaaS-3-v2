@@ -1,109 +1,220 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import {
-  canAccess,
-  getRequiredPlan,
-  PLAN_INFO,
-  normalizePlan,
-} from "../config/planAccess";
+import { canAccess, getRequiredPlan, PLAN_INFO } from "../config/planAccess";
 import { useUser, useAuth } from "../hooks/useAuth";
 import apiClient from "../lib/apiClient";
 import { useWorkspace } from "./WorkspaceContext";
 
-const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing"]);
+const RECOGNIZED_PLANS = new Set([
+  "free",
+  "audit",
+  "foundation",
+  "structure",
+  "house",
+  "estate",
+  "legacy",
+]);
 
-const PlanContext = createContext({
-  plan: "foundation",
+export const AUTHORITY_STATUS = Object.freeze({
+  IDLE: "idle",
+  LOADING: "loading",
+  RESOLVED: "resolved",
+  FAILED: "failed",
+});
+
+export const EMPTY_AUTHORITY = Object.freeze({
+  plan: "free",
   isSuperAdmin: false,
   isAdmin: false,
   userRole: "MEMBER",
   workspaceRole: null,
   globalRole: null,
-  loading: true,
   subscriptionStatus: null,
+  productAccessActive: false,
+  entitlements: null,
+  limits: null,
+  features: null,
+});
+
+const PlanContext = createContext({
+  ...EMPTY_AUTHORITY,
+  authorityStatus: AUTHORITY_STATUS.IDLE,
+  authorityLoading: false,
+  authoritySettled: false,
+  authorityFailed: false,
+  loading: true,
   hasActivePlan: false,
   planResolved: false,
-  canAccess: () => true,
-  getRequiredPlanForRoute: () => "foundation",
+  canAccess: () => false,
+  getRequiredPlanForRoute: () => null,
   getUpgradeInfo: () => null,
   refreshPlan: async () => {},
 });
 
-function stringValue(value) {
-  return String(value || "").trim();
+function normalizedString(value) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
-function normalizeRole(value, fallback = null) {
-  const normalized = stringValue(value).toUpperCase();
-  return normalized || fallback;
+function normalizedRole(value) {
+  const role = normalizedString(value).toUpperCase();
+  return role || null;
 }
 
-function inferAdminFlags({ globalRole, isSuperAdminFlag, isAdminFlag }) {
-  const superAdmin =
-    Boolean(isSuperAdminFlag) || globalRole === "SUPER_ADMIN";
+export function validateEntitlementAuthority(data, expectedClerkUserId, expectedWorkspaceId) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
 
-  const admin =
-    superAdmin ||
-    Boolean(isAdminFlag) ||
-    ["OPS_ADMIN", "BILLING_ADMIN", "CONTENT_ADMIN", "SUPPORT_ADMIN", "ADMIN"].includes(globalRole);
+  const internalUserId = normalizedString(data.user_id);
+  const clerkUserId = normalizedString(data.clerk_user_id);
+  const workspaceId = normalizedString(data.workspace_id);
+  const plan = normalizedString(data.plan).toLowerCase();
+  const planId = normalizedString(data.plan_id).toLowerCase();
+
+  if (!internalUserId) return null;
+  if (!clerkUserId || clerkUserId !== normalizedString(expectedClerkUserId)) return null;
+  if (!workspaceId || workspaceId !== normalizedString(expectedWorkspaceId)) return null;
+  if (!RECOGNIZED_PLANS.has(plan) || !RECOGNIZED_PLANS.has(planId) || plan !== planId) return null;
+  if (typeof data.product_access_active !== "boolean") return null;
+  if (typeof data.is_admin !== "boolean" || typeof data.is_super_admin !== "boolean") return null;
+  if (data.subscription_status != null && typeof data.subscription_status !== "string") return null;
+  if (data.global_role != null && typeof data.global_role !== "string") return null;
+  if (data.workspace_role != null && typeof data.workspace_role !== "string") return null;
+  if (data.entitlements == null || typeof data.entitlements !== "object") return null;
+  if (data.limits == null || typeof data.limits !== "object" || Array.isArray(data.limits)) return null;
+  if (data.features == null || typeof data.features !== "object") return null;
+
+  const globalRole = normalizedRole(data.global_role);
+  const workspaceRole = normalizedRole(data.workspace_role);
+  const isSuperAdmin = data.is_super_admin === true;
+  const isAdmin = data.is_admin === true || isSuperAdmin;
 
   return {
-    isSuperAdmin: superAdmin,
-    isAdmin: admin,
+    plan,
+    isSuperAdmin,
+    isAdmin,
+    userRole: isSuperAdmin ? "SUPER_ADMIN" : globalRole || workspaceRole || "MEMBER",
+    workspaceRole,
+    globalRole,
+    subscriptionStatus: data.subscription_status?.trim().toLowerCase() || null,
+    productAccessActive: data.product_access_active,
+    entitlements: data.entitlements,
+    limits: data.limits,
+    features: data.features,
   };
 }
 
-function getSessionRoleState(user) {
-  const publicMetadata = user?.publicMetadata || {};
-  const unsafeMetadata = user?.unsafeMetadata || {};
-  const privateMetadata = user?.privateMetadata || {};
-
-  const resolvedGlobalRole = normalizeRole(
-    publicMetadata.global_role ||
-      unsafeMetadata.global_role ||
-      privateMetadata.global_role ||
-      user?.global_role,
-    null
-  );
-
-  const resolvedWorkspaceRole = normalizeRole(
-    publicMetadata.workspace_role ||
-      unsafeMetadata.workspace_role ||
-      privateMetadata.workspace_role ||
-      user?.workspace_role,
-    null
-  );
-
-  const flags = inferAdminFlags({
-    globalRole: resolvedGlobalRole,
-    isSuperAdminFlag:
-      publicMetadata.is_super_admin ??
-      unsafeMetadata.is_super_admin ??
-      privateMetadata.is_super_admin ??
-      user?.is_super_admin,
-    isAdminFlag:
-      publicMetadata.is_admin ??
-      unsafeMetadata.is_admin ??
-      privateMetadata.is_admin ??
-      user?.is_admin,
-  });
-
-  const fallbackRole = flags.isSuperAdmin
-    ? "SUPER_ADMIN"
-    : resolvedGlobalRole || resolvedWorkspaceRole || "MEMBER";
-
+export function createIdleAuthorityState(generation = 0) {
   return {
-    resolvedGlobalRole,
-    resolvedWorkspaceRole,
-    fallbackRole,
-    ...flags,
+    key: null,
+    generation,
+    status: AUTHORITY_STATUS.IDLE,
+    authority: EMPTY_AUTHORITY,
   };
+}
+
+export function startAuthorityRequest(previousState, key, generation) {
+  if (!key) return createIdleAuthorityState(generation);
+  if (
+    previousState.key === key &&
+    previousState.generation === generation &&
+    previousState.status === AUTHORITY_STATUS.LOADING
+  ) {
+    return previousState;
+  }
+  return {
+    key,
+    generation,
+    status: AUTHORITY_STATUS.LOADING,
+    authority: EMPTY_AUTHORITY,
+  };
+}
+
+export function settleAuthorityIdle(state, generation) {
+  if (
+    state.key === null &&
+    state.status === AUTHORITY_STATUS.IDLE &&
+    state.authority === EMPTY_AUTHORITY
+  ) {
+    return state;
+  }
+  return createIdleAuthorityState(generation);
+}
+
+function ownsAuthorityRequest(state, key, generation) {
+  return (
+    state.key === key &&
+    state.generation === generation &&
+    state.status === AUTHORITY_STATUS.LOADING
+  );
+}
+
+export function failAuthorityRequest(state, key, generation) {
+  if (!ownsAuthorityRequest(state, key, generation)) return state;
+  return {
+    ...state,
+    status: AUTHORITY_STATUS.FAILED,
+    authority: EMPTY_AUTHORITY,
+  };
+}
+
+export function resolveAuthorityRequest(
+  state,
+  { key, generation, data, clerkUserId, workspaceId },
+) {
+  if (!ownsAuthorityRequest(state, key, generation)) return state;
+  const authority = validateEntitlementAuthority(data, clerkUserId, workspaceId);
+  if (!authority) return failAuthorityRequest(state, key, generation);
+  return {
+    ...state,
+    status: AUTHORITY_STATUS.RESOLVED,
+    authority,
+  };
+}
+
+export function getAuthorityStateView(state, currentKey) {
+  const stateIsCurrent = Boolean(currentKey && state.key === currentKey);
+  const status = stateIsCurrent ? state.status : AUTHORITY_STATUS.IDLE;
+  const authority = status === AUTHORITY_STATUS.RESOLVED ? state.authority : EMPTY_AUTHORITY;
+  return {
+    authority,
+    authorityStatus: status,
+    authorityLoading: status === AUTHORITY_STATUS.LOADING,
+    authoritySettled:
+      status === AUTHORITY_STATUS.RESOLVED || status === AUTHORITY_STATUS.FAILED,
+    authorityFailed: status === AUTHORITY_STATUS.FAILED,
+    planResolved: status === AUTHORITY_STATUS.RESOLVED,
+    hasActivePlan:
+      status === AUTHORITY_STATUS.RESOLVED && authority.productAccessActive === true,
+  };
+}
+
+export function getAuthorityRequestKey(userId, workspaceId) {
+  return userId && workspaceId ? `${userId}::${workspaceId}` : null;
+}
+
+export async function executeAuthorityRequest({
+  getToken,
+  fetchAuthority,
+  ownsLifecycle = () => true,
+}) {
+  try {
+    const token = typeof getToken === "function" ? await getToken() : null;
+    if (!ownsLifecycle()) return { type: "ignored" };
+    if (!token) return { type: "failed", error: null };
+
+    const data = await fetchAuthority(token);
+    if (!ownsLifecycle()) return { type: "ignored" };
+    return { type: "response", data };
+  } catch (error) {
+    if (!ownsLifecycle()) return { type: "ignored" };
+    return { type: "failed", error };
+  }
 }
 
 export function PlanProvider({ children }) {
@@ -111,271 +222,170 @@ export function PlanProvider({ children }) {
   const auth = useAuth();
   const workspace = useWorkspace();
 
-  const [plan, setPlan] = useState("foundation");
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [userRole, setUserRole] = useState("MEMBER");
-  const [workspaceRole, setWorkspaceRole] = useState(null);
-  const [globalRole, setGlobalRole] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
-  const [billingSummaryAvailable, setBillingSummaryAvailable] = useState(false);
-  const [planApiHasPlan, setPlanApiHasPlan] = useState(false);
-  const [planResolved, setPlanResolved] = useState(false);
+  return (
+    <PlanAuthorityProvider
+      userId={user?.id || null}
+      isUserLoaded={isUserLoaded}
+      authLoaded={Boolean(auth?.isLoaded ?? true)}
+      workspaceInitialized={Boolean(workspace?.initialized ?? true)}
+      activeWorkspaceId={workspace?.activeWorkspaceId || workspace?.workspaceId || null}
+      getToken={auth?.getToken}
+      fetchAuthority={({ token, workspaceId }) =>
+        apiClient.get("/api/user/entitlement-authority", {
+          params: { workspace_id: workspaceId },
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      }
+    >
+      {children}
+    </PlanAuthorityProvider>
+  );
+}
 
-  const inFlightRef = useRef(false);
-  const lastResolvedPlanKeyRef = useRef(null);
+export function PlanAuthorityProvider({
+  children,
+  userId = null,
+  isUserLoaded = true,
+  authLoaded = true,
+  workspaceInitialized = true,
+  activeWorkspaceId = null,
+  getToken,
+  fetchAuthority,
+  onAuthorityEffect,
+}) {
+  const [authorityState, setAuthorityState] = useState(() => createIdleAuthorityState());
+  const requestGenerationRef = useRef(0);
+  const getTokenRef = useRef(getToken);
+  const fetchAuthorityRef = useRef(fetchAuthority);
+  const mountedRef = useRef(false);
+  const lifecycleOwnershipRef = useRef(0);
+  const onAuthorityEffectRef = useRef(onAuthorityEffect);
 
-  const userId = user?.id || null;
-  const authLoaded = Boolean(auth?.isLoaded ?? true);
-  const workspaceInitialized = Boolean(workspace?.initialized ?? true);
-  const activeWorkspaceId = workspace?.activeWorkspaceId || workspace?.workspaceId || null;
-  const activeWorkspacePlan =
-    workspace?.activeWorkspace?.plan_id ||
-    workspace?.activeWorkspace?.plan ||
-    workspace?.plan_id ||
-    workspace?.plan ||
-    null;
-  const activeWorkspaceName = String(
-    workspace?.activeWorkspace?.name ||
-      workspace?.workspace?.name ||
-      workspace?.name ||
-      ""
-  ).toLowerCase();
-  const isCoreTruthOwnerWorkspace =
-    activeWorkspaceName.includes("core truth") ||
-    activeWorkspaceName.includes("c.t. house") ||
-    activeWorkspaceName.includes("ct house");
-
-  const sessionRoleState = useMemo(() => getSessionRoleState(user), [user]);
+  getTokenRef.current = getToken;
+  fetchAuthorityRef.current = fetchAuthority;
+  onAuthorityEffectRef.current = onAuthorityEffect;
+  const currentKey = getAuthorityRequestKey(userId, activeWorkspaceId);
 
   useEffect(() => {
-    setGlobalRole(sessionRoleState.resolvedGlobalRole);
-    setWorkspaceRole(sessionRoleState.resolvedWorkspaceRole);
-    setIsSuperAdmin(sessionRoleState.isSuperAdmin);
-    setIsAdmin(sessionRoleState.isAdmin);
-    setUserRole(sessionRoleState.fallbackRole);
-  }, [sessionRoleState]);
+    mountedRef.current = true;
+    lifecycleOwnershipRef.current += 1;
+    return () => {
+      mountedRef.current = false;
+      lifecycleOwnershipRef.current += 1;
+      requestGenerationRef.current += 1;
+    };
+  }, []);
 
-  const fetchPlan = async ({ force = false } = {}) => {
-    if (!isUserLoaded || !authLoaded) {
-      setLoading(true);
-      return null;
-    }
-
-      if (userId && (!workspaceInitialized || !activeWorkspaceId)) {
-        if (activeWorkspacePlan) {
-          setPlan(normalizePlan(activeWorkspacePlan));
-          setLoading(false);
-          return null;
-        }
-
-        // Prevent the app from staying stuck if workspace context is delayed.
-        setLoading(false);
-        return null;
-      }
-
-    if (!userId) {
-      inFlightRef.current = false;
-      lastResolvedPlanKeyRef.current = null;
-      setPlan(normalizePlan(isCoreTruthOwnerWorkspace ? "estate" : activeWorkspacePlan || "foundation"));
-      setGlobalRole(sessionRoleState.resolvedGlobalRole);
-      setWorkspaceRole(sessionRoleState.resolvedWorkspaceRole);
-      setIsSuperAdmin(sessionRoleState.isSuperAdmin);
-      setIsAdmin(sessionRoleState.isAdmin);
-      setUserRole(sessionRoleState.fallbackRole);
-      setSubscriptionStatus(null);
-      setBillingSummaryAvailable(false);
-      setPlanApiHasPlan(false);
-      setPlanResolved(true);
-      setLoading(false);
-      return null;
-    }
-
-    if (inFlightRef.current) {
-      return null;
-    }
-
-      const planLookupKey = `${userId || "anonymous"}::${activeWorkspaceId || "no-workspace"}`;
-
-      if (!force && lastResolvedPlanKeyRef.current === planLookupKey) {
-        setLoading(false);
-        return null;
-      }
-
-    inFlightRef.current = true;
-    setLoading(true);
-
-    try {
-      const token =
-        auth && typeof auth.getToken === "function"
-          ? await auth.getToken()
-          : null;
-
-      if (!token) {
-        lastResolvedPlanKeyRef.current = null;
-        setLoading(false);
-        return null;
-      }
-
-        const BILLING_SUMMARY_ERROR = Symbol("billing-summary-error");
-
-        const [data, billingSummary] = await Promise.all([
-          apiClient.get("/api/user/plan", {
-            params: {
-              workspace_id: activeWorkspaceId,
-            },
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          apiClient
-            .get("/api/billing/summary", {
-              params: { workspace_id: activeWorkspaceId },
-              headers: { Authorization: `Bearer ${token}` },
-            })
-            .catch((err) => {
-              console.warn("[PlanContext] Billing summary fetch failed", err);
-              return BILLING_SUMMARY_ERROR;
-            }),
-        ]);
-
-        const billingErrored = billingSummary === BILLING_SUMMARY_ERROR;
-        setBillingSummaryAvailable(!billingErrored);
-
-        const rawPlanFromApi =
-          typeof data?.plan === "string" && data.plan.trim().length > 0
-            ? data.plan.trim()
-            : null;
-        setPlanApiHasPlan(Boolean(rawPlanFromApi));
-
-        const resolvedPlan = isCoreTruthOwnerWorkspace
-          ? "estate"
-          : rawPlanFromApi || activeWorkspacePlan || "FOUNDATION";
-        setPlan(normalizePlan(resolvedPlan));
-
-        const summary = billingErrored ? null : billingSummary;
-        const rawStatus =
-          summary?.subscription?.status ||
-          summary?.subscription_status ||
-          data?.subscription_status ||
-          null;
-        setSubscriptionStatus(rawStatus ? String(rawStatus).toLowerCase() : null);
-
-      const backendGlobalRole = normalizeRole(
-        data?.global_role,
-        sessionRoleState.resolvedGlobalRole
-      );
-
-      const backendWorkspaceRole = normalizeRole(
-        data?.workspace_role,
-        sessionRoleState.resolvedWorkspaceRole
-      );
-
-      const flags = inferAdminFlags({
-        globalRole: backendGlobalRole,
-        isSuperAdminFlag: data?.is_super_admin,
-        isAdminFlag: data?.is_admin,
+  const runAuthorityRequest = useCallback(
+    async ({ key, generation, clerkUserId, workspaceId, lifecycleOwnership }) => {
+      const result = await executeAuthorityRequest({
+        getToken: () => getTokenRef.current?.(),
+        fetchAuthority: (token) => fetchAuthorityRef.current?.({ token, workspaceId }),
+        ownsLifecycle: () =>
+          mountedRef.current && lifecycleOwnershipRef.current === lifecycleOwnership,
       });
 
-      setGlobalRole(backendGlobalRole);
-      setWorkspaceRole(backendWorkspaceRole);
-      setIsSuperAdmin(flags.isSuperAdmin);
-      setIsAdmin(flags.isAdmin);
+      if (result.type === "ignored") return null;
+      if (result.type === "response") {
+        setAuthorityState((state) =>
+          resolveAuthorityRequest(state, {
+            key,
+            generation,
+            data: result.data,
+            clerkUserId,
+            workspaceId,
+          }),
+        );
+        return result.data;
+      }
 
-      const resolvedUserRole = flags.isSuperAdmin
-        ? "SUPER_ADMIN"
-        : backendGlobalRole ||
-          backendWorkspaceRole ||
-          normalizeRole(data?.role, "MEMBER") ||
-          "MEMBER";
-
-      setUserRole(resolvedUserRole);
-        lastResolvedPlanKeyRef.current = planLookupKey;
-      setPlanResolved(true);
-
-      return data;
-    } catch (error) {
-      console.error("[PlanContext] Failed to fetch plan", error);
-
-        setPlan(normalizePlan(isCoreTruthOwnerWorkspace ? "estate" : activeWorkspacePlan || "foundation"));
-      setGlobalRole(sessionRoleState.resolvedGlobalRole);
-      setWorkspaceRole(sessionRoleState.resolvedWorkspaceRole);
-      setIsSuperAdmin(sessionRoleState.isSuperAdmin);
-      setIsAdmin(sessionRoleState.isAdmin);
-      setUserRole(sessionRoleState.fallbackRole);
-      setSubscriptionStatus(null);
-      setBillingSummaryAvailable(false);
-      setPlanApiHasPlan(false);
-      setPlanResolved(true);
-
-      lastResolvedPlanKeyRef.current = null;
+      setAuthorityState((state) => {
+        const nextState = failAuthorityRequest(state, key, generation);
+        if (nextState !== state && result.error) {
+          console.error("[PlanContext] Failed to fetch entitlement authority", result.error);
+        }
+        return nextState;
+      });
       return null;
-    } finally {
-      inFlightRef.current = false;
-      setLoading(false);
+    },
+    [],
+  );
+
+  const beginCurrentRequest = useCallback(() => {
+    const generation = ++requestGenerationRef.current;
+    if (!currentKey || !userId || !activeWorkspaceId) {
+      setAuthorityState((state) => settleAuthorityIdle(state, generation));
+      return Promise.resolve(null);
     }
-  };
+
+    setAuthorityState((state) => startAuthorityRequest(state, currentKey, generation));
+    return runAuthorityRequest({
+      key: currentKey,
+      generation,
+      clerkUserId: userId,
+      workspaceId: activeWorkspaceId,
+      lifecycleOwnership: lifecycleOwnershipRef.current,
+    });
+  }, [activeWorkspaceId, currentKey, runAuthorityRequest, userId]);
 
   useEffect(() => {
-    if (!isUserLoaded || !authLoaded) {
+    onAuthorityEffectRef.current?.();
+    const generation = ++requestGenerationRef.current;
+
+    if (!isUserLoaded || !authLoaded || !workspaceInitialized || !currentKey) {
+      setAuthorityState((state) => settleAuthorityIdle(state, generation));
       return;
     }
 
-    void fetchPlan();
-    }, [isUserLoaded, authLoaded, userId, workspaceInitialized, activeWorkspaceId, activeWorkspacePlan, isCoreTruthOwnerWorkspace]);
+    setAuthorityState((state) => startAuthorityRequest(state, currentKey, generation));
+    void runAuthorityRequest({
+      key: currentKey,
+      generation,
+      clerkUserId: userId,
+      workspaceId: activeWorkspaceId,
+      lifecycleOwnership: lifecycleOwnershipRef.current,
+    });
+  }, [
+    activeWorkspaceId,
+    authLoaded,
+    currentKey,
+    isUserLoaded,
+    runAuthorityRequest,
+    userId,
+    workspaceInitialized,
+  ]);
+
+  const stateView = getAuthorityStateView(authorityState, currentKey);
+  const authenticationLoading = !isUserLoaded || !authLoaded;
+  const workspaceLoading = Boolean(userId && !workspaceInitialized);
+  const loading = authenticationLoading || workspaceLoading || stateView.authorityLoading;
 
   const value = useMemo(() => {
-    const checkAccess = (route) => canAccess(plan, route, isSuperAdmin);
-
+    const checkAccess = (route) =>
+      stateView.hasActivePlan &&
+      canAccess(stateView.authority.plan, route, stateView.authority.isSuperAdmin);
     const getRequiredPlanForRoute = (route) => getRequiredPlan(route);
-
     const getUpgradeInfo = (route) => {
       const required = getRequiredPlan(route);
       const info = PLAN_INFO[required];
-      if (!info) return null;
-      return { plan: required, ...info };
+      return info ? { plan: required, ...info } : null;
     };
 
-    const hasActiveStatus = ACTIVE_SUBSCRIPTION_STATUSES.has(subscriptionStatus || "");
-    const billingOutageFallback = !billingSummaryAvailable && planApiHasPlan;
-
-    const hasActivePlan =
-      isSuperAdmin ||
-      isCoreTruthOwnerWorkspace ||
-      hasActiveStatus ||
-      billingOutageFallback;
-
     return {
-      plan,
-      isSuperAdmin,
-      isAdmin,
-      userRole,
-      workspaceRole,
-      globalRole,
+      ...stateView.authority,
+      authorityStatus: stateView.authorityStatus,
+      authorityLoading: stateView.authorityLoading,
+      authoritySettled: stateView.authoritySettled,
+      authorityFailed: stateView.authorityFailed,
       loading,
-      subscriptionStatus,
-      hasActivePlan,
-      planResolved,
+      hasActivePlan: stateView.hasActivePlan,
+      planResolved: stateView.planResolved,
       canAccess: checkAccess,
       getRequiredPlanForRoute,
       getUpgradeInfo,
-      refreshPlan: () => fetchPlan({ force: true }),
+      refreshPlan: beginCurrentRequest,
     };
-  }, [
-    plan,
-    isSuperAdmin,
-    isAdmin,
-    userRole,
-    workspaceRole,
-    globalRole,
-    loading,
-    subscriptionStatus,
-    billingSummaryAvailable,
-    planApiHasPlan,
-    planResolved,
-    isCoreTruthOwnerWorkspace,
-  ]);
+  }, [beginCurrentRequest, loading, stateView]);
 
   return <PlanContext.Provider value={value}>{children}</PlanContext.Provider>;
 }
