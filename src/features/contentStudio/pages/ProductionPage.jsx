@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Check, Clapperboard, Film, Route, ShieldCheck, Sparkles } from "lucide-react";
+import { Check, Clapperboard, Film, ImagePlus, Route, ShieldCheck, Sparkles } from "lucide-react";
 
 import ContentStudioShell from "../components/ContentStudioShell";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
@@ -8,6 +8,7 @@ import { useAsyncResource, useMutation } from "../hooks/useAsyncResource";
 import {
   approveProductionFrame,
   directProduction,
+  generateProductionFrame,
   generateProductionMotion,
   listStoryboards,
 } from "../api/contentStudioApi";
@@ -18,9 +19,11 @@ function StatusPill({ children }) {
 }
 
 function ShotCard({ productionId, shot, onChanged }) {
+  const frame = useMutation(() => generateProductionFrame(productionId, shot.id));
   const approve = useMutation(() => approveProductionFrame(productionId, shot.id));
   const motion = useMutation(() => generateProductionMotion(productionId, shot.id));
   const p = shot.production || {};
+  const canGenerateFrame = p.still_required && p.frame_status === "needs-frame";
   const canApprove = p.approval_required && p.frame_status === "ready" && p.frame_approval !== "approved";
   const canGenerateMotion = !p.approval_required || p.frame_approval === "approved";
 
@@ -39,6 +42,10 @@ function ShotCard({ productionId, shot, onChanged }) {
         <StatusPill>{p.shot_type || "broll"}</StatusPill>
       </div>
 
+      {shot.image_url ? (
+        <img src={shot.image_url} alt={`${shot.title || "Shot"} production frame`} style={{ width: "100%", aspectRatio: "9 / 16", objectFit: "cover", borderRadius: "var(--cs-radius)", marginTop: 12 }} />
+      ) : null}
+
       <p style={{ color: "var(--cs-ruby)", fontSize: 12.5, lineHeight: 1.55, minHeight: 58 }}>{shot.direction || "No direction yet."}</p>
 
       <div style={{ display: "grid", gap: 8, marginTop: 12, fontSize: 12 }}>
@@ -51,19 +58,27 @@ function ShotCard({ productionId, shot, onChanged }) {
         <div><strong>Continuity:</strong> {p.continuity_status || "pending"}</div>
       </div>
 
-      {(approve.error || motion.error) ? <ErrorState error={approve.error || motion.error} compact /> : null}
+      {(frame.error || approve.error || motion.error) ? <ErrorState error={frame.error || approve.error || motion.error} compact /> : null}
 
       <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+        {p.still_required ? (
+          <button type="button" className="cs-btn cs-btn-secondary" disabled={!canGenerateFrame || frame.busy} onClick={() => run(frame)}>
+            <ImagePlus size={13} aria-hidden="true" />
+            {p.frame_status === "queued" ? "Frame queued" : p.frame_status === "ready" ? "Frame ready" : "Generate frame"}
+          </button>
+        ) : null}
         {p.approval_required ? (
           <button type="button" className="cs-btn cs-btn-secondary" disabled={!canApprove || approve.busy} onClick={() => run(approve)}>
             <Check size={13} aria-hidden="true" />
             {p.frame_approval === "approved" ? "Frame approved" : "Approve frame"}
           </button>
         ) : null}
-        <button type="button" className="cs-btn cs-btn-primary" disabled={!canGenerateMotion || motion.busy || p.motion_status === "queued"} onClick={() => run(motion)}>
-          <Film size={13} aria-hidden="true" />
-          {p.motion_status === "queued" ? "Motion queued" : "Generate motion"}
-        </button>
+        {p.motion_provider ? (
+          <button type="button" className="cs-btn cs-btn-primary" disabled={!canGenerateMotion || motion.busy || p.motion_status === "queued"} onClick={() => run(motion)}>
+            <Film size={13} aria-hidden="true" />
+            {p.motion_status === "queued" ? "Motion queued" : "Generate motion"}
+          </button>
+        ) : null}
       </div>
     </article>
   );
