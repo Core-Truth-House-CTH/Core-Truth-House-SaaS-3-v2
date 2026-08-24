@@ -41,48 +41,22 @@ export function routeShot(scene = {}) {
   };
 
   if (type === SHOT_TYPES.IDENTITY) {
-    return {
-      ...route,
-      still_required: true,
-      still_provider: "seedream-5-pro",
-      motion_provider: "seedance",
-      approval_required: true,
-    };
+    return { ...route, still_required: true, still_provider: "seedream-5-pro", motion_provider: "seedance", approval_required: true };
   }
 
   if (type === SHOT_TYPES.DIALOGUE) {
-    return {
-      ...route,
-      still_required: true,
-      still_provider: "seedream-5-pro",
-      motion_provider: "seedance",
-      audio_provider: "elevenlabs",
-      approval_required: true,
-    };
+    return { ...route, still_required: true, still_provider: "seedream-5-pro", motion_provider: "seedance", audio_provider: "elevenlabs", approval_required: true };
   }
 
   if (type === SHOT_TYPES.PRODUCT) {
-    return {
-      ...route,
-      still_required: true,
-      still_provider: "reference-controlled-image",
-      motion_provider: "seedance",
-      approval_required: true,
-    };
+    return { ...route, still_required: true, still_provider: "reference-controlled-image", motion_provider: "seedance", approval_required: true };
   }
 
   if (type === SHOT_TYPES.GRAPHIC) {
-    return {
-      ...route,
-      compositor: "cth-graphics",
-      approval_required: true,
-    };
+    return { ...route, compositor: "cth-graphics" };
   }
 
-  return {
-    ...route,
-    motion_provider: "best-fit-video",
-  };
+  return { ...route, motion_provider: "best-fit-video" };
 }
 
 export function directStoryboard(storyboard) {
@@ -95,7 +69,7 @@ export function directStoryboard(storyboard) {
         ...route,
         frame_status: route.still_required ? "needs-frame" : "not-required",
         frame_approval: route.approval_required ? "pending" : "not-required",
-        motion_status: "blocked",
+        motion_status: route.approval_required ? "blocked" : "ready",
         continuity_status: route.identity_critical ? "pending" : "not-required",
       },
     };
