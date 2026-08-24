@@ -1,19 +1,12 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-/**
- * Approved Content Studio top navigation (screen 1 of the reference).
- *
- * This is a Content Studio-scoped nav that sits inside the existing app shell.
- * It does NOT replace or remove the application's global navigation — the
- * broader app menu remains reachable, so unrelated routes stay accessible.
- *
- * Every item points at a route that exists. No dead links.
- */
 const NAV_ITEMS = [
   { label: "Command Center", to: "/command-center", end: true },
   { label: "Content Studio", to: "/content-studio", end: true },
   { label: "Campaigns", to: "/campaign-builder", end: true },
+  { label: "Storyboards", to: "/content-studio/storyboards", end: true },
+  { label: "Production", to: "/content-studio/storyboards?mode=production", end: true },
   { label: "Media Library", to: "/content-studio/media", end: false },
   { label: "Brand Memory", to: "/brand-memory", end: true },
   { label: "Automations", to: "/content-studio/automations", end: false },
