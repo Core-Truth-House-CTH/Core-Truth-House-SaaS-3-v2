@@ -29,16 +29,13 @@ const EmailSettings = lazy(() => import("../pages/EmailSettings"));
 const TenantDataDashboardV2 = lazy(() => import("../pages/TenantDataDashboardV2"));
 const ContentStudio = lazy(() => import("../pages/ContentStudio"));
 
-// Approved Content Studio feature (src/features/contentStudio).
-// The legacy prompt-generator page above is retained and still reachable at
-// /content-studio/prompt-generator so its behaviour is not lost.
 const CSDashboard = lazy(() => import("../features/contentStudio/pages/DashboardPage"));
 const CSAgents = lazy(() => import("../features/contentStudio/pages/AgentsPage"));
 const CSAgentDetail = lazy(() => import("../features/contentStudio/pages/AgentDetailPage"));
 const CSAgentCreate = lazy(() => import("../features/contentStudio/pages/AgentCreatePage"));
 const CSAutomations = lazy(() => import("../features/contentStudio/pages/AutomationsPage"));
 const CSAutomationDetail = lazy(() => import("../features/contentStudio/pages/AutomationDetailPage"));
-const CSStoryboards = lazy(() => import("../features/contentStudio/pages/StoryboardsPage"));
+const CSStoryboards = lazy(() => import("../features/contentStudio/pages/StoryboardsProductionHub"));
 const CSEditRequests = lazy(() => import("../features/contentStudio/pages/EditRequestsPage"));
 const CSNotFound = lazy(() => import("../features/contentStudio/pages/NotFoundPage"));
 const CSComposer = lazy(() =>
@@ -83,9 +80,6 @@ const FirstCampaign = CampaignBuilder;
 
 const pageRegistry = {
   "/onboarding": OnboardingWorkflow,
-  // Both paths resolve to the rebuilt Command Center. The legacy sidebar
-  // Command Center is no longer route-accessible; /command-center-next is kept
-  // registered so existing links and bookmarks continue to work.
   "/command-center": CommandCenterNext,
   "/command-center-next": CommandCenterNext,
   "/brand-house": BrandHouse,
@@ -108,9 +102,6 @@ const pageRegistry = {
   "/signal-inbox": SignalInbox,
   "/customer-journey": CustomerJourney,
 
-  // Approved Content Studio. The dashboard replaces the legacy prompt
-  // generator at this path; the legacy page is preserved one level down so no
-  // existing behaviour is removed.
   "/content-studio": CSDashboard,
   "/content-studio/prompt-generator": ContentStudio,
   "/content-studio/composer": CSComposer,
