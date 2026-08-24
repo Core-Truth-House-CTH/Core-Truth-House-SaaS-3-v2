@@ -75,6 +75,10 @@ export function getProduction(productionId, options) {
   return apiClient.get(`${BASE}/production/${id(productionId)}`, options);
 }
 
+export function generateProductionFrame(productionId, shotId, options) {
+  return apiClient.post(`${BASE}/production/${id(productionId)}/shots/${id(shotId)}/generate-frame`, undefined, options);
+}
+
 export function approveProductionFrame(productionId, shotId, options) {
   return apiClient.post(`${BASE}/production/${id(productionId)}/shots/${id(shotId)}/approve-frame`, undefined, options);
 }
@@ -134,6 +138,7 @@ export default {
   updateStoryboard,
   directProduction,
   getProduction,
+  generateProductionFrame,
   approveProductionFrame,
   generateProductionMotion,
   createEditRequest,
