@@ -11,6 +11,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
+import { getReleaseMetadataUrl, shouldOfferAppUpdate } from './appVersion.mjs'
 
 // ─────────────────────────────────────────────────────────────
 // CONFIG
@@ -22,9 +23,6 @@ const POLL_INTERVAL = 3 * 60 * 1000   // 3 minutes
 // Version embedded at build time via CRA
 // Falls back to 'dev' if not set
 const CURRENT_VERSION = import.meta.env.VITE_VERSION || 'dev'
-
-// API base URL from environment
-const API_BASE = import.meta.env.VITE_BACKEND_URL || ''
 
 // ─────────────────────────────────────────────────────────────
 // HOOK
@@ -67,19 +65,19 @@ export function useAppVersion() {
     })
   }, [])
 
-  // Poll /api/version for server-side version
+  // Poll same-origin metadata emitted by this frontend build.
   useEffect(() => {
     // Skip polling in dev mode
     if (CURRENT_VERSION === 'dev') return
 
     function checkVersion() {
-      fetch(`${API_BASE}/api/version`, {
+      fetch(getReleaseMetadataUrl(), {
         cache: 'no-store',
-        credentials: 'omit',
+        credentials: 'same-origin',
       })
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
-          if (data && data.version && data.version !== CURRENT_VERSION) {
+          if (shouldOfferAppUpdate(CURRENT_VERSION, data?.version)) {
             setUpdateAvailable(true)
           }
         })
