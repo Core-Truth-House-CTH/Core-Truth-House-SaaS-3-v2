@@ -4,6 +4,10 @@ import { useColors } from "../context/ThemeContext";
 import { ArrowLeft } from "lucide-react";
 import { useUser, useClerk, HAS_CLERK } from "../hooks/useAuth";
 import { SignIn as ClerkSignIn, SignUp as ClerkSignUp } from "@clerk/react";
+import {
+  buildDiagnosticAuthPath,
+  getDiagnosticSignupRedirectUrl,
+} from "../pages/brandDiagnosticDraft.mjs";
 
 let SignIn = null;
 let SignUp = null;
@@ -463,6 +467,9 @@ export function SignInPage() {
 
   const params = new URLSearchParams(window.location.search);
   const redirectUrl = params.get("redirect_url") || "/command-center";
+  const signUpUrl = params.has("redirect_url")
+    ? buildDiagnosticAuthPath("/sign-up", redirectUrl)
+    : "/sign-up";
 
   if (isLoaded && isSignedIn) {
     return <Navigate to={redirectUrl} replace />;
@@ -473,7 +480,7 @@ export function SignInPage() {
       <SignIn
         routing="path"
         path="/sign-in"
-        signUpUrl="/sign-up"
+        signUpUrl={signUpUrl}
         forceRedirectUrl={redirectUrl}
         appearance={CLERK_APPEARANCE}
       />
@@ -518,16 +525,13 @@ export function SignUpPage() {
     return <div style={{ color: "white", padding: 20 }}>Clerk not configured</div>;
   }
 
-  // redirect_url takes priority; otherwise diagnostic sign-ups land on billing
-  // (with the recommended tier preselected) before the personalized welcome.
-  const diagnosticTier = params.get("tier");
-  const redirectUrl =
-    params.get("redirect_url") ||
-    (source === "diagnostic"
-      ? (diagnosticTier
-          ? `/billing?welcome=diagnostic&tier=${diagnosticTier}`
-          : "/billing?welcome=diagnostic")
-      : "/command-center");
+  const redirectUrl = getDiagnosticSignupRedirectUrl({
+    redirectUrl: params.get("redirect_url") || "",
+    source,
+  });
+  const signInUrl = redirectUrl !== "/command-center"
+    ? buildDiagnosticAuthPath("/sign-in", redirectUrl)
+    : "/sign-in";
 
   if (isSignedIn) {
     return <Navigate to={redirectUrl} replace />;
@@ -542,7 +546,7 @@ export function SignUpPage() {
       <SignUp
         routing="path"
         path="/sign-up"
-        signInUrl="/sign-in"
+        signInUrl={signInUrl}
         forceRedirectUrl={redirectUrl}
         appearance={CLERK_APPEARANCE}
       />

@@ -24,7 +24,8 @@ const EstateStorePage = lazy(() => import("./pages/estate/EstateStorePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const BlogJournalPage = lazy(() => import("./pages/BlogJournalPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
-const BrandDiagnosticPage = lazy(() => import("./pages/BrandDiagnosticPage"));
+const PublicBrandDiagnosticRoute = lazy(() => import("./components/PublicBrandDiagnosticRoute"));
+const PrivateDiagnosticReportRoute = lazy(() => import("./components/PrivateDiagnosticReportRoute"));
 const PublicDiagnosticResults = lazy(() => import("./pages/PublicDiagnosticResults"));
 const PublicOfferPage = lazy(() => import("./pages/PublicOfferPage"));
 const ScorecardPage = lazy(() => import("./pages/ScorecardPage"));
@@ -58,8 +59,9 @@ function PublicRoutes() {
         </Route>
 
         {/* Functional public routes — auth handled by ProtectedApp catch-all below */}
-        <Route path="/brand-diagnostic" element={<BrandDiagnosticPage />} />
-        <Route path="/brand-diagnostic/" element={<BrandDiagnosticPage />} />
+        <Route path="/brand-diagnostic" element={<PublicBrandDiagnosticRoute />} />
+        <Route path="/brand-diagnostic/" element={<PublicBrandDiagnosticRoute />} />
+        <Route path="/brand-diagnostic/report/:resultId" element={<PrivateDiagnosticReportRoute />} />
         <Route path="/diagnostic-results/:token" element={<PublicDiagnosticResults />} />
         <Route path="/offers/:workspaceSlug/:offerSlug" element={<PublicOfferPage />} />
         {/* Subdomain mode: {slug}.coretruthhouse.com/offers/:offerSlug — workspace resolved from hostname */}

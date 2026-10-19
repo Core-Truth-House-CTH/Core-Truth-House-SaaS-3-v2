@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
  ArrowRight,
  CheckCircle2,
@@ -17,7 +18,21 @@ import {
 } from "../utils/diagnosticDimensions";
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
-import { getStoredAttribution } from "../lib/utmCapture";
+import apiClient from "../lib/apiClient";
+import { useAuth, useUser } from "../hooks/useAuth";
+import { useWorkspace } from "../context/WorkspaceContext";
+import {
+ advanceDiagnosticAnswer,
+ buildDiagnosticAuthPath,
+ bindDiagnosticDraftOwner,
+ clearDiagnosticDraft,
+  createFreshDiagnosticDraft,
+ createDiagnosticDraftId,
+ getDiagnosticAccess,
+ persistDiagnosticDraft,
+ restoreDiagnosticDraft,
+} from "./brandDiagnosticDraft.mjs";
+import { getDiagnosticHistoryViewState } from "./diagnosticHistoryState.mjs";
 
 const A = {
  logo: "/brand-assets/logo/cth-logo-seal.png",
@@ -43,23 +58,14 @@ const A = {
  execution: "/brand-diagnostic-assets/cth-brand-diagnostic-execution-rocket-icon.png",
 };
 
-const API_BASE = (
- import.meta.env.VITE_API_BASE_URL ||
- import.meta.env.VITE_API_URL ||
- "https://api.coretruthhouse.com"
-).replace(/\/$/, "");
-
-const RESULT_STORAGE_KEY = "cth_brand_diagnostic_result";
-
 const initialLeadInfo = {
- first_name: "",
- last_name: "",
- email: "",
  business_name: "",
+  industry_niche: "",
+  business_type: "",
  years_in_business: "",
  revenue_band: "",
  current_challenge: "",
- consent: true,
+ marketing_consent: false,
 };
 
 const yearsOptions = ["Less than 1 year", "1 to 2 years", "3 to 5 years", "6 to 10 years", "10+ years"];
@@ -72,6 +78,38 @@ const challengeOptions = [
  "My brand depends too much on me",
  "I need a stronger operating system",
 ];
+const industryOptions = [
+  ["beauty", "Beauty"],
+  ["travel", "Travel"],
+  ["real_estate", "Real estate"],
+  ["health_wellness", "Health and wellness"],
+  ["creative_services", "Creative services"],
+  ["education", "Education"],
+  ["retail_ecommerce", "Retail and e-commerce"],
+  ["food_beverage", "Food and beverage"],
+  ["technology", "Technology"],
+  ["professional_services", "Professional services"],
+  ["nonprofit", "Nonprofit"],
+  ["other", "Other / not listed"],
+];
+const businessTypeOptions = [
+  ["services", "Services"],
+  ["physical_products", "Physical products"],
+  ["digital_products", "Digital products"],
+  ["memberships", "Memberships"],
+  ["mixed", "A mix of these"],
+  ["other", "Other / not listed"],
+];
+
+const diagnosticQuestionIds = questions.map(([id]) => id);
+
+function getSessionStorage() {
+ try {
+ return typeof window === "undefined" ? null : window.sessionStorage;
+ } catch {
+ return null;
+ }
+}
 
 const answerOptions = [
  { label: "Not yet", value: 1 },
@@ -175,16 +213,54 @@ function ScoreRing({ score = 72, total = 100 }) {
  );
 }
 
-function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", initialData = null }) {
- const [step, setStep] = useState(initialStep);
- const [currentQuestion, setCurrentQuestion] = useState(0);
- const [leadInfo, setLeadInfo] = useState(initialLeadInfo);
- // When opened at the "result" step, pre-load the saved answers so score,
- // recommendation, and topGaps all derive from them (see useMemos below).
+function ModalDiagnostic({ open, onClose, onComplete, onRetake, initialStep = "lead", initialData = null, identity, isSignedIn, userId, workspaceId, navigate }) {
+ const [step, setStep] = useState(initialData?.step || initialStep);
+ const [currentQuestion, setCurrentQuestion] = useState(initialData?.currentQuestion || 0);
+ const [leadInfo, setLeadInfo] = useState(initialData?.leadInfo || initialLeadInfo);
  const [answers, setAnswers] = useState(initialData?.answers || {});
- const [leadSubmitting, setLeadSubmitting] = useState(false);
- const [leadError, setLeadError] = useState("");
- const [resultSaved, setResultSaved] = useState(initialStep === "result");
+ const [draftId, setDraftId] = useState(initialData?.draftId || createDiagnosticDraftId());
+ const [draftOwnerUserId, setDraftOwnerUserId] = useState(initialData?.ownerUserId || (isSignedIn ? userId : null));
+ const [draftWorkspaceId, setDraftWorkspaceId] = useState(initialData?.workspaceId || (isSignedIn ? workspaceId : null));
+ const [serverResult, setServerResult] = useState(initialData?.id && Number.isInteger(initialData?.score) ? initialData : null);
+ const [saving, setSaving] = useState(false);
+ const [saveError, setSaveError] = useState("");
+ const [resultSaved, setResultSaved] = useState(Boolean(initialData?.id && Number.isInteger(initialData?.score)));
+
+ useEffect(() => {
+ if (!open) return;
+ const userChanged = draftOwnerUserId && draftOwnerUserId !== userId;
+ const workspaceChanged = draftWorkspaceId && workspaceId && draftWorkspaceId !== workspaceId;
+ if (userChanged || workspaceChanged) {
+ clearDiagnosticDraft(getSessionStorage());
+ setStep("lead");
+ setCurrentQuestion(0);
+ setLeadInfo(initialLeadInfo);
+ setAnswers({});
+ setDraftId(createDiagnosticDraftId());
+ setDraftOwnerUserId(isSignedIn ? userId : null);
+ setDraftWorkspaceId(isSignedIn ? workspaceId : null);
+ setServerResult(null);
+ setResultSaved(false);
+ setSaveError("");
+ return;
+ }
+ if (isSignedIn && userId && !draftOwnerUserId) setDraftOwnerUserId(userId);
+ if (isSignedIn && workspaceId && !draftWorkspaceId) setDraftWorkspaceId(workspaceId);
+ }, [open, isSignedIn, userId, workspaceId, draftOwnerUserId, draftWorkspaceId]);
+
+ useEffect(() => {
+ if (!open || resultSaved) return;
+ persistDiagnosticDraft(getSessionStorage(), {
+ version: 1,
+ draftId,
+ step,
+ currentQuestion,
+ answers,
+ leadInfo,
+ ownerUserId: draftOwnerUserId,
+ workspaceId: draftWorkspaceId,
+ }, { questionIds: diagnosticQuestionIds });
+ }, [open, resultSaved, draftId, step, currentQuestion, answers, leadInfo, draftOwnerUserId, draftWorkspaceId]);
 
  const answeredCount = Object.keys(answers).length;
  const isComplete = answeredCount === questions.length;
@@ -203,13 +279,8 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  .slice(0, 3);
  }, [answers, isComplete]);
 
- const leadReady =
- leadInfo.first_name.trim() &&
- leadInfo.email.trim() &&
- leadInfo.years_in_business &&
- leadInfo.revenue_band &&
- leadInfo.current_challenge &&
- leadInfo.consent;
+ const leadReady = true;
+ const canRevealFullResults = getDiagnosticAccess({ isSignedIn, serverResult }).canRevealFullResults;
 
  if (!open) return null;
 
@@ -217,79 +288,98 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  setLeadInfo((current) => ({ ...current, [field]: value }));
  }
 
- function buildPayload(status = "started") {
+ function buildPayload() {
  return {
- first_name: leadInfo.first_name.trim(),
- last_name: leadInfo.last_name.trim(),
- email: leadInfo.email.trim(),
  business_name: leadInfo.business_name.trim(),
+  industry_niche: leadInfo.industry_niche,
+  business_type: leadInfo.business_type,
  years_in_business: leadInfo.years_in_business,
  revenue_band: leadInfo.revenue_band,
  current_challenge: leadInfo.current_challenge,
- score: score ?? undefined,
- score_range: recommendation?.range || "",
- recommended_tier: recommendation?.tier || "",
- top_gaps: topGaps.map((item) => item[1] || item[2]),
  answers,
- status,
- consent: Boolean(leadInfo.consent),
- source: "brand_diagnostic",
- // First-touch UTM/referrer/landing set captured at app entry.
- ...getStoredAttribution(),
+ marketing_consent: Boolean(leadInfo.marketing_consent),
  };
- }
-
- async function submitLead(status = "started") {
- setLeadSubmitting(true);
- setLeadError("");
-
- try {
- const response = await fetch(`${API_BASE}/api/public/brand-diagnostic-leads`, {
- method: "POST",
- headers: { "Content-Type": "application/json" },
- body: JSON.stringify(buildPayload(status)),
- });
-
- const data = await response.json().catch(() => ({}));
- if (!response.ok) throw new Error(data?.detail || data?.message || "Lead submission failed.");
-
- if (status === "completed") setResultSaved(true);
- return data;
- } catch (error) {
- setLeadError(error?.message || "Something went wrong. Please try again.");
- throw error;
- } finally {
- setLeadSubmitting(false);
- }
  }
 
  async function startQuiz(event) {
  event.preventDefault();
- if (!leadReady || leadSubmitting) return;
- await submitLead("started");
+ if (!leadReady || saving) return;
  setStep("quiz");
  }
 
  function answerCurrent(value) {
- const [id] = questions[currentQuestion];
- const updated = { ...answers, [id]: value };
- setAnswers(updated);
+ const transition = advanceDiagnosticAnswer({
+ questionIds: diagnosticQuestionIds,
+ answers,
+ currentQuestion,
+ value,
+ });
+ if (!transition) return;
 
- if (currentQuestion < questions.length - 1) {
- setCurrentQuestion((current) => current + 1);
- } else {
- setStep("result");
+ persistDiagnosticDraft(getSessionStorage(), {
+ version: 1,
+ draftId,
+ step: transition.step,
+ currentQuestion: transition.currentQuestion,
+ answers: transition.answers,
+ leadInfo,
+ ownerUserId: draftOwnerUserId,
+ workspaceId: draftWorkspaceId,
+ }, { questionIds: diagnosticQuestionIds });
+
+ setAnswers(transition.answers);
+ setCurrentQuestion(transition.currentQuestion);
+ setStep(transition.step);
  }
+
+ function navigateToAuth(route) {
+ persistDiagnosticDraft(getSessionStorage(), {
+ version: 1, draftId, step, currentQuestion, answers, leadInfo,
+ ownerUserId: draftOwnerUserId, workspaceId: draftWorkspaceId,
+ }, { questionIds: diagnosticQuestionIds });
+ navigate(buildDiagnosticAuthPath(route, window.location.pathname, window.location.search));
  }
 
  async function saveResult() {
- await submitLead("completed");
- onComplete?.({
- score,
- recommendation,
- topGaps,
- answers,
+ if (!isSignedIn || !workspaceId || !isComplete || saving || resultSaved) return;
+ setSaving(true);
+ setSaveError("");
+ try {
+ const response = await apiClient.post("/api/brand-diagnostic/results", {
+ ...buildPayload(),
+ submission_id: draftId,
  });
+ const record = response?.result;
+ if (!record?.id || !Number.isInteger(record.score)) throw new Error("The saved result could not be verified.");
+ const saved = {
+ ...record,
+ recommendation: getRecommendation(record.score),
+ topGaps: questions.filter(([id, label]) => record.top_gaps?.includes(label)),
+ };
+ setServerResult(saved);
+ setResultSaved(true);
+ clearDiagnosticDraft(getSessionStorage());
+ onComplete?.(saved);
+ } catch (error) {
+ setSaveError(error?.message || "Unable to save this result.");
+ } finally {
+ setSaving(false);
+ }
+ }
+
+ function retakeDiagnostic() {
+ clearDiagnosticDraft(getSessionStorage());
+ onRetake?.();
+ setStep("lead");
+ setCurrentQuestion(0);
+ setAnswers({});
+ setLeadInfo(initialLeadInfo);
+ setDraftId(createDiagnosticDraftId());
+ setDraftOwnerUserId(isSignedIn ? userId : null);
+ setDraftWorkspaceId(isSignedIn ? workspaceId : null);
+ setServerResult(null);
+ setResultSaved(false);
+ setSaveError("");
  }
 
  const active = questions[currentQuestion];
@@ -305,30 +395,42 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  {step === "lead" ? (
  <form onSubmit={startQuiz} data-mcp-action="brand-diagnostic-intake">
  <p className="bdx-kicker">Core Truth Brand Diagnostic</p>
- <h2>Where should we send your result?</h2>
+ <h2>Set your business context</h2>
  <p className="bdx-modal-copy">
- Your context is captured before the diagnostic. If you do not convert today, this stays in the Core Truth House CRM, not a tenant workspace.
+ {isSignedIn
+ ? `Signed in as ${identity?.name || "your account"}${identity?.email ? ` (${identity.email})` : ""}. Complete the diagnostic, then save to your private workspace to view your full results.`
+ : "Take all 15 questions free. A free account is required to view and save your full results. Your answers stay in this browser until then."}
  </p>
+  <p className="bdx-assessment-note">Industry and business type are optional. They tailor report examples and next steps, but do not change your score.</p>
 
  <div className="bdx-lead-grid">
- <label>First name *<input autoComplete="given-name" value={leadInfo.first_name} onChange={(e) => updateLead("first_name", e.target.value)} required /></label>
- <label>Last name<input autoComplete="family-name" value={leadInfo.last_name} onChange={(e) => updateLead("last_name", e.target.value)} /></label>
- <label>Email *<input type="email" autoComplete="email" value={leadInfo.email} onChange={(e) => updateLead("email", e.target.value)} required /></label>
  <label>Business name<input autoComplete="organization" value={leadInfo.business_name} onChange={(e) => updateLead("business_name", e.target.value)} /></label>
- <label>Years in business *
- <select value={leadInfo.years_in_business} onChange={(e) => updateLead("years_in_business", e.target.value)} required>
+  <label>Industry or niche <span>(optional)</span>
+  <select value={leadInfo.industry_niche} onChange={(e) => updateLead("industry_niche", e.target.value)}>
+  <option value="">Skip for now</option>
+  {industryOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+  </select>
+  </label>
+  <label>Business type <span>(optional)</span>
+  <select value={leadInfo.business_type} onChange={(e) => updateLead("business_type", e.target.value)}>
+  <option value="">Skip for now</option>
+  {businessTypeOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+  </select>
+  </label>
+ <label>Years in business
+ <select value={leadInfo.years_in_business} onChange={(e) => updateLead("years_in_business", e.target.value)}>
  <option value="">Choose one</option>
  {yearsOptions.map((item) => <option value={item} key={item}>{item}</option>)}
  </select>
  </label>
- <label>Revenue band *
- <select value={leadInfo.revenue_band} onChange={(e) => updateLead("revenue_band", e.target.value)} required>
+ <label>Revenue band
+ <select value={leadInfo.revenue_band} onChange={(e) => updateLead("revenue_band", e.target.value)}>
  <option value="">Choose one</option>
  {revenueOptions.map((item) => <option value={item} key={item}>{item}</option>)}
  </select>
  </label>
- <label className="full">Current challenge *
- <select value={leadInfo.current_challenge} onChange={(e) => updateLead("current_challenge", e.target.value)} required>
+ <label className="full">Current challenge
+ <select value={leadInfo.current_challenge} onChange={(e) => updateLead("current_challenge", e.target.value)}>
  <option value="">Choose one</option>
  {challengeOptions.map((item) => <option value={item} key={item}>{item}</option>)}
  </select>
@@ -336,14 +438,14 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  </div>
 
  <label className="bdx-consent">
- <input type="checkbox" checked={leadInfo.consent} onChange={(e) => updateLead("consent", e.target.checked)} />
- I agree to receive my diagnostic result and follow-up guidance from Core Truth House.
+ <input type="checkbox" checked={leadInfo.marketing_consent} onChange={(e) => updateLead("marketing_consent", e.target.checked)} />
+ I agree to receive Core Truth House marketing and relevant personalized brand-needs communications. This is optional; if selected, you can unsubscribe at any time.
  </label>
 
- {leadError ? <p className="bdx-error">{leadError}</p> : null}
+ {saveError ? <p className="bdx-error">{saveError}</p> : null}
 
- <button type="submit" className="bdx-primary-btn" disabled={!leadReady || leadSubmitting}>
- {leadSubmitting ? "Saving..." : "Start My Diagnostic"}
+ <button type="submit" className="bdx-primary-btn" disabled={!leadReady || saving}>
+ Start My Diagnostic
  <ArrowRight size={15} />
  </button>
  </form>
@@ -373,7 +475,34 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  </div>
  ) : null}
 
- {step === "result" && recommendation ? (
+ {step === "result" && !canRevealFullResults ? (
+ <div>
+ <p className="bdx-kicker">Your diagnostic is complete</p>
+ <h2>Your full results are ready to unlock</h2>
+ <p className="bdx-modal-copy">
+ {isSignedIn
+ ? "Save your answers to your private workspace. The score and recommendations will be shown after the server verifies and saves your result."
+ : "Create a free account or sign in to view and save your full score, recommendations, and next steps. Your answers are saved in this browser while you sign in."}
+ </p>
+ {saveError ? <p className="bdx-error">{saveError}</p> : null}
+ <div className="bdx-result-actions">
+ {isSignedIn ? (
+ <button type="button" onClick={saveResult} disabled={saving || !workspaceId}>
+ {saving ? "Saving and calculating..." : !workspaceId ? "Choose a workspace to continue" : "View My Full Results"}
+ <Lock size={15} />
+ </button>
+ ) : (
+ <>
+ <button type="button" onClick={() => navigateToAuth("/sign-up")}>Create a Free Account <ArrowRight size={15} /></button>
+ <button type="button" className="light" onClick={() => navigateToAuth("/sign-in")}>Sign In <ArrowRight size={15} /></button>
+ </>
+ )}
+ <button type="button" className="light" onClick={retakeDiagnostic}>Retake Diagnostic</button>
+ </div>
+ </div>
+ ) : null}
+
+ {step === "result" && canRevealFullResults && recommendation ? (
  <div>
  <p className="bdx-kicker">Step 03 · Your Result</p>
  <div className="bdx-result-top">
@@ -395,11 +524,11 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  ))}
  </div>
 
- {leadError ? <p className="bdx-error">{leadError}</p> : null}
+ {saveError ? <p className="bdx-error">{saveError}</p> : null}
 
  <div className="bdx-result-actions">
- <button type="button" onClick={saveResult} disabled={leadSubmitting || resultSaved}>
- {leadSubmitting ? "Saving answers..." : resultSaved ? "Answers Saved" : "Save My Answers"}
+ <button type="button" onClick={saveResult} disabled={saving || resultSaved}>
+ {saving ? "Saving answers..." : resultSaved ? "Answers Saved" : "Save My Answers"}
  <Lock size={15} />
  </button>
 
@@ -409,8 +538,7 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  `/sign-up?tier=${encodeURIComponent(recommendation.tier)}` +
  `&source=diagnostic` +
  `&score=${encodeURIComponent(score)}` +
- `&challenge=${encodeURIComponent(leadInfo.current_challenge)}` +
- `&first_name=${encodeURIComponent(leadInfo.first_name)}`
+ `&challenge=${encodeURIComponent(leadInfo.current_challenge)}`
  }
  >
  {recommendation.cta}
@@ -422,7 +550,7 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  </p>
  )}
 
- <button type="button" className="light" onClick={() => { setStep("quiz"); setAnswers({}); setCurrentQuestion(0); setResultSaved(false); }}>
+ <button type="button" className="light" onClick={retakeDiagnostic}>
  Retake Diagnostic
  </button>
  </div>
@@ -434,32 +562,132 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
 }
 
 export default function BrandDiagnosticPage() {
+ const auth = useAuth();
+ const { user } = useUser();
+  const {
+    activeWorkspaceId,
+    initialized: workspaceInitialized,
+    loading: workspaceLoading,
+    error: workspaceError,
+    refreshWorkspaces,
+  } = useWorkspace();
+ const navigate = useNavigate();
  const [diagnosticOpen, setDiagnosticOpen] = useState(false);
  const [resultSnapshot, setResultSnapshot] = useState(null);
+ const [history, setHistory] = useState([]);
+ const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+ const [historyError, setHistoryError] = useState("");
+ const historyScopeRef = useRef(0);
  const [modalInitialStep, setModalInitialStep] = useState("lead");
  const [modalInitialData, setModalInitialData] = useState(null);
+  const [showReplaceDraftDialog, setShowReplaceDraftDialog] = useState(false);
  // Bumped on each open so the modal remounts and re-reads initialStep/initialData.
  const [modalKey, setModalKey] = useState(0);
+ const diagnosticOpenRef = useRef(diagnosticOpen);
+ diagnosticOpenRef.current = diagnosticOpen;
 
- // Open the modal. Restore a saved result to the "result" step when one exists,
- // otherwise open fresh at the "lead" capture step.
- function openDiagnostic() {
- let saved = null;
+ const identity = {
+ name: [user?.firstName, user?.lastName].filter(Boolean).join(" "),
+ email: user?.primaryEmailAddress?.emailAddress || "",
+ };
+
+ function normalizeSavedResult(result) {
+ if (!result) return null;
+ return {
+ ...result,
+ recommendation: getRecommendation(result.score),
+ topGaps: questions.filter(([id, label]) => result.top_gaps?.includes(label)),
+ };
+ }
+
+ async function loadHistory(resetSnapshot = false, expectedScope = historyScopeRef.current) {
+ if (!auth.isSignedIn || !activeWorkspaceId || !workspaceInitialized) return;
+ setHistoryLoading(true);
+ setHistoryError("");
  try {
- const raw = window.localStorage.getItem(RESULT_STORAGE_KEY);
- if (raw) {
- const parsed = JSON.parse(raw);
- if (parsed && typeof parsed.score === "number" && parsed.recommendation) {
- saved = parsed;
+ const response = await apiClient.get("/api/brand-diagnostic/results");
+ if (expectedScope !== historyScopeRef.current) return;
+ const records = (response?.results || []).map(normalizeSavedResult);
+ setHistory(records);
+ if (records.length && (resetSnapshot || !resultSnapshot)) setResultSnapshot(records[0]);
+ } catch (error) {
+ if (expectedScope !== historyScopeRef.current) return;
+ setHistoryError(error?.message || "Unable to load saved diagnostics.");
+ } finally {
+ if (expectedScope !== historyScopeRef.current) return;
+ setHistoryLoading(false);
+  setHistoryLoaded(true);
  }
- }
- } catch (_) {
- saved = null;
  }
 
- if (saved) {
+ useEffect(() => {
+ if (diagnosticOpenRef.current) return;
+ if (!auth.isLoaded || (auth.isSignedIn && !workspaceInitialized)) return;
+ const restored = restoreDiagnosticDraft(getSessionStorage(), {
+ questionIds: diagnosticQuestionIds,
+ userId: auth.isSignedIn ? user?.id : null,
+ workspaceId: auth.isSignedIn ? activeWorkspaceId : null,
+ workspaceReady: Boolean(auth.isSignedIn && workspaceInitialized && activeWorkspaceId),
+ });
+ if (restored) {
+ const ownedDraft = auth.isSignedIn
+ ? bindDiagnosticDraftOwner(restored, { userId: user?.id, workspaceId: activeWorkspaceId })
+ : restored;
+ if (!ownedDraft) {
+ clearDiagnosticDraft(getSessionStorage());
+ } else {
+ persistDiagnosticDraft(getSessionStorage(), ownedDraft, { questionIds: diagnosticQuestionIds });
+ setModalInitialStep(ownedDraft.step);
+ setModalInitialData(ownedDraft);
+ setModalKey((current) => current + 1);
+ setDiagnosticOpen(true);
+ }
+ }
+ }, [auth.isLoaded, auth.isSignedIn, user?.id, activeWorkspaceId, workspaceInitialized]);
+
+ useEffect(() => {
+ const scope = ++historyScopeRef.current;
+ setResultSnapshot(null);
+ setHistory([]);
+ setHistoryLoading(false);
+  setHistoryLoaded(false);
+ setHistoryError("");
+ if (auth.isLoaded && auth.isSignedIn && workspaceInitialized && activeWorkspaceId) loadHistory(true, scope);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [auth.isLoaded, auth.isSignedIn, activeWorkspaceId, workspaceInitialized]);
+
+  const historyViewState = getDiagnosticHistoryViewState({
+    authLoaded: auth.isLoaded,
+    isSignedIn: auth.isSignedIn,
+    workspaceLoading,
+    workspaceInitialized,
+    activeWorkspaceId,
+    historyLoading,
+    historyLoaded,
+    historyError,
+    resultCount: history.length,
+  });
+
+ // Anonymous visitors can start the quiz. Results require a server-saved signed-in session.
+ function openDiagnostic() {
+ const draft = restoreDiagnosticDraft(getSessionStorage(), {
+ questionIds: diagnosticQuestionIds,
+ userId: auth.isSignedIn ? user?.id : null,
+ workspaceId: auth.isSignedIn ? activeWorkspaceId : null,
+ workspaceReady: Boolean(auth.isSignedIn && workspaceInitialized && activeWorkspaceId),
+ });
+ const ownedDraft = draft && auth.isSignedIn
+ ? bindDiagnosticDraftOwner(draft, { userId: user?.id, workspaceId: activeWorkspaceId })
+ : draft;
+ if (draft && !ownedDraft) clearDiagnosticDraft(getSessionStorage());
+ if (ownedDraft) {
+ persistDiagnosticDraft(getSessionStorage(), ownedDraft, { questionIds: diagnosticQuestionIds });
+ setModalInitialStep(ownedDraft.step);
+ setModalInitialData(ownedDraft);
+ } else if (resultSnapshot) {
  setModalInitialStep("result");
- setModalInitialData(saved);
+ setModalInitialData(resultSnapshot);
  } else {
  setModalInitialStep("lead");
  setModalInitialData(null);
@@ -468,20 +696,35 @@ export default function BrandDiagnosticPage() {
  setDiagnosticOpen(true);
  }
 
- // Restore a saved diagnostic result on load so refreshing does not lose it.
- useEffect(() => {
- try {
- const raw = window.localStorage.getItem(RESULT_STORAGE_KEY);
- if (!raw) return;
- const saved = JSON.parse(raw);
- if (saved && typeof saved.score === "number" && saved.recommendation) {
- setResultSnapshot(saved);
- }
- } catch (error) {
- // Corrupt or unavailable storage — clear it and start fresh.
- try { window.localStorage.removeItem(RESULT_STORAGE_KEY); } catch (_) {}
- }
- }, []);
+  function beginFreshDiagnostic({ discardCurrentDraft = false } = {}) {
+  const storage = getSessionStorage();
+  if (discardCurrentDraft) clearDiagnosticDraft(storage);
+  const freshDraft = createFreshDiagnosticDraft({
+  userId: auth.isSignedIn ? user?.id : null,
+  workspaceId: auth.isSignedIn ? activeWorkspaceId : null,
+  });
+  persistDiagnosticDraft(storage, freshDraft, { questionIds: diagnosticQuestionIds });
+  setShowReplaceDraftDialog(false);
+  setResultSnapshot(null);
+  setModalInitialStep("lead");
+  setModalInitialData(freshDraft);
+  setModalKey((current) => current + 1);
+  setDiagnosticOpen(true);
+  }
+
+  function startNewDiagnostic() {
+  const existingDraft = restoreDiagnosticDraft(getSessionStorage(), {
+  questionIds: diagnosticQuestionIds,
+  userId: auth.isSignedIn ? user?.id : null,
+  workspaceId: auth.isSignedIn ? activeWorkspaceId : null,
+  workspaceReady: Boolean(auth.isSignedIn && workspaceInitialized && activeWorkspaceId),
+  });
+  if (existingDraft) {
+  setShowReplaceDraftDialog(true);
+  return;
+  }
+  beginFreshDiagnostic();
+  }
 
  const liveDimensions = useMemo(
  () => buildLiveDimensions(resultSnapshot?.answers || {}),
@@ -537,7 +780,10 @@ export default function BrandDiagnosticPage() {
 
  return (
     <main className="bdx-page">
-      <PublicHeader active="diagnostic" />
+       <PublicHeader
+         active="diagnostic"
+         loginTo={buildDiagnosticAuthPath("/sign-in", window.location.pathname, window.location.search)}
+       />
 
       {/* ---------- hero ---------- */}
       <section className="bdx-hero-wrap">
@@ -552,11 +798,24 @@ export default function BrandDiagnosticPage() {
             <span className="bdx-title-rule" aria-hidden="true" />
             <p>Find the disconnect. Name the truth. Clarify the next move.</p>
 
-            <div className="bdx-hero-buttons">
-              <button type="button" onClick={openDiagnostic} className="bdx-primary-btn">
-                Start the Brand Diagnostic
+            <div className="bdx-assessment-stack">
+              <div className="bdx-hero-buttons">
+              <button
+                type="button"
+                onClick={() => resultSnapshot?.id
+                  ? navigate(`/brand-diagnostic/report/${encodeURIComponent(resultSnapshot.id)}`)
+                  : openDiagnostic()}
+                className="bdx-primary-btn"
+              >
+                {resultSnapshot ? "Continue to Saved Result" : "Start the Brand Diagnostic"}
                 <ArrowRight size={16} />
               </button>
+              {resultSnapshot?.id ? (
+                <button type="button" onClick={startNewDiagnostic} className="bdx-secondary-btn">
+                  Start a New Diagnostic
+                  <ArrowRight size={16} />
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => {
@@ -569,7 +828,45 @@ export default function BrandDiagnosticPage() {
               >
                 How the Score Works
               </button>
+              </div>
+              <p className="bdx-assessment-note">Free 15-question assessment. Create a free account or sign in after the quiz to view and save your full results.</p>
             </div>
+
+            {auth.isSignedIn ? (
+              <section className="bdx-saved-results" aria-label="Saved diagnostic history">
+                <h2>Your saved diagnostics</h2>
+                {historyViewState === "checking-auth" ? <p>Checking your account before loading saved diagnostics.</p> : null}
+                {historyViewState === "loading-workspace" ? <p>Loading your workspace before checking saved diagnostics.</p> : null}
+                {historyViewState === "loading-history" ? <p>Loading saved results.</p> : null}
+                {historyViewState === "workspace-unavailable" ? (
+                  <div className="bdx-error" role="alert">
+                    <p>{workspaceError?.message || "We could not confirm an active workspace, so saved diagnostics have not been checked."}</p>
+                    <button type="button" className="bdx-secondary-btn" onClick={() => { void refreshWorkspaces(); }}>
+                      Retry workspace
+                    </button>
+                  </div>
+                ) : null}
+                {historyViewState === "error" ? (
+                  <div className="bdx-error" role="alert">
+                    <p>{historyError}</p>
+                    <button type="button" className="bdx-secondary-btn" onClick={() => { void loadHistory(true); }}>
+                      Retry saved diagnostics
+                    </button>
+                  </div>
+                ) : null}
+                {historyViewState === "empty" ? <p>No saved diagnostics yet.</p> : null}
+                {historyViewState === "results" ? history.map((record) => (
+                  <button type="button" className="bdx-saved-result-card" key={record.id} onClick={() => {
+                    setResultSnapshot(normalizeSavedResult(record));
+                    navigate(`/brand-diagnostic/report/${encodeURIComponent(record.id)}`);
+                  }}>
+                    <span>{record.recommendation?.tier} · {record.score}/60</span>
+                    <time dateTime={record.created_at}>{new Date(record.created_at).toLocaleDateString()}</time>
+                    <span className="bdx-saved-result-action">View saved report <ArrowRight size={14} /></span>
+                  </button>
+                )) : null}
+              </section>
+            ) : null}
 
             <div className="bdx-trust">
               <div>
@@ -642,7 +939,9 @@ export default function BrandDiagnosticPage() {
 
           <div>
             <h2>{displaySummary}</h2>
-            <button type="button" onClick={openDiagnostic}>Take the full diagnostic <ArrowRight size={13} /></button>
+            <button type="button" onClick={resultSnapshot?.id ? startNewDiagnostic : openDiagnostic}>
+              {resultSnapshot?.id ? "Start a New Diagnostic" : "Take the full diagnostic"} <ArrowRight size={13} />
+            </button>
           </div>
 
           <div className="bdx-pathway">
@@ -725,8 +1024,10 @@ export default function BrandDiagnosticPage() {
               </article>
             ))}
 
-            <button type="button" onClick={openDiagnostic} className="bdx-outline-btn">
-              View Full Recommendation
+            <button type="button" onClick={resultSnapshot?.id
+              ? () => navigate(`/brand-diagnostic/report/${encodeURIComponent(resultSnapshot.id)}`)
+              : openDiagnostic} className="bdx-outline-btn">
+              {resultSnapshot?.id ? "View Saved Report" : "View Full Recommendation"}
               <ArrowRight size={14} />
             </button>
           </aside>
@@ -752,7 +1053,9 @@ export default function BrandDiagnosticPage() {
             <p>Your Next Step</p>
             <h2>Turn Insight Into Impact</h2>
             <span>You&rsquo;ve identified the gaps. Now let&rsquo;s close them with a clear plan and expert guidance.</span>
-            <button type="button" onClick={openDiagnostic}>Start the Diagnostic <ArrowRight size={14} /></button>
+            <button type="button" onClick={resultSnapshot?.id ? startNewDiagnostic : openDiagnostic}>
+              {resultSnapshot?.id ? "Start a New Diagnostic" : "Start the Diagnostic"} <ArrowRight size={14} />
+            </button>
 
             <small><ShieldCheck size={14} /> Trusted by founders and teams worldwide.</small>
           </section>
@@ -776,8 +1079,8 @@ export default function BrandDiagnosticPage() {
         <div className="bdx-inner bdx-final-inner">
           <p className="bdx-final-eyebrow">The best brands start with truth.</p>
           <h2>Ready to See the Truth About Your Brand?</h2>
-          <button type="button" onClick={openDiagnostic} className="bdx-final-btn">
-            Start the Brand Diagnostic
+          <button type="button" onClick={resultSnapshot?.id ? startNewDiagnostic : openDiagnostic} className="bdx-final-btn">
+            {resultSnapshot?.id ? "Start a New Diagnostic" : "Start the Brand Diagnostic"}
             <ArrowRight size={16} />
           </button>
           <small>Takes 8-10 Minutes · Instant Results · 100% Confidential</small>
@@ -786,21 +1089,48 @@ export default function BrandDiagnosticPage() {
 
       <PublicFooter />
 
+      {showReplaceDraftDialog ? (
+        <div className="bdx-replace-draft-backdrop">
+          <section
+            className="bdx-replace-draft-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="bdx-replace-draft-title"
+            aria-describedby="bdx-replace-draft-copy"
+          >
+            <h2 id="bdx-replace-draft-title">You have an unfinished diagnostic</h2>
+            <p id="bdx-replace-draft-copy">
+              Continue that draft, or discard only that unfinished browser draft and start fresh. Your saved reports and history stay in your workspace.
+            </p>
+            <div>
+              <button type="button" onClick={() => { setShowReplaceDraftDialog(false); openDiagnostic(); }}>
+                Continue Unfinished Diagnostic
+              </button>
+              <button type="button" className="bdx-replace-draft-confirm" onClick={() => beginFreshDiagnostic({ discardCurrentDraft: true })}>
+                Discard Draft and Start New
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
  <ModalDiagnostic
  key={modalKey}
  open={diagnosticOpen}
  initialStep={modalInitialStep}
  initialData={modalInitialData}
+ identity={identity}
+ isSignedIn={auth.isSignedIn}
+ userId={user?.id || null}
+ workspaceId={activeWorkspaceId || null}
+ navigate={navigate}
  onClose={() => setDiagnosticOpen(false)}
+ onRetake={() => setResultSnapshot(null)}
  onComplete={(snapshot) => {
  setResultSnapshot(snapshot);
+ setHistory((current) => [snapshot, ...current.filter((item) => item.id !== snapshot.id)]);
  setDiagnosticOpen(false);
- // Persist the result so a page refresh restores it.
- try {
- window.localStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify(snapshot));
- } catch (error) {
- // Storage unavailable (private mode / quota) — non-fatal.
- }
+ navigate(`/brand-diagnostic/report/${encodeURIComponent(snapshot.id)}`);
  }}
  />
 
@@ -1770,6 +2100,32 @@ export default function BrandDiagnosticPage() {
  color: #2b1040;
  }
 
+  .bdx-replace-draft-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(22, 9, 28, .62);
+  }
+
+  .bdx-replace-draft-dialog {
+  width: min(100%, 520px);
+  border: 1px solid rgba(119,67,72,.22);
+  border-radius: 16px;
+  padding: 24px;
+  background: #fffaf5;
+  color: #2b1040;
+  box-shadow: 0 24px 80px rgba(0,0,0,.24);
+  }
+
+  .bdx-replace-draft-dialog h2 { margin: 0 0 10px; font-size: 21px; }
+  .bdx-replace-draft-dialog p { color: rgba(43,16,64,.72); line-height: 1.55; }
+  .bdx-replace-draft-dialog > div { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+  .bdx-replace-draft-dialog button { min-height: 42px; border: 1px solid rgba(119,67,72,.28); border-radius: 999px; padding: 0 16px; background: white; color: #2b1040; font-weight: 800; cursor: pointer; }
+  .bdx-replace-draft-dialog .bdx-replace-draft-confirm { background: #33033c; color: #fffaf5; }
+
  @media (max-width: 1300px) {
  .bdx-hero,
  .bdx-grid,
@@ -1853,7 +2209,30 @@ export default function BrandDiagnosticPage() {
           max-width: 440px; margin: 0; color: #6d5866;
           font-family: "DM Sans", sans-serif; font-size: 1.05rem; line-height: 1.6;
         }
-        .bdx-page .bdx-hero-buttons { margin-top: 28px; }
+        .bdx-page .bdx-assessment-stack {
+          display: flex; flex-direction: column; gap: 24px; margin-top: 28px;
+        }
+        .bdx-page .bdx-assessment-stack > .bdx-hero-buttons { margin-top: 0; }
+        .bdx-page .bdx-assessment-stack > .bdx-assessment-note { margin: 0; }
+        .bdx-page .bdx-saved-results {
+          display: grid; gap: 12px; margin-top: 28px; padding-top: 22px;
+          border-top: 1px solid rgba(51,3,60,0.16);
+        }
+        .bdx-page .bdx-saved-results h2 {
+          margin: 0 0 2px; color: #33033c; font-family: "Playfair Display", Georgia, serif;
+          font-size: 1.35rem; font-weight: 600; line-height: 1.2;
+        }
+        .bdx-page .bdx-saved-result-card {
+          display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 16px;
+          width: 100%; padding: 14px 16px; border: 1px solid rgba(51,3,60,0.15); border-radius: 6px;
+          background: rgba(255,255,255,0.68); color: #33033c; text-align: left; cursor: pointer;
+          transition: border-color 150ms ease, background 150ms ease;
+        }
+        .bdx-page .bdx-saved-result-card:hover { border-color: #c4a95b; background: #fffaf6; }
+        .bdx-page .bdx-saved-result-card > span:first-child { font-size: 14px; font-weight: 700; }
+        .bdx-page .bdx-saved-result-card time { color: #6d5866; font-size: 12px; }
+        .bdx-page .bdx-saved-result-action { display: inline-flex; grid-column: 1 / -1; align-items: center; gap: 6px; color: #af0024; font-size: 12px; font-weight: 700; }
+        .bdx-page .bdx-saved-results > p { margin: 0; color: #6d5866; line-height: 1.5; }
         .bdx-trust { display: flex; flex-wrap: wrap; gap: 26px 34px; margin-top: 40px; }
         .bdx-trust > div { display: flex; align-items: center; gap: 12px; }
         .bdx-trust svg { color: #c4a95b; flex-shrink: 0; }

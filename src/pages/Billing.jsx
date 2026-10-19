@@ -285,6 +285,8 @@ function CheckoutWall({
   checkoutBusy,
   onSelectPlan,
   onSignOut,
+  diagnosticReturn,
+  onReturnToDiagnostic,
 }) {
   return (
     <main
@@ -337,8 +339,31 @@ function CheckoutWall({
             lineHeight: 1.5,
           }}
         >
-          Your brand diagnostic is complete. Select a plan to access your results.
+          {diagnosticReturn
+            ? "Return to your diagnostic to view or save your results. Choose a plan when you are ready to unlock its included system features."
+            : "Select a plan to unlock the system features included with your subscription."}
         </p>
+
+        {diagnosticReturn ? (
+          <button
+            type="button"
+            onClick={onReturnToDiagnostic}
+            style={{
+              display: "block",
+              margin: "-12px auto 28px",
+              padding: "10px 16px",
+              border: "1px solid var(--cth-command-border)",
+              borderRadius: 4,
+              background: "transparent",
+              color: "var(--cth-command-ink)",
+              fontFamily: SANS,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Return to Diagnostic Results
+          </button>
+        ) : null}
 
         <StatusBanner status={status} />
 
@@ -537,6 +562,7 @@ export default function Billing() {
 
   const sessionId = searchParams.get("session_id");
   const success = searchParams.get("success");
+  const diagnosticReturn = searchParams.get("welcome") === "diagnostic";
 
   const activePlanId = useMemo(() => {
     return summary?.subscription?.plan_id || summary?.plan_id || null;
@@ -715,6 +741,8 @@ export default function Billing() {
         checkoutBusy={checkoutBusy}
         onSelectPlan={startSubscriptionCheckout}
         onSignOut={handleSignOut}
+        diagnosticReturn={diagnosticReturn}
+        onReturnToDiagnostic={() => navigate("/brand-diagnostic")}
       />
     );
   }

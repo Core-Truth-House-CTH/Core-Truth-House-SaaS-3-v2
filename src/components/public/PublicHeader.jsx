@@ -22,7 +22,7 @@ function isActive(item, active) {
  return item.label.toLowerCase() === normalized;
 }
 
-export default function PublicHeader({ active = "" }) {
+export default function PublicHeader({ active = "", loginTo = "/sign-in" }) {
  const [menuOpen, setMenuOpen] = useState(false);
  const location = useLocation();
 
@@ -81,7 +81,7 @@ export default function PublicHeader({ active = "" }) {
  Start the Brand Diagnostic
  </a>
 
- <Link to="/sign-in" className="cth-public-login-link">
+  <Link to={loginTo} className="cth-public-login-link">
  Login
  </Link>
 
@@ -153,7 +153,7 @@ export default function PublicHeader({ active = "" }) {
  Start the Brand Diagnostic
  </a>
  <Link
- to="/sign-in"
+  to={loginTo}
  className="cth-public-mobile-login"
  onClick={() => setMenuOpen(false)}
  >
