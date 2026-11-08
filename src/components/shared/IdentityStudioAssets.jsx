@@ -1,3 +1,4 @@
+import { getApiBaseUrl } from "../../lib/apiConfig";
 /**
  * IdentityStudioAssets.jsx
  * Parent-controlled asset manager for Identity Studio
@@ -13,7 +14,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import apiClient from "../../lib/apiClient";
 import { toast } from 'sonner';
 
-const API = import.meta.env.VITE_BACKEND_URL;
+const API = getApiBaseUrl();
 
 const C = {
   bg: 'var(--cth-brand-primary-deep)',

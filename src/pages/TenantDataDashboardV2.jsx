@@ -1,3 +1,4 @@
+import { apiFetch } from "../lib/apiConfig";
 /**
  * TenantDataDashboardV2.jsx
  * Core Truth House OS — Workspace Library
@@ -354,7 +355,7 @@ function useAuthedBlobUrl(path) {
       try {
         const fullUrl = typeof apiClient.buildApiUrl === "function" ? apiClient.buildApiUrl(path) : path;
         const headers = typeof apiClient.getAuthHeaders === "function" ? await apiClient.getAuthHeaders() : {};
-        const response = await fetch(fullUrl, { method: "GET", headers, credentials: "include", signal: controller.signal });
+        const response = await apiFetch(fullUrl, { method: "GET", headers, credentials: "include", signal: controller.signal });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const blob = await response.blob();
         if (cancelled) return;
@@ -393,7 +394,7 @@ async function fetchPlaybackBlobUrl(videoId) {
   const path = `/api/studios/videos/${videoId}/playback`;
   const fullUrl = typeof apiClient.buildApiUrl === "function" ? apiClient.buildApiUrl(path) : path;
   const headers = typeof apiClient.getAuthHeaders === "function" ? await apiClient.getAuthHeaders() : {};
-  const response = await fetch(fullUrl, { method: "GET", headers, credentials: "include" });
+  const response = await apiFetch(fullUrl, { method: "GET", headers, credentials: "include" });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const blob = await response.blob();
   return window.URL.createObjectURL(blob);
@@ -1163,7 +1164,7 @@ export default function TenantDataDashboard() {
     const headers = typeof apiClient.getAuthHeaders === "function"
       ? await apiClient.getAuthHeaders({ isFormData: true })
       : {};
-    const response = await fetch(url, { method: "POST", headers, credentials: "include", body: formData });
+    const response = await apiFetch(url, { method: "POST", headers, credentials: "include", body: formData });
     if (!response.ok) {
       const text = await response.text();
       let msg = `Upload failed (${response.status})`;
@@ -1192,7 +1193,7 @@ export default function TenantDataDashboard() {
     const headers = typeof apiClient.getAuthHeaders === "function"
       ? await apiClient.getAuthHeaders({ isFormData: true })
       : {};
-    const response = await fetch(url, { method: "POST", headers, credentials: "include", body: form });
+    const response = await apiFetch(url, { method: "POST", headers, credentials: "include", body: form });
     if (!response.ok) {
       const text = await response.text();
       let msg = `Upload failed (${response.status})`;
@@ -1234,7 +1235,7 @@ export default function TenantDataDashboard() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), AUTHED_BLOB_TIMEOUT_MS);
     try {
-      const response = await fetch(fullUrl, { method: "GET", headers, credentials: "include", signal: controller.signal });
+      const response = await apiFetch(fullUrl, { method: "GET", headers, credentials: "include", signal: controller.signal });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const blob = await response.blob();
       return window.URL.createObjectURL(blob);

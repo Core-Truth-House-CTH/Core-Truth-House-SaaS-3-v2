@@ -1,3 +1,4 @@
+import { getApiBaseUrl, apiFetch } from "../lib/apiConfig";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,7 +10,7 @@ import { DashboardLayout } from "../components/Layout";
 import { usePlan } from "../context/PlanContext";
 import apiClient from "../lib/apiClient";
 
-const API_BASE = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+const API_BASE = String(getApiBaseUrl() || "").replace(/\/$/, "");
 const absUrl = (u) => (!u ? u : /^(https?:|data:)/.test(u) ? u : `${API_BASE}${u}`);
 
 const PLAN_RANK = { free: 0, audit: 1, foundation: 2, structure: 3, house: 4, estate: 5, legacy: 6 };
@@ -73,7 +74,7 @@ function FalModelBrowser({ title, loading, models, search, setSearch, cat, setCa
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1200, background: "rgba(13,0,16,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 680, maxHeight: "82dvh", display: "flex", flexDirection: "column", background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", borderRadius: 14, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--cth-command-border)" }}>
-          <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 600, color: "var(--cth-command-ink)" }}>{title}</span>
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 600, color: "var(--cth-command-ink)" }}>{title}</span>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cth-command-muted)", fontSize: 20, lineHeight: 1 }}>×</button>
         </div>
         <div style={{ display: "flex", gap: 8, padding: "12px 18px", borderBottom: "1px solid var(--cth-command-border)", flexWrap: "wrap" }}>
@@ -437,7 +438,7 @@ export default function StudiosVideo() {
   const authedDownloadBlob = async (jobId) => {
     const url = apiClient.buildApiUrl(`/api/studios/videos/download/${jobId}`);
     const headers = await apiClient.getAuthHeaders({ body: {} });
-    const res = await fetch(url, { method: "POST", headers, credentials: "include" });
+    const res = await apiFetch(url, { method: "POST", headers, credentials: "include" });
     if (!res.ok) throw new Error("Download failed");
     return res.blob();
   };

@@ -3,15 +3,17 @@ import { Link } from "react-router-dom";
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
 
+// Public return page: URL/client values are not trusted payment evidence.
+// Payment confirmation is issued only by the server-verified email path.
 export default function CohortWelcomePage() {
   useEffect(() => {
-    document.title = "Your Seat is Confirmed | Core Truth House";
+    document.title = "Checkout Return | Core Truth House";
   }, []);
 
   return (
     <>
       <PublicHeader />
-      <main style={{
+      <main data-payment-state="unverifiable" style={{
         background: "#EFE7E3",
         minHeight: "100vh",
         display: "flex",
@@ -47,18 +49,18 @@ export default function CohortWelcomePage() {
             margin: "0 auto 32px",
             fontSize: "24px",
           }}>
-            ✓
+            ?
           </div>
 
           <h1 style={{
-            fontFamily: '"Playfair Display", Georgia, serif',
+            fontFamily: '"Cormorant Garamond", Georgia, serif',
             fontSize: "clamp(2rem, 5vw, 3.2rem)",
             lineHeight: 1.05,
             color: "#2B1040",
             margin: "0 0 20px",
             letterSpacing: "-0.02em",
           }}>
-            Your seat is confirmed.
+            Payment is not verified here.
           </h1>
 
           <p style={{
@@ -70,7 +72,7 @@ export default function CohortWelcomePage() {
             marginLeft: "auto",
             marginRight: "auto",
           }}>
-            Payment received. Your invite to Core Truth House is on its way to your inbox. Click the link in that email to create your account and access the OS.
+            Returning from checkout does not confirm payment or access. This public page cannot verify whether payment is paid, unpaid or still pending. Use your payment confirmation and access invitation when available; an invitation alone is not proof of payment.
           </p>
 
           <p style={{
@@ -78,7 +80,7 @@ export default function CohortWelcomePage() {
             color: "#7C6576",
             margin: "0 0 40px",
           }}>
-            If you do not see it within a few minutes, check your spam folder.
+            If confirmation is pending or unavailable, do not pay again to test it. Retry your original flow later or contact hello@coretruthhouse.com.
           </p>
 
           <Link

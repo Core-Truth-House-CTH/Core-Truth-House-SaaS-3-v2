@@ -1,4 +1,6 @@
 export const REDIRECT_ROUTES = [
+  // Retired screen: old bookmarks use the normal authenticated destination.
+  { path: "/lock-screen", redirectTo: "/command-center" },
   {
     path: "/dashboard",
     redirectTo: "/command-center",

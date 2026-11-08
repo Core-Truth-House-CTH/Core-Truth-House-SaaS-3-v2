@@ -15,7 +15,7 @@ import {
 import apiClient from "../lib/apiClient";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const PLATFORMS = [
  { key: "instagram", label: "Instagram", icon: Instagram, color: "#E1306C", note: "Posting + profile sync" },

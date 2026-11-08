@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import SelectionCard from "./SelectionCard";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const TARGET_LABELS = {
   brief: { title: "Regenerate Brief", thingNoun: "brief" },

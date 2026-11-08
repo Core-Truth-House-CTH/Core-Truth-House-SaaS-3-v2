@@ -279,3 +279,27 @@
   .cth-authshell .as-search { width: 190px; }
   .cth-authshell .as-profile-copy { display: none; }
 }
+
+/* Narrow-screen notification panel, scoped to the AuthShell-owned bell only.
+   NotificationBell opens a 24rem panel absolutely positioned right-0 against
+   its own `relative` root. In this shell the bell sits after the flexible
+   search field rather than at the right edge, so on a phone that fixed width
+   pushed the panel's left side off-screen and its contents out of reach.
+
+   Below 640px the panel is pinned to the viewport instead of the bell. The top
+   offset is measured, not assumed: this shell's top bar wraps to a stable 187px
+   at 320px, 360px, 390px and 430px viewport widths, so 188px clears it without
+   overlapping. Desktop keeps the existing 24rem bell-anchored presentation, and
+   standalone DashboardLayout / CRM bells never receive this class. */
+@media (max-width: 640px) {
+  .cth-authshell .as-notification-panel {
+    position: fixed !important;
+    top: 188px !important;
+    left: max(12px, env(safe-area-inset-left)) !important;
+    right: max(12px, env(safe-area-inset-right)) !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: calc(100dvh - 188px - 12px) !important;
+    overflow-y: auto !important;
+  }
+}

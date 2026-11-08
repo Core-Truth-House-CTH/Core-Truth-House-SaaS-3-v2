@@ -1,3 +1,4 @@
+import { getApiBaseUrl, apiFetch } from "../lib/apiConfig";
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getWorkspaceSlugFromHost } from "../utils/subdomain";
@@ -6,11 +7,7 @@ import { getWorkspaceSlugFromHost } from "../utils/subdomain";
 // Renders an offer branded entirely to the tenant's identity — intentionally
 // free of Core Truth House design tokens (the only CTH mark is the footer).
 
-const API_BASE = (
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  "https://api.coretruthhouse.com"
-).replace(/\/$/, "");
+const API_BASE = getApiBaseUrl({ productionFallback: true });
 
 // Brand-neutral fallbacks used only when the tenant has no identity configured.
 const FALLBACK_PRIMARY = "#5d0012";
@@ -167,7 +164,7 @@ export default function PublicOfferPage() {
 
     (async () => {
       try {
-        const res = await fetch(
+        const res = await apiFetch(
           `${API_BASE}/api/public/offers/${encodeURIComponent(workspaceSlug)}/${encodeURIComponent(offerSlug)}`
         );
         if (!res.ok) {

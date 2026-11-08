@@ -9,7 +9,6 @@ Disallow: /sign-in
 Disallow: /sign-in/
 Disallow: /sign-up
 Disallow: /sign-up/
-Disallow: /lock-screen
 
 # AI agents — allowed to crawl public content, blocked from app/private areas.
 User-agent: GPTBot

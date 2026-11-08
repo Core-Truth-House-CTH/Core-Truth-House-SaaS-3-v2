@@ -3,7 +3,6 @@ import PlaceholderPage from "../pages/PlaceholderPage";
 
 const makePlaceholder = (title) => () => <PlaceholderPage title={title} />;
 
-const CommandCenter = lazy(() => import("../pages/CommandCenter"));
 const CommandCenterNext = lazy(() => import("../pages/CommandCenterNext"));
 const BrandHouse = lazy(() => import("../pages/BrandHouse"));
 const WorkspacePage = lazy(() => import("../pages/WorkspacePage"));
@@ -45,7 +44,6 @@ const VideoTutorialsPage = lazy(() => import("../pages/VideoTutorialsPage"));
 const OnboardingWorkflow = lazy(() => import("../pages/OnboardingWorkflow"));
 const Automations = lazy(() => import("../pages/Automations"));
 const Studios = lazy(() => import("../pages/Studios"));
-const StudiosHeadshot = lazy(() => import("../pages/StudiosHeadshot"));
 const StudiosVisual = lazy(() => import("../pages/StudiosVisual"));
 const StudiosVideo = lazy(() => import("../pages/StudiosVideo"));
 const StudiosVoice = lazy(() => import("../pages/StudiosVoice"));
@@ -56,7 +54,10 @@ const FirstCampaign = CampaignBuilder;
 
 const pageRegistry = {
   "/onboarding": OnboardingWorkflow,
-  "/command-center": CommandCenter,
+  // Both paths resolve to the rebuilt Command Center. The legacy sidebar
+  // Command Center is no longer route-accessible; /command-center-next is kept
+  // registered so existing links and bookmarks continue to work.
+  "/command-center": CommandCenterNext,
   "/command-center-next": CommandCenterNext,
   "/brand-house": BrandHouse,
   "/workspace": WorkspacePage,
@@ -80,7 +81,6 @@ const pageRegistry = {
 
   "/content-studio": ContentStudio,
   "/studios": Studios,
-  "/studios/headshot": StudiosHeadshot,
   "/studios/visual": StudiosVisual,
   "/studios/video": StudiosVideo,
   "/studios/voice": StudiosVoice,
@@ -143,7 +143,7 @@ export function getPageComponent(path) {
 
   if (!component) {
     console.warn(`[pageRegistry] No registered page for path: ${normalizedPath}`);
-    return CommandCenter;
+    return CommandCenterNext;
   }
 
   return component;

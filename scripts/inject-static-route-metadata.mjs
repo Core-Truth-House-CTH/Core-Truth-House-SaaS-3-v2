@@ -103,12 +103,12 @@ const routes = [
   },
   {
     route: "/cohort",
-    title: "Brand Positioning Sprint for Solo Founders | Core Truth House",
+    title: "Self-Paced Founding Cohort | Core Truth House",
     description:
-      "A 14-day positioning sprint for solo founders who are consistent but not converting. Four live sessions, async work inside Core Truth House OS, a Core Truth Profile, and a 90-day Brand Operations Plan.",
+      "$495 USD one-time for lifetime Estate access. Self-paced with written instructor feedback on your brand work during the 90-day feedback window. No live sessions. Non-refundable. See Enrollment Policy.",
     ogTitle: "The Core Truth Cohort",
     ogDescription:
-      "A focused, high-touch sprint to repair what's costing you conversions and build a brand that finally performs. Founding seat $497, Standard seat $997.",
+      "Founding: $495 USD one-time for lifetime Estate access. Self-paced with written instructor feedback on your brand work during the 90-day feedback window. No live sessions. Non-refundable. See Enrollment Policy. Standard enrollment is not currently available.",
     image: `${SITE}/cohort-assets/cth-cohort-hero-doorway-v2.png`,
     canonical: `${SITE}/cohort`,
     schemaType: "WebPage",
@@ -117,12 +117,24 @@ const routes = [
     route: "/cohort/apply",
     title: "Apply for The Core Truth Cohort | Core Truth House",
     description:
-      "Apply for your seat in The Core Truth Cohort. Applications are reviewed by hand. Eight founders admitted per cohort.",
+      "Founding: $495 USD one-time for lifetime Estate access. Non-refundable. See Enrollment Policy. Automatic account-based enrollment, initially 12 seats; one additional batch of 3 after 12 initial verified payments.",
     ogTitle: "Apply for The Core Truth Cohort",
     ogDescription:
-      "Tell us about where you are and what you are building. Applications reviewed by hand within 48 hours.",
+      "Self-paced with written instructor feedback on your brand work during the 90-day feedback window. No live sessions. No manual review or referral requirement. Accepted places have a 48-hour payment hold from email-provider acceptance; exact deadline on the secure reservation page.",
     image: `${SITE}/cohort-assets/cth-cohort-hero-doorway-v2.png`,
     canonical: `${SITE}/cohort/apply`,
+    schemaType: "WebPage",
+  },
+  {
+    route: "/enrollment-policy",
+    title: "Enrollment, Refund & Cancellation Policy | Core Truth House",
+    description:
+      "Eligibility, Founding Cohort enrollment, lifetime access, instructor feedback, refunds, cancellations, and billing terms.",
+    ogTitle: "Enrollment, Refund & Cancellation Policy | Core Truth House",
+    ogDescription:
+      "The policy for Founding Cohort enrollment, written instructor feedback, lifetime access, refunds, cancellations, and monthly billing.",
+    image: defaultImage,
+    canonical: `${SITE}/enrollment-policy`,
     schemaType: "WebPage",
   },
   {

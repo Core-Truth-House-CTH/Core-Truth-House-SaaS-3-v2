@@ -306,15 +306,6 @@ export const APP_ROUTES = [
     tooltip: "Standalone creative tools that turn your brand into market-ready visuals.",
   },
     {
-    path: "/studios/headshot",
-    label: "AI Headshot Generator",
-    icon: Sparkles,
-    group: "execution",
-    requiredPlan: null,
-    gateType: null,
-    tooltip: "Generate professional portraits using your brand identity style.",
-  },
-    {
     path: "/studios/visual",
     label: "Visual Studio",
     icon: Sparkles,

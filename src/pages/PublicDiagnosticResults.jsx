@@ -1,3 +1,4 @@
+import { getApiBaseUrl, apiFetch } from "../lib/apiConfig";
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ArrowRight, Sparkles, Target } from "lucide-react";
@@ -9,11 +10,7 @@ import {
 
 const LOGO = "/brand-assets/logo/cth-logo-seal.png";
 
-const API_BASE = (
- import.meta.env.VITE_API_BASE_URL ||
- import.meta.env.VITE_API_URL ||
- "https://api.coretruthhouse.com"
-).replace(/\/$/, "");
+const API_BASE = getApiBaseUrl({ productionFallback: true });
 
 function ScoreRing({ score = 0, total = 60 }) {
  const pct = Math.max(0, Math.min(100, Math.round((Number(score || 0) / total) * 100)));
@@ -44,7 +41,7 @@ export default function PublicDiagnosticResults() {
  return;
  }
  try {
- const response = await fetch(
+ const response = await apiFetch(
  `${API_BASE}/api/public/diagnostic-results/${encodeURIComponent(token)}`
  );
  if (!response.ok) {

@@ -50,6 +50,7 @@
     "date-fns": "^4.1.0",
     "dompurify": "^3.3.3",
     "embla-carousel-react": "^8.6.0",
+    "gsap": "3.15.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.577.0",
     "marked": "^17.0.4",
@@ -71,9 +72,12 @@
     "dev": "vite",
     "lint": "eslint src",
     "prebuild": "eslint src",
-    "build": "vite build",
+    "build": "node scripts/build-production.mjs",
     "preview": "vite preview",
-    "postbuild": "node scripts/create-route-html.cjs && node scripts/inject-static-route-metadata.mjs"
+    "postbuild": "node scripts/create-route-html.cjs && node scripts/inject-static-route-metadata.mjs",
+    "build:staging": "node scripts/build-staging.mjs",
+    "test:staging-guard": "node --test tests/stagingApiGuard.test.mjs tests/stagingApiRuntime.test.mjs",
+    "verify:staging": "node scripts/verify-staging-artifact.mjs"
   },
   "browserslist": {
     "production": [
@@ -98,6 +102,7 @@
     "eslint-plugin-react": "7.37.4",
     "eslint-plugin-react-hooks": "5.2.0",
     "globals": "15.15.0",
+    "playwright": "1.60.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "vite": "^8.0.3"

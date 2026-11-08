@@ -588,7 +588,7 @@ const LINKAGE_EYEBROW_STYLE = {
  marginBottom: 6,
 };
 const LINKAGE_HEADING_STYLE = {
- fontFamily: '"Playfair Display", serif',
+ fontFamily: '"Cormorant Garamond", serif',
  fontSize: 20,
  color: 'var(--cth-command-ink, #2a1a25)',
  margin: 0,

@@ -27,7 +27,7 @@ export function PlanGate({ route, children }) {
           <h1
             className="text-xl font-bold mb-3"
             style={{
-              fontFamily: "'Playfair Display', Georgia, serif",
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
               color: colors.textPrimary,
             }}
           >
@@ -55,7 +55,7 @@ export function PlanGate({ route, children }) {
         <div data-testid="admin-gate-page" className="flex-1 flex items-center justify-center p-6 md:p-10">
           <div className="text-center">
             <Lock size={48} style={{ color: colors.cinnabar, marginBottom: 20 }} />
-            <h1 className="text-xl md:text-2xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif", color: colors.textPrimary }}>Admin Access Only</h1>
+            <h1 className="text-xl md:text-2xl font-bold mb-3" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: colors.textPrimary }}>Admin Access Only</h1>
             <p className="text-sm mb-6" style={{ color: colors.textMuted }}>This area is restricted to the Super Admin.</p>
             <button onClick={() => navigate('/dashboard')} className="px-6 py-3 rounded-xl text-white text-sm font-semibold" style={{ background: 'linear-gradient(135deg, var(--cth-brand-primary), var(--cth-command-cinnabar))' }}>
               Back to Dashboard
@@ -82,7 +82,7 @@ export function PlanGate({ route, children }) {
             <Lock size={28} style={{ color: colors.cinnabar }} />
           </div>
 
-          <h1 className="text-2xl md:text-[28px] font-bold mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif", color: colors.textPrimary }}>
+          <h1 className="text-2xl md:text-[28px] font-bold mb-3" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: colors.textPrimary }}>
             Upgrade to Unlock
           </h1>
 

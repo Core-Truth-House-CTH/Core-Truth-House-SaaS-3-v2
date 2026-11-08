@@ -1,3 +1,4 @@
+import { apiFetch } from "../../lib/apiConfig";
 import React, { useEffect, useRef, useState } from 'react';
 import { Download, Eye, FileText, X, Loader2 } from 'lucide-react';
 import { useUser } from '../../hooks/useAuth';
@@ -5,7 +6,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import apiClient from '../../lib/apiClient';
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const KICKER_STYLE = {
   fontFamily: SANS,
@@ -73,7 +74,7 @@ async function authedFetchBlob(path) {
       ? path
       : apiClient.buildApiUrl(path);
 
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: 'GET',
     headers,
     credentials: 'include',

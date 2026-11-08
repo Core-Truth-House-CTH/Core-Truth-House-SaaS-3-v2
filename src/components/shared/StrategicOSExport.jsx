@@ -1,3 +1,4 @@
+import { apiFetch } from "../../lib/apiConfig";
 import { useEffect, useMemo, useState } from 'react';
 import { Download, Eye, FileText, Loader2, X, CheckCircle } from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
@@ -39,7 +40,7 @@ async function authedFetchBlob(path) {
       ? path
       : apiClient.buildApiUrl(path);
 
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: 'GET',
     headers,
     credentials: 'include',

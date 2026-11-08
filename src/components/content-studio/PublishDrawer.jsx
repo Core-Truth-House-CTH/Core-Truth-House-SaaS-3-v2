@@ -5,7 +5,7 @@ import apiClient from "../../lib/apiClient";
 import { useWorkspace } from "../../context/WorkspaceContext";
 
 const SANS = '"DM Sans", system-ui, sans-serif';
-const SERIF = '"Playfair Display", serif';
+const SERIF = '"Cormorant Garamond", serif';
 
 const PLATFORM_LABELS = {
   instagram: "Instagram",

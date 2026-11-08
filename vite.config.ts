@@ -1,23 +1,20 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import guardedConfig from './vite.config.js'
+import { productionApiOrigin } from './config/production-api.mjs'
 
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  server: {
-    port: 3000,
-    host: '0.0.0.0',
-    proxy: {
-      '/api': {
-        target: 'https://api.coretruthhouse.com',
-        changeOrigin: true,
-        secure: true,
+// Staging delegates unchanged to the guarded implementation. Existing explicit
+// non-staging .ts development usage keeps its previous bind address and proxy.
+export default defineConfig(context => {
+  const config = guardedConfig(context)
+  if (context.mode === 'staging') return config
+  return {
+    ...config,
+    server: {
+      ...config.server,
+      host: '0.0.0.0',
+      proxy: {
+        '/api': { target: productionApiOrigin, changeOrigin: true, secure: true },
       },
     },
-  },
+  }
 })

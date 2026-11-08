@@ -32,9 +32,33 @@ The production working tree runs directly from the VPS filesystem. It does not d
 
 Frontend contract: implemented in Section 3 on `feat/command-center-shell`.
 
-Backend implementation: must be built in `Sha1427/Core-Truth-House-Backend-`, then reconciled into the VPS working tree at `/var/www/coretruthhouse-backend/app`.
+**Backend implementation: DEPLOYED.** The endpoint is live in the production
+runtime. Verified read-only on the VPS on 2026-07-26:
 
-The connected GitHub installation currently exposes only the frontend repository, so the backend implementation cannot be committed from this session until repository access is granted.
+- Route: `/var/www/coretruthhouse-backend/app/backend/routes/command_center.py`
+  — `router = APIRouter(prefix="/api/command-center")` with
+  `@router.get("/overview", response_model=CommandCenterOverviewResponse)`.
+- Router registration: listed as `"backend.routes.command_center"` in
+  `/var/www/coretruthhouse-backend/app/app/routers/api.py`.
+- Backend test: `/var/www/coretruthhouse-backend/app/tests/test_command_center_overview.py`,
+  which asserts `any(route.path == "/api/command-center/overview" ...)`.
+- Live behaviour: an unauthenticated request to
+  `https://api.coretruthhouse.com/api/command-center/overview` returns `401`
+  (an unregistered FastAPI route would return `404`), and the authenticated
+  reconcile session received `200` with a workspace-scoped payload.
+- `https://api.coretruthhouse.com/health` returns `200`.
+
+No backend Git commit is claimed here; only the deployed runtime state above was
+verified, read-only. The backend source repository
+`Sha1427/Core-Truth-House-Backend-` remains outside this session's access, so its
+branch/commit state is not asserted.
+
+### Consequence for the frontend
+
+Because the route is deployed, a `404` from this endpoint is a **real
+missing-workspace error**, not evidence that the route is absent. The frontend
+must not infer route absence from a generic `404`; see "Required behavior" and
+"Legacy fallback" below.
 
 ## Endpoint
 
@@ -126,6 +150,29 @@ The backend must treat `X-Workspace-ID` as a requested workspace, not proof of a
 8. Do not silently substitute unrelated fields for missing metrics.
 9. Include `generated_at` so the frontend can identify stale responses.
 10. Prevent cross-workspace cache reuse. Any cache key must include the validated workspace id and permission context.
+11. Return `501 Not Implemented` — and only `501` — to signal that this endpoint is not available in a given deployment.
+
+## Status codes and legacy fallback
+
+| Status | Meaning | Frontend behaviour |
+|---|---|---|
+| `200` | Authoritative workspace-scoped overview | Render the authoritative overview |
+| `403` | Authenticated user is not a member of the workspace | Surface the access error |
+| `404` | The validated workspace does not exist | Surface the missing-workspace error |
+| `501` | Endpoint not implemented in this deployment | Enter legacy fallback |
+
+`501` is the **only** signal that permits legacy fallback. `fetchCommandCenterOverview`
+in `src/lib/commandCenterOverview.js` therefore falls back on `error?.status === 501`
+alone and rethrows everything else, including `404`, `403`, `401`, network failures
+and workspace-response mismatches.
+
+Treating a generic `404` as route absence would replace a real missing-workspace
+error with partial legacy metrics and an "unavailable sources" notice — a
+data-integrity defect. Do not reintroduce it.
+
+The legacy fallback path remains **defensive compatibility behaviour for a
+deployment that predates this endpoint. It is not the normal production path**:
+the endpoint is deployed and returns `200` in production today.
 
 ## Metric definitions
 

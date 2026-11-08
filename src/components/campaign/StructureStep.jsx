@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import SelectionCard from "./SelectionCard";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const URGENCY_OPTIONS = [
   { value: "", label: "None" },

@@ -12,6 +12,7 @@ import {
  BriefcaseBusiness,
  X,
  Mail,
+ Pencil,
 } from "lucide-react";
 
 import { DashboardLayout } from "../components/Layout";
@@ -124,7 +125,7 @@ function SectionHead({ eyebrow, title, action }) {
  alignItems: "center",
  justifyContent: "space-between",
  gap: 10,
- padding: "12px 16px",
+ padding: "16px 22px",
  borderBottom: "1px solid var(--cth-command-border)",
  }}
  >
@@ -132,7 +133,7 @@ function SectionHead({ eyebrow, title, action }) {
  <h2
  style={{
  fontFamily: SERIF,
- fontSize: 17,
+ fontSize: 20,
  fontWeight: 600,
  color: "var(--cth-command-ink)",
  margin: 0,
@@ -152,9 +153,16 @@ function SectionHead({ eyebrow, title, action }) {
 // section must not add a second inset around it.
 function Section({ eyebrow, title, action, flush = false, children }) {
  return (
- <section style={{ ...PANEL_STYLE, borderRadius: 8, overflow: "hidden" }}>
+ <section
+ style={{
+ ...PANEL_STYLE,
+ borderRadius: 16,
+ boxShadow: "0 18px 40px color-mix(in srgb, var(--cth-command-ink) 8%, transparent)",
+ overflow: "hidden",
+ }}
+ >
  <SectionHead eyebrow={eyebrow} title={title} action={action} />
- {flush ? children : <div style={{ padding: 16 }}>{children}</div>}
+ {flush ? children : <div style={{ padding: "20px 22px" }}>{children}</div>}
  </section>
  );
 }
@@ -657,6 +665,74 @@ function Toast({ toast }) {
  );
 }
 
+const CRM_TABS = [
+ { key: "dashboard", label: "Dashboard" },
+ { key: "contacts", label: "Client Database" },
+ { key: "deals", label: "Deals" },
+ { key: "pipelines", label: "Pipelines" },
+ { key: "activity", label: "Communication Log" },
+ { key: "notes", label: "Notes" },
+];
+
+// Display-only control pill (period / source), matching the approved mockup.
+const PILL_STYLE = {
+ display: "inline-flex",
+ alignItems: "center",
+ gap: 6,
+ background: "var(--cth-command-panel)",
+ border: "1px solid var(--cth-command-border)",
+ borderRadius: 999,
+ padding: "8px 14px",
+ fontFamily: SANS,
+ fontSize: 13,
+ fontWeight: 500,
+ color: "var(--cth-command-muted)",
+};
+
+// In-page horizontal tab bar. Lives inside CRMSuite (under the app header); the
+// global Sidebar / DashboardLayout are untouched.
+function TabBar({ activeTab, onChange }) {
+ return (
+ <nav
+ role="tablist"
+ aria-label="CRM sections"
+ style={{
+ display: "flex",
+ flexWrap: "wrap",
+ gap: 4,
+ borderBottom: "1px solid var(--cth-command-border)",
+ paddingBottom: 10,
+ }}
+ >
+ {CRM_TABS.map((tab) => {
+ const active = tab.key === activeTab;
+ return (
+ <button
+ key={tab.key}
+ type="button"
+ role="tab"
+ aria-selected={active}
+ onClick={() => onChange(tab.key)}
+ style={{
+ fontFamily: SANS,
+ fontSize: 14,
+ fontWeight: active ? 600 : 500,
+ padding: "9px 15px",
+ borderRadius: 11,
+ cursor: "pointer",
+ background: active ? "var(--cth-command-panel)" : "transparent",
+ border: active ? "1px solid var(--cth-command-border)" : "1px solid transparent",
+ color: active ? "var(--cth-command-ink)" : "var(--cth-command-muted)",
+ }}
+ >
+ {tab.label}
+ </button>
+ );
+ })}
+ </nav>
+ );
+}
+
 export default function CRMSuite() {
  const navigate = useNavigate();
  const [loading, setLoading] = useState(true);
@@ -674,11 +750,20 @@ export default function CRMSuite() {
  const [dismissingId, setDismissingId] = useState(null);
  const [addType, setAddType] = useState(null);
  const [addMenuOpen, setAddMenuOpen] = useState(false);
+ // Reskin step 1: in-page top tab, default Dashboard. New state only — existing
+ // state, handlers, and loadCRM are untouched.
+ const [activeTab, setActiveTab] = useState("dashboard");
 
  const [contactQuery, setContactQuery] = useState("");
  const [dealQuery, setDealQuery] = useState("");
  const [contactSortOrder, setContactSortOrder] = useState("newest");
  const [dealSortOrder, setDealSortOrder] = useState("newest");
+ // Inner-page filter pills (new UI state only; loadCRM/handlers untouched).
+ const [contactStatusFilter, setContactStatusFilter] = useState("all");
+ const [contactIndustryFilter, setContactIndustryFilter] = useState("all");
+ const [contactSourceFilter, setContactSourceFilter] = useState("all");
+ const [activityTypeFilter, setActivityTypeFilter] = useState("all");
+ const [activityOutcomeFilter, setActivityOutcomeFilter] = useState("all");
 
  const [contactBusy, setContactBusy] = useState(false);
  const [dealBusy, setDealBusy] = useState(false);
@@ -690,6 +775,9 @@ export default function CRMSuite() {
  email: "",
  company: "",
  status: "lead",
+ website: "",
+ industry: "",
+ start_date: "",
  });
 
  const [dealDraft, setDealDraft] = useState({
@@ -700,6 +788,7 @@ export default function CRMSuite() {
  pipeline_id: "",
  stage_id: "",
  close_date: "",
+ probability: "",
  });
 
  const [activityDraft, setActivityDraft] = useState({
@@ -810,13 +899,20 @@ export default function CRMSuite() {
 
  const filteredContacts = useMemo(() => {
  const q = contactQuery.trim().toLowerCase();
- const base = q
- ? contacts.filter((item) =>
- [item.name, item.email, item.company, item.status]
+ const base = contacts.filter((item) => {
+ if (
+ q &&
+ ![item.name, item.email, item.company, item.status]
  .filter(Boolean)
  .some((value) => String(value).toLowerCase().includes(q))
- )
- : contacts;
+ ) {
+ return false;
+ }
+ if (contactStatusFilter !== "all" && String(item.status || "").toLowerCase() !== contactStatusFilter) return false;
+ if (contactIndustryFilter !== "all" && String(item.industry || "") !== contactIndustryFilter) return false;
+ if (contactSourceFilter !== "all" && String(item.intake_channel || "") !== contactSourceFilter) return false;
+ return true;
+ });
 
  const sorted = [...base];
  switch (contactSortOrder) {
@@ -835,7 +931,49 @@ export default function CRMSuite() {
  break;
  }
  return sorted;
- }, [contacts, contactQuery, contactSortOrder]);
+ }, [contacts, contactQuery, contactSortOrder, contactStatusFilter, contactIndustryFilter, contactSourceFilter]);
+
+ // Distinct filter-pill option lists, derived from the loaded contacts.
+ const contactFilterOptions = useMemo(() => {
+ const industries = new Set();
+ const statuses = new Set();
+ const sources = new Set();
+ contacts.forEach((c) => {
+ if (c.industry) industries.add(String(c.industry));
+ if (c.status) statuses.add(String(c.status).toLowerCase());
+ if (c.intake_channel) sources.add(String(c.intake_channel));
+ });
+ return {
+ industries: [...industries].sort(),
+ statuses: [...statuses].sort(),
+ sources: [...sources].sort(),
+ };
+ }, [contacts]);
+
+ // Resolve contact_id / entity_id to records, for Communication Log + Notes.
+ const contactById = useMemo(() => new Map(contacts.map((c) => [c.id, c])), [contacts]);
+ const dealById = useMemo(() => new Map(deals.map((d) => [d.id, d])), [deals]);
+
+ // Communication Log: activities filtered by Type / Outcome pills.
+ const filteredActivities = useMemo(
+ () =>
+ activities.filter((item) => {
+ if (activityTypeFilter !== "all" && String(item.type || "").toLowerCase() !== activityTypeFilter) return false;
+ if (activityOutcomeFilter !== "all" && String(item.status || "").toLowerCase() !== activityOutcomeFilter) return false;
+ return true;
+ }),
+ [activities, activityTypeFilter, activityOutcomeFilter]
+ );
+
+ const activityFilterOptions = useMemo(() => {
+ const types = new Set();
+ const outcomes = new Set();
+ activities.forEach((a) => {
+ if (a.type) types.add(String(a.type).toLowerCase());
+ if (a.status) outcomes.add(String(a.status).toLowerCase());
+ });
+ return { types: [...types].sort(), outcomes: [...outcomes].sort() };
+ }, [activities]);
 
  const filteredDeals = useMemo(() => {
  const q = dealQuery.trim().toLowerCase();
@@ -906,6 +1044,9 @@ export default function CRMSuite() {
  email: contactDraft.email.trim() || null,
  company: contactDraft.company.trim() || null,
  status: contactDraft.status || "lead",
+ website: contactDraft.website.trim() || null,
+ industry: contactDraft.industry.trim() || null,
+ start_date: contactDraft.start_date || null,
  });
 
  setAddType(null);
@@ -914,6 +1055,9 @@ export default function CRMSuite() {
  email: "",
  company: "",
  status: "lead",
+ website: "",
+ industry: "",
+ start_date: "",
  });
 
  setContactQuery("");
@@ -950,6 +1094,7 @@ export default function CRMSuite() {
  pipeline_id: dealDraft.pipeline_id || null,
  stage_id: dealDraft.stage_id || null,
  expected_close_date: fromInputDate(dealDraft.close_date),
+ probability: dealDraft.probability === "" ? null : Number(dealDraft.probability),
  });
 
  setAddType(null);
@@ -961,6 +1106,7 @@ export default function CRMSuite() {
  pipeline_id: "",
  stage_id: "",
  close_date: "",
+ probability: "",
  });
  setDealQuery("");
 
@@ -1133,6 +1279,97 @@ export default function CRMSuite() {
  setToast({ message: "CRM data refreshed" });
  };
 
+ // ---- Dashboard-tab derived data (read-only; computed from loadCRM data) ----
+
+ // Contact growth: contacts bucketed by created_at month, last 6 months.
+ const contactGrowth = useMemo(() => {
+ const now = new Date();
+ const buckets = [];
+ for (let i = 5; i >= 0; i -= 1) {
+ const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+ buckets.push({
+ key: `${d.getFullYear()}-${d.getMonth()}`,
+ label: d.toLocaleDateString("en-US", { month: "short" }),
+ count: 0,
+ });
+ }
+ const byKey = new Map(buckets.map((b, i) => [b.key, i]));
+ contacts.forEach((c) => {
+ if (!c.created_at) return;
+ const d = new Date(c.created_at);
+ if (Number.isNaN(d.getTime())) return;
+ const k = `${d.getFullYear()}-${d.getMonth()}`;
+ if (byKey.has(k)) buckets[byKey.get(k)].count += 1;
+ });
+ const max = Math.max(1, ...buckets.map((b) => b.count));
+ return { buckets, max };
+ }, [contacts]);
+
+ // Deal funnel: reuse the same stage grouping the board uses (counts per stage
+ // of the selected pipeline; the Unassigned column is dropped from the funnel).
+ const dealFunnel = useMemo(() => {
+ const cols = boardColumns.filter((c) => c.id !== "__unassigned__");
+ const max = Math.max(1, ...cols.map((c) => c.deals.length));
+ return cols.map((c) => ({
+ id: c.id,
+ name: c.name,
+ type: c.type,
+ count: c.deals.length,
+ pct: Math.round((c.deals.length / max) * 100),
+ }));
+ }, [boardColumns]);
+
+ // Follow-up status: categorize contacts by next_action_at / dismissed_at.
+ const followups = useMemo(() => {
+ const now = Date.now();
+ const soon = now + 3 * 24 * 60 * 60 * 1000; // due within 3 days
+ let overdue = 0;
+ let dueSoon = 0;
+ let onTrack = 0;
+ contacts.forEach((c) => {
+ if (c.dismissed_at) { onTrack += 1; return; } // handled/dismissed
+ const na = c.next_action_at ? new Date(c.next_action_at).getTime() : null;
+ if (na == null || Number.isNaN(na)) { onTrack += 1; return; } // nothing scheduled
+ if (na < now) overdue += 1;
+ else if (na <= soon) dueSoon += 1;
+ else onTrack += 1;
+ });
+ const total = Math.max(1, overdue + dueSoon + onTrack);
+ return {
+ overdue,
+ dueSoon,
+ onTrack,
+ onTrackPct: Math.round((onTrack / total) * 100),
+ dueSoonPct: Math.round((dueSoon / total) * 100),
+ overduePct: Math.round((overdue / total) * 100),
+ };
+ }, [contacts]);
+
+ // Deal outcome / conversion, derived from deals + their stage TYPE. When there
+ // are no lost deals a rate is not cleanly derivable, so fall back to a won/open
+ // COUNT labeled as such rather than inventing a percentage.
+ const dealOutcome = useMemo(() => {
+ let won = 0;
+ let lost = 0;
+ let open = 0;
+ deals.forEach((d) => {
+ const type = stageIndex.get(d.stage_id)?.type;
+ if (type === "won") won += 1;
+ else if (type === "lost") lost += 1;
+ else if (type === "open") open += 1;
+ });
+ if (won + lost > 0) {
+ return { won, lost, open, value: `${Math.round((won / (won + lost)) * 100)}%`, label: "Won vs lost", note: `${won} won · ${lost} lost` };
+ }
+ return { won, lost, open, value: `${won}/${won + open}`, label: "Won vs open", note: `${won} won · ${open} open` };
+ }, [deals, stageIndex]);
+
+ // "New leads" = contacts still at lead status (a real count, not reused).
+ const leadCount = useMemo(
+ () => contacts.filter((c) => String(c.status || "").toLowerCase() === "lead").length,
+ [contacts]
+ );
+
  return (
  <DashboardLayout>
  <header className="cth-page-header">
@@ -1170,8 +1407,48 @@ export default function CRMSuite() {
  </div>
  ) : null}
 
- <div className="flex flex-wrap items-center justify-between gap-3">
+ <TabBar activeTab={activeTab} onChange={setActiveTab} />
+
+ <div className="flex flex-wrap items-end justify-between gap-3">
  <div>
+ {activeTab === "dashboard" ? (
+ <>
+ <h1
+ style={{
+ fontFamily: SERIF,
+ fontWeight: 600,
+ fontSize: 32,
+ color: "var(--cth-command-ink)",
+ margin: 0,
+ lineHeight: 1,
+ }}
+ >
+ Dashboard
+ </h1>
+ <p
+ style={{
+ fontFamily: SANS,
+ fontSize: 14,
+ color: "var(--cth-command-muted)",
+ margin: "6px 0 0",
+ }}
+ >
+ Contacts, deals, follow-ups, and opportunities in one view.
+ </p>
+ </>
+ ) : activeTab === "contacts" ? (
+ <p
+ style={{
+ fontFamily: SANS,
+ fontSize: 14,
+ color: "var(--cth-command-muted)",
+ margin: 0,
+ }}
+ >
+ Every contact and client in one place.
+ </p>
+ ) : (
+ <>
  <div style={EYEBROW_STYLE}>Customer Relationship Manager</div>
  <p
  style={{
@@ -1185,9 +1462,19 @@ export default function CRMSuite() {
  ? "Loading CRM..."
  : "Built once for every workspace. Simple first, scalable later."}
  </p>
+ </>
+ )}
  </div>
 
  <div className="flex flex-wrap items-center gap-2">
+ {activeTab === "dashboard" && (
+ <>
+ <span style={PILL_STYLE}>This quarter ▾</span>
+ <span style={PILL_STYLE}>All sources ▾</span>
+ </>
+ )}
+ {activeTab === "deals" && (
+ <>
  <div className="relative">
  <Search
  size={14}
@@ -1204,21 +1491,21 @@ export default function CRMSuite() {
  value={dealQuery}
  onChange={(e) => setDealQuery(e.target.value)}
  placeholder="Search deals"
- style={{ ...SMALL_INPUT_STYLE, paddingLeft: 32, width: 200 }}
+ style={{ ...SMALL_INPUT_STYLE, paddingLeft: 32, width: 200, borderRadius: 999 }}
  />
  </div>
-
  <select
  value={dealSortOrder}
  onChange={(e) => setDealSortOrder(e.target.value)}
- style={SMALL_INPUT_STYLE}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
  >
  <option value="newest">Newest First</option>
  <option value="oldest">Oldest First</option>
  <option value="name-asc">Name A-Z</option>
  <option value="name-desc">Name Z-A</option>
  </select>
-
+ </>
+ )}
  <button
  type="button"
  onClick={handleManualRefresh}
@@ -1228,7 +1515,6 @@ export default function CRMSuite() {
  {refreshing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
  Refresh
  </button>
-
  <AddMenu
  open={addMenuOpen}
  onToggle={() => setAddMenuOpen((v) => !v)}
@@ -1240,11 +1526,184 @@ export default function CRMSuite() {
  </div>
  </div>
 
- {/*
- The default view. Deliberately not a Panel: Panel is the visual language of
- the pipeline, the directory, and the notes feed, and this is meant to outrank
- all of them. Full width, above the metrics, first thing on screen.
- */}
+ {activeTab === "dashboard" && (
+ <>
+ {/* Hero + dark snapshot */}
+ <div className="grid gap-4" style={{ gridTemplateColumns: "minmax(0, 1.55fr) minmax(0, 1fr)" }}>
+ <section
+ style={{
+ ...PANEL_STYLE,
+ borderRadius: 20,
+ padding: 24,
+ display: "grid",
+ gridTemplateColumns: "minmax(0, 1fr) 170px",
+ gap: 18,
+ alignItems: "center",
+ background:
+ "linear-gradient(135deg, var(--cth-command-panel), var(--cth-command-blush) 60%, color-mix(in srgb, var(--cth-command-gold) 22%, transparent))",
+ }}
+ >
+ <div>
+ <div style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)", letterSpacing: "0.04em" }}>
+ Lead → Follow-up → Deal → Customer
+ </div>
+ <div style={{ fontFamily: SERIF, fontSize: 48, fontWeight: 600, lineHeight: 1, color: "var(--cth-command-ink)", margin: "8px 0 6px" }}>
+ {currency(summary.open_pipeline_dollars || 0)}
+ </div>
+ <div style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-command-muted)" }}>
+ {currency(summary.won_revenue_dollars || 0)} won · {dealOutcome.value} {dealOutcome.label.toLowerCase()} · {needsAttention.length} follow-ups due
+ </div>
+ </div>
+ <div style={{ ...SOFT_PANEL_STYLE, borderRadius: 18, padding: "20px 14px", textAlign: "center" }}>
+ <div style={{ ...EYEBROW_STYLE, fontSize: 11, letterSpacing: "0.1em" }}>Won revenue</div>
+ <div style={{ fontFamily: SERIF, fontSize: 34, fontWeight: 600, color: "var(--cth-command-crimson)", lineHeight: 1, margin: "10px 0 5px" }}>
+ {currency(summary.won_revenue_dollars || 0)}
+ </div>
+ <div style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>{dealOutcome.won} deals closed</div>
+ </div>
+ </section>
+
+ <section
+ style={{
+ borderRadius: 20,
+ padding: 24,
+ border: "1px solid var(--cth-command-border)",
+ background: "linear-gradient(155deg, var(--cth-command-purple), var(--cth-command-night))",
+ color: "var(--cth-command-ivory)",
+ }}
+ >
+ <div style={{ ...EYEBROW_STYLE, color: "var(--cth-command-gold)" }}>Snapshot</div>
+ <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 600, color: "var(--cth-command-ivory)", margin: "6px 0 8px" }}>
+ Relationship snapshot
+ </h2>
+ <p style={{ fontFamily: SANS, fontSize: 13, color: "color-mix(in srgb, var(--cth-command-ivory) 70%, transparent)", margin: "0 0 16px" }}>
+ See every contact, lead, and follow-up before anything slips.
+ </p>
+ <div className="grid gap-3" style={{ gridTemplateColumns: "1fr 1fr" }}>
+ {[
+ ["Active contacts", summary.contacts || 0],
+ ["New leads", leadCount],
+ ["Follow-ups due", needsAttention.length],
+ ["Won revenue", currency(summary.won_revenue_dollars || 0)],
+ ].map(([l, v]) => (
+ <div
+ key={l}
+ style={{
+ background: "color-mix(in srgb, var(--cth-command-ivory) 6%, transparent)",
+ border: "1px solid color-mix(in srgb, var(--cth-command-gold) 25%, transparent)",
+ borderRadius: 14,
+ padding: 13,
+ }}
+ >
+ <div style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "color-mix(in srgb, var(--cth-command-ivory) 60%, transparent)" }}>{l}</div>
+ <div style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 600, color: "var(--cth-command-gold)", marginTop: 3 }}>{v}</div>
+ </div>
+ ))}
+ </div>
+ </section>
+ </div>
+
+ {/* 6 KPI tiles from summary + derived conversion */}
+ <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+ {[
+ ["Total contacts", summary.contacts || 0, "All records", "var(--cth-command-crimson)"],
+ ["Open deals", summary.open_deals || 0, "In pipeline", "var(--cth-command-gold)"],
+ ["Open pipeline", currency(summary.open_pipeline_dollars || 0), "Weighted value", "var(--cth-command-success)"],
+ ["Won revenue", currency(summary.won_revenue_dollars || 0), "To date", "var(--cth-command-crimson)"],
+ ["Needs attention", needsAttention.length, "Due or overdue", "var(--cth-command-gold)"],
+ ["Conversion", dealOutcome.value, dealOutcome.note, "var(--cth-command-success)"],
+ ].map(([label, value, note, accent]) => (
+ <div key={label} style={{ ...PANEL_STYLE, borderRadius: 16, padding: "20px 22px", position: "relative", overflow: "hidden" }}>
+ <span aria-hidden="true" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, background: accent }} />
+ <div style={{ ...EYEBROW_STYLE, fontSize: 11, letterSpacing: "0.1em" }}>{label}</div>
+ <div style={{ fontFamily: SERIF, fontSize: 34, fontWeight: 600, color: "var(--cth-command-ink)", marginTop: 6, lineHeight: 1 }}>{value}</div>
+ <div style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)", marginTop: 6 }}>{note}</div>
+ </div>
+ ))}
+ </div>
+
+ {/* Charts row — all from loadCRM data, no chart library */}
+ <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+ <div style={{ ...PANEL_STYLE, borderRadius: 16, padding: 24 }}>
+ <div style={EYEBROW_STYLE}>Trend</div>
+ <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 600, color: "var(--cth-command-ink)", margin: "6px 0 16px" }}>Contact growth</h2>
+ <div style={{ display: "flex", alignItems: "flex-end", gap: 9, height: 120, paddingTop: 8 }}>
+ {contactGrowth.buckets.map((b) => (
+ <div key={b.key} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%", justifyContent: "flex-end" }}>
+ <div
+ title={`${b.label}: ${b.count}`}
+ style={{
+ width: "100%",
+ height: `${Math.max(4, Math.round((b.count / contactGrowth.max) * 100))}%`,
+ background: "linear-gradient(180deg, var(--cth-command-crimson), color-mix(in srgb, var(--cth-command-crimson) 35%, transparent))",
+ borderRadius: "7px 7px 0 0",
+ }}
+ />
+ <span style={{ fontFamily: SANS, fontSize: 10, color: "var(--cth-command-muted)" }}>{b.label}</span>
+ </div>
+ ))}
+ </div>
+ </div>
+
+ <div style={{ ...PANEL_STYLE, borderRadius: 16, padding: 24 }}>
+ <div style={EYEBROW_STYLE}>Pipeline</div>
+ <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 600, color: "var(--cth-command-ink)", margin: "6px 0 16px" }}>Deal funnel</h2>
+ {dealFunnel.length === 0 ? (
+ <EmptyState text="No pipeline stages yet." />
+ ) : (
+ <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+ {dealFunnel.map((f) => (
+ <div
+ key={f.id}
+ style={{
+ width: `${Math.max(30, f.pct)}%`,
+ display: "flex",
+ alignItems: "center",
+ justifyContent: "space-between",
+ background: "var(--cth-command-panel-soft)",
+ borderLeft: `3px solid ${stageAccent(f.type)}`,
+ borderRadius: 10,
+ padding: "9px 13px",
+ fontFamily: SANS,
+ fontSize: 13,
+ fontWeight: 500,
+ color: "var(--cth-command-ink)",
+ }}
+ >
+ <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>
+ <b style={{ color: "var(--cth-command-muted)", fontWeight: 600 }}>{f.count}</b>
+ </div>
+ ))}
+ </div>
+ )}
+ </div>
+
+ <div style={{ ...PANEL_STYLE, borderRadius: 16, padding: 24 }}>
+ <div style={EYEBROW_STYLE}>Follow-ups</div>
+ <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 600, color: "var(--cth-command-ink)", margin: "6px 0 16px" }}>Status</h2>
+ <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+ <div
+ style={{
+ width: 120,
+ height: 120,
+ borderRadius: "50%",
+ display: "grid",
+ placeItems: "center",
+ background: `conic-gradient(var(--cth-command-success) 0 ${followups.onTrackPct}%, var(--cth-command-gold) ${followups.onTrackPct}% ${followups.onTrackPct + followups.dueSoonPct}%, var(--cth-command-error) ${followups.onTrackPct + followups.dueSoonPct}% 100%)`,
+ }}
+ >
+ <div style={{ width: 74, height: 74, borderRadius: "50%", background: "var(--cth-command-panel)" }} />
+ </div>
+ <div style={{ display: "flex", flexDirection: "column", gap: 9, fontFamily: SANS, fontSize: 13, color: "var(--cth-command-muted)" }}>
+ <span><i style={{ display: "inline-block", width: 10, height: 10, borderRadius: 3, marginRight: 8, background: "var(--cth-command-success)" }} />On track {followups.onTrackPct}%</span>
+ <span><i style={{ display: "inline-block", width: 10, height: 10, borderRadius: 3, marginRight: 8, background: "var(--cth-command-gold)" }} />Due soon {followups.dueSoonPct}%</span>
+ <span><i style={{ display: "inline-block", width: 10, height: 10, borderRadius: 3, marginRight: 8, background: "var(--cth-command-error)" }} />Overdue {followups.overduePct}%</span>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ {/* Follow-up list (reused below the charts). */}
  <section
  style={{
  ...PANEL_STYLE,
@@ -1327,46 +1786,20 @@ export default function CRMSuite() {
  </div>
  )}
  </section>
-
- {/* One strip, hairline-divided, instead of five padded cards. */}
- <div
- style={{
- ...PANEL_STYLE,
- borderRadius: 8,
- display: "flex",
- flexWrap: "wrap",
- }}
- >
- {[
- ["Contacts", summary.contacts || 0, "var(--cth-command-purple)"],
- ["Deals", summary.deals || 0, "var(--cth-command-crimson)"],
- ["Open Deals", summary.open_deals || 0, "var(--cth-command-gold)"],
- ["Open Pipeline", currency(summary.open_pipeline_dollars || 0), "var(--cth-command-purple-mid)"],
- ["Won Revenue", currency(summary.won_revenue_dollars || 0), "var(--cth-command-crimson)"],
- ].map(([label, value, accent], i) => (
- <div
- key={label}
- style={{
- flex: "1 1 0",
- minWidth: 110,
- borderLeft: i === 0 ? "none" : "1px solid var(--cth-command-border)",
- }}
- >
- <MetricTile label={label} value={value} accent={accent} />
- </div>
- ))}
- </div>
+ </>
+ )}
 
  <div className="grid gap-5">
+ {activeTab === "pipelines" && (
  <Section
- eyebrow="Pipeline"
- title="Deals Pipeline"
+ eyebrow="Pipelines"
+ title="Pipelines"
  action={
  pipelines.length ? (
  <select
  value={boardPipelineId}
  onChange={(e) => setBoardPipelineId(e.target.value)}
- style={SMALL_INPUT_STYLE}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
  aria-label="Pipeline"
  >
  {pipelines.map((p) => (
@@ -1379,6 +1812,49 @@ export default function CRMSuite() {
  ) : null
  }
  >
+ {!boardPipeline ? (
+ <EmptyState text="No pipelines yet." />
+ ) : (
+ <div style={{ display: "grid", gap: 10 }}>
+ {(boardPipeline.stages || []).map((stage) => (
+ <div
+ key={stage.id}
+ style={{
+ ...SOFT_PANEL_STYLE,
+ padding: "12px 14px",
+ display: "flex",
+ alignItems: "center",
+ justifyContent: "space-between",
+ gap: 12,
+ }}
+ >
+ <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+ <span
+ aria-hidden="true"
+ style={{ width: 8, height: 8, borderRadius: "50%", background: stageAccent(stage.type), display: "inline-block", flexShrink: 0 }}
+ />
+ <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: "var(--cth-command-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+ {stage.name}
+ </span>
+ <Chip tone={stage.type === "won" ? "success" : stage.type === "lost" ? "muted" : "default"}>
+ {stage.type === "won" ? "Won" : stage.type === "lost" ? "Lost" : "Open"}
+ </Chip>
+ </div>
+ <IconButton label={`Edit ${stage.name} in Settings`} onClick={() => navigate("/settings?tab=pipelines")}>
+ <Pencil size={14} />
+ </IconButton>
+ </div>
+ ))}
+ <div style={{ fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)", marginTop: 4 }}>
+ Stages are created and reordered in Settings → Pipelines.
+ </div>
+ </div>
+ )}
+ </Section>
+ )}
+
+ {activeTab === "deals" && (
+ <Section eyebrow="Pipeline" title="Deals Pipeline">
  {!boardPipeline ? (
  <EmptyState text="No pipeline yet." />
  ) : (
@@ -1456,14 +1932,73 @@ export default function CRMSuite() {
  </div>
  )}
  </Section>
+ )}
 
- <Section
- eyebrow="Directory"
- title="Contacts"
- flush
- action={
- <div className="flex flex-wrap items-center gap-2">
- <div className="relative">
+ {activeTab === "contacts" && (
+ <section
+ style={{
+ ...PANEL_STYLE,
+ borderRadius: 16,
+ boxShadow:
+ "0 18px 40px color-mix(in srgb, var(--cth-command-ink) 8%, transparent)",
+ overflow: "hidden",
+ }}
+ >
+ {/* Header row: count eyebrow + serif title (left), Sort pill (right) */}
+ <div
+ style={{
+ display: "flex",
+ alignItems: "flex-start",
+ justifyContent: "space-between",
+ gap: 12,
+ flexWrap: "wrap",
+ padding: "20px 22px",
+ borderBottom: "1px solid var(--cth-command-border)",
+ }}
+ >
+ <div>
+ <div style={EYEBROW_STYLE}>
+ {contacts.length} record{contacts.length === 1 ? "" : "s"}
+ </div>
+ <h2
+ style={{
+ fontFamily: SERIF,
+ fontSize: 24,
+ fontWeight: 600,
+ color: "var(--cth-command-ink)",
+ margin: "4px 0 0",
+ letterSpacing: "-0.005em",
+ lineHeight: 1.2,
+ }}
+ >
+ Client Database
+ </h2>
+ </div>
+ <select
+ value={contactSortOrder}
+ onChange={(e) => setContactSortOrder(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999, width: "auto" }}
+ aria-label="Sort order"
+ >
+ <option value="newest">Newest first</option>
+ <option value="oldest">Oldest first</option>
+ <option value="name-asc">Name A-Z</option>
+ <option value="name-desc">Name Z-A</option>
+ </select>
+ </div>
+
+ {/* Filter row: one horizontal, left-aligned, wrapping row of compact pills */}
+ <div
+ style={{
+ display: "flex",
+ flexWrap: "wrap",
+ alignItems: "center",
+ gap: 8,
+ padding: "14px 22px",
+ borderBottom: "1px solid var(--cth-command-border)",
+ }}
+ >
+ <div style={{ position: "relative" }}>
  <Search
  size={14}
  style={{
@@ -1478,24 +2013,53 @@ export default function CRMSuite() {
  <input
  value={contactQuery}
  onChange={(e) => setContactQuery(e.target.value)}
- placeholder="Search contacts"
- style={{ ...SMALL_INPUT_STYLE, paddingLeft: 32, width: 200 }}
+ placeholder="Search"
+ style={{ ...SMALL_INPUT_STYLE, paddingLeft: 32, width: 200, borderRadius: 999 }}
  />
  </div>
  <select
- value={contactSortOrder}
- onChange={(e) => setContactSortOrder(e.target.value)}
- style={SMALL_INPUT_STYLE}
+ value={contactStatusFilter}
+ onChange={(e) => setContactStatusFilter(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999, width: "auto" }}
+ aria-label="Filter by status"
  >
- <option value="newest">Newest First</option>
- <option value="oldest">Oldest First</option>
- <option value="name-asc">Name A-Z</option>
- <option value="name-desc">Name Z-A</option>
+ <option value="all">All statuses</option>
+ {contactFilterOptions.statuses.map((s) => (
+ <option key={s} value={s}>
+ {s}
+ </option>
+ ))}
+ </select>
+ <select
+ value={contactIndustryFilter}
+ onChange={(e) => setContactIndustryFilter(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999, width: "auto" }}
+ aria-label="Filter by industry"
+ >
+ <option value="all">All industries</option>
+ {contactFilterOptions.industries.map((s) => (
+ <option key={s} value={s}>
+ {s}
+ </option>
+ ))}
+ </select>
+ <select
+ value={contactSourceFilter}
+ onChange={(e) => setContactSourceFilter(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999, width: "auto" }}
+ aria-label="Filter by source"
+ >
+ <option value="all">All sources</option>
+ {contactFilterOptions.sources.map((s) => (
+ <option key={s} value={s}>
+ {intakeLabel(s)}
+ </option>
+ ))}
  </select>
  </div>
- }
- >
+
  {filteredContacts.length === 0 ? (
+ <div style={{ padding: "16px 22px" }}>
  <EmptyState
  text={
  contactQuery.trim()
@@ -1503,6 +2067,7 @@ export default function CRMSuite() {
  : "No contacts yet."
  }
  />
+ </div>
  ) : (
  <div style={{ overflowX: "auto" }}>
  <table
@@ -1517,7 +2082,7 @@ export default function CRMSuite() {
  >
  <thead>
  <tr>
- {["Name", "Email", "Company", "Status", ""].map((header, idx) => (
+ {["Name", "Business", "Status", "Source", "Website", "Industry", "Start date", ""].map((header, idx) => (
  <th
  key={idx}
  style={{
@@ -1525,7 +2090,7 @@ export default function CRMSuite() {
  padding: "10px 12px",
  borderBottom: "1px solid var(--cth-command-border)",
  fontWeight: 600,
- textAlign: idx === 4 ? "right" : "left",
+ textAlign: idx === 7 ? "right" : "left",
  }}
  >
  {header}
@@ -1557,17 +2122,37 @@ export default function CRMSuite() {
  e.currentTarget.style.background = "transparent";
  }}
  >
- <td style={{ padding: "12px", fontWeight: 600, color: "var(--cth-command-ink)" }}>
+ <td style={{ padding: "12px" }}>
+ <div style={{ fontWeight: 600, color: "var(--cth-command-ink)" }}>
  {contact.name || "Untitled contact"}
- </td>
- <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
- {contact.email || <EmptyValue />}
+ </div>
+ {contact.email ? (
+ <div style={{ fontSize: 12, color: "var(--cth-command-muted)", marginTop: 2 }}>
+ {contact.email}
+ </div>
+ ) : null}
  </td>
  <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
  {contact.company || <EmptyValue />}
  </td>
  <td style={{ padding: "12px" }}>
  {contact.status ? <Chip>{contact.status}</Chip> : <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px" }}>
+ {contact.intake_channel ? (
+ <Chip tone="muted">{intakeLabel(contact.intake_channel)}</Chip>
+ ) : (
+ <EmptyValue />
+ )}
+ </td>
+ <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
+ {contact.website || <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
+ {contact.industry || <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px", color: "var(--cth-command-muted)" }}>
+ {contact.start_date ? formatDate(contact.start_date) : <EmptyValue />}
  </td>
  <td style={{ padding: "12px", textAlign: "right" }}>
  <span
@@ -1600,69 +2185,117 @@ export default function CRMSuite() {
  </table>
  </div>
  )}
- </Section>
+ </section>
+ )}
 
- <Section eyebrow="Activity" title="Recent Activity">
- {activities.length === 0 ? (
- <EmptyState text="No activity yet." />
- ) : (
- <div style={{ display: "grid", gap: 10 }}>
- {activities.map((item) => (
- <div
- key={item.id}
- style={{ ...SOFT_PANEL_STYLE, padding: "12px 14px" }}
+ {activeTab === "activity" && (
+ <Section
+ eyebrow="Log"
+ title="Communication Log"
+ flush
+ action={
+ <div className="flex flex-wrap items-center gap-2">
+ <select
+ value={activityTypeFilter}
+ onChange={(e) => setActivityTypeFilter(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
+ aria-label="Filter by type"
  >
- <div
- style={{
- display: "flex",
- alignItems: "flex-start",
- justifyContent: "space-between",
- gap: 12,
- marginBottom: 8,
- }}
+ <option value="all">All types</option>
+ {activityFilterOptions.types.map((t) => (
+ <option key={t} value={t}>
+ {t}
+ </option>
+ ))}
+ </select>
+ <select
+ value={activityOutcomeFilter}
+ onChange={(e) => setActivityOutcomeFilter(e.target.value)}
+ style={{ ...SMALL_INPUT_STYLE, borderRadius: 999 }}
+ aria-label="Filter by outcome"
  >
- <div
- style={{
- fontFamily: SANS,
- fontSize: 14,
- fontWeight: 600,
- color: "var(--cth-command-ink)",
- }}
- >
- {item.subject || item.title || "Untitled activity"}
+ <option value="all">All outcomes</option>
+ {activityFilterOptions.outcomes.map((o) => (
+ <option key={o} value={o}>
+ {o}
+ </option>
+ ))}
+ </select>
  </div>
- <IconButton
- label="Delete activity"
- onClick={() => requestDelete("activity", item)}
+ }
  >
+ {filteredActivities.length === 0 ? (
+ <EmptyState text={activities.length === 0 ? "No activity yet." : "No entries match these filters."} />
+ ) : (
+ <div style={{ overflowX: "auto" }}>
+ <table style={{ minWidth: "100%", borderCollapse: "collapse", fontFamily: SANS, fontSize: 14, color: "var(--cth-command-ink)", textAlign: "left" }}>
+ <thead>
+ <tr>
+ {["Date", "Contact", "Type", "Outcome", "Summary", ""].map((header, idx) => (
+ <th
+ key={idx}
+ style={{
+ ...EYEBROW_STYLE,
+ padding: "10px 12px",
+ borderBottom: "1px solid var(--cth-command-border)",
+ fontWeight: 600,
+ textAlign: idx === 5 ? "right" : "left",
+ }}
+ >
+ {header}
+ </th>
+ ))}
+ </tr>
+ </thead>
+ <tbody>
+ {filteredActivities.map((item) => {
+ const linked = item.contact_id ? contactById.get(item.contact_id) : null;
+ const when = item.occurred_at || item.due_date || item.created_at;
+ return (
+ <tr key={item.id} style={{ borderTop: "1px solid var(--cth-command-border)" }}>
+ <td style={{ padding: "12px", color: "var(--cth-command-muted)", whiteSpace: "nowrap" }}>
+ {when && formatDate(when) ? formatDate(when) : <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px" }}>
+ {linked ? (
+ <button
+ type="button"
+ onClick={() => openContact(linked)}
+ style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: SANS, fontSize: 14, fontWeight: 600, color: "var(--cth-command-crimson)" }}
+ >
+ {linked.name || "Untitled contact"}
+ </button>
+ ) : (
+ <EmptyValue />
+ )}
+ </td>
+ <td style={{ padding: "12px" }}>{item.type ? <Chip>{item.type}</Chip> : <EmptyValue />}</td>
+ <td style={{ padding: "12px" }}>
+ {item.status ? (
+ <Chip tone={item.status === "completed" ? "success" : "muted"}>{item.status}</Chip>
+ ) : (
+ <EmptyValue />
+ )}
+ </td>
+ <td style={{ padding: "12px", color: "var(--cth-command-muted)", maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+ {item.subject || item.title || item.details || <EmptyValue />}
+ </td>
+ <td style={{ padding: "12px", textAlign: "right" }}>
+ <IconButton label="Delete activity" onClick={() => requestDelete("activity", item)}>
  <Trash2 size={14} />
  </IconButton>
- </div>
- <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
- {item.type ? <Chip>{item.type}</Chip> : null}
- {item.status ? (
- <Chip tone={item.status === "completed" ? "success" : "muted"}>
- {item.status}
- </Chip>
- ) : null}
- {(item.occurred_at || item.due_date) && formatDate(item.occurred_at || item.due_date) ? (
- <span
- style={{
- fontFamily: SANS,
- fontSize: 11,
- color: "var(--cth-command-muted)",
- }}
- >
- {formatDate(item.occurred_at || item.due_date)}
- </span>
- ) : null}
- </div>
- </div>
- ))}
+ </td>
+ </tr>
+ );
+ })}
+ </tbody>
+ </table>
  </div>
  )}
  </Section>
+ )}
 
+ {activeTab === "notes" && (
  <Section eyebrow="Notes" title="Notes Feed">
  {notes.length === 0 ? (
  <EmptyState text="No notes yet." />
@@ -1699,6 +2332,14 @@ export default function CRMSuite() {
  <Trash2 size={14} />
  </IconButton>
  </div>
+ {note.entity_id ? (
+ <div style={{ ...EYEBROW_STYLE, fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
+ {note.entity_type === "deal" ? "Deal" : "Contact"} ·{" "}
+ {note.entity_type === "deal"
+ ? dealById.get(note.entity_id)?.title || "—"
+ : contactById.get(note.entity_id)?.name || "—"}
+ </div>
+ ) : null}
  <div
  style={{
  fontFamily: SANS,
@@ -1727,6 +2368,7 @@ export default function CRMSuite() {
  </div>
  )}
  </Section>
+ )}
  </div>
  </div>
  </div>
@@ -1757,6 +2399,24 @@ export default function CRMSuite() {
  value={contactDraft.status}
  onChange={(e) => setContactDraft((s) => ({ ...s, status: e.target.value }))}
  options={CONTACT_STATUS_OPTIONS}
+ />
+ <LabeledInput
+ label="Website"
+ value={contactDraft.website}
+ onChange={(e) => setContactDraft((s) => ({ ...s, website: e.target.value }))}
+ placeholder="example.com"
+ />
+ <LabeledInput
+ label="Industry"
+ value={contactDraft.industry}
+ onChange={(e) => setContactDraft((s) => ({ ...s, industry: e.target.value }))}
+ placeholder="Industry"
+ />
+ <LabeledInput
+ label="Start date"
+ type="date"
+ value={contactDraft.start_date}
+ onChange={(e) => setContactDraft((s) => ({ ...s, start_date: e.target.value }))}
  />
  <button
  type="submit"
@@ -1793,6 +2453,13 @@ export default function CRMSuite() {
  value={dealDraft.value}
  onChange={(e) => setDealDraft((s) => ({ ...s, value: e.target.value }))}
  placeholder="0"
+ />
+ <LabeledInput
+ label="Probability (0-100)"
+ type="number"
+ value={dealDraft.probability}
+ onChange={(e) => setDealDraft((s) => ({ ...s, probability: e.target.value }))}
+ placeholder="—"
  />
  <LabeledInput
  label="Close date"
@@ -1919,6 +2586,7 @@ export default function CRMSuite() {
  stageIndex={stageIndex}
  onClose={closeDrawer}
  onRequestDelete={requestDelete}
+ onSaved={() => loadCRM({ silent: true })}
  />
  <ComposeEmailModal compose={compose} />
  <ConfirmDeleteModal

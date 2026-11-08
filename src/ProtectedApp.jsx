@@ -18,7 +18,6 @@ import { SignInPage, SignUpPage } from "./components/Auth";
 import Chatbot from "./components/Chatbot";
 
 const AppRouter = React.lazy(() => import("./navigation/AppRouter"));
-const LockScreen = React.lazy(() => import("./pages/LockScreen"));
 
 const CLERK_KEY_RAW = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
 const HAS_CLERK = Boolean(CLERK_KEY_RAW && CLERK_KEY_RAW.startsWith("pk_"));
@@ -67,7 +66,6 @@ function ProtectedRoutes() {
         <Route path="/sign-in/*" element={<SignInPage />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route path="/admin-login" element={<AdminLoginRedirect />} />
-        <Route path="/lock-screen" element={<LockScreen />} />
         <Route
           path="/*"
           element={

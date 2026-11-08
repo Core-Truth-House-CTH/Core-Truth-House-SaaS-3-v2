@@ -1,3 +1,4 @@
+import { apiFetch } from "../lib/apiConfig";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser, useClerk } from "../hooks/useAuth";
@@ -3070,7 +3071,7 @@ export default function CommunityPage() {
       const headers = typeof apiClient.getAuthHeaders === "function"
         ? await apiClient.getAuthHeaders({ isFormData: true })
         : {};
-      const response = await fetch(url, { method: "POST", headers, credentials: "include", body: formData });
+      const response = await apiFetch(url, { method: "POST", headers, credentials: "include", body: formData });
       if (!response.ok) {
         const text = await response.text();
         throw new Error(text || "Avatar upload failed.");
@@ -3161,7 +3162,7 @@ export default function CommunityPage() {
       const headers = typeof apiClient.getAuthHeaders === "function"
         ? await apiClient.getAuthHeaders({ isFormData: true })
         : {};
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: "POST",
         headers,
         credentials: "include",
@@ -3216,7 +3217,7 @@ export default function CommunityPage() {
       const headers = typeof apiClient.getAuthHeaders === "function"
         ? await apiClient.getAuthHeaders()
         : {};
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: "GET",
         headers,
         credentials: "include",

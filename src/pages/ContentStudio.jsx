@@ -40,15 +40,23 @@ const SERIF = "'Cormorant Garamond', Georgia, serif";
 /* ------------------------------------------------------------------ */
 /* Plan gating                                                         */
 /* ------------------------------------------------------------------ */
-const PLAN_GENERATION_LIMITS = {
-  free: 5,
-  audit: 5,
-  foundation: 5,
-  structure: 20,
-  house: Infinity,
-  estate: Infinity,
-  legacy: Infinity,
-};
+// Read the same workspace credit summary and field aliases as DashboardLayout.
+// Only an explicit API string marks an unlimited allowance; missing values do not.
+function mapCreditUsage(data) {
+  const used = data?.used ?? data?.usage_used ?? data?.credits_used ?? data?.current_month_used;
+  const limit = data?.limit ?? data?.usage_limit ?? data?.credits_limit ?? data?.monthly_limit;
+  const number = (value) => {
+    if (typeof value !== "number" && typeof value !== "string") return null;
+    if (typeof value === "string" && !value.trim()) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  };
+  const usedValue = number(used);
+  if (usedValue === null) return null;
+  if (limit === "unlimited") return { used: usedValue, limit: null, unlimited: true };
+  const limitValue = number(limit);
+  return limitValue === null ? null : { used: usedValue, limit: limitValue, unlimited: false };
+}
 
 // Prompt Generator (Visual / Video) requires Structure or above.
 const PROMPT_LOCKED_PLANS = new Set(["free", "audit", "foundation"]);
@@ -223,7 +231,7 @@ const OUTPUT_FORMAT_OPTIONS = [
   "Leonardo AI",
   "Nano Banana",
   "ChatGPT",
-  "GPT Image 1",
+  "GPT Image 2.5 Flare",
 ];
 
 const VISUAL_DROPDOWNS = [
@@ -621,7 +629,6 @@ export default function ContentStudio() {
   const { refresh: refreshBrandHealth } = useBrandHealth();
 
   const planKey = String(plan || "foundation").toLowerCase();
-  const limit = PLAN_GENERATION_LIMITS[planKey] ?? 5;
   const promptLocked = PROMPT_LOCKED_PLANS.has(planKey);
 
   const [tab, setTab] = useState("create");
@@ -633,8 +640,34 @@ export default function ContentStudio() {
   const [library, setLibrary] = useState([]);
   const [promptSaved, setPromptSaved] = useState([]);
   const [loadingLibrary, setLoadingLibrary] = useState(true);
-  const [generationCount, setGenerationCount] = useState(0);
-  const atLimit = limit !== Infinity && generationCount >= limit;
+  const [creditUsage, setCreditUsage] = useState({ workspaceId: null, status: "loading", value: null });
+  const [usageRefresh, setUsageRefresh] = useState(0);
+  const currentUsage = creditUsage.workspaceId === activeWorkspaceId ? creditUsage : { status: "loading", value: null };
+  const usage = currentUsage.value;
+  const atLimit = currentUsage.status === "ready" && !usage.unlimited && usage.used >= usage.limit;
+  const usageLabel = currentUsage.status === "loading"
+    ? "AI credits: loading…"
+    : currentUsage.status !== "ready"
+      ? "AI credit usage unavailable"
+      : usage.unlimited
+        ? `AI credits: ${usage.used.toLocaleString()} used · Unlimited`
+        : `AI credits: ${usage.used.toLocaleString()} / ${usage.limit.toLocaleString()} used`;
+
+  useEffect(() => {
+    let cancelled = false;
+    setCreditUsage({ workspaceId: activeWorkspaceId, status: activeWorkspaceId ? "loading" : "unavailable", value: null });
+    if (!activeWorkspaceId) return () => { cancelled = true; };
+    apiClient.get("/api/usage/summary", { params: { workspace_id: activeWorkspaceId } })
+      .then((data) => {
+        if (cancelled) return;
+        const value = mapCreditUsage(data);
+        setCreditUsage({ workspaceId: activeWorkspaceId, status: value ? "ready" : "unavailable", value });
+      })
+      .catch(() => {
+        if (!cancelled) setCreditUsage({ workspaceId: activeWorkspaceId, status: "unavailable", value: null });
+      });
+    return () => { cancelled = true; };
+  }, [activeWorkspaceId, usageRefresh]);
 
   // Create Content
   const [createType, setCreateType] = useState("blog-post");
@@ -696,7 +729,6 @@ export default function ContentStudio() {
       const res = await apiClient.get(API_PATHS.persist.contentLibrary, { params: { workspace_id: activeWorkspaceId } });
       const assets = res?.assets || [];
       setLibrary(assets);
-      setGenerationCount(assets.length);
     } catch (e) {
       console.error("Failed to load content library", e);
     } finally {
@@ -762,7 +794,7 @@ export default function ContentStudio() {
         tone: tone || undefined,
         custom_instruction: custom_instruction || undefined,
       });
-      setGenerationCount((c) => c + 1);
+      setUsageRefresh((value) => value + 1);
       return res?.content || "";
     },
     []
@@ -869,6 +901,7 @@ export default function ContentStudio() {
         workspace_id: activeWorkspaceId,
       });
       setVisualOut(String(res?.prompt || "").trim());
+      setUsageRefresh((value) => value + 1);
     } catch (e) {
       setError(e?.message || "Failed to generate prompt.");
     } finally {
@@ -1018,6 +1051,7 @@ export default function ContentStudio() {
           "Suggest ONE compelling content angle and the single core belief the reader should hold by the end. Respond in 1-2 sentences, no preamble.",
       });
       setZuriOut(String(res?.content || "").trim());
+      setUsageRefresh((value) => value + 1);
     } catch (e) {
       showToast("Could not fetch an angle");
     } finally {
@@ -1081,6 +1115,9 @@ export default function ContentStudio() {
         </div>
         <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <span
+            data-testid="content-credit-usage"
+            role="status"
+            aria-live="polite"
             style={{
               fontSize: 10,
               padding: "4px 12px",
@@ -1093,7 +1130,7 @@ export default function ContentStudio() {
               whiteSpace: "nowrap",
             }}
           >
-            {limit === Infinity ? "Unlimited generations" : `${generationCount} / ${limit} generations this month`}
+            {usageLabel}
           </span>
         </div>
       </header>

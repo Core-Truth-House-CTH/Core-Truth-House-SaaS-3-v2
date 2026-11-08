@@ -3,7 +3,7 @@ import { PlugZap, RefreshCw, Server, Settings, ShieldCheck } from "lucide-react"
 import apiClient from "../../lib/apiClient";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const DEFAULT_INTEGRATIONS = [
   {

@@ -1,5 +1,8 @@
+import { getApiBaseUrl, apiFetch } from "../lib/apiConfig";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+
+const API_BASE = getApiBaseUrl({ productionFallback: true });
 
 export default function StudioAccess() {
  const { token } = useParams();
@@ -9,8 +12,8 @@ export default function StudioAccess() {
  useEffect(() => {
  const verify = async () => {
  try {
- const res = await fetch(
- `${import.meta.env.VITE_API_BASE_URL}/api/headshots/verify/${token}`
+ const res = await apiFetch(
+ `${API_BASE}/api/headshots/verify/${encodeURIComponent(token)}`
  );
  if (res.ok) {
  const data = await res.json();
@@ -37,13 +40,13 @@ export default function StudioAccess() {
  if (status === "invalid") {
  return (
  <div style={{ minHeight: "100vh", background: "var(--cth-brand-primary-deep)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--cth-on-dark)", textAlign: "center", padding: 24, fontFamily: "system-ui, sans-serif" }}>
- <h2 style={{ color: "var(--cth-brand-primary)", marginBottom: 16 }}>Invalid Access Link</h2>
+ <h2 style={{ color: "var(--cth-brand-primary)", marginBottom: 16 }}>Access Link Unavailable</h2>
  <p style={{ color: "var(--cth-command-muted)", marginBottom: 32 }}>
- This link is invalid or has expired. Purchase access to continue.
- </p><a href="/headshots"
+ This link is invalid or has expired. Contact support if you believe you should have access.
+ </p><a href="/contact"
  style={{ padding: "16px 32px", background: "var(--cth-brand-primary)", color: "var(--cth-on-dark)", borderRadius: 10, textDecoration: "none", fontWeight: 700, fontSize: 16 }}
  >
- Get Access
+ Contact Support
  </a>
  </div>
  );

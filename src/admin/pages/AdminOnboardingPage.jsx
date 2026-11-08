@@ -1,11 +1,12 @@
+import { getApiBaseUrl } from "../../lib/apiConfig";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import axios from "../../lib/apiAxios";
 import apiClient from "../../lib/apiClient";
 import { useUser } from "../../hooks/useAuth";
 import { BookOpen, PlayCircle, ClipboardList, ShieldCheck, RefreshCw, AlertTriangle } from "lucide-react";
 import { AdminTrainingVideos } from "../../components/admin/AdminTrainingVideos";
 
-const API = import.meta.env.VITE_BACKEND_URL;
+const API = getApiBaseUrl();
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (

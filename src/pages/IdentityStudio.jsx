@@ -1,3 +1,4 @@
+import { getApiBaseUrl } from "../lib/apiConfig";
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DashboardLayout } from '../components/Layout';
 import { useWorkspace } from '../context/WorkspaceContext';
@@ -99,7 +100,7 @@ function mergeLoadedFonts(saved) {
 // at runtime as a separate <optgroup>.
 const SYSTEM_FONT_OPTIONS = [
   'Cormorant Garamond',
-  'Playfair Display',
+  'Cormorant Garamond',
   'DM Serif Display',
   'DM Sans',
   'Inter',
@@ -115,7 +116,7 @@ const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const MONO = "'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace";
 
-const API = import.meta.env.VITE_BACKEND_URL;
+const API = getApiBaseUrl();
 
 // Stable family name for an uploaded font asset — reused so the same FontFace
 // is registered once and selections round-trip across reloads.

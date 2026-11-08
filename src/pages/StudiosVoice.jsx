@@ -1,3 +1,4 @@
+import { getApiBaseUrl, apiFetch } from "../lib/apiConfig";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,7 +10,7 @@ import { DashboardLayout } from "../components/Layout";
 import { usePlan } from "../context/PlanContext";
 import apiClient from "../lib/apiClient";
 
-const API_BASE = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+const API_BASE = String(getApiBaseUrl() || "").replace(/\/$/, "");
 const absUrl = (u) => (!u ? u : /^(https?:|data:|blob:)/.test(u) ? u : `${API_BASE}${u}`);
 
 const PLAN_RANK = { free: 0, audit: 1, foundation: 2, structure: 3, house: 4, estate: 5, legacy: 6 };
@@ -19,17 +20,14 @@ const MAX_CHARS = 5000;
 const OUTPUT_FORMAT = "mp3_44100_128";
 
 const MODELS = [
-  { id: "eleven_multilingual_v2", label: "Multilingual v2", sub: "Best quality · recommended" },
-  { id: "eleven_turbo_v2_5", label: "Turbo v2.5", sub: "Fast · low latency" },
-  { id: "eleven_monolingual_v1", label: "Monolingual v1", sub: "English only" },
+  { id: "elevenlabs/eleven-multilingual-v2", label: "Multilingual v2", sub: "Best quality · recommended" },
+  { id: "elevenlabs/eleven-turbo-v2.5", label: "Turbo v2.5", sub: "Fast · low latency" },
 ];
 
 // ElevenLabs categories are bucketed into three display groups. Anything that
 // isn't "professional" or "premade" (cloned, generated, …) shows under Custom.
 const VOICE_GROUPS = [
-  { key: "professional", label: "Professional", match: (c) => c === "professional" },
-  { key: "premade", label: "Premade", match: (c) => c === "premade" },
-  { key: "custom", label: "Custom", match: (c) => c !== "professional" && c !== "premade" },
+  { key: "premade", label: "Stock voices", match: (c) => c === "premade" },
 ];
 
 const CARD = { background: "var(--cth-command-panel)", border: "0.5px solid var(--cth-command-border)", borderRadius: 12, padding: 18 };
@@ -185,7 +183,7 @@ export default function StudiosVoice() {
   const generateBlob = async (payload) => {
     const url = apiClient.buildApiUrl("/api/studios/voice/generate");
     const headers = await apiClient.getAuthHeaders({ body: payload });
-    const res = await fetch(url, { method: "POST", headers, credentials: "include", body: JSON.stringify(payload) });
+    const res = await apiFetch(url, { method: "POST", headers, credentials: "include", body: JSON.stringify(payload) });
     if (!res.ok) {
       let msg = "Voice generation failed.";
       try { const j = await res.json(); msg = j?.detail || msg; } catch { /* non-JSON */ }
@@ -481,6 +479,7 @@ export default function StudiosVoice() {
                               <button
                                 onClick={(e) => previewVoice(v, e)}
                                 data-testid={`voice-preview-${v.voice_id}`}
+                                disabled={!v.preview_url}
                                 title={v.preview_url ? "Preview voice" : "No preview available"}
                                 style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: on ? "var(--cth-command-crimson)" : "var(--cth-command-panel)", border: "0.5px solid var(--cth-command-border)", cursor: "pointer", padding: 0 }}
                               >

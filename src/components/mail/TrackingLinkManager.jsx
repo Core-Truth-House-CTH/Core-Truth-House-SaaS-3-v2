@@ -12,7 +12,7 @@ import {
 import apiClient from "../../lib/apiClient";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const PANEL_STYLE = {
   background: "var(--cth-command-panel)",

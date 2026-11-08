@@ -37,7 +37,7 @@ import MailIntegrationsSettings from "../components/mail/MailIntegrationsSetting
 import apiClient from "../lib/apiClient";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const MAILBOXES = [
  { id: "inbox", label: "Inbox", icon: Inbox, helper: "New and active conversations" },

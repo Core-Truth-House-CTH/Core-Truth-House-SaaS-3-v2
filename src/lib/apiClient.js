@@ -1,3 +1,5 @@
+import { getApiBaseUrl, assertApiTarget, apiFetch } from "./apiConfig";
+
 // frontend/src/lib/apiClient.js
 
 function isAbsoluteUrl(value) {
@@ -42,16 +44,16 @@ function buildUrl(baseUrl, path) {
   const normalizedPath = normalizePath(path);
 
   if (isAbsoluteUrl(normalizedPath)) {
-    return normalizedPath;
+    return assertApiTarget(normalizedPath);
   }
 
   const normalizedBase = normalizeBaseUrl(baseUrl);
 
   if (!normalizedBase) {
-    return normalizedPath;
+    return assertApiTarget(normalizedPath);
   }
 
-  return `${normalizedBase}${normalizedPath}`;
+  return assertApiTarget(`${normalizedBase}${normalizedPath}`);
 }
 
 function buildQueryString(params = {}) {
@@ -143,20 +145,7 @@ class ApiClient {
   }
 
   resolveBaseUrl() {
-    const candidates = [
-      typeof import.meta !== "undefined" ? import.meta?.env?.VITE_API_BASE_URL : undefined,
-      typeof import.meta !== "undefined" ? import.meta?.env?.VITE_BACKEND_URL : undefined,
-      typeof process !== "undefined" ? process?.env?.REACT_APP_API_BASE_URL : undefined,
-      typeof process !== "undefined" ? process?.env?.REACT_APP_BACKEND_URL : undefined,
-      typeof window !== "undefined" ? window.__API_BASE_URL__ : undefined,
-    ];
-
-    for (const candidate of candidates) {
-      const normalized = normalizeBaseUrl(candidate);
-      if (normalized) return normalized;
-    }
-
-    return "";
+    return normalizeBaseUrl(getApiBaseUrl());
   }
 
   configure({
@@ -183,7 +172,7 @@ class ApiClient {
     }
 
     if (baseUrl !== undefined) {
-      this.baseUrl = normalizeBaseUrl(baseUrl);
+      this.baseUrl = normalizeBaseUrl(assertApiTarget(baseUrl, { originOnly: true }));
     }
 
     return this;
@@ -272,7 +261,7 @@ class ApiClient {
 
     let response;
     try {
-      response = await fetch(url, init);
+      response = await apiFetch(url, init);
     } catch (error) {
       const message =
         error instanceof Error

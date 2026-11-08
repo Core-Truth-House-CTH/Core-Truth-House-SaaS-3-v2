@@ -2,8 +2,9 @@ const fs = require("fs");
 const path = require("path");
 
 const root = process.cwd();
-const distIndexPath = path.join(root, "dist", "index.html");
-const outputDir = path.join(root, "dist", "brand-diagnostic");
+const distDir = path.resolve(process.env.DIST_DIR || "dist");
+const distIndexPath = path.join(distDir, "index.html");
+const outputDir = path.join(distDir, "brand-diagnostic");
 const outputPath = path.join(outputDir, "index.html");
 
 if (!fs.existsSync(distIndexPath)) {

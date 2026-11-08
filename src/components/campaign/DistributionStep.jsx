@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const PLATFORMS = [
   "Instagram",

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Settings, ShieldCheck, SlidersHorizontal, Cog, RefreshCw, Loader2 } from "lucide-react";
 
 import apiClient from "../../lib/apiClient";
+import AIRoutingPanel from "../components/AIRoutingPanel";
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
@@ -234,6 +235,7 @@ export default function AdminSettingsPage() {
         <StatCard icon={Settings} label="Admin Ownership" value="Active" tone="green" />
       </section>
 
+      <AIRoutingPanel />
       <SocialRoutingPanel />
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">

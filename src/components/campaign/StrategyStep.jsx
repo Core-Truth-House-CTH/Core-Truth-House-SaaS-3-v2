@@ -15,7 +15,7 @@ import AvatarSelector from "./AvatarSelector";
 import AvatarThumb from "../audience/AvatarThumb";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const GOAL_OPTIONS = [
   { value: "offer_launch", label: "Offer Launch" },

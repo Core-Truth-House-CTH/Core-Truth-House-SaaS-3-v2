@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useUser } from "../hooks/useAuth";
 import { usePlan } from "../context/PlanContext";
 
-const WALL_WHITELIST = new Set(["/billing", "/lock-screen"]);
+const WALL_WHITELIST = new Set(["/billing"]);
 
 function isWhitelisted(pathname) {
   if (!pathname) return false;

@@ -1,5 +1,9 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { apiFetch } from "../lib/apiConfig";
+import React, { useEffect, useState } from "react";
+import apiClient from "../lib/apiClient.js";
+import { Link, useLocation } from "react-router-dom";
+import { cohortEnrollment, submitCohortApplication, STANDARD_UNAVAILABLE } from "../lib/cohortEnrollment.mjs";
+import { useAuth, useUser } from "../hooks/useAuth";
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
 
@@ -51,13 +55,13 @@ const TRIED_BEFORE_OPTIONS = [
 ];
 
 const COMMITMENT_OPTIONS = [
-  "Yes, I can commit to all four",
-  "I can make most but not all",
-  "I need to check my schedule",
+  "Yes, self-paced with written instructor feedback fits my needs",
+  "I need more information",
+  "No",
 ];
 
 const REFERRAL_OPTIONS = [
-  "Yes, that is a fair exchange",
+  "Yes, I am interested (optional)",
   "I need more information",
   "No",
 ];
@@ -138,22 +142,42 @@ function SuccessState() {
       <p className="cth-apply-eyebrow">Thank you</p>
       <h2>Application received.</h2>
       <p className="cth-apply-success-body">
-        We review every application by hand. You will hear from us within 48 hours. Check your inbox for a confirmation.
+        Applications are accepted automatically in server-recorded order while capacity is available. Check your secure reservation for acceptance and payment timing; submission alone does not confirm a place or payment.
       </p>
-      <Link to="/" className="cth-apply-btn cth-apply-btn-primary">
-        Back to Core Truth House
+      <Link to="/cohort/reservation" className="cth-apply-btn cth-apply-btn-primary">
+        View your reservation
       </Link>
     </div>
   );
 }
 
 export default function CohortApplyPage() {
+  const { search } = useLocation();
+  const { getToken } = useAuth();
+  const { isSignedIn } = useUser();
+  const enrollment = cohortEnrollment(search);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [answers, setAnswers] = useState(initialAnswers);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [intakeState, setIntakeState] = useState("checking");
+  const [usEligible, setUsEligible] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch(apiClient.buildApiUrl("/api/cohort/phase"), { headers: { Accept: "application/json" } })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Intake status unavailable");
+        return response.json();
+      })
+      .then((phase) => {
+        if (active) setIntakeState(phase.accepting_applications === true ? "open" : "closed");
+      })
+      .catch(() => { if (active) setIntakeState("closed"); });
+    return () => { active = false; };
+  }, []);
 
   function setAnswer(key, value) {
     setAnswers((prev) => ({ ...prev, [key]: value }));
@@ -172,6 +196,14 @@ export default function CohortApplyPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (loading) return;
+    if (intakeState !== "open") {
+      setError("New Founding applications are temporarily closed.");
+      return;
+    }
+    if (!enrollment.available) {
+      setError(enrollment.message);
+      return;
+    }
     setError("");
 
     if (!name.trim() || !email.trim()) {
@@ -179,22 +211,22 @@ export default function CohortApplyPage() {
       return;
     }
 
+    if (!isSignedIn) { setError("Sign in before submitting your application."); return; }
     setLoading(true);
     try {
-      const res = await fetch("/api/cohort/apply", {
+      const authToken = await getToken();
+      const acknowledgement = await apiFetch(apiClient.buildApiUrl("/api/cohort/policy-acknowledgement"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim(),
-          answers,
-        }),
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + authToken },
+        body: JSON.stringify({ policy_version: "2026-10-25", context: "cohort_application" }),
       });
-
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        throw new Error(payload.detail || payload.message || "Something went wrong.");
+      if (!acknowledgement.ok) {
+        throw new Error("Policy acknowledgment could not be recorded. Your application was not submitted.");
       }
+      await submitCohortApplication(
+        { search, name, email, answers, authToken },
+        (url, options) => apiFetch(apiClient.buildApiUrl(url), options),
+      );
 
       setSubmitted(true);
     } catch (err) {
@@ -218,15 +250,26 @@ export default function CohortApplyPage() {
                 <p className="cth-apply-eyebrow">The Core Truth Cohort</p>
                 <h1>Apply for Your Seat</h1>
                 <p className="cth-apply-sub">
-                  Applications are reviewed by hand. We admit 8 founders per cohort. Tell us about where you are and what you are building.
+                  Sign in to apply. Valid applications are accepted automatically in server-recorded order while capacity is available. Initially 12 seats are offered; one additional batch of 3 opens only after 12 initial members have verified successful payments. No manual review or referral is required.
                 </p>
                 <div className="cth-apply-badges">
-                  <span className="cth-apply-badge cth-apply-badge-founding">Founding: $497</span>
-                  <span className="cth-apply-badge cth-apply-badge-standard">Standard: $997</span>
+                  <span className="cth-apply-badge cth-apply-badge-founding">Founding: $495 USD one-time · Non-refundable. See <Link to="/enrollment-policy">Enrollment Policy</Link>.</span>
+                  <span className="cth-apply-badge cth-apply-badge-standard">{STANDARD_UNAVAILABLE}</span>
                 </div>
               </header>
 
-              <form className="cth-apply-form" onSubmit={handleSubmit} noValidate>
+              {intakeState !== "open" ? (
+                <p role="status">
+                  {intakeState === "checking" ? "Checking application availability…" : "New applications are not currently open."}
+                </p>
+              ) : null}
+              {intakeState === "closed" && isSignedIn ? (
+                <Link to="/cohort/reservation">Go to your secure reservation</Link>
+              ) : null}
+              {intakeState === "open" && !enrollment.available ? <p role="status">{enrollment.message}</p> : null}
+
+              {intakeState === "open" && !isSignedIn && <Link to="/sign-in?redirect_url=%2Fcohort%2Fapply">Sign in to apply</Link>}
+        <form className="cth-apply-form" hidden={intakeState !== "open"} onSubmit={handleSubmit} noValidate>
                 <div className="cth-apply-row">
                   <div className="cth-apply-field">
                     <FieldLabel required>Name</FieldLabel>
@@ -321,7 +364,7 @@ export default function CohortApplyPage() {
 
                 <div className="cth-apply-field">
                   <FieldLabel>
-                    The cohort requires four live sessions across 14 days plus 4 to 6 hours of async work. Can you commit?
+                    Founding includes lifetime Estate access and written instructor feedback on your brand work during the 90-day feedback window. No live sessions. Does this fit how you want to work?
                   </FieldLabel>
                   <RadioGroup
                     name="session_commitment"
@@ -333,7 +376,7 @@ export default function CohortApplyPage() {
 
                 <div className="cth-apply-field">
                   <FieldLabel>
-                    Founding members receive lifetime Estate access to Core Truth House OS. In exchange, we ask for one referral of a qualified founder to a future cohort. Are you comfortable with that?
+                    Optional: would you be interested in referring a founder? No referral is required for acceptance, payment or lifetime Estate access. Leaving this blank or selecting No does not affect enrollment.
                   </FieldLabel>
                   <RadioGroup
                     name="referral_comfort"
@@ -353,11 +396,12 @@ export default function CohortApplyPage() {
                   />
                 </div>
 
+                <label className="cth-apply-field"><input type="checkbox" required checked={usEligible} onChange={(e) => setUsEligible(e.target.checked)} /> I am a US resident age 18 or older.</label>
                 {error ? <p className="cth-apply-error">{error}</p> : null}
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !usEligible || !enrollment.available || intakeState !== "open"}
                   className="cth-apply-btn cth-apply-btn-primary cth-apply-btn-block"
                 >
                   {loading ? (
@@ -405,7 +449,7 @@ export default function CohortApplyPage() {
         }
 
         .cth-apply-intro h1 {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Cormorant Garamond', Georgia, serif;
           font-size: clamp(2.2rem, 4vw, 3.2rem);
           line-height: 1.1;
           color: #2b1040;
@@ -636,7 +680,7 @@ export default function CohortApplyPage() {
         }
 
         .cth-apply-success h2 {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Cormorant Garamond', Georgia, serif;
           font-size: clamp(2rem, 3.6vw, 2.8rem);
           line-height: 1.15;
           color: #2b1040;

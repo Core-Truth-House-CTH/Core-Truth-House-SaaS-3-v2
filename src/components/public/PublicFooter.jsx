@@ -17,17 +17,13 @@ const footerGroups = [
  {
  heading: "Studios",
  links: [
- { label: "AI Headshot Generator", to: "/store" },
- { label: "Studio 2", to: "/store", muted: true },
- { label: "Studio 3", to: "/store", muted: true },
- { label: "All Studios", to: "/store" },
+ { label: "The Store", to: "/store" },
  ],
  },
  {
  heading: "Resources",
  links: [
  { label: "Field Notes", to: "/blog" },
- { label: "Brand Glossary", to: "/blog" },
  ],
  newsletter: true,
  },
@@ -36,8 +32,6 @@ const footerGroups = [
  links: [
  { label: "Contact", to: "/contact" },
  { label: "Member Login", to: "/sign-in" },
- { label: "Support / Help", to: "/contact" },
- { label: "Affiliate Program", to: "/contact" },
  ],
  social: true,
  },
@@ -46,8 +40,7 @@ const footerGroups = [
 const socialLinks = [
  { label: "Instagram", icon: "/brand-assets/social-icons/instagram.png", href: "https://www.instagram.com/coretruthhouse/", external: true },
  { label: "Facebook", icon: "/brand-assets/social-icons/facebook.png", href: "https://www.facebook.com/profile.php?id=61589383311165", external: true },
- { label: "TikTok", icon: "/brand-assets/social-icons/tiktok.png", href: "#", external: true },
- { label: "Email", icon: "/brand-assets/social-icons/email.png", href: "mailto:hello@coretruthhouse.com", external: false },
+ { label: "TikTok", icon: "/brand-assets/social-icons/tiktok.png", href: "https://www.tiktok.com/@coretruthhouse", external: true },
 ];
 
 function FooterLink({ link }) {
@@ -146,6 +139,7 @@ export default function PublicFooter() {
  <div>
  <Link to="/terms">Terms of Service</Link>
  <Link to="/privacy">Privacy Policy</Link>
+ <Link to="/enrollment-policy">Enrollment Policy</Link>
  <Link to="/privacy#cookies">Cookie Policy</Link>
  </div>
  </div>
@@ -184,7 +178,7 @@ export default function PublicFooter() {
  gap: 12px;
  color: rgba(248, 241, 236, 1);
  text-decoration: none;
- font-family: 'Playfair Display', Georgia, serif;
+ font-family: 'Cormorant Garamond', Georgia, serif;
  font-size: 25px;
  font-weight: 850;
  letter-spacing: -0.04em;
@@ -201,7 +195,7 @@ export default function PublicFooter() {
  .cth-public-footer-brand-row p {
  margin: 0;
  color: rgba(248, 241, 236, 0.74);
- font-family: 'Playfair Display', Georgia, serif;
+ font-family: 'Cormorant Garamond', Georgia, serif;
  font-size: clamp(1.25rem, 2vw, 1.85rem);
  font-style: italic;
  line-height: 1.2;

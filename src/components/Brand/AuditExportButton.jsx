@@ -1,3 +1,4 @@
+import { apiFetch } from "../../lib/apiConfig";
 import React, { useState } from 'react';
 import { Download, Eye, FileText, X } from 'lucide-react';
 import apiClient from '../../lib/apiClient';
@@ -47,7 +48,7 @@ export function AuditExportButton({ auditId = '', variant = 'secondary' }) {
           : {};
 
       const downloadUrl = apiClient.buildApiUrl(`/api/export/brand-audit/download/${encodeURIComponent(jobId)}`);
-      const pdfRes = await fetch(downloadUrl, {
+      const pdfRes = await apiFetch(downloadUrl, {
         method: 'GET',
         headers,
         credentials: 'include',

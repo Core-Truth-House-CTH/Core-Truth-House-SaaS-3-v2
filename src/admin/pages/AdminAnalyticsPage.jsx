@@ -1,5 +1,6 @@
+import { getApiBaseUrl } from "../../lib/apiConfig";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import axios from "../../lib/apiAxios";
 import { useUser } from "../../hooks/useAuth";
 import {
   BarChart3,
@@ -15,7 +16,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-const API = import.meta.env.VITE_BACKEND_URL;
+const API = getApiBaseUrl();
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (

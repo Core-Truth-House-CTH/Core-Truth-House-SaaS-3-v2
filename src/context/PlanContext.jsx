@@ -15,6 +15,7 @@ import {
 import { useUser, useAuth } from "../hooks/useAuth";
 import apiClient from "../lib/apiClient";
 import { useWorkspace } from "./WorkspaceContext";
+import { verifiedLifetimeAccess } from "../lib/lifetimeAccess.mjs";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing"]);
 
@@ -27,6 +28,7 @@ const PlanContext = createContext({
   globalRole: null,
   loading: true,
   subscriptionStatus: null,
+  hasLifetimeAccess: false,
   hasActivePlan: false,
   planResolved: false,
   canAccess: () => true,
@@ -61,12 +63,10 @@ function inferAdminFlags({ globalRole, isSuperAdminFlag, isAdminFlag }) {
 
 function getSessionRoleState(user) {
   const publicMetadata = user?.publicMetadata || {};
-  const unsafeMetadata = user?.unsafeMetadata || {};
   const privateMetadata = user?.privateMetadata || {};
 
   const resolvedGlobalRole = normalizeRole(
     publicMetadata.global_role ||
-      unsafeMetadata.global_role ||
       privateMetadata.global_role ||
       user?.global_role,
     null
@@ -74,7 +74,6 @@ function getSessionRoleState(user) {
 
   const resolvedWorkspaceRole = normalizeRole(
     publicMetadata.workspace_role ||
-      unsafeMetadata.workspace_role ||
       privateMetadata.workspace_role ||
       user?.workspace_role,
     null
@@ -84,12 +83,10 @@ function getSessionRoleState(user) {
     globalRole: resolvedGlobalRole,
     isSuperAdminFlag:
       publicMetadata.is_super_admin ??
-      unsafeMetadata.is_super_admin ??
       privateMetadata.is_super_admin ??
       user?.is_super_admin,
     isAdminFlag:
       publicMetadata.is_admin ??
-      unsafeMetadata.is_admin ??
       privateMetadata.is_admin ??
       user?.is_admin,
   });
@@ -119,6 +116,7 @@ export function PlanProvider({ children }) {
   const [globalRole, setGlobalRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [lifetimeAccess, setLifetimeAccess] = useState(null);
   const [billingSummaryAvailable, setBillingSummaryAvailable] = useState(false);
   const [planApiHasPlan, setPlanApiHasPlan] = useState(false);
   const [planResolved, setPlanResolved] = useState(false);
@@ -136,16 +134,7 @@ export function PlanProvider({ children }) {
     workspace?.plan_id ||
     workspace?.plan ||
     null;
-  const activeWorkspaceName = String(
-    workspace?.activeWorkspace?.name ||
-      workspace?.workspace?.name ||
-      workspace?.name ||
-      ""
-  ).toLowerCase();
-  const isCoreTruthOwnerWorkspace =
-    activeWorkspaceName.includes("core truth") ||
-    activeWorkspaceName.includes("c.t. house") ||
-    activeWorkspaceName.includes("ct house");
+  const hasLifetimeAccess = lifetimeAccess?.key === `${userId || "anonymous"}::${activeWorkspaceId || "no-workspace"}` && lifetimeAccess.active === true;
 
   const sessionRoleState = useMemo(() => getSessionRoleState(user), [user]);
 
@@ -178,13 +167,14 @@ export function PlanProvider({ children }) {
     if (!userId) {
       inFlightRef.current = false;
       lastResolvedPlanKeyRef.current = null;
-      setPlan(normalizePlan(isCoreTruthOwnerWorkspace ? "estate" : activeWorkspacePlan || "foundation"));
+      setPlan(normalizePlan(activeWorkspacePlan || "foundation"));
       setGlobalRole(sessionRoleState.resolvedGlobalRole);
       setWorkspaceRole(sessionRoleState.resolvedWorkspaceRole);
       setIsSuperAdmin(sessionRoleState.isSuperAdmin);
       setIsAdmin(sessionRoleState.isAdmin);
       setUserRole(sessionRoleState.fallbackRole);
       setSubscriptionStatus(null);
+      setLifetimeAccess(null);
       setBillingSummaryAvailable(false);
       setPlanApiHasPlan(false);
       setPlanResolved(true);
@@ -249,9 +239,10 @@ export function PlanProvider({ children }) {
             : null;
         setPlanApiHasPlan(Boolean(rawPlanFromApi));
 
-        const resolvedPlan = isCoreTruthOwnerWorkspace
-          ? "estate"
-          : rawPlanFromApi || activeWorkspacePlan || "FOUNDATION";
+        // Only authenticated server responses may establish lifetime access.
+        const lifetime = verifiedLifetimeAccess(data?.effective_access);
+        setLifetimeAccess({ key: planLookupKey, active: lifetime });
+        const resolvedPlan = lifetime ? "estate" : rawPlanFromApi || activeWorkspacePlan || "FOUNDATION";
         setPlan(normalizePlan(resolvedPlan));
 
         const summary = billingErrored ? null : billingSummary;
@@ -298,13 +289,14 @@ export function PlanProvider({ children }) {
     } catch (error) {
       console.error("[PlanContext] Failed to fetch plan", error);
 
-        setPlan(normalizePlan(isCoreTruthOwnerWorkspace ? "estate" : activeWorkspacePlan || "foundation"));
+        setPlan(normalizePlan(activeWorkspacePlan || "foundation"));
       setGlobalRole(sessionRoleState.resolvedGlobalRole);
       setWorkspaceRole(sessionRoleState.resolvedWorkspaceRole);
       setIsSuperAdmin(sessionRoleState.isSuperAdmin);
       setIsAdmin(sessionRoleState.isAdmin);
       setUserRole(sessionRoleState.fallbackRole);
       setSubscriptionStatus(null);
+      setLifetimeAccess(null);
       setBillingSummaryAvailable(false);
       setPlanApiHasPlan(false);
       setPlanResolved(true);
@@ -323,7 +315,7 @@ export function PlanProvider({ children }) {
     }
 
     void fetchPlan();
-    }, [isUserLoaded, authLoaded, userId, workspaceInitialized, activeWorkspaceId, activeWorkspacePlan, isCoreTruthOwnerWorkspace]);
+    }, [isUserLoaded, authLoaded, userId, workspaceInitialized, activeWorkspaceId, activeWorkspacePlan]);
 
   const value = useMemo(() => {
     const checkAccess = (route) => canAccess(plan, route, isSuperAdmin);
@@ -342,7 +334,7 @@ export function PlanProvider({ children }) {
 
     const hasActivePlan =
       isSuperAdmin ||
-      isCoreTruthOwnerWorkspace ||
+      hasLifetimeAccess ||
       hasActiveStatus ||
       billingOutageFallback;
 
@@ -355,6 +347,7 @@ export function PlanProvider({ children }) {
       globalRole,
       loading,
       subscriptionStatus,
+      hasLifetimeAccess,
       hasActivePlan,
       planResolved,
       canAccess: checkAccess,
@@ -374,7 +367,7 @@ export function PlanProvider({ children }) {
     billingSummaryAvailable,
     planApiHasPlan,
     planResolved,
-    isCoreTruthOwnerWorkspace,
+    hasLifetimeAccess,
   ]);
 
   return <PlanContext.Provider value={value}>{children}</PlanContext.Provider>;

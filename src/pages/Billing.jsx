@@ -12,7 +12,7 @@ import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const PAGE_STYLE = {
   background: "var(--cth-command-blush)",
@@ -108,32 +108,6 @@ const PRIMARY_CTA_STYLE = {
   width: "100%",
 };
 
-const TOGGLE_BUTTON_BASE = {
-  border: "1px solid var(--cth-command-border)",
-  borderRadius: 4,
-  padding: "8px 18px",
-  fontFamily: SANS,
-  fontSize: 13,
-  fontWeight: 600,
-  cursor: "pointer",
-  letterSpacing: "0.02em",
-};
-
-function getToggleStyle(active) {
-  return active
-    ? {
-        ...TOGGLE_BUTTON_BASE,
-        background: "var(--cth-command-crimson)",
-        borderColor: "var(--cth-command-crimson)",
-        color: "var(--cth-command-panel)",
-      }
-    : {
-        ...TOGGLE_BUTTON_BASE,
-        background: "transparent",
-        color: "var(--cth-command-ink)",
-      };
-}
-
 function StatusBanner({ status }) {
   if (!status) return null;
 
@@ -177,16 +151,14 @@ function StatusBanner({ status }) {
   );
 }
 
-function PlanCard({ plan, billingCycle, activePlanId, busy, onSelect }) {
+function PlanCard({ plan, activePlanId, busy, onSelect }) {
   const isActive = String(activePlanId || "").toLowerCase() === String(plan.id || "").toLowerCase();
-  const price =
-    billingCycle === "annual" ? plan.annual_price_cents : plan.monthly_price_cents;
+  const price = plan.monthly_price_cents;
 
   const formattedPrice =
     typeof price === "number" ? `$${(price / 100).toFixed(0)}` : "Custom";
 
-  const credits =
-    billingCycle === "annual" ? plan.annual_credits : plan.monthly_credits;
+  const credits = plan.monthly_credits;
 
   return (
     <div
@@ -207,7 +179,7 @@ function PlanCard({ plan, billingCycle, activePlanId, busy, onSelect }) {
         <div style={{ display: "flex", alignItems: "baseline" }}>
           <span style={{ ...PRICE_STYLE, fontSize: 30 }}>{formattedPrice}</span>
           <span style={PRICE_UNIT_STYLE}>
-            / {billingCycle === "annual" ? "year" : "month"}
+            / month
           </span>
         </div>
         <p style={{ ...MUTED_STYLE, marginTop: 6 }}>
@@ -279,8 +251,6 @@ function CheckoutWall({
   loading,
   status,
   plans,
-  billingCycle,
-  setBillingCycle,
   activePlanId,
   checkoutBusy,
   onSelectPlan,
@@ -342,30 +312,6 @@ function CheckoutWall({
 
         <StatusBanner status={status} />
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: 12,
-            marginBottom: 24,
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setBillingCycle("monthly")}
-            style={getToggleStyle(billingCycle === "monthly")}
-          >
-            Monthly
-          </button>
-          <button
-            type="button"
-            onClick={() => setBillingCycle("annual")}
-            style={getToggleStyle(billingCycle === "annual")}
-          >
-            Annual
-          </button>
-        </div>
-
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}>
             <Loader2
@@ -385,15 +331,12 @@ function CheckoutWall({
             {plans.map((plan) => {
               const planId = String(plan.id || "").toLowerCase();
               const isFeatured = planId === "structure";
-              const priceCents =
-                billingCycle === "annual"
-                  ? plan.annual_price_cents
-                  : plan.monthly_price_cents;
+              const priceCents = plan.monthly_price_cents;
               const formattedPrice =
                 typeof priceCents === "number"
                   ? `$${(priceCents / 100).toFixed(0)}`
                   : "Custom";
-              const cycleLabel = billingCycle === "annual" ? "/yr" : "/mo";
+              const cycleLabel = "/mo";
               const busy = checkoutBusy === plan.id;
               const isCurrent =
                 String(activePlanId || "").toLowerCase() === planId && planId !== "";
@@ -521,11 +464,10 @@ export default function Billing() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const { activeWorkspaceId } = useWorkspace();
-  const { hasActivePlan, refreshPlan } = usePlan();
+  const { hasActivePlan, hasLifetimeAccess, refreshPlan } = usePlan();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [billingCycle, setBillingCycle] = useState("monthly");
   const [plans, setPlans] = useState([]);
   const [creditPacks, setCreditPacks] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -646,7 +588,7 @@ export default function Billing() {
     try {
       const res = await apiClient.post(API_PATHS.billing.checkoutSubscription, {
         plan_id: planId,
-        billing_cycle: billingCycle,
+        billing_cycle: "monthly",
         origin_url: window.location.origin,
       });
 
@@ -709,8 +651,6 @@ export default function Billing() {
         loading={loading}
         status={status}
         plans={plans}
-        billingCycle={billingCycle}
-        setBillingCycle={setBillingCycle}
         activePlanId={activePlanId}
         checkoutBusy={checkoutBusy}
         onSelectPlan={startSubscriptionCheckout}
@@ -766,12 +706,12 @@ export default function Billing() {
                   <div>
                     <p style={SECTION_LABEL_STYLE}>Plan</p>
                     <p style={{ ...SUMMARY_VALUE_STYLE, marginTop: 8 }}>
-                      {summary?.subscription?.plan_name || summary?.plan_name || "No active plan"}
+                      {hasLifetimeAccess ? "Estate · lifetime access" : summary?.subscription?.plan_name || summary?.plan_name || "No active plan"}
                     </p>
                   </div>
 
                   <div>
-                    <p style={SECTION_LABEL_STYLE}>Status</p>
+                    <p style={SECTION_LABEL_STYLE}>{hasLifetimeAccess ? "Subscription billing status" : "Status"}</p>
                     <p style={{ ...SUMMARY_VALUE_STYLE, marginTop: 8 }}>
                       {summary?.subscription?.status || summary?.subscription_status || "inactive"}
                     </p>
@@ -786,31 +726,12 @@ export default function Billing() {
                 </div>
               </div>
 
-              <div className="mb-4 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setBillingCycle("monthly")}
-                  style={getToggleStyle(billingCycle === "monthly")}
-                >
-                  Monthly
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setBillingCycle("annual")}
-                  style={getToggleStyle(billingCycle === "annual")}
-                >
-                  Annual
-                </button>
-              </div>
-
               <div className="mb-8 grid gap-4 lg:grid-cols-4">
                 {plans.map((plan) => (
                   <PlanCard
                     key={plan.id}
                     plan={plan}
-                    billingCycle={billingCycle}
-                    activePlanId={activePlanId}
+                                activePlanId={activePlanId}
                     busy={checkoutBusy === plan.id}
                     onSelect={startSubscriptionCheckout}
                   />

@@ -1,13 +1,10 @@
+import { getApiBaseUrl, apiFetch } from "../lib/apiConfig";
 import React, { useState } from "react";
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
 import API_PATHS from "../lib/apiPaths";
 
-const API_BASE = (
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  "https://api.coretruthhouse.com"
-).replace(/\/$/, "");
+const API_BASE = getApiBaseUrl({ productionFallback: true });
 
 // 12-question brand positioning diagnostic. Answer order is index 0-3;
 // scoring (including the inverted question) is handled server-side.
@@ -144,7 +141,7 @@ const BANDS = {
   foundation: {
     title: "The Foundation Builder",
     message:
-      "The work ahead of you is foundational. Trying to sprint through positioning in 14 days would skip the layers that need to come first. Start with the Foundation tier of Core Truth House OS.",
+      "The work ahead of you is foundational. Rushing positioning would skip the layers that need to come first. Start with the Foundation tier of Core Truth House OS.",
     ctaLabel: "Start with Foundation",
     ctaHref: "/tiers",
     emphasis: false,
@@ -191,7 +188,7 @@ export default function ScorecardPage() {
     setSubmitting(true);
     setError("");
     try {
-      const response = await fetch(`${API_BASE}${API_PATHS.scorecard.submit}`, {
+      const response = await apiFetch(`${API_BASE}${API_PATHS.scorecard.submit}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -439,7 +436,7 @@ function ScorecardStyles() {
 
       .sc-headline {
         margin: 0;
-        font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
         font-size: clamp(34px, 5vw, 54px);
         line-height: 1.06;
         letter-spacing: -.03em;
@@ -589,7 +586,7 @@ function ScorecardStyles() {
       /* ---- Question ---- */
       .sc-question {
         margin: 0 0 30px;
-        font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
         font-size: clamp(25px, 3.4vw, 36px);
         line-height: 1.18;
         letter-spacing: -.02em;
@@ -715,7 +712,7 @@ function ScorecardStyles() {
       }
 
       .sc-score-num {
-        font-family: 'Playfair Display', Georgia, serif;
+        font-family: 'Cormorant Garamond', Georgia, serif;
         font-size: clamp(76px, 12vw, 124px);
         line-height: .9;
         font-weight: 600;
@@ -723,14 +720,14 @@ function ScorecardStyles() {
       }
 
       .sc-score-max {
-        font-family: 'Playfair Display', Georgia, serif;
+        font-family: 'Cormorant Garamond', Georgia, serif;
         font-size: clamp(26px, 4vw, 40px);
         color: #c0b1bd;
       }
 
       .sc-result-title {
         margin: 0;
-        font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
         font-size: clamp(32px, 4.6vw, 50px);
         line-height: 1.06;
         letter-spacing: -.03em;

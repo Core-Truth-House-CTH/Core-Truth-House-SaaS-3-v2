@@ -6,7 +6,7 @@ import { API_PATHS } from "../../lib/apiPaths";
 import SelectionCard from "./SelectionCard";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const RETROSPECTIVE_STATUSES = new Set([
   "complete",

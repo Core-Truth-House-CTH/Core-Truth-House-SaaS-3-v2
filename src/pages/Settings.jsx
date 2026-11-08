@@ -44,7 +44,7 @@ const SERIF = "'Cormorant Garamond', Georgia, serif";
 const MONO = "'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace";
 
 // Brand Identity — font options per role (must match Identity Studio families).
-const BI_DISPLAY_FONTS = ['Cormorant Garamond', 'Fraunces', 'Playfair Display', 'Libre Baskerville'];
+const BI_DISPLAY_FONTS = ['Cormorant Garamond', 'Fraunces', 'Cormorant Garamond', 'Libre Baskerville'];
 const BI_BODY_FONTS = ['DM Sans', 'Manrope', 'Inter', 'Plus Jakarta Sans'];
 
 // Canonical two font roles, mirroring Identity Studio so saved data round-trips.
@@ -1501,7 +1501,7 @@ export default function Settings() {
                         <h2 style={SECTION_HEADING_STYLE}>OpenAI</h2>
                         <p style={{ ...MUTED_STYLE, marginTop: 8, maxWidth: 560 }}>
                           Connect your own OpenAI account to use your credits for GPT Image
-                          generation (gpt-image-1) in the Content Queue. Get your API key at
+                          generation (gpt-image-2.5-flare) in the Content Queue. Get your API key at
                           platform.openai.com.
                         </p>
                       </div>

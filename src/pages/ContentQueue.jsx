@@ -1,3 +1,4 @@
+import { getApiBaseUrl } from "../lib/apiConfig";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Sparkles,
@@ -18,11 +19,7 @@ import apiClient from "../lib/apiClient";
 // visual_url is stored as a backend-relative path (e.g.
 // /api/audience/portraits/<file>.png), served by the API host — prefix it with
 // the backend base URL. Full http(s)/data URLs pass through unchanged.
-const API_BASE = String(
-  import.meta.env.VITE_API_BASE_URL ||
-    import.meta.env.VITE_BACKEND_URL ||
-    "https://api.coretruthhouse.com"
-).replace(/\/$/, "");
+const API_BASE = getApiBaseUrl({ productionFallback: true });
 
 const absUrl = (u) =>
   !u ? u : /^(https?:|data:)/.test(u) ? u : `${API_BASE}${u}`;
@@ -92,16 +89,11 @@ const DEFAULT_SETTINGS = {
 
 const unwrap = (res) => res?.data ?? res;
 
-const DEFAULT_VISUAL_MODEL = "openai/gpt-image-1";
+const DEFAULT_VISUAL_MODEL = "openai/gpt-image-2.5-flare";
+// Queue visuals are generation-only: no reference image is submitted.
+// Sunburst is reserved for reference edits; Nano Banana 2 is fallback-only.
 const VISUAL_MODELS = [
-  { value: "openai/gpt-image-1", label: "GPT Image (best text)" },
-  { value: "google/gemini-2.5-flash-image", label: "Gemini 2.5 Flash (fast)" },
-  { value: "higgsfield-ai/soul/standard", label: "Higgsfield Soul", higgsfield: true },
-  {
-    value: "higgsfield-ai/nano-banana/pro",
-    label: "Higgsfield Nano Banana",
-    higgsfield: true,
-  },
+  { value: "openai/gpt-image-2.5-flare", label: "GPT Image (best text)" },
 ];
 
 function formatRunDate(iso) {

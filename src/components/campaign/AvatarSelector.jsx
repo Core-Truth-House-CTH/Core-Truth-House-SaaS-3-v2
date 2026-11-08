@@ -7,7 +7,7 @@ import { API_PATHS } from "../../lib/apiPaths";
 import AvatarCard from "../audience/AvatarCard";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const BACKDROP_STYLE = {
   position: "fixed",

@@ -1,5 +1,6 @@
+import { getApiBaseUrl } from "../../lib/apiConfig";
 import React, { useMemo, useState } from 'react';
-import { buildUrl, normalizeBaseUrl } from '../../lib/apiClient';
+import { buildUrl } from '../../lib/apiClient';
 import { AuditExportButton } from './AuditExportButton';
 
 const C = {
@@ -17,22 +18,11 @@ const C = {
   blue: 'var(--cth-info)',
   purple: 'var(--cth-command-purple)',
   font: "'DM Sans', sans-serif",
-  serif: "'Playfair Display', serif",
+  serif: "'Cormorant Garamond', serif",
 };
 
 function resolveApiBase() {
-  const candidates = [
-    typeof import.meta !== 'undefined' ? import.meta?.env?.VITE_API_BASE_URL : undefined,
-    typeof process !== 'undefined' ? process?.env?.REACT_APP_API_BASE_URL : undefined,
-    typeof window !== 'undefined' ? window.__API_BASE_URL__ : undefined,
-  ];
-
-  for (const candidate of candidates) {
-    const normalized = normalizeBaseUrl(candidate);
-    if (normalized) return normalized;
-  }
-
-  return '';
+  return getApiBaseUrl();
 }
 
 // `palette` lets a caller retint the rendered markdown for a non-default surface
@@ -473,7 +463,7 @@ export function AuditNextSteps({ moves = [], score = 0, moduleScores = {}, onNav
               <div>
                 <p
                   style={{
-                    fontFamily: C.serif || "'Playfair Display', serif",
+                    fontFamily: C.serif || "'Cormorant Garamond', serif",
                     fontSize: 15,
                     fontWeight: 600,
                     color: C.ink,

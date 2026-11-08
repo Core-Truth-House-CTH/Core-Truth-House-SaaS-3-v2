@@ -1,3 +1,4 @@
+import { apiFetch } from "../../lib/apiConfig";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
  DollarSign,
@@ -260,7 +261,7 @@ async function uploadAuthenticatedFile(url, file) {
  const formData = new FormData();
  formData.append("file", file);
 
- const response = await fetch(url, {
+ const response = await apiFetch(url, {
  method: "POST",
  headers: await apiClient.getAuthHeaders({ isFormData: true }),
  body: formData,

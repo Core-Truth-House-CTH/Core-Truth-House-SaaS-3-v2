@@ -17,7 +17,7 @@ import StructureStep from "../components/campaign/StructureStep";
 import DistributionStep from "../components/campaign/DistributionStep";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const DRAFT_KEY = "cth.campaign-setup.draft";
 const DRAFT_STALE_MS = 24 * 60 * 60 * 1000; // 24 hours

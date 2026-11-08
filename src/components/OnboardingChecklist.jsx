@@ -100,7 +100,7 @@ function WelcomeModal({ userFirstName, onStart, onDismiss }) {
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cth-command-muted)' }}>Quick Start</span>
           </div>
 
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--cth-on-dark)', marginBottom: 12, fontFamily: "'Playfair Display', Georgia, serif", lineHeight: 1.25 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--cth-on-dark)', marginBottom: 12, fontFamily: "'Cormorant Garamond', Georgia, serif", lineHeight: 1.25 }}>
             Welcome to Core Truth House,{' '}
             <span style={{ color: 'var(--cth-command-cinnabar)' }}>{userFirstName}.</span>
           </h1>

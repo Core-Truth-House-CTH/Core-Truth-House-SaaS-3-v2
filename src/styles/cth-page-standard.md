@@ -172,13 +172,13 @@ with `letterSpacing: '0.2em'`.
 
 ### Section heading
 
-Playfair Display, in ink color. Always paired below a section label. Use 24–26px
+Cormorant Garamond, in ink color. Always paired below a section label. Use 24–26px
 for in-card section heads and the page-level h1; up to 28px for hero or
 prominent summaries.
 
 ```js
 const SECTION_HEADING_STYLE = {
-  fontFamily: "'Playfair Display', serif",
+  fontFamily: "'Cormorant Garamond', serif",
   fontSize: 26,
   fontWeight: 600,
   color: 'var(--cth-command-ink)',
@@ -452,7 +452,7 @@ const sweep = Math.max(0, Math.min(360, score * 3.6));
       justifyContent: 'center',
     }}>
       <span style={{
-        fontFamily: "'Playfair Display', serif",
+        fontFamily: "'Cormorant Garamond', serif",
         fontSize: 72,
         fontWeight: 600,
         color: 'var(--cth-command-ink)',
@@ -495,7 +495,7 @@ Playfair 44px number.
     </p>
   </div>
   <p style={{
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Cormorant Garamond', serif",
     fontSize: 44,
     fontWeight: 600,
     color: 'var(--cth-command-ink)',
@@ -557,7 +557,7 @@ in one go.
 
 ```js
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 const MONO = "'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace";
 
 const PAGE_STYLE = {
@@ -678,7 +678,7 @@ These are non-negotiable. PRs that violate any of these should be rejected.
   Corner radius section: cards/panels `12`, modal shell `14`, inputs/buttons
   `8`, pills/avatars `999`. Don't exceed it — never `rounded-3xl` (24px) on
   cards. (This replaces the former 4px-sharp rule.)
-- **No Inter font.** Anywhere. Headlines are Playfair Display, body is DM Sans,
+- **No Inter font.** Anywhere. Headlines are Cormorant Garamond, body is DM Sans,
   hex/code is DM Mono (or system monospace stack). If you see Inter sneaking in
   via a shadcn or Tailwind default, override it explicitly with `fontFamily: SANS`.
 - **No pure black (`#000000`).** Use `--cth-command-night` (`#0d0010`) or

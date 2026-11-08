@@ -16,7 +16,7 @@ const termsSections = [
  title: "Eligibility",
  anchor: "eligibility",
  body:
- "You must be at least 18 years old and legally capable of entering into a binding agreement to use the Services. By using the Services, you represent and warrant that you meet these requirements.",
+ "You must be a US resident, at least 18 years old, and legally capable of entering into a binding agreement to use paid offers. By using the Services, you represent and warrant that you meet these requirements.",
  },
  {
  number: "03",
@@ -34,76 +34,91 @@ const termsSections = [
  },
  {
  number: "05",
+ title: "Payments, Refunds & Cancellation",
+ anchor: "payments-refunds-cancellation",
+ body:
+ "Founding Cohort fees are non-refundable except where Core Truth House cancels before the cohort begins and you do not accept a new start date, or where you were charged in error or more than once. Monthly plans renew automatically until canceled in billing settings; cancellation takes effect at the end of the current billing period. Payments are non-refundable, except where a charge was made in error.",
+ policyLink: true,
+ },
+ {
+ number: "06",
+ title: "Lifetime Access",
+ anchor: "lifetime-access",
+ body:
+ "\"Lifetime Estate access\" means Estate-level access to the Core Truth House platform for as long as Core Truth House operates it. Features may change over time. If the platform is discontinued, Core Truth House will give at least 30 days' notice by email and a way to export your brand data.",
+ },
+ {
+ number: "07",
  title: "Intellectual Property",
  anchor: "intellectual-property",
  body:
  "All content, trademarks, designs, platform materials, and branded assets on the Services are the property of Core Truth House or its licensors. You may not copy, reproduce, republish, or distribute platform content without written permission.",
  },
  {
- number: "06",
+ number: "08",
  title: "Acceptable Use",
  anchor: "acceptable-use",
  body:
  "You agree to use the Services only for lawful purposes and in a way that does not infringe on the rights of others or interfere with the security and operation of the Services. Prohibited conduct includes abuse, scraping, hacking, spam, and harmful content submission.",
  },
  {
- number: "07",
+ number: "09",
  title: "User Content",
  anchor: "user-content",
  body:
  "You retain ownership of the content you submit, but you grant us a non-exclusive, worldwide, royalty-free license to host, process, and display that content as necessary to operate, maintain, and improve the Services.",
  },
  {
- number: "08",
+ number: "10",
  title: "Third-Party Services",
  anchor: "third-party-services",
  body:
  "Our Services may integrate with third-party tools, payment processors, analytics providers, or service providers. We are not responsible for the content, policies, or practices of third-party services.",
  },
  {
- number: "09",
+ number: "11",
  title: "Disclaimers",
  anchor: "disclaimers",
  body:
  'The Services are provided "as is" and "as available" without warranties of any kind, whether express or implied. We do not guarantee uninterrupted access, error-free performance, or specific business outcomes.',
  },
  {
- number: "10",
+ number: "12",
  title: "Limitation of Liability",
  anchor: "limitation-of-liability",
  body:
  "To the maximum extent permitted by law, Core Truth House shall not be liable for any indirect, incidental, consequential, special, or punitive damages arising out of or related to your use of the Services.",
  },
  {
- number: "11",
+ number: "13",
  title: "Indemnification",
  anchor: "indemnification",
  body:
  "You agree to indemnify and hold harmless Core Truth House, its affiliates, and their respective officers, employees, and agents from claims, liabilities, damages, and expenses arising from your use of the Services or violation of these Terms.",
  },
  {
- number: "12",
+ number: "14",
  title: "Termination",
  anchor: "termination",
  body:
  "We may suspend or terminate your access to the Services at any time for violation of these Terms or for conduct that may harm the platform, other users, or our business operations.",
  },
  {
- number: "13",
+ number: "15",
  title: "Governing Law",
  anchor: "governing-law",
  body:
- "These Terms are governed by and construed in accordance with the laws of the State of Alabama, without regard to conflict of law principles.",
+ "These Terms are governed by and construed in accordance with the laws of the State of Texas, without regard to conflict of law principles.",
  },
  {
- number: "14",
+ number: "16",
  title: "Changes to Terms",
  anchor: "changes-to-terms",
  body:
  "We may update these Terms from time to time. When material changes are made, we will post the revised Terms on this page and update the effective date. Continued use of the Services constitutes acceptance of the revised Terms.",
  },
  {
- number: "15",
+ number: "17",
  title: "Contact Information",
  anchor: "contact-information",
  body:
@@ -182,7 +197,7 @@ function MetaCards() {
  <span>01</span>
  <div>
  <strong>Effective Date</strong>
- <p>May 26, 2025</p>
+ <p>2026-10-25</p>
  </div>
  </article>
 
@@ -190,7 +205,7 @@ function MetaCards() {
  <span>02</span>
  <div>
  <strong>Last Updated</strong>
- <p>May 26, 2025</p>
+ <p>2026-10-25</p>
  </div>
  </article>
 
@@ -251,7 +266,7 @@ function Body() {
  <div className="cth-tos-term-line" />
  <div className="cth-tos-term-copy">
  <h2>{section.title}</h2>
- <p>{section.body}</p>
+ <p>{section.body}{section.policyLink ? <> <Link to="/enrollment-policy">Enrollment Policy</Link>.</> : null}</p>
  </div>
  </article>
  ))}

@@ -1,3 +1,4 @@
+import { getApiBaseUrl } from "../../lib/apiConfig";
 /**
  * UploadZone.jsx
  * Core Truth House OS — Universal Upload Component
@@ -106,7 +107,7 @@ function validateFile(file, acceptConfig, maxMb) {
   return null
 }
 
-var API = (typeof process !== 'undefined' && process.env && import.meta.env.VITE_BACKEND_URL) ? import.meta.env.VITE_BACKEND_URL + '/api' : '/api'
+var API = (getApiBaseUrl()) ? getApiBaseUrl() + '/api' : '/api'
 
 async function uploadFile(file, onProgress) {
   // Upload to FastAPI backend using multipart form data

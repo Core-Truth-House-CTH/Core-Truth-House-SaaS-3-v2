@@ -1,17 +1,18 @@
+import { getApiBaseUrl } from "../lib/apiConfig";
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Bell, Mail, Smartphone, Zap, DollarSign, FileText,
   Users, Settings, Check, Info,
 } from 'lucide-react';
-import axios from 'axios';
+import axios from "../lib/apiAxios";
 import { useUser } from '../hooks/useAuth';
 import { useColors } from '../context/ThemeContext';
 import apiClient from "../lib/apiClient";
 
-const API = `${import.meta.env.VITE_BACKEND_URL}/api`;
+const API = `${getApiBaseUrl()}/api`;
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const CARD_STYLE = {
   backgroundColor: 'var(--cth-command-panel)',

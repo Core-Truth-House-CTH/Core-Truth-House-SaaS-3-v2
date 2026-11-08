@@ -128,7 +128,7 @@ function LockedOverlay() {
  </p>
  <h2
  style={{
- fontFamily: "'Playfair Display', serif",
+ fontFamily: "'Cormorant Garamond', serif",
  fontSize: 32,
  fontWeight: 600,
  color: "var(--cth-command-ink)",
@@ -201,7 +201,7 @@ function SectionHeader({ title, badgeLabel, badgeColor }) {
  <div className="mb-4 flex flex-wrap items-center gap-3">
  <h3
  style={{
- fontFamily: "'Playfair Display', serif",
+ fontFamily: "'Cormorant Garamond', serif",
  fontSize: 20,
  fontWeight: 600,
  color: "var(--cth-command-ink)",
@@ -240,7 +240,7 @@ function UpgradeCard({ heading, body, ctaLabel }) {
  </div>
  <h4
  style={{
- fontFamily: "'Playfair Display', serif",
+ fontFamily: "'Cormorant Garamond', serif",
  fontSize: 20,
  fontWeight: 600,
  color: "var(--cth-command-ink)",
@@ -1172,7 +1172,7 @@ export default function Analytics() {
  </div>
  <h4
  style={{
- fontFamily: "'Playfair Display', serif",
+ fontFamily: "'Cormorant Garamond', serif",
  fontSize: 20,
  fontWeight: 600,
  color: "var(--cth-command-ink)",

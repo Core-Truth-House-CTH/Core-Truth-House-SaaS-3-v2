@@ -1,3 +1,4 @@
+import { getApiBaseUrl, apiFetch } from "../../lib/apiConfig";
 /**
  * useAppVersion.jsx
  * CTH OS — App Version Check + Auto-Refresh
@@ -24,7 +25,7 @@ const POLL_INTERVAL = 3 * 60 * 1000   // 3 minutes
 const CURRENT_VERSION = import.meta.env.VITE_VERSION || 'dev'
 
 // API base URL from environment
-const API_BASE = import.meta.env.VITE_BACKEND_URL || ''
+const API_BASE = getApiBaseUrl() || ''
 
 // ─────────────────────────────────────────────────────────────
 // HOOK
@@ -73,7 +74,7 @@ export function useAppVersion() {
     if (CURRENT_VERSION === 'dev') return
 
     function checkVersion() {
-      fetch(`${API_BASE}/api/version`, {
+      apiFetch(`${API_BASE}/api/version`, {
         cache: 'no-store',
         credentials: 'omit',
       })

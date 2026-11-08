@@ -47,7 +47,7 @@ Core Truth House is a brand strategy SaaS for serious founders. It helps users b
 - Card border rgba(216,197,195,0.6)
 
 ### Typography
-- Headlines: Playfair Display (serif) — all H1, H2, large numbers, score displays
+- Headlines: Cormorant Garamond (serif) — all H1, H2, large numbers, score displays
 - Body: DM Sans — all body text, labels, navigation
 - NEVER use Inter, Georgia, or system-ui for headlines
 
