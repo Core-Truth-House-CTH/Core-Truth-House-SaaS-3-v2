@@ -14,7 +14,7 @@ import {
 } from "../scripts/staging-api-guard.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const origin = "https://reviewed-stage.example.invalid";
+const origin = "https://staging-api.coretruthhouse.com";
 const production = "https://api.coretruthhouse.com";
 const validEnv = () => Object.fromEntries(API_KEYS.map(key => [key, origin]));
 function fixture(t) {
@@ -295,3 +295,111 @@ test("staging target cannot be relabeled with production Vite mode", async () =>
     else process.env.CTH_BUILD_TARGET = previous;
   }
 });
+
+
+test("exact staging API hostname passes canonical pin and complete preflight", t => {
+  const stagingOrigin = "https://staging-api.coretruthhouse.com";
+  assert.equal(canonicalOrigin(stagingOrigin), stagingOrigin);
+  const directory = fixture(t);
+  fs.writeFileSync(path.join(directory, "config/staging-api.json"), JSON.stringify({ origin: stagingOrigin, reviewed: true }));
+  fs.writeFileSync(path.join(directory, ".env.staging"), API_KEYS.map(key => key + "=" + stagingOrigin).join("\n"));
+  fs.mkdirSync(path.join(directory, "src"));
+  fs.writeFileSync(path.join(directory, "src/api.js"), 'export const api = "' + stagingOrigin + '";');
+  const environment = Object.fromEntries(API_KEYS.map(key => [key, stagingOrigin]));
+  assert.equal(preflightStaging({ root: directory, env: environment, shell: {} }), stagingOrigin);
+  assert.doesNotThrow(() => inspectRawStagingInputs(directory, { VITE_API_URL: stagingOrigin }, stagingOrigin));
+});
+
+test("staging hostname is permitted in generated and compressed output without permitting production", t => {
+  const stagingOrigin = "https://staging-api.coretruthhouse.com";
+  const { directory, output } = outputFixture(t);
+  fs.writeFileSync(path.join(output, "assets/app.js"), 'export const api = "' + stagingOrigin + '";');
+  fs.writeFileSync(path.join(output, "assets/app.js.gz"), gzipSync(stagingOrigin));
+  fs.writeFileSync(path.join(output, "assets/app.js.br"), brotliCompressSync(stagingOrigin));
+  assert.doesNotThrow(() => scanStagingOutput(directory, output, stagingOrigin));
+  fs.appendFileSync(path.join(output, "assets/app.js"), ';const unsafe = "' + production + '";');
+  assert.throws(() => scanStagingOutput(directory, output, stagingOrigin), /production API/);
+});
+
+test("production DNS-label boundaries and disguises still fail closed", () => {
+  for (const value of [
+    production, "https://api.coretruthhouse.com.", "https://API.CORETRUTHHOUSE.COM:443/api",
+    "https://sub.api.coretruthhouse.com", "https://api.coretruthhouse.com.foreign.invalid",
+    "https://sub.api.coretruthhouse.com.foreign.invalid", "https://api.coretruthhouse.com@staging-api.coretruthhouse.com",
+    "https://staging-api.coretruthhouse.com/path?next=" + production,
+    "https://staging-api.coretruthhouse.com " + production,
+  ]) assert.throws(() => assertNoProduction(value), /production API/);
+});
+
+test("production text embedded within a distinct DNS label is not treated as the production host", () => {
+  for (const value of [
+    "https://staging-api.coretruthhouse.com", "https://preview-api.coretruthhouse.com",
+    "https://staging-api.coretruthhouse.com/path", 'const api = "https://staging-api.coretruthhouse.com";',
+  ]) assert.doesNotThrow(() => assertNoProduction(value));
+});
+
+
+test("production detection preserves both text-line boundaries and URL-ignored newlines", () => {
+  for (const separator of ["\n", "\r\n", "\t"]) {
+    assert.throws(() => assertNoProduction(production + separator + "VITE_API_URL=" + origin), /production API/);
+    assert.throws(() => assertNoProduction("https://api." + separator + "coretruthhouse.com"), /production API/);
+    assert.doesNotThrow(() => assertNoProduction("https://staging-api.coretruthhouse.com" + separator + "VITE_API_URL=" + origin));
+  }
+});
+
+
+const exactOriginCases = [
+  ["exact reviewed origin", "https://staging-api.coretruthhouse.com", true],
+  ["production API", "https://api.coretruthhouse.com", false],
+  ["production website", "https://coretruthhouse.com", false],
+  ["production www", "https://www.coretruthhouse.com", false],
+  ["suffix lookalike", "https://staging-api.coretruthhouse.com.evil.com", false],
+  ["prefix lookalike", "https://xstaging-api.coretruthhouse.com", false],
+  ["hyphen lookalike", "https://staging-api-coretruthhouse.com", false],
+  ["uppercase staging", "https://STAGING-API.CORETRUTHHOUSE.COM", false],
+  ["trailing-dot staging", "https://staging-api.coretruthhouse.com.", false],
+  ["explicit default port", "https://staging-api.coretruthhouse.com:443", false],
+  ["explicit alternate port", "https://staging-api.coretruthhouse.com:8443", false],
+  ["non-HTTPS staging", "http://staging-api.coretruthhouse.com", false],
+];
+for (const [name, value, allowed] of exactOriginCases) {
+  test("literal reviewed-origin allowlist: " + name, t => {
+    const directory = fixture(t);
+    fs.writeFileSync(path.join(directory, "config/staging-api.json"), JSON.stringify({ origin: value, reviewed: true }));
+    const env = Object.fromEntries(API_KEYS.map(key => [key, value]));
+    if (allowed) {
+      assert.equal(canonicalOrigin(value), origin);
+      assert.equal(readPinnedOrigin(directory), origin);
+      assert.equal(preflightStaging({ root: directory, env, shell: {} }), origin);
+    } else {
+      assert.throws(() => canonicalOrigin(value));
+      assert.throws(() => readPinnedOrigin(directory));
+      assert.throws(() => preflightStaging({ root: directory, env, shell: {} }));
+      assert.throws(() => validateApiEnvironment(env, origin));
+    }
+  });
+}
+
+
+// Preserve an explicit 25-case hostile-host regression matrix, alongside the
+// existing raw-input, artifact and shadowed-value tests above.
+const hostileUnicode = [
+  "https://api\u3002coretruthhouse.com", "https://api\uFF0Ecoretruthhouse.com",
+  "https://api\uFF61coretruthhouse.com", "https://api.\uFF43oretruthhouse.com",
+  "https://api.co\u00ADretruthhouse.com", "https://api.co\u200Bretruthhouse.com",
+  "https://api.co\uFEFFretruthhouse.com",
+];
+const hostileHosts = [
+  ...escaped,
+  ...hostileUnicode,
+  ...hostileUnicode.map(value => encodeURI(value)),
+  "https://%252561%252570%252569.coretruthhouse.com",
+  "https://%2561%2570%2569%252ecoretruthhouse.com",
+];
+assert.equal(hostileHosts.length, 25);
+for (const [index, value] of hostileHosts.entries()) {
+  test("hostile production host regression " + String(index + 1).padStart(2, "0"), () => {
+    assert.throws(() => assertNoProduction(value), /production API/);
+    assert.throws(() => canonicalOrigin(value));
+  });
+}

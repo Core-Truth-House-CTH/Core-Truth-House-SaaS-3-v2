@@ -13,7 +13,7 @@ const TEXT_EXTENSIONS = /\.(?:[cm]?[jt]sx?|html?|json|css|map|svg|xml|txt|webman
 function stop(reason) { throw new Error("Staging API guard: " + reason); }
 
 // Decode common JS/JSON, URL and HTML spellings before checking. Values are never logged.
-export function decodedText(value) {
+export function decodedText(value, lineSeparator = "") {
   let text = String(value);
   for (let i = 0; i < 8; i += 1) {
     const next = text
@@ -30,19 +30,25 @@ export function decodedText(value) {
     if (next === text) break;
     text = next;
   }
-  return text.normalize("NFKC").replace(/[\u3002\uFF0E\uFF61]/g, ".").replace(/[\t\r\n]/g, "").toLowerCase();
+  return text.normalize("NFKC").replace(/[\u3002\uFF0E\uFF61]/g, ".").replace(/[\t\r\n]/g, lineSeparator).toLowerCase();
 }
 
 export function assertNoProduction(value, label = "input") {
   // Also catches uppercase, trailing-dot, port, subdomain and credential disguises.
-  const decoded = decodedText(value);
-  if (decoded.includes("api.coretruthhouse.com")) stop(label + " contains the production API hostname");
+  // Scan both URL-style ignored line breaks and text-file assignment boundaries.
+  const decodedForms = [decodedText(value), decodedText(value, " ")];
   // WHATWG URL parsing applies IDNA mappings, including ignored Unicode code
   // points. Canonicalize host-shaped tokens as well as normalizing display text.
-  for (const match of decoded.matchAll(/[\p{L}\p{N}\p{M}\p{Cf}.\-]+/gu)) {
-    if (!match[0].includes(".")) continue;
-    const ascii = domainToASCII(match[0]);
-    if (ascii.toLowerCase().includes("api.coretruthhouse.com")) stop(label + " contains a browser-normalized production API hostname");
+  for (const decoded of decodedForms) {
+    for (const match of decoded.matchAll(/[\p{L}\p{N}\p{M}\p{Cf}.\-]+/gu)) {
+      if (!match[0].includes(".")) continue;
+      const ascii = domainToASCII(match[0]);
+      // Match complete DNS labels, not a substring of staging-api or another label.
+      // Keep rejecting production subdomains and host-suffix disguises.
+      if (/(?:^|\.)api\.coretruthhouse\.com(?:\.|$)/i.test(ascii)) {
+        stop(label + " contains a browser-normalized production API hostname");
+      }
+    }
   }
 }
 
@@ -58,6 +64,10 @@ export function canonicalOrigin(value, label = "API origin") {
   }
   // URL normalizes :443 away; explicit ports (including 443) are not accepted.
   if (parsed.port || /:\d+(?:\/|$)/.test(value)) stop(label + " must not specify a port");
+  // This staging target is a single reviewed origin, not a hostname pattern.
+  if (value !== "https://staging-api.coretruthhouse.com") {
+    stop(label + " must exactly match the single reviewed staging API origin");
+  }
   return parsed.origin;
 }
 
