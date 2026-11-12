@@ -27,6 +27,7 @@ export default [
         ...globals.browser,
         ...globals.node,
         ...globals.es2021,
+        __CTH_API_DEFAULT__: "readonly", // defined in vite.config.js
       },
     },
     settings: {

@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 const API_BASE = String(
  import.meta.env.VITE_API_BASE_URL ||
  import.meta.env.VITE_API_URL ||
- "https://api.coretruthhouse.com"
+ __CTH_API_DEFAULT__
 ).replace(/\/$/, "");
 
 export default function StudioAccess() {

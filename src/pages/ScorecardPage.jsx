@@ -6,7 +6,7 @@ import API_PATHS from "../lib/apiPaths";
 const API_BASE = (
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_URL ||
-  "https://api.coretruthhouse.com"
+  __CTH_API_DEFAULT__
 ).replace(/\/$/, "");
 
 // 12-question brand positioning diagnostic. Answer order is index 0-3;
