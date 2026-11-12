@@ -9,11 +9,14 @@ const WorkspacePage = lazy(() => import("../pages/WorkspacePage"));
 const ReportsShell = lazy(() => import("../pages/ReportsShell"));
 const Billing = lazy(() => import("../pages/Billing"));
 const BrandIntelligencePage = lazy(() => import("../pages/BrandIntelligencePage"));
-const BrandAudit = lazy(() => import("../pages/BrandAudit"));
 const BrandFoundation = lazy(() => import("../pages/BrandFoundation"));
-const BrandPositioning = lazy(() => import("../pages/BrandPositioning"));
-const MessagingStructure = lazy(() => import("../pages/MessagingStructure"));
-const Audience = lazy(() => import("../pages/Audience"));
+const FoundationHome = lazy(() => import("../pages/FoundationHome"));
+const BrandAuditFoundation = lazy(() => import("../pages/FoundationPages").then((module) => ({ default: module.BrandAuditPage })));
+const AudienceFoundation = lazy(() => import("../pages/FoundationPages").then((module) => ({ default: module.AudiencePage })));
+const PositioningFoundation = lazy(() => import("../pages/FoundationPages").then((module) => ({ default: module.PositioningPage })));
+const MessagingFoundation = lazy(() => import("../pages/FoundationPages").then((module) => ({ default: module.MessagingPage })));
+const ExpressionFoundation = lazy(() => import("../pages/FoundationPages").then((module) => ({ default: module.ExpressionPage })));
+const ReviewLockFoundation = lazy(() => import("../pages/FoundationPages").then((module) => ({ default: module.ReviewLockPage })));
 const AvatarEditor = lazy(() => import("../pages/AvatarEditor"));
 const BrandHealthDashboard = lazy(() => import("../pages/BrandHealthDashboard"));
 const StrategicOS = lazy(() => import("../pages/StrategicOS"));
@@ -30,7 +33,6 @@ const TenantDataDashboardV2 = lazy(() => import("../pages/TenantDataDashboardV2"
 const ContentStudio = lazy(() => import("../pages/ContentStudio"));
 const CampaignBuilder = lazy(() => import("../pages/CampaignBuilder"));
 const CampaignSetup = lazy(() => import("../pages/CampaignSetup"));
-const IdentityStudio = lazy(() => import("../pages/IdentityStudio"));
 const OfferBuilder = lazy(() => import("../pages/OfferBuilder"));
 const LaunchPlanner = lazy(() => import("../pages/LaunchPlanner"));
 const Calendar = lazy(() => import("../pages/Calendar"));
@@ -63,12 +65,14 @@ const pageRegistry = {
   "/workspace": WorkspacePage,
   "/my-data": TenantDataDashboardV2,
 
-  "/brand-audit": BrandAudit,
+  "/brand-audit": BrandAuditFoundation,
   "/brand-memory": BrandFoundation,
   "/brand-foundation": BrandFoundation,
-  "/brand-positioning": BrandPositioning,
-  "/messaging-structure": MessagingStructure,
-  "/audience": Audience,
+  "/foundation": FoundationHome,
+  "/foundation/review-lock": ReviewLockFoundation,
+  "/brand-positioning": PositioningFoundation,
+  "/messaging-structure": MessagingFoundation,
+  "/audience": AudienceFoundation,
   "/audience/avatars/new": AvatarEditor,
   "/audience/avatars/:id": AvatarEditor,
   "/brand-intelligence": BrandIntelligencePage,
@@ -88,7 +92,7 @@ const pageRegistry = {
   "/campaign-builder": CampaignBuilder,
   "/campaign-setup": CampaignSetup,
   "/first-campaign": FirstCampaign,
-  "/identity-studio": IdentityStudio,
+  "/identity-studio": ExpressionFoundation,
 
   "/offer-builder": OfferBuilder,
   "/launch-planner": LaunchPlanner,

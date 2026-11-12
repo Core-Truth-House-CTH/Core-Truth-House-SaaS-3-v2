@@ -10,6 +10,8 @@ const AskTheHouseContext = createContext(null);
 
 const PATH_TO_SURFACE = {
   "/command-center": "command_center",
+  "/foundation": "brand_foundation",
+  "/brand-audit": "brand_foundation",
   "/brand-foundation": "brand_foundation",
   "/brand-memory": "brand_foundation",
   "/brand-positioning": "brand_positioning",
@@ -38,13 +40,15 @@ const FALLBACK_SURFACE = "command_center";
 // ("Strategic OS") both resolve to the strategic_os surface.
 const PATH_TO_LABEL = {
   "/command-center": "Command Center",
+  "/foundation": "Foundation",
+  "/brand-audit": "Brand Audit",
   "/brand-foundation": "Foundation",
   "/brand-memory": "Foundation",
   "/brand-positioning": "Brand Positioning",
   "/messaging-structure": "Messaging",
   "/audience": "Audience",
   "/identity-studio": "Identity Studio",
-  "/strategic-os": "Strategic OS",
+  "/strategic-os": "Strategy Room",
   "/systems-builder": "Structure",
   "/offer-builder": "Offers",
   "/campaign-builder": "Campaign Builder",

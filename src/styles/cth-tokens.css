@@ -1,46 +1,9 @@
-/*
- * Core Truth House — Command Center design tokens
- *
- * Single source of truth for the 13 palette values that CommandCenter.jsx
- * currently defines inline as `--cc-*`. Promoted here under the
- * `--cth-command-*` namespace (the pattern already established in
- * cth-design-system.css) so Brand Audit, Brand Foundation, and any future
- * surfaces can adopt the Command Center palette without re-declaring it.
- *
- * Naming note: the flat names (--cth-night, --cth-gold, --cth-crimson, ...)
- * are intentionally NOT used here — those are already defined elsewhere in
- * the cascade with different values, and overriding them would change the
- * appearance of pages outside the Command Center system.
- */
-
-:root {
-  /* Typography — Phase 1 redesign display typeface */
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-
-  /* Surfaces — dark */
-  --cth-command-night: #0d0010;
-  --cth-command-purple: #33033c;
-  --cth-command-purple-mid: #230029;
-  --cth-command-ink: #2b1040;
-
-  /* Accents */
-  --cth-command-crimson: #af002a;
-  --cth-command-cinnabar: #e04e35;
-  --cth-command-gold: #c4a95b;
-
-  /* Surfaces — light */
-  --cth-command-ivory: #f8f4f2;
-  --cth-command-blush: #efe7e3;
-  --cth-command-panel: #fffaf7;
-  --cth-command-panel-soft: #f5ece8;
-
-  /* Structural */
-  --cth-command-border: #d8c5c3;
-  --cth-command-muted: #7c6576;
-
-  /* Semantic status — values match existing --cth-status-* so the migration
-     from --cth-status-* to --cth-command-* is a name swap, not a recolor. */
-  --cth-command-success: #2d6a4f;
-  --cth-command-warning: #e04e35;
-  --cth-command-error: #b44343;
+/* Canonical CTH design tokens: palette and typography */
+:root{
+ --cth-brand-crimson:#AF0024;--cth-brand-purple:#33033C;--cth-brand-black:#0D0010;--cth-brand-gold:#C4A95B;--cth-brand-ivory:#F8F1EC;--cth-brand-panel:#FFFAF5;
+ --font-display:'Cormorant Garamond',Georgia,serif;--cth-heading-serif:'Cormorant Garamond',Georgia,serif;--cth-document-serif:'Cormorant Garamond',Georgia,serif;--cth-sans:'DM Sans',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--cth-document-sans:var(--cth-sans);
+ --cth-crimson:var(--cth-brand-crimson);--cth-purple-deep:var(--cth-brand-purple);--cth-purple-black:var(--cth-brand-black);--cth-gold:var(--cth-brand-gold);--cth-ivory:var(--cth-brand-ivory);--cth-panel:var(--cth-brand-panel);
+ --cth-command-night:var(--cth-brand-black);--cth-command-purple:var(--cth-brand-purple);--cth-command-purple-mid:var(--cth-brand-purple);--cth-command-ink:var(--cth-brand-purple);--cth-command-crimson:var(--cth-brand-crimson);--cth-command-gold:var(--cth-brand-gold);--cth-command-ivory:var(--cth-brand-ivory);--cth-command-panel:var(--cth-brand-panel);
+ --cth-command-cinnabar:#E04E35;--cth-cinnabar:#E04E35;--cth-command-success:#2D6A4F;--cth-command-warning:#9A6B12;--cth-command-error:#B44343;--cth-success:#2D6A4F;--cth-warning:#9A6B12;--cth-danger:#B44343;--cth-info:#2563EB;--cth-status-success:#2D6A4F;--cth-status-warning:#9A6B12;--cth-status-danger:#B44343;--cth-status-info:#2563EB;--cth-status-focus:#7C3AED;
+ --cth-command-blush:var(--cth-brand-ivory);--cth-command-panel-soft:var(--cth-brand-ivory);--cth-command-border:color-mix(in srgb,var(--cth-brand-purple) 18%,var(--cth-brand-panel));--cth-command-muted:#6A5669;--cth-command-purple-mid:var(--cth-brand-purple);
 }

@@ -14,13 +14,13 @@
 .cth-command-page {
   --cth-final-token-check: command-center-final;
 
-  --cc-night: #0d0010;
-  --cc-purple: #33033c;
+  --cc-night: var(--cth-brand-black);
+  --cc-purple: var(--cth-brand-purple);
   --cc-purple-mid: #230029;
-  --cc-ink: #2b1040;
-  --cc-crimson: #af002a;
+  --cc-ink: var(--cth-brand-purple);
+  --cc-crimson: var(--cth-brand-crimson);
   --cc-cinnabar: #e04e35;
-  --cc-gold: #c4a95b;
+  --cc-gold: var(--cth-brand-gold);
 
   --cth-crimson: var(--cc-crimson);
   --cth-purple-deep: var(--cc-purple);
@@ -31,13 +31,13 @@
   --cth-ink: var(--cc-ink);
   --cth-muted: #7c6576;
   --cth-ruby: #763b5b;
-  --cth-blush: #efe7e3;
-  --cth-ivory: #f8f4f2;
+  --cth-blush: var(--cth-brand-ivory);
+  --cth-ivory: var(--cth-brand-ivory);
   --cth-border: #d8c5c3;
 
-  --cth-admin-bg: #efe7e3;
-  --cth-admin-panel: #f8f4f2;
-  --cth-admin-panel-alt: #fffaf7;
+  --cth-admin-bg: var(--cth-brand-ivory);
+  --cth-admin-panel: var(--cth-brand-ivory);
+  --cth-admin-panel-alt: var(--cth-brand-panel);
   --cth-admin-sidebar-start: var(--cc-purple);
   --cth-admin-sidebar-end: var(--cc-night);
   --cth-admin-sidebar-hover: var(--cc-purple-mid);
@@ -48,7 +48,7 @@
   --cth-admin-crimson: var(--cc-crimson);
   --cth-admin-gold: var(--cc-gold);
   --cth-admin-border: #d8c5c3;
-  --cth-admin-border-dark: #3b2740;
+  --cth-admin-border-dark: color-mix(in srgb,var(--cth-brand-purple) 70%,var(--cth-brand-black));
   --cth-admin-muted: #7c6576;
   --cth-admin-tuscany: #c7a09d;
 
@@ -101,18 +101,18 @@
   --cth-final-token-check: command-center-final-dark;
 
   --cth-admin-bg: var(--cc-night);
-  --cth-admin-panel: #120717;
-  --cth-admin-panel-alt: #1a1028;
+  --cth-admin-panel: var(--cth-brand-black);
+  --cth-admin-panel-alt: var(--cth-brand-purple);
   --cth-admin-sidebar-start: var(--cc-purple);
   --cth-admin-sidebar-end: var(--cc-night);
   --cth-admin-sidebar-hover: var(--cc-purple-mid);
-  --cth-admin-ink: #f8f4f2;
+  --cth-admin-ink: var(--cth-brand-ivory);
   --cth-admin-ink-soft: #d8c5c3;
   --cth-admin-ruby: #c7a09d;
   --cth-admin-accent: var(--cc-cinnabar);
   --cth-admin-crimson: var(--cc-crimson);
   --cth-admin-gold: var(--cc-gold);
-  --cth-admin-border: #3b2740;
+  --cth-admin-border: color-mix(in srgb,var(--cth-brand-purple) 70%,var(--cth-brand-black));
   --cth-admin-border-dark: #d8c5c3;
   --cth-admin-muted: #c7a09d;
   --cth-admin-tuscany: #c7a09d;
@@ -125,8 +125,8 @@
   --cth-app-muted: var(--cth-admin-muted);
   --cth-app-accent: var(--cth-admin-accent);
 
-  --cth-heading: #f8f4f2;
-  --cth-text: #f8f4f2;
+  --cth-heading: var(--cth-brand-ivory);
+  --cth-text: var(--cth-brand-ivory);
   --cth-text-muted: #c7a09d;
   --cth-surface: var(--cth-admin-panel);
   --cth-surface-soft: var(--cth-admin-panel-alt);

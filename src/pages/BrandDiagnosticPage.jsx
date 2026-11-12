@@ -543,7 +543,7 @@ export default function BrandDiagnosticPage() {
         <div className="bdx-blueprint" aria-hidden="true" />
         <div className="bdx-inner bdx-hero">
           <div className="bdx-title">
-            <span className="bdx-eyebrow">Brand Audit</span>
+            <span className="bdx-eyebrow">Brand Diagnostic</span>
             <h1>
               Brand Diagnostic.
               <em>Your Blueprint for What&apos;s Next.</em>

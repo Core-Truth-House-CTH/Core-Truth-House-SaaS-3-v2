@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import fs from 'node:fs';
 import {rolldown} from '/root/cth-workspace-visual-pass/node_modules/rolldown/dist/index.mjs';
 import {chromium} from '/root/pw/node_modules/playwright/index.mjs';
 
@@ -54,7 +55,7 @@ const bundle=await rolldown({input:'mock:entry',plugins:[{
 }],transform:{jsx:{runtime:'classic'}},logLevel:'silent'});
 const {output}=await bundle.generate({format:'iife'});await bundle.close();
 const code=output.find(item=>item.type==='chunk').code;
-const server=http.createServer((request,response)=>{response.setHeader('Content-Type',request.url==='/bundle.js'?'text/javascript':'text/html');response.end(request.url==='/bundle.js'?code:'<html><body><div id="root"></div><script src="/bundle.js"></script></body></html>')});
+const server=http.createServer((request,response)=>{if(request.url==='/bundle.js'){response.setHeader('Content-Type','text/javascript');return response.end(code)}if(request.url==='/styles.css'){response.setHeader('Content-Type','text/css');const assets=path.join(root,'dist-candidate/assets');const files=fs.readdirSync(assets);return response.end(files.filter(x=>/^index-.*\\.css$/.test(x)||/^CommandCenterNext-.*\\.css$/.test(x)).map(x=>fs.readFileSync(path.join(assets,x),'utf8')).join('\\n'))}response.setHeader('Content-Type','text/html');response.end('<html><head><link rel="stylesheet" href="/styles.css"></head><body><div id="root"></div><script src="/bundle.js"></script></body></html>')});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 let browser,checks=0;
 try{
@@ -72,7 +73,12 @@ try{
  const noMove=await browser.newPage();
  await noMove.goto(base+'/?mode=fallback&admin=0');
  await noMove.getByRole('heading',{name:'Start here: Brand Foundation'}).waitFor({state:'visible'});
- await noMove.getByRole('button',{name:'Open Brand Foundation'}).evaluate(el=>el.click());
+ const supporting=noMove.locator('.ccn-next-move p'),openFoundation=noMove.getByRole('button',{name:'Open Brand Foundation'});
+ assert.equal((await supporting.textContent()).trim(),'Build your positioning, beliefs, and brand promise into a clear foundation.');
+ assert.equal(await supporting.isVisible(),true);assert.equal(await openFoundation.isVisible(),true);
+ const visual=await noMove.locator('.ccn-next-move').evaluate(el=>{const p=el.querySelector('p'),b=el.querySelector('button'),ps=getComputedStyle(p),bs=getComputedStyle(b);return{card:el.getBoundingClientRect().height,pDisplay:ps.display,pVisibility:ps.visibility,pColor:ps.color,pOpacity:ps.opacity,pHeight:p.getBoundingClientRect().height,buttonDisplay:bs.display,buttonVisibility:bs.visibility,buttonOpacity:bs.opacity,buttonHeight:b.getBoundingClientRect().height}});
+ assert.ok(visual.card>0&&visual.pHeight>0&&visual.buttonHeight>0);assert.notEqual(visual.pVisibility,'hidden');assert.equal(visual.pOpacity,'1');assert.notEqual(visual.buttonVisibility,'hidden');assert.equal(visual.buttonOpacity,'1');checks+=3;
+ await openFoundation.evaluate(el=>el.click());
  await noMove.waitForFunction(()=>window.__navigatedTo==='/brand-foundation');
  checks+=2;
  const existing=await browser.newPage();
