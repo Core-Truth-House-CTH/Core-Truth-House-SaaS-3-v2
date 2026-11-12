@@ -74,6 +74,8 @@
     "prebuild": "eslint src",
     "build": "vite build",
     "preview": "vite preview",
+    "build:staging": "node scripts/build-staging.mjs",
+    "scan:staging": "node scripts/staging-artifact-scan.mjs",
     "postbuild": "node scripts/create-route-html.cjs && node scripts/inject-static-route-metadata.mjs"
   },
   "browserslist": {
