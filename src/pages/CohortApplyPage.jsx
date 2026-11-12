@@ -5,6 +5,7 @@ import { cohortEnrollment, submitCohortApplication, STANDARD_UNAVAILABLE } from 
 import { useAuth, useUser } from "../hooks/useAuth";
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
+import CohortWaitlistForm from "../components/cohort/CohortWaitlistForm.jsx";
 
 const RADIO_QUESTIONS = [
   {
@@ -265,6 +266,7 @@ export default function CohortApplyPage() {
               {intakeState === "closed" && isSignedIn ? (
                 <Link to="/cohort/reservation">Go to your secure reservation</Link>
               ) : null}
+              {intakeState === "closed" ? <CohortWaitlistForm source="cohort_apply" /> : null}
               {intakeState === "open" && !enrollment.available ? <p role="status">{enrollment.message}</p> : null}
 
               {intakeState === "open" && !isSignedIn && <Link to="/sign-in?redirect_url=%2Fcohort%2Fapply">Sign in to apply</Link>}

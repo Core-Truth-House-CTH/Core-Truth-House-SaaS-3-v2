@@ -126,6 +126,18 @@ const routes = [
     schemaType: "WebPage",
   },
   {
+    route: "/cohort/waitlist",
+    title: "Founding Cohort Waitlist | Core Truth House",
+    description:
+      "Join the Founding Cohort waitlist. New applications are not open right now; we will reach out when Founding seats open. US residents only for now.",
+    ogTitle: "Join the Founding Cohort Waitlist",
+    ogDescription:
+      "Leave your name, email and business, and we will reach out when Founding seats open. US residents only for now.",
+    image: `${SITE}/cohort-assets/cth-cohort-hero-doorway-v2.png`,
+    canonical: `${SITE}/cohort/waitlist`,
+    schemaType: "WebPage",
+  },
+  {
     route: "/enrollment-policy",
     title: "Enrollment, Refund & Cancellation Policy | Core Truth House",
     description:

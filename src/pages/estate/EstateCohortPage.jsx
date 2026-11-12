@@ -4,6 +4,7 @@
 
 import React, { useEffect, useRef } from "react";
 import apiClient from "../../lib/apiClient.js";
+import { waitlistHref } from "../../lib/cohortWaitlist.mjs";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -170,9 +171,7 @@ export default function EstateCohortPage() {
               ))}
             </div>
             <div className="ec-build-ctas">
-              <Link to="/cohort/apply" className="ec-btn ec-btn-crimson">
-                Join the Cohort <span className="ec-btn-arrow">→</span>
-              </Link>
+              <CohortCta className="ec-btn ec-btn-crimson" openLabel="Join the Cohort" />
             </div>
           </div>
 
@@ -259,9 +258,7 @@ export default function EstateCohortPage() {
                   <li key={o}>{o}</li>
                 ))}
               </ul>
-              <Link to="/cohort/apply" className="ec-btn ec-btn-gold">
-                Apply for the Cohort <span className="ec-btn-arrow">→</span>
-              </Link>
+              <CohortCta className="ec-btn ec-btn-gold" openLabel="Apply for the Cohort" />
               <span className="ec-founding-close">One additional batch of 3 opens only after 12 initial members have verified successful payments. Maximum 15 members. No referral required.</span>
             </div>
           </div>
@@ -286,6 +283,25 @@ export default function EstateCohortPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+// Apply while intake is open; otherwise the waitlist. An unreadable phase is
+// treated as closed, matching CohortApplyPage.
+function CohortCta({ className, openLabel }) {
+  const [open, setOpen] = React.useState(false);
+  React.useEffect(() => {
+    let disposed = false;
+    fetch(apiClient.buildApiUrl("/api/cohort/phase"))
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(p => { if (!disposed) setOpen(p.accepting_applications === true); })
+      .catch(() => { if (!disposed) setOpen(false); });
+    return () => { disposed = true; };
+  }, []);
+  return (
+    <Link to={open ? "/cohort/apply" : waitlistHref({ source: "cohort_page" })} className={className}>
+      {open ? openLabel : "Join the Waitlist"} <span className="ec-btn-arrow">→</span>
+    </Link>
   );
 }
 

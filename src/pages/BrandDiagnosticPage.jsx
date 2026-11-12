@@ -18,6 +18,7 @@ import {
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
 import { getStoredAttribution } from "../lib/utmCapture";
+import { waitlistHref } from "../lib/cohortWaitlist.mjs";
 
 const A = {
  logo: "/brand-assets/logo/cth-logo-seal.png",
@@ -382,6 +383,7 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  <h2>{recommendation.tier}</h2>
  <p>{recommendation.line}</p>
  <small>Score range: {recommendation.range}</small>
+ <p className="bdx-result-start">Where you'd start: <strong>{recommendation.tier}</strong></p>
  </div>
  </div>
 
@@ -404,16 +406,8 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  </button>
 
  {resultSaved ? (
- <a
- href={
- `/sign-up?tier=${encodeURIComponent(recommendation.tier)}` +
- `&source=diagnostic` +
- `&score=${encodeURIComponent(score)}` +
- `&challenge=${encodeURIComponent(leadInfo.current_challenge)}` +
- `&first_name=${encodeURIComponent(leadInfo.first_name)}`
- }
- >
- {recommendation.cta}
+ <a href={waitlistHref({ source: "brand_diagnostic", tier: recommendation.tier })}>
+ Join the Cohort Waitlist
  <ArrowRight size={15} />
  </a>
  ) : (
