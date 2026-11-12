@@ -9,7 +9,7 @@ import { getWorkspaceSlugFromHost } from "../utils/subdomain";
 const API_BASE = (
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_URL ||
-  "https://api.coretruthhouse.com"
+  __CTH_API_DEFAULT__
 ).replace(/\/$/, "");
 
 // Brand-neutral fallbacks used only when the tenant has no identity configured.

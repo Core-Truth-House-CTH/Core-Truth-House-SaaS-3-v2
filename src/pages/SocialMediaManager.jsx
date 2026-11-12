@@ -252,7 +252,7 @@ function backendAssetUrl(url) {
  const base =
  import.meta.env.VITE_API_BASE_URL ||
  import.meta.env.VITE_BACKEND_URL ||
- "https://api.coretruthhouse.com";
+ __CTH_API_DEFAULT__;
 
  return `${String(base).replace(/\/+$/, "")}${url.startsWith("/") ? url : `/${url}`}`;
 }
