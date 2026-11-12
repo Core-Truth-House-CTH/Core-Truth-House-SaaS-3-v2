@@ -963,3 +963,81 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Post-diagnostic welcome. Editorial panel sized to the rebuilt no-sidebar
+   Command Center: it spans the content column above the layout grid rather
+   than sitting inside a card rail, and uses the deep purple ground so it reads
+   as an arrival moment rather than another dashboard card. */
+.ccn-diag-welcome {
+  position: relative;
+  margin-bottom: 18px;
+  padding: clamp(22px, 2.6vw, 34px) clamp(22px, 3vw, 40px);
+  padding-right: clamp(52px, 6vw, 72px);
+  border: 1px solid rgba(196, 169, 91, .34);
+  border-radius: 16px;
+  color: #fff;
+  background:
+    radial-gradient(120% 150% at 100% 0%, rgba(224, 78, 53, .28) 0%, transparent 58%),
+    linear-gradient(135deg, var(--ccn-purple) 0%, var(--ccn-night) 100%);
+  box-shadow: 0 14px 34px rgba(51, 3, 60, .18);
+}
+
+.ccn-diag-welcome-title {
+  margin: 0 0 10px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: .2px;
+}
+
+.ccn-diag-welcome-line {
+  margin: 0 0 8px;
+  max-width: 66ch;
+  font-size: 13px;
+  line-height: 1.62;
+  color: rgba(255, 253, 251, .88);
+}
+
+.ccn-diag-welcome-cta {
+  margin-top: 14px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  color: var(--ccn-night);
+  background: var(--ccn-gold);
+  transition: transform .15s ease, filter .15s ease;
+}
+
+.ccn-diag-welcome-cta:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.ccn-diag-welcome-cta:focus-visible { outline: 2px solid var(--ccn-gold); outline-offset: 3px; }
+
+.ccn-diag-welcome-dismiss {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(255, 253, 251, .26);
+  border-radius: 50%;
+  cursor: pointer;
+  color: rgba(255, 253, 251, .82);
+  background: rgba(255, 253, 251, .08);
+  transition: background .15s ease, color .15s ease;
+}
+
+.ccn-diag-welcome-dismiss:hover { background: rgba(255, 253, 251, .16); color: #fff; }
+.ccn-diag-welcome-dismiss:focus-visible { outline: 2px solid var(--ccn-gold); outline-offset: 2px; }
+
+@media (max-width: 640px) {
+  .ccn-diag-welcome { padding-right: clamp(22px, 3vw, 40px); }
+  .ccn-diag-welcome-dismiss { top: 10px; right: 10px; }
+  .ccn-diag-welcome-cta { width: 100%; }
+}

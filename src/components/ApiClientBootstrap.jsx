@@ -100,7 +100,8 @@ export default function ApiClientBootstrap({
           return;
         }
 
-        console.error("Forbidden API request", error);
+        // Never log request URLs or payloads: invite endpoints contain bearer tokens.
+        console.error("Forbidden API request", { status: error?.status || 403 });
       },
     });
   }, [getToken, getWorkspaceId, onUnauthorized, onForbidden]);

@@ -3,7 +3,7 @@ import { Loader2, Clock, AlertCircle } from "lucide-react";
 import apiClient from "../../lib/apiClient";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -36,7 +36,7 @@ function ScoreBar({ value, color, height = 8 }) {
         width: "100%",
         height,
         borderRadius: 999,
-        background: "var(--cth-command-panel-soft)",
+        background: "var(--cth-blush)",
         overflow: "hidden",
       }}
     >
@@ -119,9 +119,9 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
               fontSize: 12,
               fontWeight: 600,
               cursor: "pointer",
-              background: active ? "var(--cth-command-crimson)" : "var(--cth-command-panel)",
-              color: active ? "#fff" : "var(--cth-command-ink)",
-              border: "1px solid " + (active ? "var(--cth-command-crimson)" : "var(--cth-command-border)"),
+              background: active ? "var(--cth-crimson)" : "var(--cth-panel-white)",
+              color: active ? "#fff" : "var(--cth-ink)",
+              border: "1px solid " + (active ? "var(--cth-crimson)" : "var(--cth-border)"),
               transition: "background 150ms ease, color 150ms ease",
             }}
           >
@@ -134,7 +134,7 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 32, fontFamily: SANS, fontSize: 14, color: "var(--cth-command-muted)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 32, fontFamily: SANS, fontSize: 14, color: "var(--cth-muted)" }}>
         <Loader2 size={16} className="animate-spin" /> Analyzing your best posting times…
       </div>
     );
@@ -142,8 +142,8 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
 
   if (error) {
     return (
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: 16, borderRadius: 10, fontFamily: SANS, fontSize: 13, background: "var(--cth-command-panel-soft)", border: "1px solid var(--cth-command-crimson)", color: "var(--cth-command-ink)" }}>
-        <AlertCircle size={16} style={{ color: "var(--cth-command-crimson)", flexShrink: 0, marginTop: 1 }} />
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: 16, borderRadius: 10, fontFamily: SANS, fontSize: 13, background: "var(--cth-blush)", border: "1px solid var(--cth-crimson)", color: "var(--cth-ink)" }}>
+        <AlertCircle size={16} style={{ color: "var(--cth-crimson)", flexShrink: 0, marginTop: 1 }} />
         <span>{error}</span>
       </div>
     );
@@ -157,7 +157,7 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
         <div
           style={{
             background: "#1a0828",
-            border: "1px solid var(--cth-command-border)",
+            border: "1px solid var(--cth-border)",
             borderRadius: 16,
             padding: "48px 32px",
             textAlign: "center",
@@ -170,7 +170,7 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
               background: "rgba(255,255,255,0.06)",
             }}
           >
-            <Clock size={24} style={{ color: "var(--cth-command-gold)" }} />
+            <Clock size={24} style={{ color: "var(--cth-gold)" }} />
           </div>
           <h3 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 600, color: "#fff", margin: "0 0 10px" }}>
             Find your best times
@@ -186,19 +186,19 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
   // ---- Data source legend ----
   const legend = (
     <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 18, marginBottom: 18 }}>
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--cth-command-crimson)" }} />
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: SANS, fontSize: 12, color: "var(--cth-muted)" }}>
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--cth-crimson)" }} />
         Buyer signal activity ({data?.signal_count ?? 0} signals)
       </span>
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: SANS, fontSize: 12, color: "var(--cth-command-muted)" }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--cth-command-muted)" }} />
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: SANS, fontSize: 12, color: "var(--cth-muted)" }}>
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--cth-muted)" }} />
         Post engagement ({data?.post_count ?? 0} posts)
       </span>
     </div>
   );
 
   const baselineNote = data?.is_baseline ? (
-    <p style={{ fontFamily: SANS, fontSize: 12, fontStyle: "italic", color: "var(--cth-command-gold)", margin: "0 0 18px" }}>
+    <p style={{ fontFamily: SANS, fontSize: 12, fontStyle: "italic", color: "var(--cth-gold)", margin: "0 0 18px" }}>
       Limited data — showing industry baselines. Post more to see your personalized times.
     </p>
   ) : null;
@@ -212,39 +212,39 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
           <div
             key={`${t.day}-${t.hour}`}
             style={{
-              background: "var(--cth-command-panel)",
-              border: "1px solid " + (isTop ? "var(--cth-command-crimson)" : "var(--cth-command-border)"),
-              borderRadius: 12,
+              background: "var(--cth-panel-white)",
+              border: "1px solid " + (isTop ? "var(--cth-crimson)" : "var(--cth-border)"),
+              borderRadius: 6,
               padding: 16,
             }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: isTop ? "var(--cth-command-crimson)" : "var(--cth-command-muted)" }}>
+              <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: isTop ? "var(--cth-crimson)" : "var(--cth-muted)" }}>
                 {isTop ? "Top pick" : `#${i + 1}`}
               </span>
-              <span style={{ fontFamily: SANS, fontSize: 18, fontWeight: 700, color: "var(--cth-command-ink)" }}>
+              <span style={{ fontFamily: SANS, fontSize: 18, fontWeight: 700, color: "var(--cth-ink)" }}>
                 {t.combined_score}
               </span>
             </div>
-            <div style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 600, color: "var(--cth-command-ink)" }}>
+            <div style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 600, color: "var(--cth-ink)" }}>
               {t.day}
             </div>
-            <div style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-command-muted)", marginBottom: 12 }}>
+            <div style={{ fontFamily: SANS, fontSize: 13, color: "var(--cth-muted)", marginBottom: 12 }}>
               {t.display_time}
             </div>
 
             <div style={{ marginBottom: 8 }}>
-              <div style={{ fontFamily: SANS, fontSize: 10, color: "var(--cth-command-muted)", marginBottom: 3 }}>Combined</div>
-              <ScoreBar value={t.combined_score} color="var(--cth-command-crimson)" height={8} />
+              <div style={{ fontFamily: SANS, fontSize: 10, color: "var(--cth-muted)", marginBottom: 3 }}>Combined</div>
+              <ScoreBar value={t.combined_score} color="var(--cth-crimson)" height={8} />
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: SANS, fontSize: 10, color: "var(--cth-command-muted)", marginBottom: 3 }}>Signal {t.signal_score}</div>
-                <ScoreBar value={t.signal_score} color="var(--cth-command-crimson)" height={5} />
+                <div style={{ fontFamily: SANS, fontSize: 10, color: "var(--cth-muted)", marginBottom: 3 }}>Signal {t.signal_score}</div>
+                <ScoreBar value={t.signal_score} color="var(--cth-crimson)" height={5} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: SANS, fontSize: 10, color: "var(--cth-command-muted)", marginBottom: 3 }}>Engage {t.engagement_score}</div>
-                <ScoreBar value={t.engagement_score} color="var(--cth-command-muted)" height={5} />
+                <div style={{ fontFamily: SANS, fontSize: 10, color: "var(--cth-muted)", marginBottom: 3 }}>Engage {t.engagement_score}</div>
+                <ScoreBar value={t.engagement_score} color="var(--cth-muted)" height={5} />
               </div>
             </div>
           </div>
@@ -255,8 +255,8 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
 
   // ---- Weekly heatmap ----
   const heatmapGrid = (
-    <div style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", borderRadius: 12, padding: 16, overflowX: "auto" }}>
-      <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--cth-command-ink)", marginBottom: 12 }}>
+    <div style={{ background: "var(--cth-panel-white)", border: "1px solid var(--cth-border)", borderRadius: 6, padding: 16, overflowX: "auto" }}>
+      <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--cth-ink)", marginBottom: 12 }}>
         Weekly activity heatmap
       </div>
       <div style={{ minWidth: 560 }}>
@@ -272,7 +272,7 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
                   left: `${(h / 24) * 100}%`,
                   fontFamily: SANS,
                   fontSize: 9,
-                  color: "var(--cth-command-muted)",
+                  color: "var(--cth-muted)",
                 }}
               >
                 {shortHour(h)}
@@ -284,7 +284,7 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
         {/* Rows */}
         {DAY_LABELS.map((label, day) => (
           <div key={label} style={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
-            <div style={{ width: 34, flexShrink: 0, fontFamily: SANS, fontSize: 10, fontWeight: 600, color: "var(--cth-command-muted)" }}>
+            <div style={{ width: 34, flexShrink: 0, fontFamily: SANS, fontSize: 10, fontWeight: 600, color: "var(--cth-muted)" }}>
               {label}
             </div>
             <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(24, 1fr)", gap: 2 }}>
@@ -304,9 +304,9 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
                       position: "relative",
                       aspectRatio: "1 / 1",
                       borderRadius: 2,
-                      background: "var(--cth-command-panel-soft)",
-                      border: isTopCell ? "1.5px solid #fff" : "1px solid var(--cth-command-border)",
-                      boxShadow: isTopCell ? "0 0 0 1px var(--cth-command-crimson)" : "none",
+                      background: "var(--cth-blush)",
+                      border: isTopCell ? "1.5px solid #fff" : "1px solid var(--cth-border)",
+                      boxShadow: isTopCell ? "0 0 0 1px var(--cth-crimson)" : "none",
                       overflow: "hidden",
                       cursor: "default",
                     }}
@@ -315,7 +315,7 @@ export default function BestPostingTimes({ workspaceId, connections = {} }) {
                       style={{
                         position: "absolute",
                         inset: 0,
-                        background: "var(--cth-command-crimson)",
+                        background: "var(--cth-crimson)",
                         opacity: Math.max(0, Math.min(1, score / 100)),
                       }}
                     />

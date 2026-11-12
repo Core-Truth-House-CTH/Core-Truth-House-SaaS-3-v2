@@ -458,13 +458,13 @@ export default function StudiosVisual() {
                 ) : (
                   <>
                     <div style={{ marginBottom: 6 }}><ImageIcon size={20} style={{ color: "var(--cth-command-muted)" }} /></div>
-                    <div style={{ fontSize: 11, color: "var(--cth-command-muted)", lineHeight: 1.5 }}>Upload your headshot, product photo, or any reference image</div>
+                    <div style={{ fontSize: 11, color: "var(--cth-command-muted)", lineHeight: 1.5 }}>Upload a reference image, product photo, or other visual asset</div>
                     <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 3 }}>JPG, PNG, WEBP up to 10MB — optional but recommended</div>
                   </>
                 )}
                 <input ref={refInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => acceptRef(e.target.files?.[0])} />
               </div>
-              <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 2 }}>Anchors the visual to your face or product</div>
+              <div style={{ fontSize: 10, color: "var(--cth-command-muted)", marginTop: 2 }}>Keeps the visual consistent with your chosen reference</div>
             </div>
 
             {/* Copy fields */}

@@ -229,7 +229,9 @@ function InviteRow({ invite, busyResend, busyRevoke, onResend, onRevoke }) {
       </div>
 
       <div className="flex items-center justify-center gap-1" style={{ width: 80 }}>
-        <button type="button" onClick={onResend} disabled={busyResend} title="Resend"
+        <button type="button" onClick={onResend} disabled
+          title="Resending email invitations is unavailable during this launch"
+          aria-label="Resend unavailable during the cohort-only email launch"
           className="rounded-md p-1.5 transition-colors hover:bg-[var(--cth-command-panel-soft)] disabled:opacity-50"
           style={{ color: "var(--cth-command-muted)" }}>
           {busyResend ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
@@ -631,13 +633,13 @@ export default function Members() {
   const headerAction = isWorkspaceAdmin ? (
     <button
       type="button"
-      onClick={() => { setInviteError(""); setInviteModalOpen(true); }}
-      disabled={atSeatCap}
-      title={atSeatCap ? `Seat limit reached for the ${seatUsage?.plan || "current"} plan. Upgrade to add more members.` : ""}
-      className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-      style={{ background: "var(--cth-command-crimson)", color: "var(--cth-command-panel)" }}
+      disabled
+      title="Team invitations are unavailable during the cohort-only email launch."
+      aria-label="Team invitations unavailable during the cohort-only email launch"
+      className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold opacity-50"
+      style={{ background: "var(--cth-command-muted)", color: "var(--cth-command-panel)" }}
     >
-      <UserPlus size={13} /> Invite member
+      <UserPlus size={13} /> Invitations paused
     </button>
   ) : null;
 
@@ -693,6 +695,17 @@ export default function Members() {
       </header>
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+        {isWorkspaceAdmin ? (
+          <div
+            role="status"
+            className="rounded-md p-4 text-sm"
+            style={{ background: "var(--cth-command-panel)", border: "1px solid var(--cth-command-border)", color: "var(--cth-command-muted)" }}
+          >
+            New and resent team invitations are unavailable during the cohort-only email launch.
+            Existing pending invitations remain listed, and revocation is still available.
+          </div>
+        ) : null}
+
         {seatUsage && isWorkspaceAdmin ? (
           <div className="flex flex-wrap items-center gap-2">
             <span

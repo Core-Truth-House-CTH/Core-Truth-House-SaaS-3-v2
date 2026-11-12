@@ -1,14 +1,14 @@
 import React, { lazy, Suspense, useEffect } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { ProtectedRoute } from "../components/Auth";
 import { PlanGate } from "../components/PlanGate";
 import BillingWall from "../components/BillingWall";
+import CohortClaimEntry from "../pages/CohortClaimEntry";
 import { APP_ROUTES } from "../config/appRoutes";
 import { ADMIN_ROUTES } from "../config/adminRoutes";
 import { REDIRECT_ROUTES } from "../config/redirectRoutes";
 import { getPageComponent } from "./pageRegistry";
 
-const HeadshotStudio = lazy(() => import("../pages/HeadshotStudio"));
 const StudioAccess = lazy(() => import("../pages/StudioAccess"));
 const TrainingVideos = lazy(() => import("../pages/TrainingVideos"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
@@ -37,6 +37,14 @@ const SuspenseFallback = (
   </div>
 );
 
+function PaidPage({ route, PageComponent }) {
+  const location = useLocation();
+  if (location.pathname === "/command-center" && new URLSearchParams(location.search).has("cohort_token")) {
+    return <CohortClaimEntry />;
+  }
+  return <ProtectedRoute><BillingWall><PlanGate route={route.path}><PageComponent /></PlanGate></BillingWall></ProtectedRoute>;
+}
+
 function buildRouteElement(route) {
   const PageComponent = getPageComponent(route?.path);
 
@@ -45,13 +53,7 @@ function buildRouteElement(route) {
   }
 
   return (
-    <ProtectedRoute>
-      <BillingWall>
-        <PlanGate route={route.path}>
-          <PageComponent />
-        </PlanGate>
-      </BillingWall>
-    </ProtectedRoute>
+    <PaidPage route={route} PageComponent={PageComponent} />
   );
 }
 
@@ -70,7 +72,7 @@ export default function AppRouter() {
   return (
     <Suspense fallback={SuspenseFallback}>
       <Routes>
-        <Route path="/headshots" element={<HeadshotStudio />} />
+        <Route path="/cohort/claim" element={<CohortClaimEntry />} />
         <Route path="/studio/:token" element={<StudioAccess />} />
         <Route path="/help" element={<TrainingVideos />} />
         <Route path="/admin/*" element={<AdminRouter />} />

@@ -232,7 +232,7 @@ export default function EmailSettings() {
       });
       if (res?.integration) applyIntegration(res.integration);
       setApiKey("");
-      showToast("Resend connected.");
+      showToast("Resend credentials saved. They are not used for platform sends during this launch.");
     } catch (err) {
       showToast(
         err?.response?.data?.detail || err?.message || "Unable to connect Resend.",
@@ -277,7 +277,7 @@ export default function EmailSettings() {
             className="text-xs md:text-sm truncate"
             style={{ margin: "6px 0 0 0", color: "var(--cth-command-muted)", fontFamily: SANS }}
           >
-            Configure how the platform sends emails on your behalf.
+            Manage saved tenant email settings. Platform email delivery is restricted during this launch.
           </p>
         </div>
       </header>
@@ -317,8 +317,7 @@ export default function EmailSettings() {
             </div>
 
             <p style={{ ...HELPER_TEXT, marginTop: 14 }}>
-              This is the name and email address your subscribers and clients will see when
-              they receive emails from the platform.
+              Saved sender details do not enable or change platform email delivery during this launch.
             </p>
 
             <div className="mt-5 flex justify-end">
@@ -358,15 +357,15 @@ export default function EmailSettings() {
                   }}
                 >
                   <CheckCircle2 size={13} />
-                  Connected
+                  Credentials saved
                 </span>
               ) : null}
             </div>
 
             <p style={{ ...HELPER_TEXT, marginTop: 14 }}>
-              Connect your own Resend account to send emails from your custom domain. When
-              connected, all platform emails sent on your behalf will use your Resend API key
-              and sender address.
+              You can save a tenant Resend integration here, but those credentials are not used
+              for platform sends during this launch. Application email is restricted to canonical,
+              evidence-validated cohort reservation and verified-paid access messages.
             </p>
 
             {connected ? (

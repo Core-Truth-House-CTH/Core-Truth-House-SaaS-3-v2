@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
 import apiClient from "../lib/apiClient";
+import { rememberClaimToken } from "../lib/lifetimeAccess.mjs";
 
 export default function CohortJoinPage() {
-  const { token } = useParams();
+  const { token: legacyToken } = useParams();
+  const location = useLocation();
+  const token = new URLSearchParams(location.hash.replace(/^#/, "")).get("token") || legacyToken;
   const [status, setStatus] = useState("loading");
-  const [invite, setInvite] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
@@ -23,9 +25,9 @@ export default function CohortJoinPage() {
     let cancelled = false;
     (async () => {
       try {
-        const data = await apiClient.get(`/api/cohort/invite/${encodeURIComponent(token)}`);
+        const data = await apiClient.post("/api/cohort/invite/validate", { token });
         if (cancelled) return;
-        setInvite(data);
+        if (data?.valid !== true) throw new Error("Invite validation did not succeed.");
         setStatus("valid");
       } catch (err) {
         if (cancelled) return;
@@ -129,25 +131,17 @@ export default function CohortJoinPage() {
       </>
     );
   } else if (status === "valid") {
-    const firstName = invite?.first_name || "there";
-    const tierLabel = invite?.cohort_tier === "founding" ? "founding" : "standard";
-    const email = invite?.email || "";
-    const redirectAfter = `/command-center?cohort_token=${encodeURIComponent(token)}`;
+    const redirectAfter = "/cohort/claim";
     const signUpHref = `/sign-up?redirect_url=${encodeURIComponent(redirectAfter)}`;
     const signInHref = `/sign-in?redirect_url=${encodeURIComponent(redirectAfter)}`;
 
     content = (
       <>
         <p style={eyebrow}>Core Truth House</p>
-        <h1 style={heading}>Welcome, {firstName}.</h1>
+        <h1 style={heading}>Welcome.</h1>
         <p style={body}>
-          Your {tierLabel} seat is ready. Create your account to access the OS and your cohort channel.
+          Your seat is ready. Create your account to access the OS and the member community.
         </p>
-        {email ? (
-          <p style={{ ...body, fontSize: "0.9rem", marginBottom: "32px" }}>
-            Use this email: <strong style={{ color: "#2B1040" }}>{email}</strong>
-          </p>
-        ) : null}
         <div
           style={{
             display: "flex",
@@ -157,10 +151,12 @@ export default function CohortJoinPage() {
             marginTop: "24px",
           }}
         >
-          <a href={signUpHref} style={primaryBtn}>
+          <a href={signUpHref}
+              onClick={(event) => { try { rememberClaimToken(token); } catch { event.preventDefault(); setErrorMsg("Enable session storage to preserve your claim, then retry."); setStatus("invalid"); } }} style={primaryBtn}>
             Create Your Account
           </a>
-          <a href={signInHref} style={secondaryBtn}>
+          <a href={signInHref}
+              onClick={(event) => { try { rememberClaimToken(token); } catch { event.preventDefault(); setErrorMsg("Enable session storage to preserve your claim, then retry."); setStatus("invalid"); } }} style={secondaryBtn}>
             Already have an account? Sign in
           </a>
         </div>

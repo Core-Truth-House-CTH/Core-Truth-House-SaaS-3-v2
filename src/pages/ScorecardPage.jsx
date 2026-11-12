@@ -144,7 +144,7 @@ const BANDS = {
   foundation: {
     title: "The Foundation Builder",
     message:
-      "The work ahead of you is foundational. Trying to sprint through positioning in 14 days would skip the layers that need to come first. Start with the Foundation tier of Core Truth House OS.",
+      "The work ahead of you is foundational. Rushing positioning would skip the layers that need to come first. Start with the Foundation tier of Core Truth House OS.",
     ctaLabel: "Start with Foundation",
     ctaHref: "/tiers",
     emphasis: false,

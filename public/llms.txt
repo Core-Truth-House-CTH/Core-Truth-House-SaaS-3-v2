@@ -11,7 +11,7 @@ Core Truth House (CTH) is a Brand Operating System (Brand OS). It holds the thin
 - Brand infrastructure: define and store a brand foundation, positioning, messaging structure, audience avatars, and visual identity that every other tool reads from.
 - Content generation: produce on-brand written content, social graphics, and brand visuals that stay consistent with the saved brand work.
 - Buyer signal tracking: capture tracking links, source activity, signal levels, and conversion events, then surface the next best action.
-- AI-powered brand tools: an in-app brand assistant (Ask the House), an AI Headshot Generator, and a Visual Studio for on-brand imagery.
+- AI-powered brand tools: an in-app brand assistant (Ask the House), the Visual, Video, Voice, and Bio studios.
 
 ## Who it serves
 
@@ -22,7 +22,7 @@ Solo, service-based founders, typically in years three through ten of their busi
 - Command Center: a single view of brand health and the next useful step.
 - Foundation: Brand Audit, Brand Foundation, Brand Positioning, Messaging Structure, Audience, Identity Studio, Strategic OS.
 - Structure: Systems Builder, Customer Journey, Offers, Campaign Builder, Content Studio.
-- Studios: standalone creative tools, including the AI Headshot Generator and Visual Studio.
+- Studios: standalone creative tools, including Visual, Video, Voice, and Bio Studios.
 - House: Email, CRM.
 - Estate: Calendar, Social Planner, Cohort Community.
 - Intelligence: Signal Inbox (tracking links and buyer signals), Analytics.
@@ -31,7 +31,7 @@ Solo, service-based founders, typically in years three through ten of their busi
 ## Public entry points
 
 - Brand Diagnostic: a free assessment that returns a Brand Score and shows where a brand is strong and where it needs work. https://coretruthhouse.com/brand-diagnostic/
-- Studios: standalone creative tools, including the AI Headshot Generator. https://coretruthhouse.com/studios
+- Studios: standalone creative tools, including Visual, Video, Voice, and Bio Studios. https://coretruthhouse.com/studios
 
 ## Links
 

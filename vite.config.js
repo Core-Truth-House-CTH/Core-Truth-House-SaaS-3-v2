@@ -1,8 +1,13 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
+import { validateStripePublishableKey } from './scripts/stripe-publishable-key-guard.mjs'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  if (mode === "production") {
+    validateStripePublishableKey(loadEnv(mode, process.cwd(), "VITE_"));
+  }
+  return {
   plugins: [react()],
   resolve: {
     alias: {
@@ -29,4 +34,5 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 600,
   },
+  }
 })

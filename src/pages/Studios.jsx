@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  UserCircle,
   LayoutGrid,
   Video,
   FileOutput,
@@ -16,15 +15,6 @@ import { DashboardLayout } from "../components/Layout";
 // Standalone creative tools. Banners use --cth-command-* gradients only; the
 // available/coming badges use --cth-command-success / --cth-command-ink.
 const TOOLS = [
-  {
-    name: "AI Headshot Generator",
-    desc: "Generate professional headshots and brand portraits using your identity style. Upload a photo and let your brand context do the rest.",
-    tier: "Foundation+",
-    available: true,
-    to: "/studios/headshot",
-    icon: UserCircle,
-    banner: "linear-gradient(135deg, var(--cth-command-purple), var(--cth-command-crimson))",
-  },
   {
     name: "Visual Studio",
     desc: "Generate on-brand social graphics, cover images, and brand visuals using your stored colors, fonts, and logos.",

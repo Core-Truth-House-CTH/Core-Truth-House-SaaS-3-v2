@@ -168,6 +168,11 @@ export default function AskTheHouseDrawer({
   // When omitted, the drawer behaves exactly as before (all existing callers
   // pass no onInsert and are unaffected).
   onInsert,
+  // Optional. Seeds the composer textarea when the drawer opens, so a caller can
+  // hand over a question the user already typed. It only prefills the draft -
+  // nothing is sent until the user activates Send. Callers that omit it open
+  // with a blank textarea exactly as before.
+  initialInput = "",
 }) {
   const { activeWorkspace, activeWorkspaceId } = useWorkspace();
   const wsId = activeWorkspace?.id || activeWorkspaceId;
@@ -214,6 +219,12 @@ export default function AskTheHouseDrawer({
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
+  // Read through a ref so an unrelated parent rerender (or a new prop identity)
+  // cannot reset the composer of an already-open conversation. Only the open
+  // transition below consumes it.
+  const initialInputRef = useRef(initialInput);
+  initialInputRef.current = initialInput;
+
   // Reset transient state when drawer opens (auto-resume runs in loadContext).
   useEffect(() => {
     if (!open) {
@@ -222,7 +233,9 @@ export default function AskTheHouseDrawer({
     }
     setSessionId(null);
     setMessages([]);
-    setInput("");
+    // Seeds the caller's handed-over draft when one was provided; "" otherwise,
+    // which is the previous behaviour for every existing caller.
+    setInput(String(initialInputRef.current || ""));
     setMode("guide");
     setSessionsOpen(false);
     setResumedFrom(null);

@@ -156,8 +156,8 @@ const policySections = [
  body: [
  "If you have questions about this Privacy Policy, data handling practices, or privacy-related concerns, please contact Core Truth House.",
  "Email: hello@coretruthhouse.com",
- "Phone: (205) 555-0178",
- "Location: Birmingham, AL",
+ "Phone: 832-956-2949",
+ "Location: Houston, TX",
  ],
  icon: "✉",
  },
@@ -224,7 +224,7 @@ function TrustStrip() {
  <div className="cth-trust-icon">⌚</div>
  <div>
  <h3>Effective Date</h3>
- <p>May 15, 2025</p>
+ <p>2026-10-25</p>
  </div>
  </article>
 
@@ -232,7 +232,7 @@ function TrustStrip() {
  <div className="cth-trust-icon">◷</div>
  <div>
  <h3>Last Updated</h3>
- <p>May 15, 2025</p>
+ <p>2026-10-25</p>
  </div>
  </article>
 

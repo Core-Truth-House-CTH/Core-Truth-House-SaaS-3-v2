@@ -521,7 +521,7 @@ export default function Billing() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const { activeWorkspaceId } = useWorkspace();
-  const { hasActivePlan, refreshPlan } = usePlan();
+  const { hasActivePlan, hasLifetimeAccess, refreshPlan } = usePlan();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -766,12 +766,12 @@ export default function Billing() {
                   <div>
                     <p style={SECTION_LABEL_STYLE}>Plan</p>
                     <p style={{ ...SUMMARY_VALUE_STYLE, marginTop: 8 }}>
-                      {summary?.subscription?.plan_name || summary?.plan_name || "No active plan"}
+                      {hasLifetimeAccess ? "Estate · lifetime access" : summary?.subscription?.plan_name || summary?.plan_name || "No active plan"}
                     </p>
                   </div>
 
                   <div>
-                    <p style={SECTION_LABEL_STYLE}>Status</p>
+                    <p style={SECTION_LABEL_STYLE}>{hasLifetimeAccess ? "Subscription billing status" : "Status"}</p>
                     <p style={{ ...SUMMARY_VALUE_STYLE, marginTop: 8 }}>
                       {summary?.subscription?.status || summary?.subscription_status || "inactive"}
                     </p>

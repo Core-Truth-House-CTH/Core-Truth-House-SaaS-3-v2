@@ -138,7 +138,11 @@ const CATEGORY_LABELS = {
   system: 'System',
 };
 
-export function NotificationBell() {
+// panelClassName is optional and applies ONLY to the dropdown panel, so a host
+// shell can constrain it without affecting the bell button, the component root
+// or any other caller. Omitted by default, which preserves the existing
+// standalone behaviour for every current caller.
+export function NotificationBell({ panelClassName = "" }) {
   const { user } = useUser();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -151,6 +155,7 @@ export function NotificationBell() {
   const [brandAlerts, setBrandAlerts] = useState([]);
   const [brandUnread, setBrandUnread] = useState(0);
   const triggerRef = useRef(null);
+  const mountedRef = useRef(false);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const pingIntervalRef = useRef(null);
@@ -217,18 +222,36 @@ export function NotificationBell() {
     }
   }, []);
 
-  // WebSocket connection
+  // WebSocket connection.
+  //
+  // A socket only owns this component's connection while it is the one held in
+  // wsRef AND the component is still mounted. Both guards are required: close()
+  // resolves asynchronously, so a socket's onclose can run after cleanup or
+  // after a replacement socket already exists. Without them that stale onclose
+  // schedules a reconnect through a ref the unmounted component can no longer
+  // clear, leaving an orphan connection that re-arms itself forever.
   const connectWebSocket = useCallback(() => {
+    if (!mountedRef.current) return;
     if (!user?.id || !WS_URL) return;
-    
-    // Close existing connection
-    if (wsRef.current) {
-      wsRef.current.close();
+
+    // Retire the previous socket first: detach its handlers and release
+    // ownership *before* closing it, so its onclose can neither touch state nor
+    // reclaim wsRef. Clear the ping timer too, so timers cannot overlap.
+    const previous = wsRef.current;
+    if (previous) {
+      previous.onopen = null;
+      previous.onmessage = null;
+      previous.onclose = null;
+      previous.onerror = null;
+      wsRef.current = null;
+      previous.close();
     }
-    
+    clearInterval(pingIntervalRef.current);
+
     const ws = new WebSocket(`${WS_URL}/api/notifications/ws/${user.id}`);
-    
+
     ws.onopen = () => {
+      if (!mountedRef.current || wsRef.current !== ws) return;
       setIsConnected(true);
 
       // Start ping interval to keep connection alive
@@ -238,8 +261,9 @@ export function NotificationBell() {
         }
       }, 30000);
     };
-    
+
     ws.onmessage = (event) => {
+      if (!mountedRef.current || wsRef.current !== ws) return;
       try {
         const data = JSON.parse(event.data);
         
@@ -264,9 +288,12 @@ export function NotificationBell() {
     };
     
     ws.onclose = () => {
+      // Only the socket that still owns this component reconnects. A stale or
+      // deliberately closed socket returns here and dies quietly.
+      if (!mountedRef.current || wsRef.current !== ws) return;
       setIsConnected(false);
       clearInterval(pingIntervalRef.current);
-      
+
       // Reconnect after 5 seconds
       reconnectTimeoutRef.current = setTimeout(() => {
         connectWebSocket();
@@ -300,13 +327,23 @@ export function NotificationBell() {
 
   // Initialize
   useEffect(() => {
+    mountedRef.current = true;
     load();
     connectWebSocket();
     requestNotificationPermission();
-    
+
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
+      // Mark unmounted first, then release ownership, then detach and close, so
+      // nothing this socket does on the way out can schedule new work.
+      mountedRef.current = false;
+      const ws = wsRef.current;
+      wsRef.current = null;
+      if (ws) {
+        ws.onopen = null;
+        ws.onmessage = null;
+        ws.onclose = null;
+        ws.onerror = null;
+        ws.close();
       }
       clearTimeout(reconnectTimeoutRef.current);
       clearInterval(pingIntervalRef.current);
@@ -483,8 +520,8 @@ export function NotificationBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div 
-            className="absolute right-0 top-12 z-50 w-96 max-h-[500px] overflow-hidden rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] shadow-2xl"
+          <div
+            className={`absolute right-0 top-12 z-50 w-96 max-h-[500px] overflow-hidden rounded-2xl border border-[var(--cth-command-border)] bg-[var(--cth-command-ivory)] shadow-2xl ${panelClassName}`.trim()}
             data-testid="notification-panel"
           >
             {/* Header */}
