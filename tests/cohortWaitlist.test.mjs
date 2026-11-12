@@ -77,6 +77,12 @@ test("diagnostic result buttons go to the waitlist, not plan sign-up", () => {
   assert.match(diagnostic, /waitlistHref\(\{ source: "brand_diagnostic", tier: recommendation\.tier \}\)/);
   assert.doesNotMatch(diagnostic, /href=\{\s*`\/sign-up\?tier=/);
   assert.match(diagnostic, /Where you'd start:/);
+  // After saving, the result panel on the page repeats the tier and button.
+  const live = diagnostic.slice(diagnostic.indexOf('data-testid="diagnostic-live-start"'));
+  assert.match(live.slice(0, 600), /Where you'd start: <strong>\{savedTier\}<\/strong>/);
+  assert.match(live.slice(0, 600), /waitlistHref\(\{ source: "brand_diagnostic", tier: savedTier \}\)/);
+  assert.match(diagnostic, /const savedTier = WAITLIST_TIERS\.includes\(resultSnapshot\?\.recommendation\?\.tier\)/);
+  assert.doesNotMatch(live.slice(0, 600), /\u2014|refund|start date|starts? on|December/i);
   const results = read("src/pages/PublicDiagnosticResults.jsx");
   assert.match(results, /waitlistHref\(\{ source: "diagnostic_return", tier: startTier \}\)/);
   assert.doesNotMatch(results, /\/sign-up\?tier=/);

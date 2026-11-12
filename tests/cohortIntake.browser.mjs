@@ -45,13 +45,16 @@ try{
   await page.route('**/api/cohort/apply',route=>{applications++;return route.fulfill({status:200,contentType:'application/json',body:'{}'})});
   await page.goto(base);
   await page.getByText('New applications are not currently open.').waitFor();
-  assert.equal(await page.locator('form').isVisible(),false);
+  assert.equal(await page.locator('form.cth-apply-form').isVisible(),false);
   assert.equal(await page.getByRole('link',{name:'Go to your secure reservation'}).isVisible(),true);
+  // Closed intake shows the public waitlist form instead.
+  assert.equal(await page.locator('.cth-waitlist form').isVisible(),true);
   checks++;
 
   intakeOpen=true;
   await page.reload();
-  await page.locator('form').waitFor({state:'visible'});
+  await page.locator('form.cth-apply-form').waitFor({state:'visible'});
+  assert.equal(await page.locator('.cth-waitlist').count(),0);
   const eligible = page.getByRole('checkbox',{name:/I am a US resident age 18 or older/});
   const submit = page.getByRole('button',{name:'Submit Application'});
   assert.equal(await submit.isDisabled(),true);
@@ -70,7 +73,7 @@ try{
   intakeStatus=503;
   await page.reload();
   await page.getByText('New applications are not currently open.').waitFor();
-  assert.equal(await page.locator('form').isVisible(),false);
+  assert.equal(await page.locator('form.cth-apply-form').isVisible(),false);
   checks++;
   console.log(`${checks} cohort intake mounted Chromium checks passed`);
 }finally{
