@@ -18,7 +18,7 @@ import {
 import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
 import { getStoredAttribution } from "../lib/utmCapture";
-import { waitlistHref } from "../lib/cohortWaitlist.mjs";
+import { WAITLIST_TIERS, waitlistHref } from "../lib/cohortWaitlist.mjs";
 
 const A = {
  logo: "/brand-assets/logo/cth-logo-seal.png",
@@ -485,6 +485,11 @@ export default function BrandDiagnosticPage() {
  const displayScore = resultSnapshot?.score ?? 72;
  const displayTotal = resultSnapshot?.score ? 60 : 100;
  const displayTier = resultSnapshot?.recommendation?.tier || "Brand Readiness";
+ // Only a saved result has a snapshot (set after "Save My Answers" succeeds, or
+ // restored from storage), so the waitlist step shows on the page once saved.
+ const savedTier = WAITLIST_TIERS.includes(resultSnapshot?.recommendation?.tier)
+ ? resultSnapshot.recommendation.tier
+ : null;
  const displaySummary =
  resultSnapshot?.recommendation?.line ||
  "Your brand has strong potential, but structure and message clarity are reducing conversion.";
@@ -636,6 +641,15 @@ export default function BrandDiagnosticPage() {
 
           <div>
             <h2>{displaySummary}</h2>
+            {savedTier ? (
+              <div className="bdx-live-start" data-testid="diagnostic-live-start">
+                <p className="bdx-result-start">Where you'd start: <strong>{savedTier}</strong></p>
+                <a href={waitlistHref({ source: "brand_diagnostic", tier: savedTier })}>
+                  Join the Cohort Waitlist
+                  <ArrowRight size={14} />
+                </a>
+              </div>
+            ) : null}
             <button type="button" onClick={openDiagnostic}>Take the full diagnostic <ArrowRight size={13} /></button>
           </div>
 
@@ -911,6 +925,7 @@ export default function BrandDiagnosticPage() {
  .bdx-primary-btn,
  .bdx-secondary-btn,
  .bdx-outline-btn,
+ .bdx-live-start a,
  .bdx-result-actions a,
  .bdx-result-actions button,
  .bdx-impact button,
@@ -930,6 +945,7 @@ export default function BrandDiagnosticPage() {
  }
 
  .bdx-primary-btn,
+ .bdx-live-start a,
  .bdx-result-actions a,
  .bdx-result-actions button,
  .bdx-impact button {
@@ -979,6 +995,20 @@ export default function BrandDiagnosticPage() {
  color: #af0024;
  font-weight: 900;
  cursor: pointer;
+ }
+
+ .bdx-live-start {
+ margin-top: 14px;
+ display: flex;
+ flex-wrap: wrap;
+ align-items: center;
+ gap: 10px 16px;
+ }
+
+ .bdx-live-start .bdx-result-start {
+ margin: 0;
+ font-size: 14px;
+ color: #2b1040;
  }
 
  .bdx-score-art {
