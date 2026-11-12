@@ -64,6 +64,7 @@ export default function AuthShell({ activeNav, children }) {
 
   const [searchValue, setSearchValue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [buildOpen, setBuildOpen] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -85,6 +86,8 @@ export default function AuthShell({ activeNav, children }) {
       document.removeEventListener("keydown", onKey);
     };
   }, [menuOpen]);
+
+  useEffect(() => { setBuildOpen(false); }, [location.pathname]);
 
   const currentActive =
     activeNav ||
@@ -109,7 +112,7 @@ export default function AuthShell({ activeNav, children }) {
     // This shell renders the notification bell for everything beneath it, so a
     // legacy DashboardLayout embedded in one of these routes omits its own.
     <AuthShellContext.Provider value={AUTH_SHELL_OWNS_BELL}>
-    <div className="cth-authshell">
+    <div className={`cth-authshell${currentActive === "foundation" ? " foundation-shell" : ""}`}>
       <header className="as-topbar">
         <button
           type="button"
@@ -129,8 +132,8 @@ export default function AuthShell({ activeNav, children }) {
             const Icon = item.icon;
             const active = currentActive === item.key;
             return (
+              <React.Fragment key={item.key}>
               <button
-                key={item.key}
                 type="button"
                 className={`as-navbtn${active ? " active" : ""}`}
                 aria-current={active ? "page" : undefined}
@@ -138,6 +141,17 @@ export default function AuthShell({ activeNav, children }) {
               >
                 <Icon size={15} aria-hidden="true" /> {item.label}
               </button>
+              {currentActive === "foundation" && item.key === "command-center" && (
+                <div className="as-build-menu" style={{ position: "relative", flex: "0 0 auto" }}>
+                  <button type="button" className={`as-navbtn${buildOpen || currentActive === "foundation" ? " active" : ""}`} aria-haspopup="menu" aria-expanded={buildOpen} onClick={() => setBuildOpen((open) => !open)}>
+                    Build <ChevronDown size={14} aria-hidden="true" />
+                  </button>
+                  {buildOpen && <div role="menu" aria-label="Build sections" style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 80, minWidth: 205, padding: 6, background: "#fffaf5", border: "1px solid #e5d9de", borderRadius: 6, boxShadow: "0 10px 30px rgba(13,0,16,.2)" }}>
+                    {[["Foundation Home","/foundation"],["Brand Audit","/brand-audit"],["Core Truth","/brand-foundation"],["Audience Truth","/audience"],["Positioning","/brand-positioning"],["Messaging","/messaging-structure"],["Brand Expression","/identity-studio"],["Review and Lock","/foundation/review-lock"]].map(([label,path]) => <button key={path} role="menuitem" type="button" onClick={() => { setBuildOpen(false); navigate(path); }} style={{ display: "block", width: "100%", padding: "9px 10px", border: 0, borderRadius: 4, background: location.pathname === path ? "#f7e9ed" : "transparent", color: "#210b25", textAlign: "left", font: "500 12px var(--as-sans)", cursor: "pointer" }}>{label}</button>)}
+                  </div>}
+                </div>
+              )}
+              </React.Fragment>
             );
           })}
         </nav>
@@ -230,7 +244,7 @@ export default function AuthShell({ activeNav, children }) {
         </div>
       </header>
 
-      <div className="as-frame">{children}</div>
+      <div className={`as-frame${currentActive === "foundation" ? " as-frame-foundation" : ""}`}>{children}</div>
     </div>
     </AuthShellContext.Provider>
   );

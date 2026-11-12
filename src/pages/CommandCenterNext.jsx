@@ -118,7 +118,7 @@ const HEALTH_ROWS = [
 ];
 
 const QUICK_ACTIONS = [
-  { label: "Run Brand Diagnostic", helper: "Find the structural gap", icon: Gauge, route: "/brand-audit" },
+  { label: "Run Brand Audit", helper: "Find the structural gap", icon: Gauge, route: "/brand-audit" },
   { label: "Generate Content", helper: "Create from Brand Memory", icon: PenTool, route: "/content-studio" },
   { label: "Create Campaign", helper: "Connect message to movement", icon: Megaphone, route: "/campaign-builder" },
   { label: "Build Offer", helper: "Shape the transformation", icon: BriefcaseBusiness, route: "/offer-builder" },
@@ -217,7 +217,7 @@ function fallbackNextMove({ score, modules, audit, stats }) {
   if (!audit) {
     return {
       eyebrow: "START HERE",
-      title: "Complete your Brand Diagnostic",
+      title: "Complete your Brand Audit",
       body: "The House needs a current baseline before it can recommend the most accurate structural move.",
       action: "Run the diagnostic",
       route: "/brand-audit",
@@ -753,7 +753,7 @@ export default function CommandCenterNext() {
     ].filter(Boolean);
 
     const progressItems = [
-      audit ? { id: "audit", icon: CheckCircle2, title: "Brand Diagnostic recorded", meta: dateLabel(audit?.created_at || audit?.updated_at), route: "/brand-health" } : null,
+      audit ? { id: "audit", icon: CheckCircle2, title: "Brand Audit recorded", meta: dateLabel(audit?.created_at || audit?.updated_at), route: "/brand-health" } : null,
       progress?.brand_memory_complete ? { id: "brand-memory", icon: CheckCircle2, title: "Brand Memory connected", meta: "Foundation", route: "/brand-foundation" } : null,
       activeCampaigns && activeCampaigns[0] ? { id: "campaign", icon: Megaphone, title: safeText(activeCampaigns[0]?.name || activeCampaigns[0]?.title, "Campaign in progress"), meta: safeText(activeCampaigns[0]?.status, "Active"), route: "/campaign-builder" } : null,
       confirmedSignals && confirmedSignals[0] ? { id: "signal", icon: Radar, title: "Buyer signal confirmed", meta: dateLabel(confirmedSignals[0]?.created_at), route: "/signal-inbox" } : null,

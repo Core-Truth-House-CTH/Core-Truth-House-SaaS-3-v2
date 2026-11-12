@@ -25,18 +25,18 @@ h1 {
 
 :root {
   /* Core Truth House Admin Light Theme */
-  --cth-admin-bg: #efe7e3;
-  --cth-admin-panel: #f8f4f2;
+  --cth-admin-bg: var(--cth-brand-ivory);
+  --cth-admin-panel: var(--cth-brand-ivory);
   --cth-admin-panel-alt: #f2e9e5;
-  --cth-admin-sidebar-start: #140f2b;
-  --cth-admin-sidebar-end: #120717;
-  --cth-admin-sidebar-hover: #3a1838;
-  --cth-admin-ink: #2b1040;
+  --cth-admin-sidebar-start: var(--cth-brand-purple);
+  --cth-admin-sidebar-end: var(--cth-brand-black);
+  --cth-admin-sidebar-hover: var(--cth-brand-purple);
+  --cth-admin-ink: var(--cth-brand-purple);
   --cth-admin-ink-soft: #5e4a67;
   --cth-admin-ruby: #763b5b;
   --cth-admin-accent: #e04e35;
   --cth-admin-border: #d8c5c3;
-  --cth-admin-border-dark: #3b2740;
+  --cth-admin-border-dark: color-mix(in srgb,var(--cth-brand-purple) 70%,var(--cth-brand-black));
   --cth-admin-muted: #a88f9f;
   --cth-admin-tuscany: #c7a09d;
 
@@ -100,17 +100,17 @@ h1 {
 .dark,
 [data-theme="dark"] {
   /* Core Truth House Admin Dark Theme */
-  --cth-admin-bg: #140f2b;
-  --cth-admin-panel: #120717;
-  --cth-admin-panel-alt: #1a1028;
-  --cth-admin-sidebar-start: #140f2b;
-  --cth-admin-sidebar-end: #120717;
-  --cth-admin-sidebar-hover: #3a1838;
-  --cth-admin-ink: #f8f4f2;
+  --cth-admin-bg: var(--cth-brand-purple);
+  --cth-admin-panel: var(--cth-brand-black);
+  --cth-admin-panel-alt: var(--cth-brand-purple);
+  --cth-admin-sidebar-start: var(--cth-brand-purple);
+  --cth-admin-sidebar-end: var(--cth-brand-black);
+  --cth-admin-sidebar-hover: var(--cth-brand-purple);
+  --cth-admin-ink: var(--cth-brand-ivory);
   --cth-admin-ink-soft: #d8c5c3;
   --cth-admin-ruby: #c7a09d;
   --cth-admin-accent: #e04e35;
-  --cth-admin-border: #3b2740;
+  --cth-admin-border: color-mix(in srgb,var(--cth-brand-purple) 70%,var(--cth-brand-black));
   --cth-admin-border-dark: #d8c5c3;
   --cth-admin-muted: #a88f9f;
   --cth-admin-tuscany: #c7a09d;
@@ -657,13 +657,13 @@ canvas {
 .cth-app-body,
 .cth-module-page,
 .cth-command-page {
-  --cc-night: #0d0010;
-  --cc-purple: #33033c;
+  --cc-night: var(--cth-brand-black);
+  --cc-purple: var(--cth-brand-purple);
   --cc-purple-mid: #230029;
-  --cc-ink: #2b1040;
-  --cc-crimson: #af002a;
+  --cc-ink: var(--cth-brand-purple);
+  --cc-crimson: var(--cth-brand-crimson);
   --cc-cinnabar: #e04e35;
-  --cc-gold: #c4a95b;
+  --cc-gold: var(--cth-brand-gold);
 
   --cth-crimson: var(--cc-crimson);
   --cth-crimson-alt: var(--cc-crimson);
@@ -675,13 +675,13 @@ canvas {
   --cth-ink: var(--cc-ink);
   --cth-muted: #7c6576;
   --cth-ruby: #763b5b;
-  --cth-blush: #efe7e3;
-  --cth-ivory: #f8f4f2;
+  --cth-blush: var(--cth-brand-ivory);
+  --cth-ivory: var(--cth-brand-ivory);
   --cth-border: #d8c5c3;
 
-  --cth-admin-bg: #efe7e3;
-  --cth-admin-panel: #f8f4f2;
-  --cth-admin-panel-alt: #fffaf7;
+  --cth-admin-bg: var(--cth-brand-ivory);
+  --cth-admin-panel: var(--cth-brand-ivory);
+  --cth-admin-panel-alt: var(--cth-brand-panel);
   --cth-admin-sidebar-start: var(--cc-purple);
   --cth-admin-sidebar-end: var(--cc-night);
   --cth-admin-sidebar-hover: var(--cc-purple-mid);
@@ -692,7 +692,7 @@ canvas {
   --cth-admin-crimson: var(--cc-crimson);
   --cth-admin-gold: var(--cc-gold);
   --cth-admin-border: #d8c5c3;
-  --cth-admin-border-dark: #3b2740;
+  --cth-admin-border-dark: color-mix(in srgb,var(--cth-brand-purple) 70%,var(--cth-brand-black));
   --cth-admin-muted: #7c6576;
   --cth-admin-tuscany: #c7a09d;
 
@@ -743,18 +743,18 @@ canvas {
 .theme-dark,
 .cth-dark {
   --cth-admin-bg: var(--cc-night);
-  --cth-admin-panel: #120717;
-  --cth-admin-panel-alt: #1a1028;
+  --cth-admin-panel: var(--cth-brand-black);
+  --cth-admin-panel-alt: var(--cth-brand-purple);
   --cth-admin-sidebar-start: var(--cc-purple);
   --cth-admin-sidebar-end: var(--cc-night);
   --cth-admin-sidebar-hover: var(--cc-purple-mid);
-  --cth-admin-ink: #f8f4f2;
+  --cth-admin-ink: var(--cth-brand-ivory);
   --cth-admin-ink-soft: #d8c5c3;
   --cth-admin-ruby: #c7a09d;
   --cth-admin-accent: var(--cc-cinnabar);
   --cth-admin-crimson: var(--cc-crimson);
   --cth-admin-gold: var(--cc-gold);
-  --cth-admin-border: #3b2740;
+  --cth-admin-border: color-mix(in srgb,var(--cth-brand-purple) 70%,var(--cth-brand-black));
   --cth-admin-border-dark: #d8c5c3;
   --cth-admin-muted: #c7a09d;
   --cth-admin-tuscany: #c7a09d;
@@ -767,8 +767,8 @@ canvas {
   --cth-app-muted: var(--cth-admin-muted);
   --cth-app-accent: var(--cth-admin-accent);
 
-  --cth-heading: #f8f4f2;
-  --cth-text: #f8f4f2;
+  --cth-heading: var(--cth-brand-ivory);
+  --cth-text: var(--cth-brand-ivory);
   --cth-text-muted: #c7a09d;
   --cth-surface: var(--cth-admin-panel);
   --cth-surface-soft: var(--cth-admin-panel-alt);
@@ -999,13 +999,7 @@ canvas {
     linear-gradient(145deg, rgba(255, 255, 255, 0.74), rgba(248, 244, 242, 0.94)) !important;
 }
 
-/* Dark hero panels used by Mail Suite and future Structure pages */
-.cth-app-shell .bg-\[linear-gradient\(135deg\,\#33033C_0\%\,\#140016_62\%\,\#AF002A_160\%\)\] {
-  background:
-    radial-gradient(circle at top right, rgba(196, 169, 91, 0.22), transparent 34%),
-    linear-gradient(135deg, var(--cc-purple) 0%, var(--cc-night) 58%, var(--cc-crimson) 150%) !important;
-}
-
+/* Removed dead arbitrary Tailwind selector; no matching JSX class exists. */
 /* Set 2 borders */
 .cth-app-shell .border-\[var\(--cth-admin-border\)\] {
   border-color: rgba(196, 169, 91, 0.30) !important;
@@ -1082,9 +1076,9 @@ canvas {
 }
 
 /* Keep dark hero text bright */
-.cth-app-shell section[class*="#33033C"] h1,
-.cth-app-shell section[class*="#33033C"] p,
-.cth-app-shell section[class*="#33033C"] div {
+.cth-app-shell section[class*="var(--cth-brand-purple)"] h1,
+.cth-app-shell section[class*="var(--cth-brand-purple)"] p,
+.cth-app-shell section[class*="var(--cth-brand-purple)"] div {
   color: inherit;
 }
 
@@ -1094,15 +1088,15 @@ canvas {
    ========================================================= */
 
 .cth-brand-diagnostic-page {
-  --bd-night: #0d0010;
-  --bd-purple: #33033c;
+  --bd-night: var(--cth-brand-black);
+  --bd-purple: var(--cth-brand-purple);
   --bd-purple-mid: #230029;
-  --bd-ink: #2b1040;
-  --bd-crimson: #af002a;
+  --bd-ink: var(--cth-brand-purple);
+  --bd-crimson: var(--cth-brand-crimson);
   --bd-cinnabar: #e04e35;
-  --bd-gold: #c4a95b;
-  --bd-ivory: #f8f4f2;
-  --bd-blush: #efe7e3;
+  --bd-gold: var(--cth-brand-gold);
+  --bd-ivory: var(--cth-brand-ivory);
+  --bd-blush: var(--cth-brand-ivory);
   --bd-border: rgba(196, 169, 91, 0.3);
 
   min-height: 100vh;
