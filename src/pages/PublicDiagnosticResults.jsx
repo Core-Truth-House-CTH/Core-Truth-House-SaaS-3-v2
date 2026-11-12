@@ -1,6 +1,7 @@
 import { getApiBaseUrl, apiFetch } from "../lib/apiConfig";
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { WAITLIST_TIERS, waitlistHref } from "../lib/cohortWaitlist.mjs";
 import { ArrowRight, Sparkles, Target } from "lucide-react";
 
 import {
@@ -77,12 +78,8 @@ export default function PublicDiagnosticResults() {
 
  const topGaps = Array.isArray(data?.top_gaps) ? data.top_gaps : [];
 
- const signUpHref =
- data &&
- `/sign-up?tier=${encodeURIComponent(data.recommended_tier || "")}` +
- `&source=diagnostic_return` +
- `&score=${encodeURIComponent(data.score ?? "")}` +
- `&first_name=${encodeURIComponent(data.first_name || "")}`;
+ const startTier = data && WAITLIST_TIERS.includes(data.recommended_tier) ? data.recommended_tier : null;
+ const waitlistLink = data && waitlistHref({ source: "diagnostic_return", tier: startTier });
 
  return (
  <main className="pdr-page">
@@ -197,9 +194,12 @@ export default function PublicDiagnosticResults() {
  </section>
 
  <div className="pdr-cta-bar">
- <p>Ready to fix this? Start building your brand infrastructure.</p>
- <a href={signUpHref}>
- Start Building
+ <p>
+ Ready to build? Join the Founding Cohort waitlist.
+ {startTier ? <> Where you'd start: <strong>{startTier}</strong>.</> : null}
+ </p>
+ <a href={waitlistLink}>
+ Join the Waitlist
  <ArrowRight size={16} />
  </a>
  </div>

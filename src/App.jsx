@@ -30,6 +30,7 @@ const PublicDiagnosticResults = lazy(() => import("./pages/PublicDiagnosticResul
 const PublicOfferPage = lazy(() => import("./pages/PublicOfferPage"));
 const ScorecardPage = lazy(() => import("./pages/ScorecardPage"));
 const CohortApplyPage = lazy(() => import("./pages/CohortApplyPage"));
+const CohortWaitlistPage = lazy(() => import("./pages/CohortWaitlistPage"));
 const CohortEnrollmentShell = lazy(() => import("./pages/CohortEnrollmentShell"));
 const CohortReservationPage = lazy(() => import("./pages/CohortReservationPage"));
 const CohortWelcomePage = lazy(() => import("./pages/CohortWelcomePage"));
@@ -70,6 +71,7 @@ function PublicRoutes() {
         <Route path="/scorecard" element={<ScorecardPage />} />
         <Route path="/scorecard/" element={<ScorecardPage />} />
         <Route path="/cohort/apply" element={<CohortEnrollmentShell><CohortApplyPage /></CohortEnrollmentShell>} />
+        <Route path="/cohort/waitlist" element={<CohortWaitlistPage />} />
         <Route path="/cohort/reservation" element={<CohortEnrollmentShell><CohortReservationPage /></CohortEnrollmentShell>} />
         <Route path="/cohort/welcome" element={<CohortWelcomePage />} />
         <Route path="/cohort/join" element={<CohortJoinPage />} />
