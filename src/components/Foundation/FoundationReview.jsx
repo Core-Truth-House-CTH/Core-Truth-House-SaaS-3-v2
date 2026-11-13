@@ -230,3 +230,25 @@ export function DiagnosticInsightCard() {
     {r.interpretation?.scope_note && <small className="foundation-muted">{r.interpretation.scope_note}</small>}
   </section>;
 }
+
+// ------------------------------------------------------------------ Review and Lock: the approval summary panel
+
+export function ApprovalSummary({ children }) {
+  const { sections, loading, error, reload } = useFoundationSections();
+  const locked = sections.filter((s) => s.status === "locked");
+  const waiting = sections.filter((s) => s.status === "submitted" || s.status === "in_review");
+  const last = locked.map((s) => s.locked_at).filter(Boolean).sort().pop();
+  return <section className="foundation-card fp-approval-dark">
+    <div className="fp-card-title"><h2>APPROVAL AND LOCK</h2></div>
+    {error && !sections.length ? <div role="alert"><p>{error}</p><button className="foundation-button foundation-button-secondary" type="button" onClick={reload}>Retry</button></div>
+      : loading && !sections.length ? <p aria-live="polite">Loading…</p>
+      : <div className="fp-approval-status-list">
+        <p><span>Sections locked</span><b>{locked.length} of {SECTION_IDS.length}</b></p>
+        <p><span>Waiting for review</span><b>{waiting.length}</b></p>
+        <p><span>Last approved</span><b>{last ? new Date(last).toLocaleDateString() : "Nothing locked yet"}</b></p>
+        <p><span>Foundation status</span><b>{locked.length === SECTION_IDS.length ? "Locked" : waiting.length ? "In review" : "Draft"}</b></p>
+      </div>}
+    <p className="fp-approval-reason">A Core Truth House reviewer approves each section. A locked section cannot be edited until it is unlocked.</p>
+    <div className="fp-approval-actions">{children}</div>
+  </section>;
+}
