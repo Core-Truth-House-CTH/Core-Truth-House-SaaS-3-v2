@@ -83,3 +83,25 @@ test("error messages: required-fields list, server message, plain string, fallba
   assert.equal(errorMessage({ message: "Network request failed." }), "Network request failed.");
   assert.equal(errorMessage({}), "That did not work. Please try again.");
 });
+
+test("a locked-section refusal from the server reaches the member as its plain message", async () => {
+  const { ApiClient } = await import("../src/lib/apiClient.js");
+  const message = "Messaging is locked. Ask a Core Truth House reviewer to unlock it before making changes.";
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(
+    JSON.stringify({ detail: { code: "section_locked", section_id: "messaging", message } }),
+    { status: 423, headers: { "content-type": "application/json" } },
+  );
+  try {
+    const client = new ApiClient();
+    client.baseUrl = "http://staging.invalid";
+    await assert.rejects(() => client.put("/api/brand-foundation", { tagline: "x" }), (err) => {
+      assert.equal(err.status, 423);
+      assert.equal(err.message, message);
+      assert.equal(errorMessage(err), message);
+      return true;
+    });
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

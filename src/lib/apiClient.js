@@ -108,6 +108,11 @@ function extractErrorMessage(payload, fallback) {
     return payload.detail;
   }
 
+  // Structured errors such as a locked section: {detail: {code, message}}.
+  if (typeof payload?.detail?.message === "string" && payload.detail.message.trim()) {
+    return payload.detail.message;
+  }
+
   if (typeof payload?.message === "string" && payload.message.trim()) {
     return payload.message;
   }
