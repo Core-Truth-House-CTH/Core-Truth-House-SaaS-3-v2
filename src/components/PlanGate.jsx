@@ -57,7 +57,7 @@ export function PlanGate({ route, children }) {
             <Lock size={48} style={{ color: colors.cinnabar, marginBottom: 20 }} />
             <h1 className="text-xl md:text-2xl font-bold mb-3" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: colors.textPrimary }}>Admin Access Only</h1>
             <p className="text-sm mb-6" style={{ color: colors.textMuted }}>This area is restricted to the Super Admin.</p>
-            <button onClick={() => navigate('/dashboard')} className="px-6 py-3 rounded-xl text-white text-sm font-semibold" style={{ background: 'linear-gradient(135deg, var(--cth-brand-primary), var(--cth-command-cinnabar))' }}>
+            <button onClick={() => navigate('/command-center')} className="px-6 py-3 rounded-xl text-white text-sm font-semibold" style={{ background: 'linear-gradient(135deg, var(--cth-brand-primary), var(--cth-command-cinnabar))' }}>
               Back to Dashboard
             </button>
           </div>
@@ -97,7 +97,7 @@ export function PlanGate({ route, children }) {
               className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white text-sm font-bold" style={{ background: 'linear-gradient(135deg, var(--cth-brand-primary), var(--cth-command-cinnabar))', letterSpacing: '0.02em' }}>
               <Sparkles size={16} /> View Plans & Upgrade <ArrowRight size={16} />
             </button>
-            <button data-testid="plan-gate-back-btn" onClick={() => navigate('/dashboard')}
+            <button data-testid="plan-gate-back-btn" onClick={() => navigate('/command-center')}
               className="px-6 py-3 rounded-xl text-sm" style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted }}>
               Back to Dashboard
             </button>

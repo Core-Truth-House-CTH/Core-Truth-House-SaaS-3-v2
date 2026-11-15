@@ -6,7 +6,6 @@ import BillingWall from "../components/BillingWall";
 import CohortClaimEntry from "../pages/CohortClaimEntry";
 import { APP_ROUTES } from "../config/appRoutes";
 import { ADMIN_ROUTES } from "../config/adminRoutes";
-import { REDIRECT_ROUTES } from "../config/redirectRoutes";
 import { getPageComponent } from "./pageRegistry";
 
 const StudioAccess = lazy(() => import("../pages/StudioAccess"));
@@ -76,14 +75,6 @@ export default function AppRouter() {
         <Route path="/studio/:token" element={<StudioAccess />} />
         <Route path="/help" element={<TrainingVideos />} />
         <Route path="/admin/*" element={<AdminRouter />} />
-
-        {REDIRECT_ROUTES.map((route) => (
-          <Route
-            key={route.path}
-            path={route.path}
-            element={<Navigate to={route.redirectTo} replace />}
-          />
-        ))}
 
         {protectedRouteItems.map((route) => (
           <Route

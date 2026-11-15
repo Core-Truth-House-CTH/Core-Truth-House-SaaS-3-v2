@@ -1,6 +1,5 @@
 import { APP_ROUTES } from "./appRoutes";
 import { ADMIN_ROUTES } from "./adminRoutes";
-import { REDIRECT_ROUTES } from "./redirectRoutes";
 
 export const PLAN_ORDER = ["free", "audit", "foundation", "structure", "house", "estate", "legacy"];
 
@@ -36,12 +35,6 @@ export const SIDEBAR_GROUPS = [
 export const ROUTES = [
   ...ADMIN_ROUTES,
   ...APP_ROUTES,
-  ...REDIRECT_ROUTES.map((route) => ({
-    ...route,
-    hidden: true,
-    requiredPlan: null,
-    gateType: null,
-  })),
 ];
 
 export function getRoute(path) {

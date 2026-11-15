@@ -11,7 +11,7 @@ const generate = require('@babel/generator').default;
 const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 
-for (const source of ['diagnostic', 'diagnostic_return']) {
+for (const source of ['diagnostic']) {
   test(source + ' preserves readable context, full handoff and billing redirect', () => {
     const params = new URLSearchParams({
       source, tier: 'Estate', score: '42', challenge: 'unclear_offer',
@@ -35,7 +35,7 @@ for (const source of ['diagnostic', 'diagnostic_return']) {
 }
 
 test('ordinary and unknown signup sources do not acquire diagnostic context', () => {
-  for (const source of ['', 'other', 'diagnostic-return', 'diagnostic_return_extra']) {
+  for (const source of ['', 'other', 'diagnostic_return', 'diagnostic-return', 'diagnostic_return_extra']) {
     const state = getDiagnosticSignupState(new URLSearchParams({ source, tier: 'Estate' }));
     assert.equal(state.diagnosticContext, null);
     assert.equal(state.persistedContext, null);
@@ -57,7 +57,7 @@ const componentFactory = new Function(
   transformed.code + '; return SignUpPage;',
 );
 
-for (const source of ['diagnostic', 'diagnostic_return']) {
+for (const source of ['diagnostic']) {
   for (const signedIn of [false, true]) {
     test(source + ' actual Auth component applies context, persistence and redirect; signedIn=' + signedIn, () => {
       const writes = [];

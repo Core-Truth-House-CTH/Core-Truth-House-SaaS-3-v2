@@ -32,7 +32,7 @@ export default function NotFoundPage() {
  Go to Homepage
  </Link>
  <Link
- to="/dashboard"
+ to="/command-center"
  className="px-8 py-3 rounded-xl cth-muted font-medium border border-[var(--cth-command-border)] hover:border-[rgba(224,78,53,0.4)] hover:opacity-80 transition-all"
  >
  Go to Dashboard

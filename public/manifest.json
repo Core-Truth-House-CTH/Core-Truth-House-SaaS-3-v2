@@ -2,7 +2,7 @@
  "name": "Core Truth House OS",
  "short_name": "CTH OS",
  "description": "The brand operating system for serious founders. Build your strategy, systems, and content in one place.",
- "start_url": "/dashboard",
+ "start_url": "/command-center",
  "scope": "/",
  "display": "standalone",
  "orientation": "portrait-primary",

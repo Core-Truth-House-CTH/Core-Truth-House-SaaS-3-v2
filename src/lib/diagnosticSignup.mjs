@@ -1,7 +1,7 @@
-// Keep both diagnostic entry paths equivalent through Clerk sign-up sub-routes.
+// Diagnostic context carried through Clerk sign-up sub-routes.
 export function getDiagnosticSignupState(params) {
   const source = params.get("source");
-  const diagnostic = source === "diagnostic" || source === "diagnostic_return";
+  const diagnostic = source === "diagnostic";
   const tier = params.get("tier") || "";
   return {
     diagnosticContext: diagnostic ? {
