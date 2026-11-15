@@ -48,7 +48,7 @@ test("valid independently reviewed fixture passes with Vite's actual environment
   fs.writeFileSync(path.join(directory, ".env.staging"), API_KEYS.map(key => key + "=" + origin).join("\n"));
   assert.equal(preflightStaging({ root: directory, env: loadEnv("staging", directory, "VITE_"), shell: {} }), origin);
 });
-test("repository staging policy is intentionally unverified", () => assert.throws(() => readPinnedOrigin(root), /unverified/));
+test("repository staging policy is reviewed and pinned to the staging API host", () => assert.equal(readPinnedOrigin(root), "https://staging-api.coretruthhouse.com"));
 test("missing, null and unreviewed policy cannot be self-approved by environment", t => {
   const directory = fixture(t);
   fs.writeFileSync(path.join(directory, "config/staging-api.json"), JSON.stringify({ origin: null, reviewed: true }));
@@ -152,7 +152,7 @@ test("resolved config rejects mode, output, proxy, env and define bypasses", t =
 });
 for (const configFile of ["vite.config.js"]) {
   test(configFile + " direct Vite config loading fails closed before any build", async () => {
-    await assert.rejects(loadConfigFromFile({ command: "build", mode: "staging" }, path.join(root, configFile), root, "silent"), /unverified/);
+    await assert.rejects(loadConfigFromFile({ command: "build", mode: "staging" }, path.join(root, configFile), root, "silent"), /missing or malformed/);
   });
 }
 test("non-staging Vite config has no API fallback, requires VITE_API_BASE_URL to build, and keeps the Stripe guard", async () => {
