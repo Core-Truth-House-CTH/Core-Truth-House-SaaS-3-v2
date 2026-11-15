@@ -7,7 +7,7 @@ brought into conformance when touched.
 The standard is derived from the Command Center reference implementation and
 applied across:
 
-- `src/pages/CommandCenter.jsx` (visual reference)
+- `src/pages/CommandCenterNext.jsx` (visual reference)
 - `src/pages/BrandAudit.jsx`
 - `src/pages/BrandFoundation.jsx`
 - `src/pages/IdentityStudio.jsx`

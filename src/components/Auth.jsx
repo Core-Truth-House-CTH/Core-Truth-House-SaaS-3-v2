@@ -2,17 +2,9 @@ import React, { useEffect, useMemo } from "react";
 import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import { useColors } from "../context/ThemeContext";
 import { ArrowLeft } from "lucide-react";
-import { useUser, useClerk, HAS_CLERK } from "../hooks/useAuth";
-import { SignIn as ClerkSignIn, SignUp as ClerkSignUp } from "@clerk/react";
+import { useUser, useClerk } from "../hooks/useAuth";
+import { SignIn, SignUp } from "@clerk/react";
 import { getDiagnosticSignupState } from "../lib/diagnosticSignup.mjs";
-
-let SignIn = null;
-let SignUp = null;
-
-if (HAS_CLERK) {
-  SignIn = ClerkSignIn;
-  SignUp = ClerkSignUp;
-}
 
 // Estate gold — accent used on the dark story panel (tier badge, eyebrow).
 const CTH_GOLD = "#c4a95b";
@@ -442,9 +434,6 @@ export function ProtectedRoute({ children }) {
   const { isLoaded, isSignedIn } = useUser();
   const location = useLocation();
 
-  if (!HAS_CLERK) {
-    return children;
-  }
   if (!isLoaded) {
     return <div style={{ color: "white", padding: 20 }}>Loading...</div>;
   }
@@ -457,10 +446,6 @@ export function ProtectedRoute({ children }) {
 
 export function SignInPage() {
   const { isSignedIn, isLoaded } = useUser();
-
-  if (!HAS_CLERK) {
-    return <div style={{ color: "white", padding: 20 }}>Clerk not configured</div>;
-  }
 
   const params = new URLSearchParams(window.location.search);
   const redirectUrl = params.get("redirect_url") || "/command-center";
@@ -501,10 +486,6 @@ export function SignUpPage() {
     }
   }, [persistedContext]);
 
-  if (!HAS_CLERK) {
-    return <div style={{ color: "white", padding: 20 }}>Clerk not configured</div>;
-  }
-
 
   if (isSignedIn) {
     return <Navigate to={redirectUrl} replace />;
@@ -531,7 +512,7 @@ export function UserButton() {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
 
-  if (!HAS_CLERK || !isLoaded || !user) return null;
+  if (!isLoaded || !user) return null;
 
   return (
     <button

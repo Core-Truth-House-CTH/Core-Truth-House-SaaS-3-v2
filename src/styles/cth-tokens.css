@@ -1,7 +1,7 @@
 /*
  * Core Truth House — Command Center design tokens
  *
- * Single source of truth for the 13 palette values that CommandCenter.jsx
+ * Single source of truth for the 13 palette values that the retired CommandCenter.jsx
  * currently defines inline as `--cc-*`. Promoted here under the
  * `--cth-command-*` namespace (the pattern already established in
  * cth-design-system.css) so Brand Audit, Brand Foundation, and any future

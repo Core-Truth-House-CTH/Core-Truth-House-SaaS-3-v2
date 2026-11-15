@@ -1,15 +1,11 @@
 import React from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { useUser, HAS_CLERK } from "../../hooks/useAuth";
+import { useUser } from "../../hooks/useAuth";
 import { SignIn as ClerkSignIn } from "@clerk/react";
 
 export default function AdminSignInPage() {
   const navigate = useNavigate();
   const { isLoaded, isSignedIn } = useUser();
-
-  if (!HAS_CLERK) {
-    return <div style={{ color: "white", padding: 20 }}>Clerk not configured</div>;
-  }
 
   if (isLoaded && isSignedIn) {
     return <Navigate to="/admin/dashboard" replace />;

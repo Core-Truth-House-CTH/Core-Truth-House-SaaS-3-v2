@@ -10,7 +10,7 @@ import React, {
 
 import apiClient from "../lib/apiClient";
 import { API_PATHS } from "../lib/apiPaths";
-import { useAuth, HAS_CLERK } from "../hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
 
 const WorkspaceContext = createContext(null);
 
@@ -304,13 +304,6 @@ export function WorkspaceProvider({ children }) {
         resetTokenRecovery();
       }
 
-      if (!HAS_CLERK) {
-        setLoading(false);
-        setInitialized(true);
-        releaseGate();
-        return [];
-      }
-
       if (!authIsLoaded) {
         return [];
       }
@@ -583,11 +576,6 @@ export function WorkspaceProvider({ children }) {
   // tokenRecoveryTick is a stable number, so a delayed recovery attempt re-runs
   // this effect without the unstable Clerk auth object entering the dependencies.
   useEffect(() => {
-    if (!HAS_CLERK) {
-      setInitialized(true);
-      return;
-    }
-
     void fetchWorkspaces();
   }, [fetchWorkspaces, tokenRecoveryTick]);
 

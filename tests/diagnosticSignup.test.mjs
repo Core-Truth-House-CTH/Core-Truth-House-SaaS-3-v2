@@ -53,7 +53,7 @@ const transformed = await transformWithOxc(generate(component).code, 'SignUpPage
 });
 const componentFactory = new Function(
   'React', 'useUser', 'useMemo', 'useEffect', 'window', 'sessionStorage',
-  'HAS_CLERK', 'getDiagnosticSignupState', 'Navigate', 'AuthShell', 'SignUp', 'CLERK_APPEARANCE',
+  'getDiagnosticSignupState', 'Navigate', 'AuthShell', 'SignUp', 'CLERK_APPEARANCE',
   transformed.code + '; return SignUpPage;',
 );
 
@@ -69,7 +69,6 @@ for (const source of ['diagnostic']) {
         (fn) => fn(),
         { location: { search: '?source=' + source + '&tier=House&score=35&lead_id=synthetic' } },
         { setItem: (key, value) => writes.push([key, JSON.parse(value)]) },
-        true,
         getDiagnosticSignupState,
         ({ to }) => React.createElement('div', { 'data-redirect': to }),
         ({ diagnosticContext, children }) => {

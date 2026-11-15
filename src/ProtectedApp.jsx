@@ -20,28 +20,8 @@ import Chatbot from "./components/Chatbot";
 const AppRouter = React.lazy(() => import("./navigation/AppRouter"));
 
 const CLERK_KEY_RAW = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
-const HAS_CLERK = Boolean(CLERK_KEY_RAW && CLERK_KEY_RAW.startsWith("pk_"));
-
-let ClerkProvider = null;
-let clerkUseAuth = null;
-
-if (HAS_CLERK) {
-  ClerkProvider = ClerkProviderActual;
-  clerkUseAuth = useAuthActual;
-}
-
-function useOptionalClerkAuth() {
-  if (!clerkUseAuth) {
-    return {
-      getToken: async () => null,
-      signOut: async () => {},
-      isSignedIn: false,
-      isLoaded: true,
-      userId: null,
-    };
-  }
-
-  return clerkUseAuth();
+if (!CLERK_KEY_RAW.startsWith("pk_")) {
+  throw new Error("VITE_CLERK_PUBLISHABLE_KEY is missing or invalid. Sign-in cannot run without it.");
 }
 
 function AdminLoginRedirect() {
@@ -57,7 +37,7 @@ function LoadingFallback() {
 }
 
 function ProtectedRoutes() {
-  const { isSignedIn } = useOptionalClerkAuth();
+  const { isSignedIn } = useAuthActual();
   return (
     <>
       <AppVersionBanner />
@@ -83,7 +63,7 @@ function ProtectedRoutes() {
 }
 
 function ProtectedShell() {
-  const auth = useOptionalClerkAuth();
+  const auth = useAuthActual();
 
   const getToken = useCallback(async () => {
     if (!auth || typeof auth.getToken !== "function") {
@@ -160,18 +140,14 @@ export default function ProtectedApp() {
     </AppProviders>
   );
 
-  if (HAS_CLERK && ClerkProvider) {
-    return (
-      <ClerkProvider
-        publishableKey={CLERK_KEY_RAW}
-        signInUrl="/sign-in"
-        signUpUrl="/sign-up"
-        fallbackRedirectUrl="/command-center"
-      >
-        {content}
-      </ClerkProvider>
-    );
-  }
-
-  return content;
+  return (
+    <ClerkProviderActual
+      publishableKey={CLERK_KEY_RAW}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      fallbackRedirectUrl="/command-center"
+    >
+      {content}
+    </ClerkProviderActual>
+  );
 }

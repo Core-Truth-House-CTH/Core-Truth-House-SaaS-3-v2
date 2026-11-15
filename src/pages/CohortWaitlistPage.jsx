@@ -26,7 +26,7 @@ export default function CohortWaitlistPage() {
         .cth-waitlist-page { background: #f8f4f2; color: var(--cth-purple-deep, #33033c); font-family: 'DM Sans', system-ui, -apple-system, sans-serif; }
         .cth-waitlist-page-shell { width: min(680px, calc(100vw - 48px)); margin: 0 auto; padding: 96px 0 120px; text-align: center; }
         .cth-waitlist-page-eyebrow { margin: 0 0 14px; font-size: 11px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cth-crimson, #af0024); }
-        .cth-waitlist-page h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 4vw, 3rem); line-height: 1.1; margin: 0 0 16px; }
+        .cth-waitlist-page h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(2.2rem, 4vw, 3rem); line-height: 1.1; margin: 0 0 16px; }
         .cth-waitlist-page-sub { margin: 0 auto; max-width: 560px; line-height: 1.65; color: #4a3b4a; }
         .cth-waitlist-page-sub a { color: var(--cth-crimson, #af0024); }
       `}</style>
