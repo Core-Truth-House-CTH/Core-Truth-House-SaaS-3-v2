@@ -5,6 +5,8 @@ import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '/root/pw/node_modules/playwright/index.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..',process.env.DIST_DIR||'dist');
+const apiOrigin=process.env.API_ORIGIN;
+if(!apiOrigin) throw new Error('Set API_ORIGIN to the API origin the build under test was compiled with.');
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.svg':'image/svg+xml','.webp':'image/webp'};
 const server=http.createServer((req,res)=>{
  const pathname=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);
@@ -25,7 +27,7 @@ try {
  await page.route('**/*',async route=>{
   const u=route.request().url();
   if(u.startsWith(base)){ await route.continue(); return; }
-  if(u==='https://api.coretruthhouse.com/api/headshots/verify/synthetic-token'){
+  if(u===apiOrigin+'/api/headshots/verify/synthetic-token'){
    verified.push(u); await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({studio_url:'https://synthetic-studio.invalid/access'})}); return;
   }
   if(u==='https://synthetic-studio.invalid/access') { await route.fulfill({status:200,contentType:'text/html',body:'<title>Mock studio</title><p>synthetic</p>'}); return; }
@@ -33,14 +35,14 @@ try {
  });
  await page.goto(`${base}/studio/synthetic-token`,{waitUntil:'domcontentloaded'});
  await page.locator('iframe[title="The Presence Studio"]').waitFor({timeout:10000});
- assert.deepEqual(verified,['https://api.coretruthhouse.com/api/headshots/verify/synthetic-token']);
+ assert.deepEqual(verified,[apiOrigin+'/api/headshots/verify/synthetic-token']);
  assert.equal(await page.locator('iframe[title="The Presence Studio"]').getAttribute('src'),'https://synthetic-studio.invalid/access');
  console.log('PASS synthetic valid historical token reaches expected API URL and embeds returned studio URL');
  await page.unrouteAll({behavior:'wait'});
  await page.route('**/*',async route=>{
   const u=route.request().url();
   if(u.startsWith(base)){ await route.continue(); return; }
-  if(u==='https://api.coretruthhouse.com/api/headshots/verify/synthetic-token'){
+  if(u===apiOrigin+'/api/headshots/verify/synthetic-token'){
    verified.push(u); await route.fulfill({status:404,contentType:'application/json',body:'{}'}); return;
   }
   await route.abort();
