@@ -29,11 +29,10 @@ const bundle=await rolldown({input:'mock:entry',plugins:[{
   },
   load(id){
     if(id.endsWith('/BrandDiagnosticPage.jsx'))return{code:fs.readFileSync(id,'utf8')
-      .replace('import.meta.env.VITE_API_BASE_URL',JSON.stringify(API))
-      .replace('import.meta.env.VITE_API_URL','""'),moduleType:'jsx'};
+      ,moduleType:'jsx'};
     if(id.startsWith('mock:'))return{code:mocks[id.slice(5)],moduleType:'jsx'};
   },
-}],transform:{jsx:{runtime:'classic'}},logLevel:'silent'});
+}],transform:{define:{'import.meta.env':JSON.stringify({MODE:'test',VITE_API_BASE_URL:API})},jsx:{runtime:'classic'}},logLevel:'silent'});
 const {output}=await bundle.generate({format:'iife'});await bundle.close();
 const code=output.find(item=>item.type==='chunk').code;
 const server=http.createServer((request,response)=>{

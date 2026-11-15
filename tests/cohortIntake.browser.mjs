@@ -27,12 +27,12 @@ const bundle=await rolldown({input:'mock:entry',plugins:[{
     if(id.endsWith('/CohortApplyPage.jsx'))return{code:req('node:fs').readFileSync(id,'utf8'),moduleType:'jsx'};
     if(id.startsWith('mock:'))return{code:mocks[id.slice(5)],moduleType:'jsx'};
   },
-}],transform:{define:{'import.meta.env':JSON.stringify({MODE:'test',VITE_API_BASE_URL:'',VITE_BACKEND_URL:'',VITE_API_URL:'',CTH_API_FALLBACK:''})},jsx:{runtime:'classic'}},logLevel:'silent'});
+}],transform:{define:{'import.meta.env':JSON.stringify({MODE:'test',VITE_API_BASE_URL:'http://cth-test-origin.invalid'})},jsx:{runtime:'classic'}},logLevel:'silent'});
 const {output}=await bundle.generate({format:'iife'});await bundle.close();
 const code=output.find(item=>item.type==='chunk').code;
 const server=http.createServer((request,response)=>{
   response.setHeader('Content-Type',request.url==='/bundle.js'?'text/javascript':'text/html');
-  response.end(request.url==='/bundle.js'?code:'<html><body><div id="root"></div><script src="/bundle.js"></script></body></html>');
+  response.end(request.url==='/bundle.js'?code.replaceAll('http://cth-test-origin.invalid',base):'<html><body><div id="root"></div><script src="/bundle.js"></script></body></html>');
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const base=`http://127.0.0.1:${server.address().port}`;

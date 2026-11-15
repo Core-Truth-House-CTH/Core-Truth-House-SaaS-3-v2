@@ -66,7 +66,7 @@ const bundle = await rolldown({
       }
     },
   }],
-  transform: { define: {'import.meta.env': JSON.stringify({MODE:'test',VITE_API_BASE_URL:'',VITE_BACKEND_URL:'',VITE_API_URL:'',CTH_API_FALLBACK:''})}, jsx: { runtime: 'classic' } },
+  transform: { define: {'import.meta.env': JSON.stringify({MODE:'test',VITE_API_BASE_URL:base})}, jsx: { runtime: 'classic' } },
   logLevel: 'silent',
 });
 const generated = await bundle.generate({ format: 'iife' });
