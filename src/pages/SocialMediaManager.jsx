@@ -250,7 +250,7 @@ function backendAssetUrl(url) {
  if (!url) return "";
  if (/^https?:\/\//i.test(url)) return url;
 
- const base = getApiBaseUrl({ productionFallback: true });
+ const base = getApiBaseUrl();
 
  return `${String(base).replace(/\/+$/, "")}${url.startsWith("/") ? url : `/${url}`}`;
 }

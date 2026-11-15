@@ -7,7 +7,7 @@ import { getWorkspaceSlugFromHost } from "../utils/subdomain";
 // Renders an offer branded entirely to the tenant's identity — intentionally
 // free of Core Truth House design tokens (the only CTH mark is the footer).
 
-const API_BASE = getApiBaseUrl({ productionFallback: true });
+const API_BASE = getApiBaseUrl();
 
 // Brand-neutral fallbacks used only when the tenant has no identity configured.
 const FALLBACK_PRIMARY = "#5d0012";

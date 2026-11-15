@@ -2,7 +2,7 @@ import { getApiBaseUrl, apiFetch } from "../lib/apiConfig";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-const API_BASE = getApiBaseUrl({ productionFallback: true });
+const API_BASE = getApiBaseUrl();
 
 export default function StudioAccess() {
  const { token } = useParams();

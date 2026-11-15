@@ -11,7 +11,7 @@ import {
 
 const LOGO = "/brand-assets/logo/cth-logo-seal.png";
 
-const API_BASE = getApiBaseUrl({ productionFallback: true });
+const API_BASE = getApiBaseUrl();
 
 function ScoreRing({ score = 0, total = 60 }) {
  const pct = Math.max(0, Math.min(100, Math.round((Number(score || 0) / total) * 100)));

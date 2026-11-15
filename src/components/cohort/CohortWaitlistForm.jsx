@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import apiClient from "../../lib/apiClient.js";
+import { apiFetch } from "../../lib/apiConfig.js";
 import { WAITLIST_TIERS, WAITLIST_YEARS, waitlistPayload } from "../../lib/cohortWaitlist.mjs";
 
 // Public Founding Cohort waitlist. No sign-in and no intake check: this is
@@ -23,7 +24,7 @@ export default function CohortWaitlistForm({ source = "direct", recommendedTier 
     setError("");
     setStatus("sending");
     try {
-      const response = await fetch(apiClient.buildApiUrl("/api/cohort/waitlist"), {
+      const response = await apiFetch(apiClient.buildApiUrl("/api/cohort/waitlist"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(payload.body),

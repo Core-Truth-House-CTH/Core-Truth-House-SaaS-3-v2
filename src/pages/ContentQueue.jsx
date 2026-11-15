@@ -19,7 +19,7 @@ import apiClient from "../lib/apiClient";
 // visual_url is stored as a backend-relative path (e.g.
 // /api/audience/portraits/<file>.png), served by the API host — prefix it with
 // the backend base URL. Full http(s)/data URLs pass through unchanged.
-const API_BASE = getApiBaseUrl({ productionFallback: true });
+const API_BASE = getApiBaseUrl();
 
 const absUrl = (u) =>
   !u ? u : /^(https?:|data:)/.test(u) ? u : `${API_BASE}${u}`;

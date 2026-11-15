@@ -4,7 +4,7 @@ import PublicHeader from "../components/public/PublicHeader";
 import PublicFooter from "../components/public/PublicFooter";
 import API_PATHS from "../lib/apiPaths";
 
-const API_BASE = getApiBaseUrl({ productionFallback: true });
+const API_BASE = getApiBaseUrl();
 
 // 12-question brand positioning diagnostic. Answer order is index 0-3;
 // scoring (including the inverted question) is handled server-side.

@@ -173,10 +173,9 @@ export function validateResolvedStagingConfig(config, origin, expectedOutDir) {
   assertNoProduction(JSON.stringify(config.define || {}), "Vite defines");
   for (const key of Object.keys(config.define || {})) {
     if (/API|BACKEND|process\.env|window\./i.test(key) &&
-        !["import.meta.env.CTH_API_FALLBACK", "import.meta.env.CTH_STAGING_API_ORIGIN"].includes(key)) stop("custom API/runtime Vite defines are not permitted");
+        key !== "import.meta.env.CTH_STAGING_API_ORIGIN") stop("custom API/runtime Vite defines are not permitted");
   }
-  if (config.define?.["import.meta.env.CTH_STAGING_API_ORIGIN"] !== JSON.stringify(origin) ||
-      config.define?.["import.meta.env.CTH_API_FALLBACK"] !== '""') stop("staging compile-time API pins were overridden");
+  if (config.define?.["import.meta.env.CTH_STAGING_API_ORIGIN"] !== JSON.stringify(origin)) stop("staging compile-time API pins were overridden");
 }
 
 export function assertIsolatedOutput(root, output, { mustBeNew = false } = {}) {

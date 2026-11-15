@@ -45,7 +45,7 @@ const A = {
  execution: "/brand-diagnostic-assets/cth-brand-diagnostic-execution-rocket-icon.png",
 };
 
-const API_BASE = getApiBaseUrl({ productionFallback: true });
+const API_BASE = getApiBaseUrl();
 
 const RESULT_STORAGE_KEY = "cth_brand_diagnostic_result";
 

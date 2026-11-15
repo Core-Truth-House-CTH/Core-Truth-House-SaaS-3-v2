@@ -293,7 +293,7 @@ function CohortCta({ className, openLabel }) {
   const [open, setOpen] = React.useState(false);
   React.useEffect(() => {
     let disposed = false;
-    fetch(apiClient.buildApiUrl("/api/cohort/phase"))
+    apiFetch(apiClient.buildApiUrl("/api/cohort/phase"))
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(p => { if (!disposed) setOpen(p.accepting_applications === true); })
       .catch(() => { if (!disposed) setOpen(false); });

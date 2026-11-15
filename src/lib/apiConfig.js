@@ -8,7 +8,7 @@ export function assertApiTarget(value, { originOnly = false } = {}) {
   return value;
 }
 
-export function getApiBaseUrl({ productionFallback = false } = {}) {
+export function getApiBaseUrl() {
   const env = import.meta.env;
   if (isStagingApi) {
     for (const key of ["VITE_API_BASE_URL", "VITE_BACKEND_URL", "VITE_API_URL"]) {
@@ -19,16 +19,11 @@ export function getApiBaseUrl({ productionFallback = false } = {}) {
     }
     return pinnedOrigin;
   }
-  const candidates = [
-    env.VITE_API_BASE_URL,
-    env.VITE_BACKEND_URL,
-    env.VITE_API_URL,
-    typeof process !== "undefined" ? process?.env?.REACT_APP_API_BASE_URL : undefined,
-    typeof process !== "undefined" ? process?.env?.REACT_APP_BACKEND_URL : undefined,
-    typeof window !== "undefined" ? window.__API_BASE_URL__ : undefined,
-    productionFallback ? env.CTH_API_FALLBACK : undefined,
-  ];
-  return String(candidates.find(value => value && value !== "undefined" && value !== "null") || "").trim().replace(/\/+$/, "");
+  const value = String(env.VITE_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
+  if (!value || value === "undefined" || value === "null") {
+    throw new Error("VITE_API_BASE_URL is not set. The API origin must be provided at build time.");
+  }
+  return value;
 }
 
 /** Raw internal API requests share the same origin and redirect policy as ApiClient. */

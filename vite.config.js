@@ -2,7 +2,6 @@ import { defineConfig, loadEnv } from 'vite'
 import { validateStripePublishableKey } from './scripts/stripe-publishable-key-guard.mjs'
 import { readPinnedOrigin } from './scripts/staging-api-guard.mjs'
 import { stagingVitePlugin } from './scripts/staging-vite-plugin.mjs'
-import { productionApiOrigin } from './config/production-api.mjs'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -20,6 +19,9 @@ export default defineConfig(({ mode, command }) => {
   }
   const env = loadEnv(mode, root, 'VITE_')
   if (mode === 'production') validateStripePublishableKey(env)
+  if (command === 'build' && !staging && !env.VITE_API_BASE_URL) {
+    throw new Error('VITE_API_BASE_URL must be set for a build. There is no default API origin.')
+  }
   const output = staging
     ? path.resolve(root, process.env.CTH_STAGING_OUT_DIR || '.artifacts/staging/vite-' + randomUUID())
     : 'dist'
@@ -33,7 +35,6 @@ export default defineConfig(({ mode, command }) => {
       ...(staging ? [stagingVitePlugin({ root, env, output })] : []),
     ],
     define: {
-      'import.meta.env.CTH_API_FALLBACK': JSON.stringify(staging ? '' : productionApiOrigin),
       'import.meta.env.CTH_STAGING_API_ORIGIN': JSON.stringify(origin),
     },
     resolve: { alias: { '@': path.resolve(root, './src') } },

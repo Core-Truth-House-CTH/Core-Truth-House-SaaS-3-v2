@@ -44,13 +44,14 @@ test("staging client configure, absolute URLs and mutable baseUrl cannot switch 
   client.baseUrl = "https://foreign.example.invalid";
   assert.throws(() => client.buildApiUrl("/api/test"));
 });
-test("non-staging preserves modern, legacy, runtime and fallback resolution", () => {
-  const base = { MODE: "production", CTH_API_FALLBACK: "https://api.coretruthhouse.com" };
-  assert.equal(loadRuntime(base).getApiBaseUrl(), "");
-  assert.equal(loadRuntime(base).getApiBaseUrl({ productionFallback: true }), "https://api.coretruthhouse.com");
-  assert.equal(loadRuntime({ ...base, VITE_BACKEND_URL: "https://backend.example" }).getApiBaseUrl(), "https://backend.example");
-  assert.equal(loadRuntime(base, {}, { env: { REACT_APP_API_BASE_URL: "/legacy" } }).getApiBaseUrl(), "/legacy");
-  assert.equal(loadRuntime(base, { __API_BASE_URL__: "/runtime" }).getApiBaseUrl(), "/runtime");
+test("non-staging reads only VITE_API_BASE_URL and throws when it is missing", () => {
+  const base = { MODE: "production", VITE_API_BASE_URL: "https://api.example/" };
+  assert.equal(loadRuntime(base).getApiBaseUrl(), "https://api.example");
+  assert.throws(() => loadRuntime({ MODE: "production" }).getApiBaseUrl(), /VITE_API_BASE_URL is not set/);
+  assert.throws(() => loadRuntime({ MODE: "production", VITE_API_BASE_URL: "" }).getApiBaseUrl(), /VITE_API_BASE_URL is not set/);
+  assert.throws(() => loadRuntime({ MODE: "production", CTH_API_FALLBACK: "https://api.coretruthhouse.com" }).getApiBaseUrl(), /VITE_API_BASE_URL is not set/);
+  assert.throws(() => loadRuntime({ MODE: "production", VITE_BACKEND_URL: "https://backend.example" }).getApiBaseUrl(), /VITE_API_BASE_URL is not set/);
+  assert.throws(() => loadRuntime({ MODE: "production" }, { __API_BASE_URL__: "/runtime" }).getApiBaseUrl(), /VITE_API_BASE_URL is not set/);
   const { ApiClient } = loadRuntime(base);
   const client = new ApiClient();
   client.configure({ baseUrl: "/custom" });
@@ -84,7 +85,7 @@ test("staging raw/API-client fetch forces redirect error and never sends to a fo
 test("non-staging raw fetch keeps caller options unchanged", async () => {
   let received;
   const options = { method: "POST", redirect: "follow", body: "fixture" };
-  const { apiFetch } = loadRuntime({ MODE: "production" }, {}, { env: {} }, async (url, init) => { received = { url, init }; return "ok"; });
+  const { apiFetch } = loadRuntime({ MODE: "production", VITE_API_BASE_URL: "https://api.example" }, {}, { env: {} }, async (url, init) => { received = { url, init }; return "ok"; });
   assert.equal(await apiFetch("/api/test", options), "ok");
   assert.equal(received.init, options);
   assert.equal(received.url, "/api/test");

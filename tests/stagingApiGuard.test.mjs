@@ -39,7 +39,7 @@ function resolvedConfig(directory, output) {
     mode: "staging", command: "build", root: directory, envDir: directory, envPrefix: "VITE_",
     env: { ...validEnv(), MODE: "staging" },
     build: { outDir: output }, server: {}, preview: {}, publicDir: path.join(directory, "public"),
-    define: { "import.meta.env.CTH_STAGING_API_ORIGIN": JSON.stringify(origin), "import.meta.env.CTH_API_FALLBACK": '""' },
+    define: { "import.meta.env.CTH_STAGING_API_ORIGIN": JSON.stringify(origin) },
   };
 }
 
@@ -155,9 +155,16 @@ for (const configFile of ["vite.config.js", "vite.config.ts"]) {
     await assert.rejects(loadConfigFromFile({ command: "build", mode: "staging" }, path.join(root, configFile), root, "silent"), /unverified/);
   });
 }
-test("non-staging Vite config retains production fallback and Stripe guard", async () => {
+test("non-staging Vite config has no API fallback, requires VITE_API_BASE_URL to build, and keeps the Stripe guard", async () => {
   const result = await loadConfigFromFile({ command: "serve", mode: "development" }, path.join(root, "vite.config.js"), root, "silent");
-  assert.equal(result.config.define["import.meta.env.CTH_API_FALLBACK"], JSON.stringify(production));
+  assert.equal(result.config.define["import.meta.env.CTH_API_FALLBACK"], undefined);
+  const priorApi = process.env.VITE_API_BASE_URL;
+  delete process.env.VITE_API_BASE_URL;
+  try {
+    await assert.rejects(loadConfigFromFile({ command: "build", mode: "development" }, path.join(root, "vite.config.js"), root, "silent"), /VITE_API_BASE_URL must be set/);
+  } finally {
+    if (priorApi !== undefined) process.env.VITE_API_BASE_URL = priorApi;
+  }
   assert.equal(result.config.plugins.some(plugin => plugin?.name === "cth-staging-api-guard"), false);
   assert.match(fs.readFileSync(path.join(root, "vite.config.js"), "utf8"), /mode === 'production'.*validateStripePublishableKey/);
 });
@@ -236,7 +243,7 @@ test("actual Vite resolver accepts reviewed fixture through both config entry po
     const config = await resolveConfig({ configFile: path.join(directory, configName), mode: "staging", logLevel: "silent" }, "build", "production");
     assert.equal(config.mode, "staging");
     assert.ok(config.plugins.some(plugin => plugin.name === "cth-staging-api-guard"));
-    assert.equal(config.define["import.meta.env.CTH_API_FALLBACK"], '""');
+    assert.equal(config.define["import.meta.env.CTH_API_FALLBACK"], undefined);
     assert.ok(!fs.existsSync(config.build.outDir));
     await assert.rejects(resolveConfig({
       configFile: path.join(directory, configName), mode: "staging", logLevel: "silent",
