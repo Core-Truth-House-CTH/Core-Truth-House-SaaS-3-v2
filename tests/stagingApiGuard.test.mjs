@@ -150,7 +150,7 @@ test("resolved config rejects mode, output, proxy, env and define bypasses", t =
     assert.throws(() => validateResolvedStagingConfig(bad, origin, output));
   }
 });
-for (const configFile of ["vite.config.js", "vite.config.ts"]) {
+for (const configFile of ["vite.config.js"]) {
   test(configFile + " direct Vite config loading fails closed before any build", async () => {
     await assert.rejects(loadConfigFromFile({ command: "build", mode: "staging" }, path.join(root, configFile), root, "silent"), /unverified/);
   });
@@ -233,9 +233,9 @@ test("actual Vite resolver accepts reviewed fixture through both config entry po
   const priorNodeEnv = process.env.NODE_ENV;
   process.env.NODE_ENV = "production";
   t.after(() => { if (priorNodeEnv === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = priorNodeEnv; });
-  for (const configName of ["vite.config.js", "vite.config.ts"]) {
+  for (const configName of ["vite.config.js"]) {
     const directory = fixture(t);
-    for (const file of ["vite.config.js", "vite.config.ts", "config/production-api.mjs", "scripts/staging-api-guard.mjs", "scripts/staging-vite-plugin.mjs", "scripts/stripe-publishable-key-guard.mjs"]) {
+    for (const file of ["vite.config.js", "config/production-api.mjs", "scripts/staging-api-guard.mjs", "scripts/staging-vite-plugin.mjs", "scripts/stripe-publishable-key-guard.mjs"]) {
       fs.mkdirSync(path.dirname(path.join(directory, file)), { recursive: true });
       fs.copyFileSync(path.join(root, file), path.join(directory, file));
     }
@@ -281,10 +281,8 @@ test("WHATWG/IDNA Unicode production spellings reject in literal, escaped and ra
     assert.throws(() => inspectRawStagingInputs(directory, {}, origin), /production API/);
   }
 });
-test("non-staging TypeScript config retains prior dev bind/proxy", async () => {
-  const result = await loadConfigFromFile({ command: "serve", mode: "development" }, path.join(root, "vite.config.ts"), root, "silent");
-  assert.equal(result.config.server.host, "0.0.0.0");
-  assert.equal(result.config.server.proxy["/api"].target, production);
+test("there is one Vite config: vite.config.ts is gone", () => {
+  assert.equal(fs.existsSync(path.join(root, "vite.config.ts")), false);
 });
 
 test("UTF-8 percent decoding tolerates malformed escapes without losing ASCII host detection", () => {

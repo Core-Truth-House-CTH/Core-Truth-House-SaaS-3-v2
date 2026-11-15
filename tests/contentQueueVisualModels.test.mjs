@@ -16,6 +16,9 @@ const frontendRoot = fileURLToPath(new URL('..', import.meta.url));
 // Use the real paired backend, not a second, hand-maintained allowlist.
 // A standalone frontend checkout must explicitly supply its paired backend.
 const backendRoot = process.env.CTH_BACKEND_CHECKOUT || path.resolve(frontendRoot, '../backend');
+if (!fs.existsSync(path.join(backendRoot, 'backend/services/openrouter_images_service.py'))) {
+  throw new Error(`Paired backend checkout not found at ${backendRoot}. Set CTH_BACKEND_CHECKOUT to the directory that contains backend/services/.`);
+}
 const backendPolicy = JSON.parse(execFileSync('python3', ['-I', '-B', '-c', `
 import ast, json, pathlib, sys
 root = pathlib.Path(sys.argv[1])
