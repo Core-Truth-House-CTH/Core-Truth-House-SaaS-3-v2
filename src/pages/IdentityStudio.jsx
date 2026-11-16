@@ -8,6 +8,9 @@ import IdentityStudioAssets from '../components/shared/IdentityStudioAssets';
 import apiClient from "../lib/apiClient";
 import { toast } from 'sonner';
 import { Check, Pencil, Circle, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { ensureMemberPreviewFonts } from '../lib/memberPreviewFonts';
+
+ensureMemberPreviewFonts(); // member font-picker previews only (not a CTH UI font)
 
 function isValidHex(value) {
   return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value.trim());

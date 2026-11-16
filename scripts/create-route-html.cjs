@@ -61,7 +61,7 @@ const html = `<!doctype html>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://clerk.coretruthhouse.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Playfair+Display:wght@400;600;700&family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
     <script type="application/ld+json">
     {

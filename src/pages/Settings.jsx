@@ -38,6 +38,9 @@ import apiClient from "../lib/apiClient";
 import { toast } from 'sonner';
 import SocialConnectionsSection from "../components/SocialConnectionsSection";
 import PipelineSettings from "./crm/PipelineSettings";
+import { ensureMemberPreviewFonts } from "../lib/memberPreviewFonts";
+
+ensureMemberPreviewFonts(); // member font-picker previews only (not a CTH UI font)
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
