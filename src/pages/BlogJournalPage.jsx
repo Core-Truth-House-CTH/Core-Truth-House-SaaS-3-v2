@@ -869,7 +869,7 @@ function FieldNotesStyles() {
  .fn-hero h1 {
  margin: 0;
  max-width: 560px;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  font-size: clamp(58px, 6vw, 84px);
  line-height: .94;
  letter-spacing: -.06em;
@@ -1017,7 +1017,7 @@ function FieldNotesStyles() {
  background: #761126;
  color: #f2c46d;
  border: 3px solid #d8aa55;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  font-weight: 700;
  font-size: 14px;
  }
@@ -1034,7 +1034,7 @@ function FieldNotesStyles() {
 
  .fn-featured-copy h2 {
  margin: 0 0 22px;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  font-size: 48px;
  line-height: 1.02;
  letter-spacing: -.05em;
@@ -1134,7 +1134,7 @@ function FieldNotesStyles() {
  .fn-card h3 {
  margin: 0 0 10px;
  color: #241536;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  font-size: 19px;
  line-height: 1.12;
  }
@@ -1171,7 +1171,7 @@ function FieldNotesStyles() {
 
  .fn-subscribe h2 {
  margin: 0;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  font-size: 36px;
  line-height: 1.08;
  text-align: center;
@@ -1290,7 +1290,7 @@ function FieldNotesStyles() {
 
  .fn-inside-grid h3 {
  margin: 0 0 8px;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  color: #241536;
  font-size: 20px;
  }
@@ -1338,7 +1338,7 @@ function FieldNotesStyles() {
  background: #761126;
  color: #f2c46d;
  border: 3px solid #d8aa55;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  font-weight: 700;
  font-size: 20px;
  }
@@ -1346,7 +1346,7 @@ function FieldNotesStyles() {
  .fn-cta h2,
  .article-diagnostic h2 {
  margin: 0 0 8px;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  font-size: 34px;
  font-weight: 400;
  }
@@ -1431,7 +1431,7 @@ function FieldNotesStyles() {
  margin: 0;
  max-width: 720px;
  color: #21133b;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  font-size: clamp(54px, 5.8vw, 82px);
  line-height: .96;
  letter-spacing: -.06em;
@@ -1606,7 +1606,7 @@ function FieldNotesStyles() {
  .article-content h2 {
  margin: 28px 0 10px;
  color: #35224d;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  font-size: 28px;
  line-height: 1.12;
  letter-spacing: -.03em;
@@ -1751,7 +1751,7 @@ function FieldNotesStyles() {
 
  .related-note h3 {
  margin: 18px 0 10px;
- font-family: Georgia, "Times New Roman", serif;
+ font-family: var(--cth-font-display);
  font-size: 27px;
  line-height: 1.05;
  }

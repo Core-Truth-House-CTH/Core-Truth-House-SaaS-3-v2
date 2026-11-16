@@ -346,7 +346,7 @@ export default function OnboardingWorkflow() {
  .cth-onboarding-brand strong {
  display: block;
  color: #fff;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 16px;
  line-height: 1.1;
  }
@@ -362,7 +362,7 @@ export default function OnboardingWorkflow() {
  .cth-onboarding-sidebar h2 {
  margin: 0 0 18px;
  color: #fff;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 29px;
  line-height: 1.05;
  letter-spacing: -0.045em;
@@ -565,7 +565,7 @@ export default function OnboardingWorkflow() {
  .cth-onboarding-content h1 {
  margin: 0;
  color: ${C.ink};
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: clamp(2.3rem, 4.6vw, 4.7rem);
  line-height: 0.96;
  letter-spacing: -0.065em;

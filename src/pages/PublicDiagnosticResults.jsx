@@ -233,7 +233,7 @@ export default function PublicDiagnosticResults() {
 
  .pdr-state h1 {
  margin: 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: clamp(1.8rem, 4vw, 2.6rem);
  letter-spacing: -.03em;
  }
@@ -264,7 +264,7 @@ export default function PublicDiagnosticResults() {
  align-items: center;
  gap: 8px;
  color: #af0024;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-weight: 800;
  text-decoration: none;
  }
@@ -310,7 +310,7 @@ export default function PublicDiagnosticResults() {
 
  .pdr-hero-copy h1 {
  margin: 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: clamp(2.4rem, 4vw, 3.6rem);
  line-height: .95;
  letter-spacing: -.05em;
@@ -342,7 +342,7 @@ export default function PublicDiagnosticResults() {
  }
 
  .pdr-ring strong {
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 52px;
  line-height: .9;
  font-weight: 500;
@@ -380,7 +380,7 @@ export default function PublicDiagnosticResults() {
 
  .pdr-card-head .pdr-avg {
  margin: 0 0 0 auto;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-body);
  font-size: 13px;
  color: rgba(43,16,64,.62);
  }
@@ -441,13 +441,13 @@ export default function PublicDiagnosticResults() {
  .pdr-dim-grid h3 {
  display: inline;
  margin: 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 14px;
  }
 
  .pdr-dim-grid strong {
  float: right;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 18px;
  font-weight: 500;
  }
@@ -511,7 +511,7 @@ export default function PublicDiagnosticResults() {
 
  .pdr-next-list h3 {
  margin: 0 0 4px;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 15px;
  }
 
@@ -566,7 +566,7 @@ export default function PublicDiagnosticResults() {
 
  .pdr-cta-bar p {
  margin: 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-body);
  font-size: 16px;
  font-weight: 600;
  }

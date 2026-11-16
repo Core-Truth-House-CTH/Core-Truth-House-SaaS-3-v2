@@ -194,7 +194,7 @@ export default function PublicHeader({ active = "" }) {
  gap: 12px;
  color: var(--cth-purple-deep);
  text-decoration: none;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 20px;
  font-weight: 800;
  letter-spacing: -0.03em;

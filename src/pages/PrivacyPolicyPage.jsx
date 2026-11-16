@@ -451,7 +451,7 @@ export default function PrivacyPolicyPage() {
 
  .cth-crest-text {
  position: relative;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 28px;
  font-weight: 800;
  letter-spacing: -0.08em;
@@ -467,7 +467,7 @@ export default function PrivacyPolicyPage() {
  gap: 12px;
  color: #763B5B;
  text-decoration: none;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 20px;
  font-weight: 700;
  white-space: nowrap;
@@ -548,7 +548,7 @@ export default function PrivacyPolicyPage() {
  .cth-privacy-hero-copy h1 {
  margin: 18px 0 18px;
  color: #33033C;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: clamp(4rem, 6vw, 6.2rem);
  line-height: 0.95;
  letter-spacing: -0.06em;
@@ -619,7 +619,7 @@ export default function PrivacyPolicyPage() {
  .cth-privacy-trust-grid h3 {
  margin: 0 0 4px;
  color: #FFF5EE;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 28px;
  line-height: 1;
  font-weight: 500;
@@ -715,7 +715,7 @@ export default function PrivacyPolicyPage() {
  .cth-privacy-values-card p {
  margin: 0 0 14px;
  color: #5B475B;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-body);
  font-size: 20px;
  line-height: 1.4;
  }
@@ -777,7 +777,7 @@ export default function PrivacyPolicyPage() {
 
  .cth-policy-number {
  color: #AF0024;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 28px;
  line-height: 1;
  }
@@ -785,7 +785,7 @@ export default function PrivacyPolicyPage() {
  .cth-policy-head-text h2 {
  margin: 0 0 8px;
  color: #33033C;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 36px;
  line-height: 1.05;
  letter-spacing: -0.04em;
@@ -843,7 +843,7 @@ export default function PrivacyPolicyPage() {
  .cth-privacy-help-inner h2 {
  margin: 10px 0 8px;
  color: #FFF7F2;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: clamp(2.2rem, 3vw, 3.6rem);
  line-height: 0.96;
  font-weight: 500;
@@ -896,7 +896,7 @@ export default function PrivacyPolicyPage() {
  .cth-privacy-footer-brand h3 {
  margin: 12px 0 4px;
  color: #C4A95B;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 24px;
  font-weight: 500;
  }

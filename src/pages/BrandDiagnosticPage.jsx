@@ -856,7 +856,7 @@ export default function BrandDiagnosticPage() {
  align-items: center;
  gap: 8px;
  color: #af0024;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-weight: 800;
  text-decoration: none;
  }
@@ -902,7 +902,7 @@ export default function BrandDiagnosticPage() {
 
  .bdx-title h1 {
  margin: 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: clamp(3.1rem, 5vw, 5.6rem);
  line-height: .9;
  letter-spacing: -.07em;
@@ -910,7 +910,7 @@ export default function BrandDiagnosticPage() {
 
  .bdx-title p {
  margin: 16px 0 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-body);
  font-size: 17px;
  color: rgba(43,16,64,.75);
  }
@@ -982,7 +982,7 @@ export default function BrandDiagnosticPage() {
 
  .bdx-score-panel h2 {
  margin: 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 26px;
  line-height: 1.12;
  letter-spacing: -.04em;
@@ -1051,7 +1051,7 @@ export default function BrandDiagnosticPage() {
  }
 
  .bdx-ring strong {
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 48px;
  line-height: .9;
  font-weight: 500;
@@ -1137,7 +1137,7 @@ export default function BrandDiagnosticPage() {
 
  .bdx-card-head p {
  margin: 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-body);
  font-size: 12px;
  color: rgba(43,16,64,.62);
  }
@@ -1175,13 +1175,13 @@ export default function BrandDiagnosticPage() {
  .bdx-dim-grid h3 {
  display: inline;
  margin: 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 14px;
  }
 
  .bdx-dim-grid strong {
  float: right;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 18px;
  font-weight: 500;
  }
@@ -1229,7 +1229,7 @@ export default function BrandDiagnosticPage() {
 
  .bdx-score-explainer h3 {
  margin: 6px 0 6px;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 24px;
  line-height: 1;
  }
@@ -1242,7 +1242,7 @@ export default function BrandDiagnosticPage() {
  }
 
  .bdx-score-explainer strong {
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  color: #af0024;
  font-size: 34px;
  font-weight: 500;
@@ -1298,7 +1298,7 @@ export default function BrandDiagnosticPage() {
  align-items: center;
  margin: 0;
  padding: 6px 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-body);
  font-size: 12px;
  color: rgba(43,16,64,.66);
  }
@@ -1367,7 +1367,7 @@ export default function BrandDiagnosticPage() {
 
  .bdx-next h3 {
  margin: 0 0 4px;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 15px;
  }
 
@@ -1433,7 +1433,7 @@ export default function BrandDiagnosticPage() {
 
  .bdx-after h3 {
  margin: 0 0 5px;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 15px;
  }
 
@@ -1476,7 +1476,7 @@ export default function BrandDiagnosticPage() {
 
  .bdx-impact h2 {
  margin: 10px 0 8px;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 34px;
  line-height: .98;
  letter-spacing: -.05em;
@@ -1584,7 +1584,7 @@ export default function BrandDiagnosticPage() {
 
  .bdx-modal h2 {
  margin: 10px 0 0;
- font-family: Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: clamp(2rem, 4vw, 3.4rem);
  line-height: .96;
  letter-spacing: -.05em;
