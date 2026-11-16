@@ -1867,7 +1867,7 @@ export default function BrandDiagnosticPage() {
         }
         .bdx-page .bdx-title h1 {
           margin: 0; color: #33033c;
-          font-family: "Playfair Display", Georgia, serif; font-weight: 600;
+          font-family: var(--cth-font-display); font-weight: 600;
           font-size: clamp(2.9rem, 5vw, 4.6rem); line-height: 1.0; letter-spacing: -0.03em;
           text-wrap: balance;
         }
@@ -1897,12 +1897,12 @@ export default function BrandDiagnosticPage() {
         .bdx-band-inner { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 34px 44px; padding: 40px 0; }
         .bdx-band-lead { display: flex; align-items: center; gap: 20px; max-width: 480px; }
         .bdx-band-lead svg { color: #c4a95b; flex-shrink: 0; }
-        .bdx-band-lead strong { display: block; color: #c4a95b; font-family: "Playfair Display", Georgia, serif; font-weight: 600; font-size: 1.4rem; letter-spacing: -0.01em; }
+        .bdx-band-lead strong { display: block; color: #c4a95b; font-family: var(--cth-font-display); font-weight: 600; font-size: 1.4rem; letter-spacing: -0.01em; }
         .bdx-band-lead p { margin: 6px 0 0; color: rgba(244,236,223,0.72); font-size: 0.92rem; line-height: 1.5; }
         .bdx-band-stats { display: flex; flex-wrap: wrap; gap: 30px; }
         .bdx-band-stats > div { padding-left: 28px; border-left: 1px solid rgba(196,169,91,0.28); }
         .bdx-band-stats > div:first-child { border-left: 0; padding-left: 0; }
-        .bdx-band-stats strong, .bdx-band-stats em { display: block; color: #f4ecdf; font-family: "Playfair Display", Georgia, serif; font-weight: 600; font-style: normal; font-size: 2rem; line-height: 1; }
+        .bdx-band-stats strong, .bdx-band-stats em { display: block; color: #f4ecdf; font-family: var(--cth-font-display); font-weight: 600; font-style: normal; font-size: 2rem; line-height: 1; }
         .bdx-band-stats span { display: block; margin-top: 8px; color: rgba(244,236,223,0.6); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
 
         /* assurance row */
@@ -1918,7 +1918,7 @@ export default function BrandDiagnosticPage() {
         .bdx-final-art img { height: 100%; width: 100%; object-fit: cover; object-position: left center; }
         .bdx-final-inner { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 84px 0; }
         .bdx-final-eyebrow { margin: 0; color: #c4a95b; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
-        .bdx-final h2 { margin: 8px 0 6px; max-width: 720px; color: #fff; font-family: "Playfair Display", Georgia, serif; font-weight: 600; font-size: clamp(2.1rem, 4vw, 3.4rem); line-height: 1.05; letter-spacing: -0.02em; text-wrap: balance; }
+        .bdx-final h2 { margin: 8px 0 6px; max-width: 720px; color: #fff; font-family: var(--cth-font-display); font-weight: 600; font-size: clamp(2.1rem, 4vw, 3.4rem); line-height: 1.05; letter-spacing: -0.02em; text-wrap: balance; }
         .bdx-final-btn { display: inline-flex; align-items: center; gap: 10px; margin-top: 18px; padding: 15px 30px; border: 0; border-radius: 4px; background: #c4a95b; color: #33033c; font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: transform 0.15s ease; }
         .bdx-final-btn:hover { transform: translateY(-1px); }
         .bdx-final small { margin-top: 16px; color: rgba(244,236,223,0.6); font-size: 12px; letter-spacing: 0.04em; }

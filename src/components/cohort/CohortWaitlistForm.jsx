@@ -137,7 +137,7 @@ function WaitlistStyles() {
         text-align: left;
       }
       .cth-waitlist h2 {
-        font-family: 'Playfair Display', Georgia, serif;
+        font-family: var(--cth-font-display);
         font-size: clamp(1.6rem, 3vw, 2rem);
         margin: 0 0 10px;
       }

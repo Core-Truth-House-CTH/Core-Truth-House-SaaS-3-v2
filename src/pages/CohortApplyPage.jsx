@@ -450,7 +450,7 @@ export default function CohortApplyPage() {
         }
 
         .cth-apply-intro h1 {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: var(--cth-font-display);
           font-size: clamp(2.2rem, 4vw, 3.2rem);
           line-height: 1.1;
           color: #2b1040;
@@ -681,7 +681,7 @@ export default function CohortApplyPage() {
         }
 
         .cth-apply-success h2 {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: var(--cth-font-display);
           font-size: clamp(2rem, 3.6vw, 2.8rem);
           line-height: 1.15;
           color: #2b1040;

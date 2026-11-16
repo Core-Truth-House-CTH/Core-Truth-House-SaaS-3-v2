@@ -442,7 +442,7 @@ function buildFallbackBody(meta) {
       <main style="font-family: 'DM Sans', Arial, sans-serif; background: #efe7e3; color: #2b1040; min-height: 100vh; padding: 56px 24px;">
         <section style="max-width: 980px; margin: 0 auto;">
           <p style="letter-spacing: 0.18em; text-transform: uppercase; font-size: 12px; color: #763b5b; margin: 0 0 18px;">${escapeHtml(body.eyebrow)}</p>
-          <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: clamp(42px, 7vw, 84px); line-height: 0.95; margin: 0 0 24px; color: #2b1040;">${escapeHtml(body.headline)}</h1>
+          <h1 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(42px, 7vw, 84px); line-height: 0.95; margin: 0 0 24px; color: #2b1040;">${escapeHtml(body.headline)}</h1>
           <p style="font-size: 19px; line-height: 1.7; max-width: 760px; margin: 0 0 32px; color: #4b2a4f;">${escapeHtml(body.intro)}</p>
           <ul style="display: grid; gap: 12px; padding: 0; margin: 0 0 36px; list-style: none;">
             ${body.points
