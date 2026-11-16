@@ -38,7 +38,7 @@ const CLERK_APPEARANCE = {
       borderRadius: "6px",
     },
     headerTitle: {
-      fontFamily: '"Playfair Display", Georgia, serif',
+      fontFamily: 'var(--cth-font-display)',
       fontWeight: 600,
       letterSpacing: "-0.02em",
       color: "#33033c",
@@ -261,7 +261,7 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
         .cth-auth-brand strong {
           display: block;
           color: #fff;
-          font-family: "Playfair Display", Georgia, serif;
+          font-family: var(--cth-font-display);
           font-weight: 600;
           font-size: 19px;
           line-height: 1.1;
@@ -296,7 +296,7 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
           margin: 20px 0 0;
           max-width: 460px;
           color: #fff;
-          font-family: "Playfair Display", Georgia, serif;
+          font-family: var(--cth-font-display);
           font-weight: 600;
           font-size: clamp(2.8rem, 5vw, 4.6rem);
           line-height: 1.0;
@@ -351,7 +351,7 @@ function AuthShell({ title, subtitle, children, diagnosticContext }) {
         }
 
         .cth-auth-diag-score-num {
-          font-family: "Playfair Display", Georgia, serif;
+          font-family: var(--cth-font-display);
           font-size: clamp(3rem, 6vw, 4.4rem);
           font-weight: 600;
           line-height: 0.9;

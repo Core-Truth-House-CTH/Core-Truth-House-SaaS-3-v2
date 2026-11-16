@@ -320,7 +320,7 @@ function FieldNotesIndexStyles() {
         --fnx-blush: #efe3df;
         --fnx-panel: #fffaf5;
         --fnx-line: rgba(51, 3, 60, 0.15);
-        --fnx-serif: "Playfair Display", Georgia, serif;
+        --fnx-serif: var(--cth-font-display);
         --fnx-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
         background: var(--fnx-ivory);
         color: var(--fnx-ink);

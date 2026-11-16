@@ -17,7 +17,7 @@
   --ec-line: rgba(51, 3, 60, 0.22);
   --ec-line-faint: rgba(51, 3, 60, 0.1);
   --ec-cream: #f4ecdf;
-  --ec-serif: "Playfair Display", Georgia, serif;
+  --ec-serif: var(--cth-font-display);
   --ec-sans: "DM Sans", sans-serif;
   --ec-hand: "Architects Daughter", "Segoe Print", cursive;
   --ec-max: 1240px;

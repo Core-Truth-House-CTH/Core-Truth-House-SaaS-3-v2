@@ -116,7 +116,7 @@ const SYSTEM_FONT_OPTIONS = [
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
-const MONO = "'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace";
+const MONO = "var(--cth-font-mono)";
 
 const API = import.meta.env.VITE_BACKEND_URL;
 

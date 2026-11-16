@@ -1520,3 +1520,14 @@ canvas {
     font-size: 4.4rem;
   }
 }
+
+/* ============================================================
+   Numbers (type decision 2026-11-16)
+   - Display numbers (scores, big stats) stay in the display face (Cormorant Garamond)
+     with lining figures so 1, 0 and 5 sit on the baseline.
+   - Data numbers (tables, counts, row percentages, planner cells) use the body face
+     with tabular figures so columns line up. Use .cth-data-number on a cell/span.
+   ============================================================ */
+:root { font-variant-numeric: lining-nums; }
+td, th, .cth-data-number { font-variant-numeric: lining-nums tabular-nums; }
+.cth-data-number { font-family: var(--cth-font-body); }

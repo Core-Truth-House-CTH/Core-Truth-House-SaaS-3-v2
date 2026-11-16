@@ -11,7 +11,7 @@ import apiClient from "../lib/apiClient";
 const API = `${import.meta.env.VITE_BACKEND_URL}/api`;
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "var(--cth-font-display)";
 
 const CARD_STYLE = {
   backgroundColor: 'var(--cth-command-panel)',

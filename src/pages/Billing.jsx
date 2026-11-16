@@ -12,7 +12,7 @@ import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "var(--cth-font-display)";
 
 const PAGE_STYLE = {
   background: "var(--cth-command-blush)",

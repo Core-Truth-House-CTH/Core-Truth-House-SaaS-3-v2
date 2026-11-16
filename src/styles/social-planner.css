@@ -906,11 +906,12 @@
 .cth-social-planner .week-slot:hover .week-empty-cta { opacity: 1; }
 .cth-social-planner .list-actions .icon-btn { color: var(--cth-ruby); }
 
-/* Numbers: Playfair has clean lining figures — Cormorant renders 1/0 like I/O. */
+/* Data numbers (cells, counts, stats) use the body font with tabular figures, per the
+   2026-11-16 type decision. Display numbers stay Cormorant with lining-nums (see index.css). */
 .cth-social-planner .week-day-number,
 .cth-social-planner .list-date-number,
 .cth-social-planner .metric-value,
 .cth-social-planner .profile-stat strong {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: var(--cth-font-body);
   font-variant-numeric: lining-nums tabular-nums;
 }

@@ -5,7 +5,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import apiClient from '../../lib/apiClient';
 
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
+const SERIF = "var(--cth-font-display)";
 
 const KICKER_STYLE = {
   fontFamily: SANS,

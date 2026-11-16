@@ -17,7 +17,7 @@ const C = {
   blue: 'var(--cth-info)',
   purple: 'var(--cth-command-purple)',
   font: "'DM Sans', sans-serif",
-  serif: "'Playfair Display', serif",
+  serif: "var(--cth-font-display)",
 };
 
 function resolveApiBase() {
@@ -473,7 +473,7 @@ export function AuditNextSteps({ moves = [], score = 0, moduleScores = {}, onNav
               <div>
                 <p
                   style={{
-                    fontFamily: C.serif || "'Playfair Display', serif",
+                    fontFamily: C.serif || "var(--cth-font-display)",
                     fontSize: 15,
                     fontWeight: 600,
                     color: C.ink,

@@ -50,9 +50,8 @@ import "../styles/social-planner.css";
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
-// Numbers render in Playfair Display via the .metric-value / *-number CSS rules
-// (Cormorant renders 1/0 like I/O at display sizes; CLAUDE.md: score numbers use
-// Playfair). Kept in the stylesheet so it stays consistent across all number cells.
+// Data numbers render in the body font (DM Sans, tabular-nums) via the .metric-value /
+// *-number CSS rules in social-planner.css, so every number cell stays consistent.
 
 const PLATFORM_CFG = {
  instagram: { icon: Instagram, color: "#E1306C", limit: 2200, label: "Instagram" },

@@ -178,7 +178,7 @@ export default function PublicFooter() {
  gap: 12px;
  color: rgba(248, 241, 236, 1);
  text-decoration: none;
- font-family: 'Playfair Display', Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: 25px;
  font-weight: 850;
  letter-spacing: -0.04em;
@@ -195,7 +195,7 @@ export default function PublicFooter() {
  .cth-public-footer-brand-row p {
  margin: 0;
  color: rgba(248, 241, 236, 0.74);
- font-family: 'Playfair Display', Georgia, serif;
+ font-family: var(--cth-font-display);
  font-size: clamp(1.25rem, 2vw, 1.85rem);
  font-style: italic;
  line-height: 1.2;

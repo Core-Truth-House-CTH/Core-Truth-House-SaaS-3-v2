@@ -6,7 +6,7 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 import { getSurfaceLabelFromPath } from "../../context/AskTheHouseContext";
 
 const SANS = '"DM Sans", system-ui, sans-serif';
-const SERIF = '"Playfair Display", serif';
+const SERIF = 'var(--cth-font-display)';
 
 const MODES = [
   { id: "guide", label: "Guide" },

@@ -8,9 +8,10 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Playfair Display"', "Georgia", "serif"],
-        body: ['"DM Sans"', "sans-serif"],
-        accent: ['"Cormorant Garamond"', "serif"],
+        display: ["var(--cth-font-display)"],
+        body: ["var(--cth-font-body)"],
+        mono: ["var(--cth-font-mono)"],
+        accent: ["var(--cth-font-display)"],
       },
       borderRadius: {
         lg: "var(--radius)",

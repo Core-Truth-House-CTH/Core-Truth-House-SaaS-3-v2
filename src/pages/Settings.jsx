@@ -44,7 +44,7 @@ ensureMemberPreviewFonts(); // member font-picker previews only (not a CTH UI fo
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Cormorant Garamond', Georgia, serif";
-const MONO = "'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace";
+const MONO = "var(--cth-font-mono)";
 
 // Brand Identity — font options per role (must match Identity Studio families).
 const BI_DISPLAY_FONTS = ['Cormorant Garamond', 'Fraunces', 'Playfair Display', 'Libre Baskerville'];

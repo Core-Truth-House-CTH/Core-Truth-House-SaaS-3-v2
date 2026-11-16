@@ -466,7 +466,7 @@ function LaunchPlannerContent() {
  <div>
  <div
  style={{
- fontFamily: "'Playfair Display', Georgia, serif",
+ fontFamily: "var(--cth-font-display)",
  fontSize: 20,
  color: colors.textPrimary,
  fontWeight: 600,
@@ -656,7 +656,7 @@ function LaunchPlannerContent() {
  onClick={(event) => event.stopPropagation()}
  >
  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
- <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, color: colors.textPrimary }}>
+ <div style={{ fontFamily: "var(--cth-font-display)", fontSize: 20, color: colors.textPrimary }}>
  New Launch
  </div>
 

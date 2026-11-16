@@ -172,13 +172,13 @@ with `letterSpacing: '0.2em'`.
 
 ### Section heading
 
-Playfair Display, in ink color. Always paired below a section label. Use 24–26px
+Cormorant Garamond (`var(--cth-font-display)`), in ink color. Always paired below a section label. Use 24–26px
 for in-card section heads and the page-level h1; up to 28px for hero or
 prominent summaries.
 
 ```js
 const SECTION_HEADING_STYLE = {
-  fontFamily: "'Playfair Display', serif",
+  fontFamily: 'var(--cth-font-display)',
   fontSize: 26,
   fontWeight: 600,
   color: 'var(--cth-command-ink)',
@@ -424,7 +424,7 @@ Identity Studio.
 ### Score anchor (large display)
 
 For "this number is the page" anchors (e.g. Brand Audit overall score). 220px
-conic-gradient ring on a panel card, Playfair 72px number inside.
+conic-gradient ring on a panel card, Cormorant 72px number inside (lining-nums).
 
 ```jsx
 const sweep = Math.max(0, Math.min(360, score * 3.6));
@@ -452,7 +452,8 @@ const sweep = Math.max(0, Math.min(360, score * 3.6));
       justifyContent: 'center',
     }}>
       <span style={{
-        fontFamily: "'Playfair Display', serif",
+        fontFamily: 'var(--cth-font-display)',
+        fontVariantNumeric: 'lining-nums',
         fontSize: 72,
         fontWeight: 600,
         color: 'var(--cth-command-ink)',
@@ -470,7 +471,7 @@ const sweep = Math.max(0, Math.min(360, score * 3.6));
 Six-up grid of small score cards, e.g. Brand Audit module scores. Card style,
 14px radius (the one place we use radius > 4 — softer than CARD_STYLE because
 the small format reads tight at 4px), small uppercase label with a colored dot,
-Playfair 44px number.
+Cormorant 44px number (lining-nums).
 
 ```jsx
 <div style={{
@@ -495,7 +496,8 @@ Playfair 44px number.
     </p>
   </div>
   <p style={{
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: 'var(--cth-font-display)',
+    fontVariantNumeric: 'lining-nums',
     fontSize: 44,
     fontWeight: 600,
     color: 'var(--cth-command-ink)',
@@ -557,8 +559,8 @@ in one go.
 
 ```js
 const SANS = "'DM Sans', sans-serif";
-const SERIF = "'Playfair Display', serif";
-const MONO = "'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace";
+const SERIF = 'var(--cth-font-display)';   // Cormorant Garamond
+const MONO = 'var(--cth-font-mono)';        // DM Mono
 
 const PAGE_STYLE = {
   background: 'var(--cth-command-blush)',
@@ -678,8 +680,11 @@ These are non-negotiable. PRs that violate any of these should be rejected.
   Corner radius section: cards/panels `12`, modal shell `14`, inputs/buttons
   `8`, pills/avatars `999`. Don't exceed it — never `rounded-3xl` (24px) on
   cards. (This replaces the former 4px-sharp rule.)
-- **No Inter font.** Anywhere. Headlines are Playfair Display, body is DM Sans,
-  hex/code is DM Mono (or system monospace stack). If you see Inter sneaking in
+- **No Inter font and no Playfair Display.** Anywhere in CTH UI (both retired
+  2026-11-16; they remain only as member brand-picker options). Headlines are
+  Cormorant Garamond (`--cth-font-display`), body and data numbers are DM Sans
+  (`--cth-font-body`, `tabular-nums`), small uppercase labels and hex/code are DM Mono
+  (`--cth-font-mono`). Never hardcode a family name; use the tokens. If you see Inter sneaking in
   via a shadcn or Tailwind default, override it explicitly with `fontFamily: SANS`.
 - **No pure black (`#000000`).** Use `--cth-command-night` (`#0d0010`) or
   `--cth-command-ink` (`#2b1040`) instead.

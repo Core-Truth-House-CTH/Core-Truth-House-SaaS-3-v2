@@ -53,7 +53,7 @@ export default function CohortWelcomePage() {
           </div>
 
           <h1 style={{
-            fontFamily: '"Playfair Display", Georgia, serif',
+            fontFamily: 'var(--cth-font-display)',
             fontSize: "clamp(2rem, 5vw, 3.2rem)",
             lineHeight: 1.05,
             color: "#2B1040",

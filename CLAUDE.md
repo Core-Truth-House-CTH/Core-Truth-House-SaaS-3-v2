@@ -47,8 +47,11 @@ Core Truth House is a brand strategy SaaS for serious founders. It helps users b
 - Card border rgba(216,197,195,0.6)
 
 ### Typography
-- Headlines: Playfair Display (serif) — all H1, H2, large numbers, score displays
-- Body: DM Sans — all body text, labels, navigation
+Three fonts, one token each (defined once in `src/styles/cth-tokens.css`; never hardcode a family name):
+- `--cth-font-display` = Cormorant Garamond — all H1, H2, large display numbers, score displays (use `font-variant-numeric: lining-nums`)
+- `--cth-font-body` = DM Sans — all body text, navigation, and DATA numbers (tables, counts, row percentages, planner cells; use `font-variant-numeric: tabular-nums`)
+- `--cth-font-mono` = DM Mono — small uppercase labels, hex codes
+- Playfair Display and Inter are RETIRED as CTH UI fonts (decided 2026-11-16). They survive only as options in the member brand font pickers (Identity Studio, Settings).
 - NEVER use Inter, Georgia, or system-ui for headlines
 
 ### Layout
@@ -61,7 +64,7 @@ Core Truth House is a brand strategy SaaS for serious founders. It helps users b
 - Gold as accents, not large fills
 - Dark CTA pattern: gold button on deep purple background
 - Eyebrow pills: gold border, uppercase, letterspaced
-- Score numbers: Playfair Display oversized
+- Score numbers: Cormorant Garamond (`var(--cth-font-display)`) oversized, lining figures
 - Cards: cream background, subtle border, minimal shadow
 
 ### Rules — Never Violate

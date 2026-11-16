@@ -439,7 +439,7 @@ function ScorecardStyles() {
 
       .sc-headline {
         margin: 0;
-        font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        font-family: var(--cth-font-display);
         font-size: clamp(34px, 5vw, 54px);
         line-height: 1.06;
         letter-spacing: -.03em;
@@ -589,7 +589,7 @@ function ScorecardStyles() {
       /* ---- Question ---- */
       .sc-question {
         margin: 0 0 30px;
-        font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        font-family: var(--cth-font-display);
         font-size: clamp(25px, 3.4vw, 36px);
         line-height: 1.18;
         letter-spacing: -.02em;
@@ -715,7 +715,7 @@ function ScorecardStyles() {
       }
 
       .sc-score-num {
-        font-family: 'Playfair Display', Georgia, serif;
+        font-family: var(--cth-font-display);
         font-size: clamp(76px, 12vw, 124px);
         line-height: .9;
         font-weight: 600;
@@ -723,14 +723,14 @@ function ScorecardStyles() {
       }
 
       .sc-score-max {
-        font-family: 'Playfair Display', Georgia, serif;
+        font-family: var(--cth-font-display);
         font-size: clamp(26px, 4vw, 40px);
         color: #c0b1bd;
       }
 
       .sc-result-title {
         margin: 0;
-        font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        font-family: var(--cth-font-display);
         font-size: clamp(32px, 4.6vw, 50px);
         line-height: 1.06;
         letter-spacing: -.03em;
