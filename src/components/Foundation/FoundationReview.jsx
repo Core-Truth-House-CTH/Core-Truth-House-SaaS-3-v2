@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import apiClient from "../../lib/apiClient";
 import {
   errorMessage, memberActions, memberPath, missingText, noteRequired, queueKey, reviewerActions, reviewerPath,
-  scoreNote, statusLabel, STATUS_HELP, validateNote, MAX_NOTE, SECTION_IDS,
+  scoreNote, sectionLock, statusLabel, STATUS_HELP, validateNote, MAX_NOTE, SECTION_IDS,
 } from "../../lib/foundationSections.mjs";
 
 // ------------------------------------------------------------------ data
@@ -35,8 +35,10 @@ function NoteBox({ id, action, value, onChange, label }) {
 
 // ------------------------------------------------------------------ member: one section's status and submit
 
-export function SectionStatusCard({ sectionId, readinessSection = null, onChanged }) {
-  const { sections, loading, error, reload } = useFoundationSections();
+// sectionsState is the useFoundationSections() result owned by the section layout, which also
+// uses it to lock the fields (one load, one source for the card and the lock).
+export function SectionStatusCard({ sectionId, sectionsState, readinessSection = null, onChanged }) {
+  const { sections, loading, error, reload } = sectionsState;
   const [ownReadiness, setOwnReadiness] = useState(null);
   const loadReadiness = useCallback(async () => {
     try {
@@ -79,6 +81,7 @@ export function SectionStatusCard({ sectionId, readinessSection = null, onChange
   if (!section) return null;
 
   const can = memberActions(section);
+  const lock = sectionLock(section);
   const missing = missingText(section);
   const line = scoreNote(readinessSection || ownReadiness);
 
@@ -87,7 +90,7 @@ export function SectionStatusCard({ sectionId, readinessSection = null, onChange
       <div><span className="fp-eyebrow">REVIEW STATUS</span><StatusBadge status={section.status} /></div>
       {section.version ? <small>Version {section.version}</small> : null}
     </div>
-    <p>{STATUS_HELP[section.status] || STATUS_HELP.draft}</p>
+    {lock.note ? <p className="fv3-locked-note" role="note">{lock.note}</p> : <p>{STATUS_HELP[section.status] || STATUS_HELP.draft}</p>}
     {section.review_note && section.status === "draft" && <div className="fv3-review-note" role="note"><b>Changes requested</b><p>{section.review_note}</p></div>}
     {section.review_note && section.status === "draft" && section.unlocked_at && <small>This section was unlocked for editing.</small>}
     {can.submitBlocked && <p className="foundation-muted">To submit, still needed: {missing || "the required fields"}.</p>}

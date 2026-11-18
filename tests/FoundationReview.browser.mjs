@@ -182,6 +182,31 @@ try {
       await p.close();
     }
   });
+  // Fields a member could type into: not disabled (own attribute or a disabled fieldset) and not read-only.
+  const typeable = (p) => p.locator(".foundation-main-content, .foundation-right-rail").locator("textarea, input, select")
+    .evaluateAll((els) => els.filter((e) => !e.matches(":disabled") && !e.readOnly && !e.closest(".fv3-status")).map((e) => e.getAttribute("aria-label") || e.id || e.tagName));
+  await check("S13 locked Core Truth: every field read-only, plain note shown, Request unlock still works", async () => {
+    const p = await open("page=core&s=locked"); await card(p).waitFor(); await card(p).locator(".fv3-badge", { hasText: "Locked" }).waitFor(); await p.locator("#purpose").waitFor();
+    assert.deepEqual(await typeable(p), [], "fields still typeable while locked");
+    const purpose = p.locator("#purpose"); assert.equal(await purpose.isEditable(), false);
+    assert.equal(await p.getByLabel("New belief").isEditable(), false);
+    assert.equal(await card(p).locator(".fv3-locked-note").innerText(), "Approved and locked. To make changes, request an unlock.");
+    assert.equal(await card(p).getByText("Approved and locked", { exact: false }).count(), 1);   // one line, not two
+    const ask = card(p).getByRole("button", { name: "Request unlock" }); assert.equal(await ask.isEnabled(), true);
+    await ask.click(); await card(p).getByLabel(/Why does this section need to change/).fill("We rebranded.");
+    await card(p).getByRole("button", { name: "Send request" }).click(); await card(p).getByText(/Unlock requested/).first().waitFor();
+    assert.ok((await calls(p)).some((c) => c.m === "POST" && c.p === "/api/foundation/sections/core_truth/request-unlock"));
+    await p.screenshot({ path: "/tmp/cth-review-core-locked-readonly.png", fullPage: true }); assert.deepEqual(p.errors, []); await p.close();
+  });
+  await check("S14 draft and submitted Core Truth: fields stay typeable, no locked note", async () => {
+    for (const s of ["draft_complete", "changes_requested"]) {
+      const p = await open("page=core&s=" + s); await card(p).waitFor();
+      if (s === "draft_complete") { await card(p).getByRole("button", { name: "Submit for review" }).click(); await card(p).getByText("Submitted for review").first().waitFor(); }
+      const open_ = await typeable(p); assert.ok(open_.includes("purpose") && open_.includes("New belief"), s + ": " + JSON.stringify(open_));
+      assert.equal(await p.locator(".fv3-locked-note").count(), 0); assert.equal(await p.locator(".fv3-lock-scope[data-locked]").count(), 0);
+      await p.close();
+    }
+  });
 } finally { if (browser) await browser.close(); await new Promise((r) => server.close(r)); }
 const pass = results.filter((r) => r[1]).length;
 console.log(`SUMMARY: ${pass} pass, ${results.length - pass} fail`);

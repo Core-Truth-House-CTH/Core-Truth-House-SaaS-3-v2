@@ -875,6 +875,10 @@
 .fv3-note textarea { width: 100%; padding: 10px; border: 1px solid rgba(51, 3, 60, .35); border-radius: 6px; font: inherit; background: #fff; }
 .fv3-review-note { border-left: 3px solid var(--cth-crimson, #af0024); padding: 6px 12px; margin: 10px 0; background: rgba(175, 0, 36, .05); }
 .fv3-review-note p { margin: 4px 0 0; }
+/* Locked section: the fieldset only carries the disabled state; it adds no box of its own. */
+.fv3-lock-scope { display: contents; border: 0; margin: 0; padding: 0; min-width: 0; }
+.fv3-lock-scope:disabled :is(textarea, input, select) { background: rgba(51, 3, 60, .04); color: #665b68; cursor: not-allowed; }
+.fv3-locked-note { border-left: 3px solid var(--cth-purple-deep, #33033c); padding: 6px 12px; margin: 10px 0; background: rgba(51, 3, 60, .05); }
 .fv3-error { color: var(--cth-crimson, #af0024); margin-top: 8px; }
 .fv3-queue-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
 .fv3-queue-row { border-top: 1px solid rgba(51, 3, 60, .15); padding-top: 12px; }

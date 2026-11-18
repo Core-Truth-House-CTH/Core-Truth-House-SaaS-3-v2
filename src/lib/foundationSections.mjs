@@ -15,7 +15,7 @@ export const STATUS_HELP = {
   draft: "You can keep editing. Submit this section when the required fields are complete.",
   submitted: "Waiting for a Core Truth House reviewer. You can withdraw it to keep editing.",
   in_review: "A reviewer is looking at this section now.",
-  locked: "Approved and locked. Ask for it to be unlocked if something has to change.",
+  locked: "Approved and locked. To make changes, request an unlock.",
 };
 
 export const MAX_NOTE = 2000;
@@ -57,6 +57,17 @@ export function memberActions(section) {
     unlockRequested: status === "locked" && Boolean(section?.unlock_requested_at),
     editable: status !== "locked",
   };
+}
+
+export const LOCKED_NOTE = STATUS_HELP.locked;   // one line on the status card, not two
+
+// How the shared section layout treats a section's fields. A locked section turns every field
+// read-only in one place (the layout's disabled fieldset); the status card, with Request unlock,
+// sits outside that fieldset so it stays usable. Unknown or not-yet-loaded status stays editable:
+// the server still refuses a locked save with 423.
+export function sectionLock(section) {
+  const locked = Boolean(section) && !memberActions(section).editable;
+  return { locked, fieldsDisabled: locked, note: locked ? LOCKED_NOTE : "" };
 }
 
 // What a reviewer can do with a row from the review queue (or a locked section).

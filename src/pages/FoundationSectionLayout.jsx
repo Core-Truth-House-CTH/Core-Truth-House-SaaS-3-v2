@@ -1,4 +1,5 @@
-import {SectionStatusCard} from "../components/Foundation/FoundationReview";
+import {SectionStatusCard,useFoundationSections} from "../components/Foundation/FoundationReview";
+import {sectionLock} from "../lib/foundationSections.mjs";
 import React from "react";
 import {Link,useLocation,useNavigate} from "react-router-dom";
 import {ArrowUpFromLine,ChevronDown,LockKeyhole} from "lucide-react";
@@ -25,6 +26,18 @@ export const FOUNDATION_TABS=[
 ];
 
 const CARD_SECTIONS=["brand_audit","core_truth","audience","positioning","messaging","expression"];
+// The content grid. Section fields (children and rail) sit in one fieldset, disabled when the
+// section is locked, so every input, textarea, select and edit button is read-only at once.
+// The status card (with Request unlock) stays outside it.
+function SectionGrid({activeSection,hideRail,card=null,lock=sectionLock(null),rail,children}){
+ return <div className={`foundation-content-grid fp-layout-${activeSection}${hideRail?" fp-no-rail":""}`}><main className="foundation-main-content">{card}<fieldset className="fv3-lock-scope" disabled={lock.fieldsDisabled} data-locked={lock.locked?"true":undefined}>{children}</fieldset></main>{!hideRail&&<aside className="foundation-right-rail"><fieldset className="fv3-lock-scope" disabled={lock.fieldsDisabled} data-locked={lock.locked?"true":undefined}>{rail}</fieldset></aside>}</div>
+}
+// A Foundation section with a review status: one sections load feeds both the card and the lock.
+function ReviewedSectionGrid(props){
+ const sectionsState=useFoundationSections();
+ const lock=sectionLock(sectionsState.sections.find((s)=>s.section_id===props.activeSection));
+ return <SectionGrid {...props} lock={lock} card={<SectionStatusCard sectionId={props.activeSection} sectionsState={sectionsState}/>}/>
+}
 export function FoundationSectionLayout({title,subtitle,activeSection="core_truth",children,rail,footer=null,saveLabel="Save Draft",onSaveDraft,onSaveContinue,saving=false,hideRail=false,home=false,hideToolbar=false,headerActions=null,customTabs=null}){
  const nav=useNavigate();
  const sectionIndex=Math.max(1,FOUNDATION_TABS.findIndex((item)=>item[2]===activeSection));
@@ -37,6 +50,6 @@ export function FoundationSectionLayout({title,subtitle,activeSection="core_trut
    {headerActions}
   </header>
   {customTabs || <nav className="foundation-tabs" aria-label="Foundation sections">{FOUNDATION_TABS.map(([label,to,id])=>id==="review_lock"?<Link key={id} to={to} className={`foundation-tab${activeSection===id?" is-active":""}`} aria-current={activeSection===id?"page":undefined}>{label}</Link>:<Link key={id} to={to} className={`foundation-tab${activeSection===id?" is-active":""}`} aria-current={activeSection===id?"page":undefined}>{label}</Link>)}</nav>}
-  <div className={`foundation-content-grid fp-layout-${activeSection}${hideRail?" fp-no-rail":""}`}><main className="foundation-main-content">{!home&&CARD_SECTIONS.includes(activeSection)&&<SectionStatusCard sectionId={activeSection}/>}{children}</main>{!hideRail&&<aside className="foundation-right-rail">{rail}</aside>}</div>{footer&&<div className="fp-layout-footer">{footer}</div>}
+  {!home&&CARD_SECTIONS.includes(activeSection)?<ReviewedSectionGrid activeSection={activeSection} hideRail={hideRail} rail={rail}>{children}</ReviewedSectionGrid>:<SectionGrid activeSection={activeSection} hideRail={hideRail} rail={rail}>{children}</SectionGrid>}{footer&&<div className="fp-layout-footer">{footer}</div>}
  </div>
 }
