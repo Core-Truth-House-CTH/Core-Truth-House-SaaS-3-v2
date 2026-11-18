@@ -240,15 +240,6 @@ export const API_PATHS = {
     download: (documentId) => `/api/documents/${encode(documentId)}/download`,
   },
 
-  store: {
-    catalog: "/api/store/catalog",
-    products: "/api/store/products",
-    productById: (productId) => `/api/store/products/${encode(productId)}`,
-    checkout: "/api/store/checkout",
-    orders: "/api/store/orders",
-    orderById: (orderId) => `/api/store/orders/${encode(orderId)}`,
-  },
-
   admin: {
     dashboard: "/api/admin/dashboard",
     users: "/api/admin/users",

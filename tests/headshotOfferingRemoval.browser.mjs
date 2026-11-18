@@ -90,7 +90,7 @@ try {
 
   await page.goto(base + '/footer');
   assert.equal(await page.getByRole('link', { name: 'AI Headshot Generator' }).count(), 0);
-  assert.equal(await page.getByRole('link', { name: 'The Store' }).count(), 1);
+  assert.equal(await page.getByRole('link', { name: 'The Store' }).count(), 0);
   checks += 2;
 
   await page.goto(base + '/headshots');
