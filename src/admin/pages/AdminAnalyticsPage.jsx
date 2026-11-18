@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import apiClient from "../../lib/apiClient";
 import { useUser } from "../../hooks/useAuth";
 import {
   BarChart3,
@@ -15,7 +15,6 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-const API = import.meta.env.VITE_BACKEND_URL;
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
@@ -167,17 +166,15 @@ export default function AdminAnalyticsPage() {
   const [usageAnalytics, setUsageAnalytics] = useState(null);
 
   const load = useCallback(async () => {
-    if (!API) return;
-
     setLoading(true);
     try {
       const [overviewRes, usageRes] = await Promise.all([
-        axios.get(`${API}/api/admin/overview?admin_id=${adminId}`),
-        axios.get(`${API}/api/admin/analytics/usage?admin_id=${adminId}`),
+        apiClient.get("/api/admin/overview", { params: { admin_id: adminId } }),
+        apiClient.get("/api/admin/analytics/usage", { params: { admin_id: adminId } }),
       ]);
 
-      setOverview(overviewRes.data || null);
-      setUsageAnalytics(usageRes.data || null);
+      setOverview(overviewRes || null);
+      setUsageAnalytics(usageRes || null);
     } catch (err) {
       console.error("Failed to load admin analytics:", err);
       setOverview(null);

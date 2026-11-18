@@ -107,14 +107,12 @@ Example:
   git push origin main
 
 Build output goes to dist/. Nginx serves dist/ as the live site.
-All 50 protected pages bundle into a single AppRouter-{hash}.js (~1.8MB).
+Protected pages are lazy-loaded per route (src/navigation/pageRegistry.jsx), ~100 JS chunks. Vendor code splits into vendor-react, vendor-charts, vendor-ui, vendor-editor via manualChunks in vite.config.ts. Largest chunk is vendor-charts (~405KB / ~116KB gzip).
 Static route HTML injection runs post-build via scripts/inject-static-route-metadata.mjs.
 
 ## Known Architecture Notes
-- Two TenantDataDashboard versions exist (V1 + V2) — do not delete either until confirmed
-- vite.config.ts is the active config (has API proxy for local dev)
-- vite.config.js is excluded from git (duplicate, no proxy config)
+- Only TenantDataDashboardV2 exists (V1 was removed)
+- vite.config.ts is the only Vite config (dev /api proxy + build chunking). Do NOT add a vite.config.js: Vite loads .js before .ts, so it would silently shadow this file
 - public/sw.js is an intentional cache kill-switch — do not modify
 - Rollback comes from git — NEVER write per-edit `.bak`/`.bak.<timestamp>` siblings beside source files (they accumulate as stale clutter; 160 were swept from the backend tree on 2026-06-17). If a pre-edit local copy is truly needed mid-session, write it to /tmp, not into the source tree. Existing `./backups/` dirs are historical — leave them, don't add to them.
-- Any remaining .bak files are stale — safe to ignore, do not edit
 - Sidebar hover-expand is implemented in Layout.jsx — test after any Layout changes
