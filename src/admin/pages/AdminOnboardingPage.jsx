@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import apiClient from "../../lib/apiClient";
+import { API_PATHS } from "../../lib/apiPaths";
 import { useUser } from "../../hooks/useAuth";
 import { BookOpen, PlayCircle, ClipboardList, ShieldCheck, RefreshCw, AlertTriangle } from "lucide-react";
 import { AdminTrainingVideos } from "../../components/admin/AdminTrainingVideos";
 
-const API = import.meta.env.VITE_BACKEND_URL;
 
 function PanelCard({ title, subtitle, children, actions = null }) {
   return (
@@ -137,12 +136,10 @@ export default function AdminOnboardingPage() {
   }, []);
 
   const fetchOnboardingProgress = useCallback(async () => {
-    if (!API) return;
-    const params = new URLSearchParams();
-    if (user?.id) params.set("user_id", user.id);
-    const url = `${API}/api/onboarding/progress${params.toString() ? `?${params.toString()}` : ""}`;
-    const res = await axios.get(url);
-    setOnboardingProgress(res.data || null);
+    const res = await apiClient.get(API_PATHS.onboarding.progress, {
+      params: { user_id: user?.id },
+    });
+    setOnboardingProgress(res || null);
   }, [user?.id]);
 
   const load = useCallback(async () => {

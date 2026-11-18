@@ -3,12 +3,9 @@ import {
   Bell, Mail, Smartphone, Zap, DollarSign, FileText,
   Users, Settings, Check, Info,
 } from 'lucide-react';
-import axios from 'axios';
 import { useUser } from '../hooks/useAuth';
 import { useColors } from '../context/ThemeContext';
 import apiClient from "../lib/apiClient";
-
-const API = `${import.meta.env.VITE_BACKEND_URL}/api`;
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Playfair Display', serif";
@@ -178,7 +175,9 @@ export function NotificationPreferences() {
     if (!user?.id) return;
     setSaving(true);
     try {
-      await axios.put(`${API}/notifications/preferences?user_id=${user.id}`, newPrefs);
+      await apiClient.put("/api/notifications/preferences", newPrefs, {
+        params: { user_id: user.id },
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
