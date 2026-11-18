@@ -131,7 +131,6 @@ const navLinks = [
  ["Platform", "/#platform"],
  ["About", "/about"],
  ["Resources", "/blog"],
- ["Store", "/store"],
  ["Contact", "/contact"],
 ];
 
@@ -145,7 +144,6 @@ const footerColumns = {
  Company: [
  ["About", "/about"],
  ["Contact", "/contact"],
- ["Store", "/store"],
  ["Blog", "/blog"],
  ],
  Legal: [

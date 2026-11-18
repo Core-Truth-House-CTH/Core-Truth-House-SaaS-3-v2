@@ -15,12 +15,6 @@ const footerGroups = [
  ],
  },
  {
- heading: "Studios",
- links: [
- { label: "The Store", to: "/store" },
- ],
- },
- {
  heading: "Resources",
  links: [
  { label: "Field Notes", to: "/blog" },

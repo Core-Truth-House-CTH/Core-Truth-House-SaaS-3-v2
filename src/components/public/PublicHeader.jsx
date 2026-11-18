@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 const navItems = [
  { label: "The System", to: "/methodology" },
  { label: "Tiers", to: "/tiers" },
- { label: "Studios", to: "/store" },
  { label: "Cohort", to: "/cohort" },
  { label: "About", to: "/about" },
 ];
@@ -14,7 +13,6 @@ function isActive(item, active) {
 
  const normalized = active.toLowerCase();
 
- if (item.label === "Studios" && normalized === "store") return true;
  if (item.label === "About" && normalized === "about") return true;
  if (item.label === "The System" && normalized === "system") return true;
  if (item.label === "Tiers" && (normalized === "tiers" || normalized === "pricing")) return true;

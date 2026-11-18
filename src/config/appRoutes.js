@@ -523,6 +523,5 @@ export const APP_ROUTES = [
   { path: "/knowledge-base", label: "Knowledge Base", group: "placeholder", requiredPlan: null, gateType: null },
   { path: "/release-notes", label: "Release Notes", group: "placeholder", requiredPlan: null, gateType: null },
   { path: "/ai-keys", label: "AI API Keys", group: "placeholder", requiredPlan: null, gateType: null, superAdminOnly: true },
-  { path: "/platform-store", label: "Store", group: "placeholder", requiredPlan: null, gateType: null, superAdminOnly: true },
 ];
 

@@ -20,7 +20,6 @@ import {
   CalendarClock,
   Gauge,
   RefreshCw,
-  DollarSign,
   Building2,
   TrendingUp,
 } from "lucide-react";
@@ -142,7 +141,6 @@ export default function AdminDashboardPage() {
 
   const workspaces = overview?.workspaces || {};
   const users = overview?.users || {};
-  const store = overview?.store || {};
   const billing = overview?.billing || {};
 
   return (
@@ -170,10 +168,9 @@ export default function AdminDashboardPage() {
         </p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <StatCard icon={Building2} label="Workspaces" value={workspaces.total || 0} tone="blue" />
         <StatCard icon={Users} label="Users" value={users.total || 0} tone="green" />
-        <StatCard icon={DollarSign} label="Store Revenue" value={formatDollars(store.revenue_dollars || 0)} tone="gold" />
         <StatCard icon={TrendingUp} label="Billing Revenue" value={formatDollars(billing.revenue_dollars || 0)} tone="rose" />
       </section>
 
@@ -196,14 +193,12 @@ export default function AdminDashboardPage() {
 
         <PanelCard
           title="Revenue Snapshot"
-          subtitle="Store and billing summary"
+          subtitle="Billing summary"
         >
           {loading ? (
             <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
           ) : (
             <div className="grid gap-3 text-sm text-[var(--cth-command-ink)]">
-              <div>Store revenue: {formatDollars(store.revenue_dollars || 0)}</div>
-              <div>Completed orders: {store.completed_orders || 0}</div>
               <div>Billing revenue: {formatDollars(billing.revenue_dollars || 0)}</div>
               <div>Paid transactions: {billing.paid_transactions || 0}</div>
             </div>

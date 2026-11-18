@@ -199,7 +199,6 @@ export default function AdminAnalyticsPage() {
 
   const workspaces = overview?.workspaces || {};
   const users = overview?.users || {};
-  const store = overview?.store || {};
   const billing = overview?.billing || {};
 
   const usageRows = useMemo(() => flattenUsageAnalytics(usageAnalytics), [usageAnalytics]);
@@ -213,7 +212,6 @@ export default function AdminAnalyticsPage() {
   const totalUsers = safeNumber(users.total || 0);
   const engagementRate = totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : "0.0";
 
-  const completedOrders = safeNumber(store.completed_orders || 0);
   const churnPlaceholder = "Not wired yet";
   const nrrPlaceholder = "Not wired yet";
   const clvPlaceholder = "Not wired yet";
@@ -248,11 +246,10 @@ export default function AdminAnalyticsPage() {
         title="Revenue & Business Health"
         subtitle="Core SaaS metrics for financial health and efficiency"
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <MetricCard icon={DollarSign} label="MRR" value={formatDollars(mrr)} hint="Recurring revenue baseline" tone="rose" />
           <MetricCard icon={TrendingUp} label="ARR" value={formatDollars(arr)} hint="MRR x 12 projection" tone="plum" />
           <MetricCard icon={Gauge} label="ARPU" value={formatDollars(arpu)} hint="Revenue per workspace" tone="gold" />
-          <MetricCard icon={Target} label="Completed Orders" value={completedOrders} hint="Commercial activity signal" tone="green" />
         </div>
       </PanelCard>
 

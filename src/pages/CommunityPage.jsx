@@ -46,7 +46,6 @@ import {
   ShieldCheck,
   Smile,
   Sparkles,
-  Store as StoreIcon,
   Trash2,
   Upload,
   UserPlus,
@@ -79,7 +78,6 @@ const SAAS_LINKS = [
   { path: "/crm", label: "CRM", icon: ContactRound },
   { path: "/tutorials", label: "Tutorials", icon: Video },
   { path: "/community", label: "Community", icon: UsersRound },
-  { path: "/store", label: "Store", icon: StoreIcon },
 ];
 
 // lucide-react has no native TikTok icon; using Music as the closest visual fallback
@@ -544,7 +542,6 @@ function CommunityTopNav({
         <nav className="flex items-center gap-1">
           <NavIconButton title="Home" onClick={() => navigate("/command-center")} icon={Home} />
           <NavIconButton title="Videos" onClick={() => navigate("/tutorials")} icon={Video} />
-          <NavIconButton title="Store" onClick={() => navigate("/store")} icon={StoreIcon} />
           <NavIconButton title="People" onClick={onPeopleClick} icon={UsersRound} />
         </nav>
 

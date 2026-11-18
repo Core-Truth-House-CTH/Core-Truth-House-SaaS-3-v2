@@ -89,7 +89,6 @@ const GROUP_ROUTE_ORDER = {
     "/billing",
     "/settings",
     "/methodology",
-    "/store",
   ],
 };
 
