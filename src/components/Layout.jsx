@@ -316,7 +316,6 @@ export function Sidebar() {
                 { path: "/mail", label: "Mail", icon: Mail },
                 { path: "/cohort-manager", label: "Cohort Manager", icon: Users },
                 { path: "/automations", label: "Automations", icon: Workflow },
-                { path: "/platform-store", label: "Store", icon: Package },
                 { path: "/ai-keys", label: "AI API Keys", icon: Key },
               ],
             },

@@ -18,7 +18,6 @@ const EstateAboutPage = lazy(() => import("./pages/estate/EstateAboutPage"));
 const EstateTiersPage = lazy(() => import("./pages/estate/EstateTiersPage"));
 const EstateContactPage = lazy(() => import("./pages/estate/EstateContactPage"));
 const EstateCohortPage = lazy(() => import("./pages/estate/EstateCohortPage"));
-const EstateStorePage = lazy(() => import("./pages/estate/EstateStorePage"));
 
 // Functional public pages (auth, lead funnel, cohort flow, legal, content) — unchanged
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
@@ -58,7 +57,6 @@ function PublicRoutes() {
           <Route path="/about" element={<EstateAboutPage />} />
           <Route path="/contact" element={<EstateContactPage />} />
           <Route path="/cohort" element={<EstateCohortPage />} />
-          <Route path="/store" element={<EstateStorePage />} />
         </Route>
 
         {/* Functional public routes — auth handled by ProtectedApp catch-all below */}

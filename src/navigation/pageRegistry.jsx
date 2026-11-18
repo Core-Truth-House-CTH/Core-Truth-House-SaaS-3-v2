@@ -119,7 +119,6 @@ const pageRegistry = {
   "/knowledge-base": KnowledgeBasePage,
   "/release-notes": makePlaceholder("Release Notes"),
   "/ai-keys": makePlaceholder("AI API Keys"),
-  "/platform-store": makePlaceholder("Store"),
 };
 
 const routeAliases = {

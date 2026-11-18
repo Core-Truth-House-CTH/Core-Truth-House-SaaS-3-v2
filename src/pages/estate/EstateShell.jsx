@@ -135,7 +135,6 @@ export default function EstateShell() {
           <nav className="ec-nav-links" aria-label="Site">
             {navLink("The System", "/methodology")}
             {navLink("Tiers", "/tiers")}
-            {navLink("Store", "/store")}
             {navLink("Cohort", "/cohort")}
             {navLink("About", "/about")}
             <Link to="/sign-in">Login</Link>
@@ -167,7 +166,6 @@ export default function EstateShell() {
             <SheetLink to="/">Home</SheetLink>
             <SheetLink to="/methodology">The System</SheetLink>
             <SheetLink to="/tiers">Tiers</SheetLink>
-            <SheetLink to="/store">Store</SheetLink>
             <SheetLink to="/cohort">Cohort</SheetLink>
             <SheetLink to="/about">About</SheetLink>
             <SheetLink to="/contact">Contact</SheetLink>
@@ -212,11 +210,7 @@ export default function EstateShell() {
                   </ul>
                 </div>
                 <div>
-                  <h4>Studios</h4>
-                  <ul>
-                    <li>{navLink("The Store", "/store")}</li>
-                  </ul>
-                  <h4 style={{ marginTop: 26 }}>Resources</h4>
+                  <h4>Resources</h4>
                   <ul>
                     <li><Link to="/blog">Field Notes</Link></li>
                   </ul>

@@ -556,7 +556,6 @@ canvas {
 /* Footer CTA cleanup: avoid stacked duplicate logos above the footer */
 .cth-final-cta .cth-logo-seal-img,
 .cth-contact-cta .cth-logo-seal-img,
-.cth-store-cta .cth-logo-seal-img,
 .cth-blog-cta .cth-logo-seal-img {
   display: none !important;
 }

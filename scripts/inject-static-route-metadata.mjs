@@ -90,18 +90,6 @@ const routes = [
     schemaType: "Blog",
   },
   {
-    route: "/store",
-    title: "Brand Tools & Resources for Founders | Core Truth House",
-    description:
-      "Explore Core Truth House offers, tools, and resources designed to help founders strengthen brand structure and presence.",
-    ogTitle: "Core Truth House Store",
-    ogDescription:
-      "Tools, studios, and strategic resources for founders building the brand behind the business.",
-    image: `${SITE}/storefront-assets/cth-store-social-card.png`,
-    canonical: `${SITE}/store`,
-    schemaType: "CollectionPage",
-  },
-  {
     route: "/cohort",
     title: "Self-Paced Founding Cohort | Core Truth House",
     description:
@@ -376,19 +364,6 @@ function buildFallbackBody(meta) {
         "Brand clarity and positioning",
         "Messaging and offer structure",
         "Founder systems and content strategy",
-      ],
-      cta: "Start the Brand Diagnostic",
-      href: "/brand-diagnostic/",
-    },
-    "/store": {
-      eyebrow: "Store",
-      headline: "Tools and resources for building the brand behind the business.",
-      intro:
-        "Explore Core Truth House offers, studios, and strategic resources designed to help founders strengthen brand structure and presence.",
-      points: [
-        "Brand-building tools",
-        "Strategic resources",
-        "Focused founder support",
       ],
       cta: "Start the Brand Diagnostic",
       href: "/brand-diagnostic/",

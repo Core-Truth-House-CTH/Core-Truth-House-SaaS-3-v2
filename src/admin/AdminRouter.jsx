@@ -24,8 +24,6 @@ import AdminPlaygroundPage from "./pages/AdminPlaygroundPage";
 import AdminEventsPage from "./pages/AdminEventsPage";
 import AdminMetricsPage from "./pages/AdminMetricsPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
-import AdminStoreProductsPage from "./pages/AdminStoreProductsPage";
-import AdminStoreOrdersPage from "./pages/AdminStoreOrdersPage";
 import AdminCohortPage from "./pages/AdminCohortPage";
 
 export default function AdminRouter() {
@@ -59,8 +57,6 @@ export default function AdminRouter() {
           <Route path="events" element={<AdminEventsPage />} />
           <Route path="metrics" element={<AdminMetricsPage />} />
 
-          <Route path="store-products" element={<AdminStoreProductsPage />} />
-          <Route path="store-orders" element={<AdminStoreOrdersPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
       </Route>
