@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   reviewState, homeRows, lockedCount, nextStep, latestNote, shortDate, requiredLine, reviewCard, aiButtonLabel,
   openedForEdits, joinNames, alignmentPrompt, fieldHelpPrompt, REVIEW_STATE_LABELS,
-  outOfCredits, changesRequested, SECTION_IDS,
+  outOfCredits, changesRequested, SECTION_IDS, lessonCategory, isLessonVideo, lessonFor, lessonLabel, lessonEmbedUrl,
 } from "../src/lib/foundationSections.mjs";
 
 const sec = (id, extra = {}) => ({ section_id: id, status: "draft", ...extra });
@@ -117,4 +117,21 @@ test("Ask the House starting messages", () => {
   assert.equal(fieldHelpPrompt("audience", "Main problem", ""), "Help me answer Main problem in Audience Truth.");
   assert.equal(fieldHelpPrompt("expression", "Brand colors", ["Crimson", " "]), 'Help me refine my Brand colors in Brand Expression. Right now it says: "Crimson"');
   assert.equal(joinNames([]), "");
+});
+
+test("lessons: one per section by category, newest edit wins, needs a YouTube id; label and player address", () => {
+  const v = (id, extra) => ({ id, category: "foundation-core_truth", youtube_id: "abcDEF12345", title: id, is_published: true, ...extra });
+  assert.equal(lessonCategory("positioning"), "foundation-positioning");
+  assert.equal(isLessonVideo({ category: "foundation-audience" }), true);
+  assert.equal(isLessonVideo({ category: "getting-started" }), false);
+  assert.equal(lessonFor([], "core_truth"), null);
+  assert.equal(lessonFor(undefined, "core_truth"), null);
+  assert.equal(lessonFor([v("a", { category: "foundation-audience" })], "core_truth"), null);
+  assert.equal(lessonFor([v("a", { youtube_id: "" })], "core_truth"), null);
+  assert.equal(lessonFor([v("a", { is_published: false })], "core_truth"), null);
+  assert.equal(lessonFor([v("old", { updated_at: "2026-11-01" }), v("new", { updated_at: "2026-11-20" })], "core_truth").id, "new");
+  assert.equal(lessonLabel({ duration_minutes: 9 }), "LESSON, 9 MIN");
+  assert.equal(lessonLabel({}), "LESSON");
+  assert.equal(lessonLabel({ duration_minutes: 0 }), "LESSON");
+  assert.equal(lessonEmbedUrl({ youtube_id: "abcDEF12345" }), "https://www.youtube-nocookie.com/embed/abcDEF12345?autoplay=1&rel=0");
 });

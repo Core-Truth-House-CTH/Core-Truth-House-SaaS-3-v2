@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../lib/apiClient';
+import { isLessonVideo } from '../lib/foundationSections.mjs';
 import { toast } from 'sonner';
 import { DashboardLayout } from '../components/Layout';
 import { useColors } from '../context/ThemeContext';
@@ -15,7 +16,8 @@ export default function TrainingVideos() {
  const fetchVideos = async () => {
  try {
  const res = await apiClient.get('/api/training-videos');
- setVideos(res.videos || []);
+ // Foundation lessons play on their section pages, not in this library.
+ setVideos((res.videos || []).filter((video) => !isLessonVideo(video)));
  } catch (err) {
  console.error('Failed to load videos:', err);
  toast.error("Could not load training videos. Please refresh.");

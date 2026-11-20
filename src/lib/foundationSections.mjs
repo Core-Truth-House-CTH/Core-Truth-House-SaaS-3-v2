@@ -239,3 +239,24 @@ export function fieldHelpPrompt(sectionId, label, value) {
   const text = Array.isArray(value) ? value.filter((v) => String(v ?? "").trim()).join("; ") : String(value ?? "").trim();
   return text ? `Help me refine my ${label} in ${sectionName(sectionId)}. Right now it says: "${text}"` : `Help me answer ${label} in ${sectionName(sectionId)}.`;
 }
+
+// Foundation lessons (Agent Tasks 8). A lesson is a training video whose category names the section
+// ("foundation-core_truth"); Shake sets the YouTube link, title and length on /admin/onboarding.
+export const lessonCategory = (sectionId) => `foundation-${sectionId}`;
+export const isLessonVideo = (video) => String(video?.category || "").startsWith("foundation-");
+
+// The section's lesson, or null ("Lesson coming soon"). The newest edit wins if two share a section.
+export function lessonFor(videos, sectionId) {
+  const mine = (Array.isArray(videos) ? videos : []).filter((v) => v?.category === lessonCategory(sectionId) && v.youtube_id && v.is_published !== false);
+  return mine.sort((a, b) => String(b.updated_at || "").localeCompare(String(a.updated_at || "")))[0] || null;
+}
+
+export function lessonLabel(lesson) {
+  const minutes = Number(lesson?.duration_minutes);
+  return Number.isInteger(minutes) && minutes > 0 ? `LESSON, ${minutes} MIN` : "LESSON";
+}
+
+// The privacy-enhanced player; it loads only after the member presses Play.
+export function lessonEmbedUrl(lesson) {
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(lesson.youtube_id)}?autoplay=1&rel=0`;
+}

@@ -1,10 +1,11 @@
-import React from "react";
+import React,{useEffect,useState} from "react";
 import {Link,useLocation} from "react-router-dom";
 import AuthShell from "../components/AuthShell";
 import AskTheHouseDrawer from "../components/ask-the-house/AskTheHouseDrawer";
 import {useAskTheHouse,getSurfaceFromPath} from "../context/AskTheHouseContext";
 import {SectionStatusCard,useFoundationSections} from "../components/Foundation/FoundationReview";
-import {FOUNDATION_SECTIONS,SECTION_IDS,sectionLock} from "../lib/foundationSections.mjs";
+import {FOUNDATION_SECTIONS,SECTION_IDS,lessonEmbedUrl,lessonFor,lessonLabel,sectionLock} from "../lib/foundationSections.mjs";
+import apiClient from "../lib/apiClient";
 import "./foundation-phase1.css";
 import "./foundation-v03.css";
 import "./foundation.css";
@@ -22,13 +23,27 @@ function FoundationTabs({active}){
  return <nav className="fnd-tabs" aria-label="Foundation sections"><div>{FOUNDATION_TABS.map(([label,to,id])=><Link key={id} to={to} className={active===id?"is-on":undefined} aria-current={active===id?"page":undefined}>{label}</Link>)}</div></nav>
 }
 
-// Lesson spot (Agent Tasks 8). No lesson store exists yet, so every section shows "coming soon"
-// with no play link, as the build reference specifies for a section without a lesson.
+// Lesson spot (Agent Tasks 8). Shows the section's lesson (title, length, Play) once Shake sets one on
+// /admin/onboarding; Play swaps the tile for the YouTube player. With no lesson, or if the list cannot be
+// read, the card reads "Lesson coming soon" with no play link, as the build reference specifies. It sits
+// outside the lock, so a locked section's lesson still plays.
 function LessonSpot({sectionId}){
- return <section className="fnd-card fnd-lesson" aria-label="Lesson">
-  <span className="fnd-lesson-tile" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor"/></svg></span>
-  <div className="fnd-lesson-copy"><p className="fnd-lbl fnd-lbl-sm">LESSON</p><p className="fnd-serif fnd-lesson-title">Lesson coming soon</p>{sectionId==="brand_audit"&&<p className="fnd-muted">New here? Start with the welcome lesson in your welcome email.</p>}</div>
- </section>
+ const [state,setState]=useState({loading:true,lesson:null});
+ const [playing,setPlaying]=useState(false);
+ useEffect(()=>{let live=true;setPlaying(false);setState({loading:true,lesson:null});
+  apiClient.get("/api/training-videos").then((r)=>{if(live)setState({loading:false,lesson:lessonFor(r?.videos,sectionId)})}).catch(()=>{if(live)setState({loading:false,lesson:null})});
+  return()=>{live=false}},[sectionId]);
+ const {loading,lesson}=state;
+ const welcome=sectionId==="brand_audit"&&<p className="fnd-muted">New here? Start with the welcome lesson in your welcome email.</p>;
+ if(lesson&&playing) return <section className="fnd-card fnd-lesson fnd-lesson-playing" aria-label="Lesson">
+  <div className="fnd-lesson-player"><iframe src={lessonEmbedUrl(lesson)} title={lesson.title} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/></div>
+  <div className="fnd-lesson-copy"><p className="fnd-lbl fnd-lbl-sm">{lessonLabel(lesson)}</p><p className="fnd-serif fnd-lesson-title">{lesson.title}</p>{welcome}</div>
+ </section>;
+ const tileIcon=<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor"/></svg>;
+ return <section className="fnd-card fnd-lesson" aria-label="Lesson" aria-busy={loading||undefined}>
+  {lesson?<button type="button" className="fnd-lesson-tile" aria-label={`Play lesson: ${lesson.title}`} onClick={()=>setPlaying(true)}>{tileIcon}</button>:<span className="fnd-lesson-tile" aria-hidden="true">{tileIcon}</span>}
+  <div className="fnd-lesson-copy"><p className="fnd-lbl fnd-lbl-sm">{lesson?lessonLabel(lesson):"LESSON"}</p><p className="fnd-serif fnd-lesson-title">{lesson?lesson.title:loading?"\u00a0":"Lesson coming soon"}</p>{welcome}</div>
+ </section>;
 }
 
 // Navigation only: it does not save or submit. Back goes to the previous section; the first section

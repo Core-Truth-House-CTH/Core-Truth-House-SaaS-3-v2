@@ -2,6 +2,7 @@
 //   ?s=draft|waiting|changes|unlocked|locked|incomplete   the state of one section
 //   ?sec=core_truth|audience|positioning|messaging|expression|brand_audit   which section (default core_truth)
 //   ?credits=none   every ai-assist answers 402      ?reviewer=1   the review queue answers with rows
+//   ?lesson=1   the section under test has a lesson (and the library holds one general video)
 // Synthetic data only. Follows the server's rules for the routes it answers.
 const params = new URLSearchParams(location.search);
 const scenario = params.get("s") || "draft";
@@ -26,6 +27,10 @@ const avatar = { id: "av-1", is_primary: true, created_at: "2026-11-10T10:00:00Z
 const identity = { colors: [{ id: "primary", role: "primary", label: "Crimson", hex: "#AF0024" }, { id: "secondary", role: "secondary", label: "Deep plum", hex: "#33033C" }], fonts: [{ id: "display", role: "display", label: "Heading", family: "Cormorant Garamond", source: "system" }, { id: "body", role: "body", label: "Body", family: "DM Sans", source: "system" }] };
 const assets = [{ asset_id: "a1", name: "Primary logo.svg", status: "confirmed", context: "brand_asset" }];
 const diagnostic = { available: true, completed: true, result: { score: 38, score_range: "Building: the basics are there, the system isn't", recommended_tier: "Foundation", taken_by_me: true, top_gaps: ["Positioning", "Messaging consistency"], interpretation: { priority_actions: [{ priority: 1, category: "Positioning", action: "Write one sentence that says who you serve and why you." }, { priority: 2, category: "Messaging", action: "Choose three brand pillars and use them everywhere." }], scope_note: "Based on your Diagnostic answers only." } } };
+const videos = [{ id: "v-general", title: "Welcome tour", category: "getting-started", youtube_id: "genGEN12345", youtube_url: "https://youtu.be/genGEN12345", is_published: true, updated_at: "2026-11-01T10:00:00Z" }];
+if (params.get("lesson") === "1") videos.push({ id: "v-lesson", title: `${LABELS[target]}: the one sentence that holds`, category: `foundation-${target}`, youtube_id: "abcDEF12345", youtube_url: "https://youtu.be/abcDEF12345", duration_minutes: 9, is_published: true, updated_at: "2026-11-20T10:00:00Z" });
+const youtubeId = (url) => (String(url).match(/(?:youtu\.be\/|[?&]v=|youtube\.com\/(?:embed|shorts)\/)([a-zA-Z0-9_-]{11})/) || [])[1] || "";
+let videoSeq = 0;
 const queue = [{ workspace_id: "ws-demo", section_id: "core_truth", label: "Core Truth", status: "submitted", version: 1 }];
 const fail = (status, code, message, extra = {}) => { const e = new Error(message); e.status = status; e.payload = { detail: { code, message, ...extra } }; throw e; };
 const log = (m, p, b) => { window.__calls = (window.__calls || []).concat([{ m, p, b }]); };
@@ -45,11 +50,16 @@ const api = {
     if (p === "/api/audience/avatars") return { avatars: [{ ...avatar }] };
     if (p === "/api/identity") return { ...identity };
     if (p === "/api/media-upload/assets") return { assets };
+    if (p === "/api/training-videos") return { videos: videos.map((v) => ({ ...v })) };
     return {};
   },
   post: async (p, b) => {
     log("POST", p, b);
     if (p.endsWith("/ai-assist")) return suggest(b);
+    if (p === "/api/admin/training-videos") {
+      const id = youtubeId(b.youtube_url); if (!id) fail(400, "", "That is not a YouTube video link.");
+      const v = { ...b, id: `v-new-${++videoSeq}`, youtube_id: id, updated_at: new Date().toISOString() }; videos.push(v); return { video: v, created: true };
+    }
     if (p === "/api/persist/brand-foundation") { if (target !== "positioning" && target !== "messaging" && target !== "expression") guard("core_truth"); Object.assign(foundation, b); return { saved: true }; }
     if (p === "/api/persist/brand-positioning") { guard("positioning"); Object.assign(positioning, b); return { saved: true }; }
     if (p === "/api/persist/messaging-structure") { guard("messaging"); Object.assign(messaging, b); return { saved: true }; }
@@ -67,7 +77,15 @@ const api = {
   patch: async (p, b) => {
     log("PATCH", p, b);
     if (p === "/api/audience/avatars/av-1") { guard("audience"); Object.assign(avatar, b); return { avatar }; }
+    const v = videos.find((x) => p === `/api/admin/training-videos/${x.id}`);
+    if (v) { const id = b.youtube_url ? youtubeId(b.youtube_url) : v.youtube_id; if (!id) fail(400, "", "That is not a YouTube video link."); Object.assign(v, b, { youtube_id: id, updated_at: new Date().toISOString() }); return { video: v, updated: true }; }
     return {};
+  },
+  delete: async (p) => {
+    log("DELETE", p);
+    const i = videos.findIndex((x) => p === `/api/admin/training-videos/${x.id}`);
+    if (i >= 0) videos.splice(i, 1);
+    return { deleted: i >= 0 };
   },
 };
 export default api;

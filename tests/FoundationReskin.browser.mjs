@@ -15,7 +15,7 @@ const fs = req("node:fs");
 const SHOTS = process.env.SHOTS || "/tmp/cth-foundation-reskin";
 fs.mkdirSync(SHOTS, { recursive: true });
 const mocks = {
-  entry: `import React from"react";import{createRoot}from"react-dom/client";import{MemoryRouter}from"react-router-dom";import Home from"${root}/src/pages/FoundationHome.jsx";import Core from"${root}/src/pages/BrandFoundation.jsx";import{BrandAuditPage,AudiencePage,PositioningPage,MessagingPage,ExpressionPage,ReviewLockPage}from"${root}/src/pages/FoundationPages.jsx";const PAGES={home:[Home,"/foundation"],core:[Core,"/brand-foundation"],audit:[BrandAuditPage,"/brand-audit"],audience:[AudiencePage,"/audience"],positioning:[PositioningPage,"/brand-positioning"],messaging:[MessagingPage,"/messaging-structure"],expression:[ExpressionPage,"/identity-studio"],review:[ReviewLockPage,"/foundation/review-lock"]};const [Page,route]=PAGES[new URLSearchParams(location.search).get("page")||"core"];createRoot(document.getElementById("root")).render(<MemoryRouter initialEntries={[route]}><Page/></MemoryRouter>);`,
+  entry: `import React from"react";import{createRoot}from"react-dom/client";import{MemoryRouter}from"react-router-dom";import Home from"${root}/src/pages/FoundationHome.jsx";import Core from"${root}/src/pages/BrandFoundation.jsx";import{BrandAuditPage,AudiencePage,PositioningPage,MessagingPage,ExpressionPage,ReviewLockPage}from"${root}/src/pages/FoundationPages.jsx";import api from"mock:api";import{AdminFoundationLessons}from"${root}/src/components/admin/AdminFoundationLessons.jsx";function LessonsAdmin(){const[v,setV]=React.useState([]);const f=React.useCallback(async()=>{const r=await api.get("/api/training-videos");setV(r.videos||[])},[]);React.useEffect(()=>{f()},[f]);return <div style={{padding:24,background:"#fff",maxWidth:1100}}><AdminFoundationLessons trainingVideos={v} fetchTrainingVideos={f}/></div>}const PAGES={lessons:[LessonsAdmin,"/admin/onboarding"],home:[Home,"/foundation"],core:[Core,"/brand-foundation"],audit:[BrandAuditPage,"/brand-audit"],audience:[AudiencePage,"/audience"],positioning:[PositioningPage,"/brand-positioning"],messaging:[MessagingPage,"/messaging-structure"],expression:[ExpressionPage,"/identity-studio"],review:[ReviewLockPage,"/foundation/review-lock"]};const [Page,route]=PAGES[new URLSearchParams(location.search).get("page")||"core"];createRoot(document.getElementById("root")).render(<MemoryRouter initialEntries={[route]}><Page/></MemoryRouter>);`,
   drawer: `export default function AskTheHouseDrawer(){return null}`,
   ask: `export function useAskTheHouse(){return{isOpen:false,open:(s,i,m)=>{window.__askOpen=[s,i,m]},close:()=>{},sectionId:null,initialInput:"",initialMode:"guide"}}export function getSurfaceFromPath(){return"brand_foundation"}`,
   legacy: `export default function Legacy(){return null}`,
@@ -373,6 +373,54 @@ try {
     p = await open("page=review&s=draft&reviewer=1"); await p.locator("li.fv3-queue-row").waitFor();
     await p.locator("li.fv3-queue-row").getByRole("button", { name: "Start review" }).waitFor();
     await shot(p, "review-reviewer"); await p.close();
+  });
+  await check("L lesson spot: title and length, Play swaps in the YouTube player; still plays on a locked section; none set reads coming soon", async () => {
+    for (const st of ["draft", "locked"]) {
+      const p = await open(`page=positioning&sec=positioning&s=${st}&lesson=1`);
+      await p.route(/youtube-nocookie\.com/, (r) => r.fulfill({ status: 200, contentType: "text/html", body: "<html><body style='background:#000'></body></html>" }));
+      const spot = p.locator(".fnd-lesson"); await spot.getByText("Positioning: the one sentence that holds").waitFor();
+      assert.equal(await spot.locator(".fnd-lbl").innerText(), "LESSON, 9 MIN");
+      assert.equal(await p.getByText("Lesson coming soon").count(), 0);
+      if (st === "draft") await shot(p, "lesson-set");
+      await spot.getByRole("button", { name: "Play lesson: Positioning: the one sentence that holds" }).click();
+      const frame = p.locator(".fnd-lesson-player iframe"); await frame.waitFor();
+      assert.match(await frame.getAttribute("src"), /^https:\/\/www\.youtube-nocookie\.com\/embed\/abcDEF12345\?autoplay=1/);
+      assert.equal(await frame.getAttribute("title"), "Positioning: the one sentence that holds");
+      if (st === "draft") await shot(p, "lesson-playing");
+      assert.deepEqual(p.errors, []); await p.close();
+    }
+    const p = await open("page=messaging&sec=messaging&s=draft"); await p.getByText("Lesson coming soon").waitFor();
+    assert.equal(await p.locator(".fnd-lesson button").count(), 0, "no play button without a lesson"); await p.close();
+  });
+  await check("LA admin Foundation Lessons: six rows; save a new lesson, refuse a non-YouTube link, edit, remove", async () => {
+    const p = await open("page=lessons&sec=positioning&lesson=1", 1200, 1400);
+    const rows = p.locator("[data-testid=foundation-lessons] > li"); await rows.nth(5).waitFor();
+    assert.deepEqual(await rows.locator("h4").allInnerTexts(), ["Diagnostic Insight", "Core Truth", "Audience Truth", "Positioning", "Messaging", "Brand Expression"]);
+    const pos = p.locator("li[data-section=positioning]");
+    assert.equal(await pos.locator("#lesson-positioning-minutes").inputValue(), "9");
+    const core = p.locator("li[data-section=core_truth]");
+    await core.locator("#lesson-core_truth-url").fill("https://vimeo.com/123"); await core.locator("#lesson-core_truth-title").fill("Core Truth, start here");
+    await core.getByRole("button", { name: "Save lesson" }).click();
+    await core.getByRole("alert").filter({ hasText: "That is not a YouTube video link." }).waitFor();
+    await core.locator("#lesson-core_truth-minutes").fill("0"); await core.getByRole("button", { name: "Save lesson" }).click();
+    await core.getByRole("alert").filter({ hasText: "Length is whole minutes, 1 to 240." }).waitFor();
+    await core.locator("#lesson-core_truth-url").fill("https://youtu.be/coreCORE123"); await core.locator("#lesson-core_truth-minutes").fill("7");
+    await core.getByRole("button", { name: "Save lesson" }).click();
+    await p.locator("li[data-section=core_truth]").getByText("Lesson set").waitFor();
+    let w = (await calls(p)).filter((c) => c.m !== "GET");
+    assert.deepEqual(w.map((c) => [c.m, c.p]), [["POST", "/api/admin/training-videos"], ["POST", "/api/admin/training-videos"]]);
+    assert.deepEqual(w[1].b, { youtube_url: "https://youtu.be/coreCORE123", title: "Core Truth, start here", duration_minutes: 7, description: "", category: "foundation-core_truth", is_published: true });
+    await shot(p, "lessons-admin");
+    await pos.locator("#lesson-positioning-title").fill("Positioning, revised"); await pos.getByRole("button", { name: "Save lesson" }).click();
+    await pos.getByText("Saved. Members see it on the section page.").waitFor();
+    w = (await calls(p)).filter((c) => c.m !== "GET");
+    assert.deepEqual(w.at(-1), { m: "PATCH", p: "/api/admin/training-videos/v-lesson", b: { youtube_url: "https://youtu.be/abcDEF12345", title: "Positioning, revised", duration_minutes: 9 } });
+    await p.locator("li[data-section=positioning]").getByRole("button", { name: "Remove" }).click();
+    await p.locator("li[data-section=positioning]").getByText("Lesson coming soon", { exact: true }).waitFor();
+    await p.locator("li[data-section=positioning]").getByText('Removed. The section shows "Lesson coming soon".').waitFor();
+    assert.equal(await p.locator("#lesson-positioning-url").inputValue(), "");
+    assert.deepEqual((await calls(p)).filter((c) => c.m === "DELETE").map((c) => c.p), ["/api/admin/training-videos/v-lesson"]);
+    assert.deepEqual(p.errors, []); await p.close();
   });
   // New journey step 8 rule: the first AI button on Positioning, then the credits message anywhere on the page.
   await check("J8 out-of-credits on Positioning, as the updated journey step 8 reads it", async () => {

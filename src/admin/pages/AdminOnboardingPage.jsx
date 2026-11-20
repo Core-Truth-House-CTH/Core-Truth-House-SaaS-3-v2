@@ -4,6 +4,8 @@ import apiClient from "../../lib/apiClient";
 import { useUser } from "../../hooks/useAuth";
 import { BookOpen, PlayCircle, ClipboardList, ShieldCheck, RefreshCw, AlertTriangle } from "lucide-react";
 import { AdminTrainingVideos } from "../../components/admin/AdminTrainingVideos";
+import { AdminFoundationLessons } from "../../components/admin/AdminFoundationLessons";
+import { isLessonVideo } from "../../lib/foundationSections.mjs";
 
 const API = import.meta.env.VITE_BACKEND_URL;
 
@@ -185,7 +187,7 @@ export default function AdminOnboardingPage() {
     onboardingProgress?.currentStep ||
     "unknown";
 
-  const tutorialCount = trainingVideos.length;
+  const tutorialCount = trainingVideos.filter((video) => !isLessonVideo(video)).length;
   const onboardingCategoryCount = trainingVideos.filter(
     (video) => String(video.category || "").toLowerCase() === "onboarding"
   ).length;
@@ -316,6 +318,17 @@ export default function AdminOnboardingPage() {
       </div>
 
       <PanelCard
+        title="Foundation Lessons"
+        subtitle="One YouTube lesson per Foundation section. Members see it at the top of that section."
+      >
+        {loading ? (
+          <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
+        ) : (
+          <AdminFoundationLessons trainingVideos={trainingVideos} fetchTrainingVideos={fetchTrainingVideos} />
+        )}
+      </PanelCard>
+
+      <PanelCard
         title="Training Video Management"
         subtitle="Connected admin training surface"
       >
@@ -323,7 +336,7 @@ export default function AdminOnboardingPage() {
           <div className="text-sm text-[var(--cth-command-muted)]">Loading...</div>
         ) : (
           <AdminTrainingVideos
-            trainingVideos={trainingVideos}
+            trainingVideos={trainingVideos.filter((video) => !isLessonVideo(video))}
             fetchTrainingVideos={fetchTrainingVideos}
             adminId={adminId}
           />
