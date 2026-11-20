@@ -528,6 +528,7 @@ export default function Billing() {
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [plans, setPlans] = useState([]);
   const [creditPacks, setCreditPacks] = useState([]);
+  const [packsOpen, setPacksOpen] = useState(false);
   const [summary, setSummary] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -542,6 +543,13 @@ export default function Billing() {
     return summary?.subscription?.plan_id || summary?.plan_id || null;
   }, [summary]);
 
+  // "Buy credits" (out-of-credits message) links to /billing#credit-packs: scroll there once the page has loaded.
+  useEffect(() => {
+    if (!loading && window.location.hash === "#credit-packs") {
+      document.getElementById("credit-packs")?.scrollIntoView({ block: "start" });
+    }
+  }, [loading]);
+
   const loadBillingData = useCallback(async () => {
     setLoading(true);
 
@@ -553,7 +561,8 @@ export default function Billing() {
       ]);
 
       setPlans(plansRes?.plans || plansRes?.items || []);
-      setCreditPacks(packsRes?.credit_packs || packsRes?.items || []);
+      setCreditPacks(packsRes?.packs || []);          // GET /api/billing/credit-packs answers { packs, checkout_enabled }
+      setPacksOpen(packsRes?.checkout_enabled === true);
       setSummary(summaryRes || null);
     } catch (error) {
       console.error("Failed to load billing data", error);
@@ -817,12 +826,15 @@ export default function Billing() {
                 ))}
               </div>
 
-              <div className="mb-4">
+              <div className="mb-4" id="credit-packs">
                 <h2 className="mb-4" style={SECTION_HEADING_STYLE}>
                   Credit packs
                 </h2>
+                {!packsOpen && (
+                  <p style={MUTED_STYLE}>Credit packs are not open yet.</p>
+                )}
                 <div className="grid gap-4 md:grid-cols-3">
-                  {creditPacks.map((pack) => (
+                  {packsOpen && creditPacks.map((pack) => (
                     <CreditPackCard
                       key={pack.id}
                       pack={pack}

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   reviewState, homeRows, lockedCount, nextStep, latestNote, shortDate, requiredLine, reviewCard, aiButtonLabel,
   openedForEdits, joinNames, alignmentPrompt, fieldHelpPrompt, REVIEW_STATE_LABELS,
-  outOfCredits, changesRequested, SECTION_IDS, lessonCategory, isLessonVideo, lessonFor, lessonLabel, lessonEmbedUrl, foundationNextMove,
+  outOfCredits, outOfCreditsMessage, OUT_OF_CREDITS_FALLBACK, changesRequested, SECTION_IDS, lessonCategory, isLessonVideo, lessonFor, lessonLabel, lessonEmbedUrl, foundationNextMove,
 } from "../src/lib/foundationSections.mjs";
 
 const sec = (id, extra = {}) => ({ section_id: id, status: "draft", ...extra });
@@ -86,6 +86,15 @@ test("one AI button per field: Help me answer when empty, Refine when filled", (
 test("out of credits is the server's 402", () => {
   assert.equal(outOfCredits({ status: 402 }), true);
   assert.equal(outOfCredits({ status: 500 }), false);
+});
+
+test("the out-of-credits box shows the server's approved wording, with the refill date", () => {
+  const msg = "You've used this month's AI credits. They refill on December 13. Your work is saved. Buy more credits to keep going now.";
+  assert.equal(outOfCreditsMessage({ status: 402, payload: { detail: msg } }), msg);
+  assert.equal(outOfCreditsMessage({ status: 402, data: { detail: msg } }), msg);
+  assert.equal(outOfCreditsMessage({ status: 402, payload: { detail: "Insufficient AI credits." } }), OUT_OF_CREDITS_FALLBACK);
+  assert.equal(outOfCreditsMessage({ status: 402 }), OUT_OF_CREDITS_FALLBACK);
+  assert.equal(OUT_OF_CREDITS_FALLBACK, "You've used this month's AI credits. Your work is saved. Buy more credits to keep going now.");
 });
 
 test("an unlock reads as Open for edits; a later note reads as Changes requested", () => {

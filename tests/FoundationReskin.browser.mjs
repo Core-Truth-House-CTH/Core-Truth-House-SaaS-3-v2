@@ -117,6 +117,8 @@ try {
     assert.equal(await card(p).locator(".fnd-review-heading").innerText(), "Draft");
     assert.match(await card(p).innerText(), /Submit when it's ready\. You can keep working on other sections while this one is reviewed\./);
     assert.match(await card(p).locator(".fnd-required").innerText(), /Required fields are filled/);
+    assert.equal(await card(p).locator(".fnd-required svg.fnd-check").count(), 1);       // an SVG icon, not the "✓" character
+    assert.ok(!(await card(p).locator(".fnd-required").innerText()).includes("\u2713"));
     assert.equal(await card(p).getByRole("button", { name: "Submit for review" }).isEnabled(), true);
     assert.ok(await typeable(p) > 0);
     await shot(p, "core-draft");
@@ -185,7 +187,9 @@ try {
     const p = await open("page=core&s=draft&credits=none"); await card(p).waitFor();
     await p.locator(".fnd-field", { hasText: "Where you're going" }).getByRole("button", { name: "Help me answer" }).click();
     await p.getByRole("link", { name: "Buy credits" }).waitFor();
-    const t = await p.locator(".fnd-house").innerText(); assert.match(t, /AI credits/); assert.ok(!/Insufficient AI credits/.test(t));
+    const t = (await p.locator(".fnd-house").innerText()).replace(/\s+/g, " ");
+    assert.ok(t.includes("You've used this month's AI credits. They refill on December 13. Your work is saved. Buy more credits to keep going now."), t); assert.ok(!/Insufficient AI credits/.test(t));
+    assert.equal(await p.getByRole("link", { name: "Buy credits" }).getAttribute("href"), "/billing#credit-packs");
     await shot(p, "core-out-of-credits"); await p.close();
   });
   await check("C-house Tell the House opens Ask the House with the typed text; lists add and remove", async () => {

@@ -10,6 +10,13 @@ import {
 // The loader lives with Foundation Home's progress hook; re-exported here for the section pages.
 export { useFoundationSections } from "../../hooks/useFoundationProgress";
 
+// Drawn as SVG: the "✓" character is missing from some fonts and showed as an empty box.
+function CheckIcon() {
+  return <svg className="fnd-check" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+    <path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>;
+}
+
 function StatusBadge({ status }) {
   return <span className={`fv3-badge fv3-badge-${status || "draft"}`}>{statusLabel(status)}</span>;
 }
@@ -75,7 +82,7 @@ export function SectionStatusCard({ sectionId, sectionsState, onSaveDraft = null
     <p className="fnd-serif fnd-review-heading">{card.heading}</p>
     {sentBack && <div className="fnd-note fv3-review-note" role="note"><span className="fnd-av" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><div><p className="fnd-muted fnd-note-meta">{["Reviewer's note", shortDate(section.review_note_at)].filter(Boolean).join(", ")}</p><p className="fnd-note-text">{section.review_note}</p></div></div>}
     {card.text && <p className="fnd-muted">{card.text}</p>}
-    {card.edit && <p className={`fnd-required${left ? " is-missing" : ""}`}>{left ? requiredLine(section) : <>✓ {requiredLine(section)}</>}</p>}
+    {card.edit && <p className={`fnd-required${left ? " is-missing" : ""}`}>{left ? requiredLine(section) : <><CheckIcon />{requiredLine(section)}</>}</p>}
     {card.edit && <div className="fnd-review-actions">
       {onSaveDraft && <button className="fnd-btn fnd-btn-s fnd-btn-save" type="button" disabled={saving || Boolean(busy)} onClick={saveDraft}>{saving ? "Saving…" : "Save draft"}</button>}
       <button className="fnd-btn fnd-btn-p fnd-btn-submit" type="button" disabled={!can.submit || saving || Boolean(busy)} onClick={() => run("submit")}>{busy === "submit" ? "Submitting…" : "Submit for review"}</button>

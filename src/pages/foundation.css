@@ -153,6 +153,8 @@ button.fnd-lesson-tile:focus-visible{outline:2px solid var(--fnd-crimson);outlin
 .fnd-note-text{margin:0;font-size:15px;line-height:1.5}
 .fnd-required{margin:0;font-size:14px;font-weight:600;color:var(--fnd-green)}
 .fnd-required.is-missing{color:var(--fnd-crimson)}
+.fnd-required:has(.fnd-check){display:flex;align-items:center;gap:6px}
+.fnd-check{flex:none}
 .fnd-review-actions{display:flex;flex-wrap:wrap;gap:10px}
 .fnd-review-actions .fnd-btn{flex:1 1 120px}
 .fnd-review-actions .fnd-btn-submit{flex:2 1 180px}

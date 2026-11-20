@@ -230,6 +230,13 @@ export function outOfCredits(error) {
   return error?.status === 402 || error?.response?.status === 402;
 }
 
+// The server's out-of-credits answer carries the approved wording with the refill date (Agent Tasks 4).
+export const OUT_OF_CREDITS_FALLBACK = "You've used this month's AI credits. Your work is saved. Buy more credits to keep going now.";
+export function outOfCreditsMessage(error) {
+  const text = errorMessage(error, "");
+  return /^You've used this month's AI credits\./.test(text) ? text : OUT_OF_CREDITS_FALLBACK;
+}
+
 // Ask the House starting messages. The member reads and sends them; nothing is sent automatically.
 export function alignmentPrompt(sectionId) {
   return `Check that my ${sectionName(sectionId)} agrees with my Foundation sections that are already locked, and point out anything that contradicts them.`;

@@ -36,7 +36,7 @@ const fail = (status, code, message, extra = {}) => { const e = new Error(messag
 const log = (m, p, b) => { window.__calls = (window.__calls || []).concat([{ m, p, b }]); };
 const guard = (section) => { if (state[section].status === "locked") fail(423, "section_locked", `${LABELS[section]} is locked. Request an unlock to change it.`); };
 let suggestions = 0;
-const suggest = (b) => { if (!credits) fail(402, "", "Insufficient AI credits."); suggestions += 1; return { field: b.field || b.field_id, suggestion: suggestions === 1 ? "Help independent founders turn scattered brand decisions into one clear working system." : "Give founders one working system for every brand decision." }; };
+const suggest = (b) => { if (!credits) fail(402, "", "You've used this month's AI credits. They refill on December 13. Your work is saved. Buy more credits to keep going now."); suggestions += 1; return { field: b.field || b.field_id, suggestion: suggestions === 1 ? "Help independent founders turn scattered brand decisions into one clear working system." : "Give founders one working system for every brand decision." }; };
 const api = {
   get: async (p) => {
     log("GET", p);
