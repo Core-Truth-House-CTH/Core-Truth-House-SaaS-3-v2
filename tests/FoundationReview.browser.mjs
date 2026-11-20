@@ -33,7 +33,7 @@ const bundle = await rolldown({ input: "mock:entry", plugins: [{ name: "review-i
   resolveId(s) {
     if (s.startsWith("mock:")) return s;
     if (["react", "react-dom/client", "react-router-dom", "lucide-react"].includes(s)) return req.resolve(s);
-    const m = { "../components/AuthShell": real("components/AuthShell.jsx"), "../components/ask-the-house/AskTheHouseDrawer": "mock:drawer", "../context/AskTheHouseContext": "mock:ask",
+    const m = { "../components/AuthShell": real("components/AuthShell.jsx"), "../components/ask-the-house/AskTheHouseDrawer": "mock:drawer", "../context/AskTheHouseContext": "mock:ask", "../../context/AskTheHouseContext": "mock:ask",
       "../context/WorkspaceContext": "mock:workspace", "../context/BrandHealthContext": "mock:brandHealth", "../hooks/useAuth": "mock:auth", "../context/PlanContext": "mock:plan",
       "../config/planAccess": "mock:planAccess", "./NotificationBell": "mock:notification", "../context/AuthShellContext": "mock:shellContext", "./ui/tooltip": "mock:tooltip",
       "../lib/apiClient": "mock:api", "../../lib/apiClient": "mock:api", "../lib/apiPaths": "mock:paths", "./FoundationSectionLayout": real("pages/FoundationSectionLayout.jsx"),
@@ -72,11 +72,11 @@ try {
   const card = (p) => p.locator(".fv3-status");
   const calls = (p) => p.evaluate(() => window.__calls || []);
 
-  await check("S1 draft with missing fields: heading Draft, Submit disabled, says how many required fields are left", async () => {
+  await check("S1 draft with missing fields: heading Draft, Submit disabled, names the required fields still missing", async () => {
     const p = await open("page=core&s=draft_incomplete"); await card(p).waitFor();
     assert.equal(await card(p).locator(".fnd-review-heading").innerText(), "Draft");
     assert.equal(await card(p).getByRole("button", { name: "Submit for review" }).isDisabled(), true);
-    assert.equal(await card(p).locator(".fnd-required.is-missing").innerText(), "1 required field left");
+    assert.match(await card(p).locator(".fnd-required.is-missing").innerText(), /^Add .+ to submit$/);
     assert.equal((await calls(p)).filter((c) => c.m === "POST").length, 0);
     await p.screenshot({ path: "/tmp/cth-review-core-incomplete.png", fullPage: true }); assert.deepEqual(p.errors, []); await p.close();
   });
@@ -117,12 +117,12 @@ try {
     assert.equal((await calls(p)).filter((c) => c.p.endsWith("/submit")).length, 0, "disabled button sends nothing");
     await p.close();
   });
-  await check("S6 Review and Lock as a member: 6-row status table, no reviewer queue", async () => {
-    const p = await open("page=review&s=mixed"); await p.locator(".fv3-table").waitFor();
-    assert.equal(await p.locator(".fv3-table tbody tr").count(), 6);
-    const t = await p.locator(".fv3-table").innerText();
-    for (const w of ["Submitted for review", "In review", "Locked", "Draft"]) assert.ok(t.includes(w), w);
-    assert.match(t, /1 of 6 locked/); assert.match(t, /Needs: Core message/);
+  await check("S6 Review and Lock as a member: 7-row sections table with review states, approval card, no reviewer queue", async () => {
+    const p = await open("page=review&s=mixed"); await p.locator(".fnd-tbl li").nth(6).waitFor();
+    assert.equal(await p.locator(".fnd-tbl li").count(), 7);
+    const t = await p.locator(".fnd-tbl").innerText();
+    for (const w of ["Waiting for review", "Locked"]) assert.ok(t.includes(w), w);
+    assert.match(await p.locator(".fnd-approval").innerText(), /Sections locked\s*\d of 6/);
     assert.equal(await p.locator(".fv3-queue").count(), 0);
     await p.screenshot({ path: "/tmp/cth-review-table-member.png", fullPage: true }); assert.deepEqual(p.errors.filter((e) => !/403/.test(e)), []); await p.close();
   });
@@ -160,22 +160,21 @@ try {
     assert.deepEqual(p.errors, []); await p.close();
   });
   await check("S10 a member never sees reviewer controls (queue hidden, no Request changes anywhere)", async () => {
-    const p = await open("page=review&s=mixed"); await p.locator(".fv3-table").waitFor();
+    const p = await open("page=review&s=mixed"); await p.locator(".fnd-tbl li").nth(6).waitFor();
     const names = await p.getByRole("button").evaluateAll((els) => els.map((e) => (e.innerText || e.getAttribute("aria-label") || "").trim()));
     assert.ok(!names.some((n) => /Request Review|Approve and Lock|Start review|Unlock/i.test(n)), "no review controls for a member: " + JSON.stringify(names));
     assert.equal(await p.getByRole("button", { name: "Request changes" }).count(), 0); assert.equal(await p.getByRole("button", { name: "Approve and lock" }).count(), 0); await p.close();
   });
   await check("S11 Diagnostic Insight on Brand Audit: score, tier, gaps, first action; and the empty state", async () => {
-    let p = await open("page=audit&s=draft_complete"); await p.locator(".fv3-insight").waitFor();
-    const t = await p.locator(".fv3-insight").innerText();
-    assert.match(t, /40/); assert.match(t, /Foundation/); assert.match(t, /Positioning/); assert.match(t, /Write one sentence/); assert.match(t, /Taken by a teammate/);
+    let p = await open("page=audit&s=draft_complete"); await p.locator(".fnd-insight").waitFor();
+    const t = await p.locator(".fnd-insight").innerText();
+    assert.match(t, /40/); assert.match(t, /Foundation/); assert.match(t, /Positioning/); assert.match(t, /Write one sentence/); assert.match(t, /a teammate took/);
     await p.screenshot({ path: "/tmp/cth-review-insight.png", fullPage: true }); await p.close();
-    p = await open("page=audit&insight=none"); await p.locator(".fv3-insight").waitFor();
-    assert.match(await p.locator(".fv3-insight").innerText(), /No Brand Diagnostic/); await p.getByRole("link", { name: "Start the Brand Diagnostic" }).waitFor(); await p.close();
+    p = await open("page=audit&insight=none"); await p.getByText(/No Brand Diagnostic/).waitFor(); await p.getByRole("link", { name: "Start the Brand Diagnostic" }).waitFor(); await p.close();
   });
   await check("S12 phone widths 390 and 320: no sideways scrolling on Review and Lock (reviewer) or a section page", async () => {
     for (const w of [390, 320]) for (const qs of ["page=review&s=mixed&role=reviewer", "page=core&s=changes_requested"]) {
-      const p = await open(qs, w, 844); await p.locator(".fv3-status, .fv3-table").first().waitFor(); await p.waitForTimeout(200);
+      const p = await open(qs, w, 844); await p.locator(".fv3-status, .fnd-tbl").first().waitFor(); await p.waitForTimeout(200);
       const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert.ok(over <= 1, `${qs} @${w}: overflow ${over}px`);
       if (qs.includes("review") && w === 390) await p.screenshot({ path: "/tmp/cth-review-mobile.png", fullPage: true });

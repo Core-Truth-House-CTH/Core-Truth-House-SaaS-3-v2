@@ -73,11 +73,6 @@ export function reviewerActions(section) {
   };
 }
 
-export function missingText(section) {
-  const items = section?.missing_items || [];
-  return items.length ? items.join("; ") : "";
-}
-
 export function queueKey(row) {
   return `${row.workspace_id}:${row.section_id}`;
 }
@@ -110,8 +105,9 @@ export const FOUNDATION_SECTIONS = [
 
 export const REVIEW_STATE_LABELS = {
   locked: "Locked",
-  waiting: "Waiting for Shake",
+  waiting: "Waiting for review",
   changes_requested: "Changes requested",
+  open_for_edits: "Open for edits",
   in_progress: "In progress",
   not_started: "Not started",
 };
@@ -124,9 +120,18 @@ export function sectionPath(sectionId) {
   return (FOUNDATION_SECTIONS.find(([id]) => id === sectionId) || [null, null, "/foundation"])[2];
 }
 
+// An unlock stores its reason as the review note in the same write that sets unlocked_at, so a note
+// written within a moment of unlocked_at is the unlock reason; a later note is a request for changes.
+const SAME_WRITE_MS = 2000;
+export function openedForEdits(section) {
+  if ((section?.status || "draft") !== "draft" || !section?.review_note || !section?.unlocked_at) return false;
+  const gap = Math.abs(Date.parse(section.review_note_at) - Date.parse(section.unlocked_at));
+  return Number.isFinite(gap) && gap < SAME_WRITE_MS;
+}
+
 // A draft that still carries a reviewer's note was sent back (submit and approve clear the note).
 export function changesRequested(section) {
-  return (section?.status || "draft") === "draft" && Boolean(section?.review_note);
+  return (section?.status || "draft") === "draft" && Boolean(section?.review_note) && !openedForEdits(section);
 }
 
 // One section's member-facing state. readinessSection (from /api/foundation/readiness) only decides
@@ -136,6 +141,7 @@ export function reviewState(section, readinessSection) {
   if (status === "locked") return "locked";
   if (status === "submitted" || status === "in_review") return "waiting";
   if (changesRequested(section)) return "changes_requested";
+  if (openedForEdits(section)) return "open_for_edits";
   return Number(readinessSection?.score) > 0 ? "in_progress" : "not_started";
 }
 
@@ -155,14 +161,14 @@ export function lockedCount(rows) {
   return rows.filter((r) => r.state === "locked").length;
 }
 
-// "Your next step": the first sent-back section, else the first unfinished one, else waiting.
+// "Your next step": the first sent-back or reopened section, else the first unfinished one, else waiting.
 export function nextStep(rows) {
   const content = rows.filter((r) => r.id !== "review_lock");
-  const sentBack = content.find((r) => r.state === "changes_requested");
-  if (sentBack) return { kind: "update", id: sentBack.id, title: `Update ${sentBack.name}`, body: "Shake sent it back with a note. Make the change, then submit it again.", path: sentBack.path, button: `Open ${sentBack.name}` };
+  const sentBack = content.find((r) => r.state === "changes_requested" || r.state === "open_for_edits");
+  if (sentBack) return { kind: "update", id: sentBack.id, title: `Update ${sentBack.name}`, body: sentBack.state === "open_for_edits" ? "Your reviewer opened it for edits. Make the change, then submit it again." : "Your reviewer sent it back with a note. Make the change, then submit it again.", path: sentBack.path, button: `Open ${sentBack.name}` };
   const open = content.find((r) => r.state === "in_progress" || r.state === "not_started");
   if (open) return { kind: open.state === "in_progress" ? "continue" : "start", id: open.id, title: `${open.state === "in_progress" ? "Continue" : "Start"} ${open.name}`, body: "Watch the lesson, then answer in your own words.", path: open.path, button: `Open ${open.name}` };
-  return { kind: "waiting", id: null, title: "Waiting for Shake", body: "Every section is with Shake. You'll get an email when there's news.", path: null, button: null };
+  return { kind: "waiting", id: null, title: "Waiting for review", body: "Every section is with your reviewer. You'll get an email when there's news.", path: null, button: null };
 }
 
 // The most recent reviewer note across all sections, or null.
@@ -186,19 +192,27 @@ export function requiredLeft(section) {
   return Math.max(1, (section?.missing_items || []).length);
 }
 
+// "Vision", "Vision and Founder insight", "Vision, Mission and Founder insight".
+export function joinNames(names) {
+  const list = names.filter(Boolean);
+  return list.length < 2 ? (list[0] || "") : `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`;
+}
+
 export function requiredLine(section) {
-  const n = requiredLeft(section);
-  return n === 0 ? "Required fields are filled" : `${n} required field${n === 1 ? "" : "s"} left`;
+  if (requiredLeft(section) === 0) return "Required fields are filled";
+  const names = joinNames(section?.missing_items || []);
+  return names ? `Add ${names} to submit` : "Fill the required fields to submit";
 }
 
 // The "Your Review" card for one section, by status.
 export function reviewCard(section) {
   const status = section?.status || "draft";
   if (status === "locked") return { heading: "Approved and locked", text: "To make changes, request an unlock.", edit: false };
-  if (status === "submitted") return { heading: "Waiting for Shake", text: "Shake gets an email when you submit.", edit: false };
-  if (status === "in_review") return { heading: "Shake is reviewing", text: "", edit: false };
+  if (status === "submitted") return { heading: "Waiting for review", text: "Your reviewer gets an email when you submit.", edit: false };
+  if (status === "in_review") return { heading: "Your reviewer is reviewing", text: "", edit: false };
   if (changesRequested(section)) return { heading: "Changes requested", text: "", edit: true };
-  return { heading: "Draft", text: "Submit when it's ready. You can keep working on other sections while Shake reviews this one.", edit: true };
+  if (openedForEdits(section)) return { heading: "Open for edits", text: "", edit: true };
+  return { heading: "Draft", text: "Submit when it's ready. You can keep working on other sections while this one is reviewed.", edit: true };
 }
 
 // Ask the House field helpers: one button per field, its words depend on whether the field has text.
@@ -210,4 +224,14 @@ export function aiButtonLabel(value) {
 // The server answers 402 when the workspace has no AI credits left.
 export function outOfCredits(error) {
   return error?.status === 402 || error?.response?.status === 402;
+}
+
+// Ask the House starting messages. The member reads and sends them; nothing is sent automatically.
+export function alignmentPrompt(sectionId) {
+  return `Check that my ${sectionName(sectionId)} agrees with my Foundation sections that are already locked, and point out anything that contradicts them.`;
+}
+
+export function fieldHelpPrompt(sectionId, label, value) {
+  const text = Array.isArray(value) ? value.filter((v) => String(v ?? "").trim()).join("; ") : String(value ?? "").trim();
+  return text ? `Help me refine my ${label} in ${sectionName(sectionId)}. Right now it says: "${text}"` : `Help me answer ${label} in ${sectionName(sectionId)}.`;
 }

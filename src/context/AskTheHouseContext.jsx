@@ -85,10 +85,13 @@ export function AskTheHouseProvider({ children }) {
   // Optional text a page hands over (for example the Foundation "Tell the House what to change"
   // box). The drawer only prefills its composer with it; nothing is sent until the member sends.
   const [initialInput, setInitialInput] = useState("");
+  // Optional chat mode to open in ("guide", "review" or "generate"); the drawer opens in Guide otherwise.
+  const [initialMode, setInitialMode] = useState("guide");
 
-  const open = useCallback((section, input = "") => {
+  const open = useCallback((section, input = "", mode = "guide") => {
     if (section !== undefined) setSectionId(section || null);
     setInitialInput(String(input || ""));
+    setInitialMode(mode || "guide");
     setIsOpen(true);
   }, []);
 
@@ -101,8 +104,8 @@ export function AskTheHouseProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ isOpen, open, close, toggle, sectionId, setSectionId, initialInput }),
-    [isOpen, open, close, toggle, sectionId, initialInput]
+    () => ({ isOpen, open, close, toggle, sectionId, setSectionId, initialInput, initialMode }),
+    [isOpen, open, close, toggle, sectionId, initialInput, initialMode]
   );
 
   return (

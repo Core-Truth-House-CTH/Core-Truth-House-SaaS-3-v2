@@ -12,8 +12,8 @@ import "./foundation.css";
 // Foundation pages (build reference E: Home, F: section page). Approved 2026-11-18.
 
 export function FoundationPageShell({children}){
- const {isOpen,close,sectionId,initialInput}=useAskTheHouse(),location=useLocation();
- return <AuthShell activeNav="foundation">{children}<AskTheHouseDrawer open={isOpen} onClose={close} surface={getSurfaceFromPath(location.pathname)} sectionId={sectionId} initialInput={initialInput}/></AuthShell>
+ const {isOpen,close,sectionId,initialInput,initialMode}=useAskTheHouse(),location=useLocation();
+ return <AuthShell activeNav="foundation">{children}<AskTheHouseDrawer open={isOpen} onClose={close} surface={getSurfaceFromPath(location.pathname)} sectionId={sectionId} initialInput={initialInput} initialMode={initialMode}/></AuthShell>
 }
 
 export const FOUNDATION_TABS=[["Foundation Home","/foundation","home"],...FOUNDATION_SECTIONS.map(([id,label,to])=>[label,to,id])];
@@ -31,10 +31,11 @@ function LessonSpot({sectionId}){
  </section>
 }
 
-// Navigation only: it does not save or submit.
+// Navigation only: it does not save or submit. Back goes to the previous section; the first section
+// goes back to Foundation Home.
 function PrevNext({sectionId}){
- const i=FOUNDATION_SECTIONS.findIndex(([id])=>id===sectionId),next=FOUNDATION_SECTIONS[i+1];
- return <div className="fnd-prevnext"><Link to="/foundation">← Foundation Home</Link><span/>{next&&<Link to={next[2]}>Next: {next[1]} →</Link>}</div>
+ const i=FOUNDATION_SECTIONS.findIndex(([id])=>id===sectionId),prev=FOUNDATION_SECTIONS[i-1],next=FOUNDATION_SECTIONS[i+1];
+ return <div className="fnd-prevnext">{prev?<Link to={prev[2]}>← {prev[1]}</Link>:<Link to="/foundation">← Foundation Home</Link>}<span/>{next&&<Link to={next[2]}>Next: {next[1]} →</Link>}</div>
 }
 
 // One fieldset per column holds the section's fields. It is disabled when the section is locked, so
@@ -59,13 +60,12 @@ function ReviewedSectionBody({onSaveDraft,saving,...props}){
  return <SectionBody {...props} lock={lock} card={<SectionStatusCard sectionId={props.activeSection} sectionsState={sectionsState} onSaveDraft={onSaveDraft} saving={saving}/>}/>
 }
 
-export function FoundationSectionLayout({title,subtitle,activeSection="core_truth",children,rail=null,footer=null,onSaveDraft=null,saving=false,home=false,headerActions=null,customTabs=null}){
+export function FoundationSectionLayout({title,subtitle,activeSection="core_truth",children,rail=null,onSaveDraft=null,saving=false,home=false,headerActions=null,customTabs=null}){
  return <div className="fnd foundation-phase1">
   <div className="fnd-wrap">
    <div className="fnd-head"><div><h1 className="fnd-h1">{title}</h1><p className="fnd-sub">{subtitle}</p></div>{headerActions}</div>
    {customTabs||<FoundationTabs active={home?"home":activeSection}/>}
    {home?children:SECTION_IDS.includes(activeSection)?<ReviewedSectionBody activeSection={activeSection} rail={rail} onSaveDraft={onSaveDraft} saving={saving}>{children}</ReviewedSectionBody>:<SectionBody activeSection={activeSection} rail={rail}>{children}</SectionBody>}
-   {footer&&<div className="fp-layout-footer">{footer}</div>}
   </div>
  </div>
 }

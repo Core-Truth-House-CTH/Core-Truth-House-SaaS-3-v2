@@ -173,6 +173,8 @@ export default function AskTheHouseDrawer({
   // nothing is sent until the user activates Send. Callers that omit it open
   // with a blank textarea exactly as before.
   initialInput = "",
+  // Optional. The mode the drawer opens in ("guide", "review", "generate"); Guide otherwise.
+  initialMode = "guide",
 }) {
   const { activeWorkspace, activeWorkspaceId } = useWorkspace();
   const wsId = activeWorkspace?.id || activeWorkspaceId;
@@ -224,6 +226,8 @@ export default function AskTheHouseDrawer({
   // transition below consumes it.
   const initialInputRef = useRef(initialInput);
   initialInputRef.current = initialInput;
+  const initialModeRef = useRef(initialMode);
+  initialModeRef.current = initialMode;
 
   // Reset transient state when drawer opens (auto-resume runs in loadContext).
   useEffect(() => {
@@ -236,7 +240,7 @@ export default function AskTheHouseDrawer({
     // Seeds the caller's handed-over draft when one was provided; "" otherwise,
     // which is the previous behaviour for every existing caller.
     setInput(String(initialInputRef.current || ""));
-    setMode("guide");
+    setMode(MODES.some((m) => m.id === initialModeRef.current) ? initialModeRef.current : "guide");
     setSessionsOpen(false);
     setResumedFrom(null);
     setOpenPicker(null);

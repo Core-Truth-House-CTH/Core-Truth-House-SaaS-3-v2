@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import apiClient from "../../lib/apiClient";
 import {
-  changesRequested, errorMessage, memberActions, memberPath, missingText, noteRequired, queueKey, requiredLeft, requiredLine,
+  changesRequested, errorMessage, openedForEdits, memberActions, memberPath, noteRequired, queueKey, requiredLeft, requiredLine,
   reviewCard, reviewerActions, reviewerPath, shortDate, statusLabel, validateNote, MAX_NOTE, SECTION_IDS,
 } from "../../lib/foundationSections.mjs";
 
@@ -79,20 +79,20 @@ export function SectionStatusCard({ sectionId, sectionsState, onSaveDraft = null
 
   const can = memberActions(section);
   const card = reviewCard(section);
-  const sentBack = changesRequested(section);
+  const sentBack = changesRequested(section) || openedForEdits(section);
   const left = requiredLeft(section);
 
   return <section className="fnd-card fnd-review fv3-status" aria-label="Your review" data-status={section.status}>
     <p className="fnd-lbl">YOUR REVIEW</p>
     <p className="fnd-serif fnd-review-heading">{card.heading}</p>
-    {sentBack && <div className="fnd-note fv3-review-note" role="note"><span className="fnd-av" aria-hidden="true">S</span><div><p className="fnd-muted fnd-note-meta">{["Shake", shortDate(section.review_note_at)].filter(Boolean).join(", ")}</p><p className="fnd-note-text">{section.review_note}</p></div></div>}
+    {sentBack && <div className="fnd-note fv3-review-note" role="note"><span className="fnd-av" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><div><p className="fnd-muted fnd-note-meta">{["Reviewer's note", shortDate(section.review_note_at)].filter(Boolean).join(", ")}</p><p className="fnd-note-text">{section.review_note}</p></div></div>}
     {card.text && <p className="fnd-muted">{card.text}</p>}
     {card.edit && <p className={`fnd-required${left ? " is-missing" : ""}`}>{left ? requiredLine(section) : <>✓ {requiredLine(section)}</>}</p>}
     {card.edit && <div className="fnd-review-actions">
       {onSaveDraft && <button className="fnd-btn fnd-btn-s fnd-btn-save" type="button" disabled={saving || Boolean(busy)} onClick={saveDraft}>{saving ? "Saving…" : "Save draft"}</button>}
       <button className="fnd-btn fnd-btn-p fnd-btn-submit" type="button" disabled={!can.submit || saving || Boolean(busy)} onClick={() => run("submit")}>{busy === "submit" ? "Submitting…" : "Submit for review"}</button>
     </div>}
-    {sentBack && <p className="fnd-muted fnd-small">You can keep working on other sections while Shake reviews this one.</p>}
+    {sentBack && <p className="fnd-muted fnd-small">You can keep working on other sections while this one is reviewed.</p>}
     {can.withdraw && <div className="fnd-review-actions"><button className="fnd-btn fnd-btn-s" type="button" disabled={Boolean(busy)} onClick={() => run("withdraw")}>{busy === "withdraw" ? "Withdrawing…" : "Withdraw"}</button></div>}
     {can.requestUnlock && !asking && <div className="fnd-review-actions"><button className="fnd-btn fnd-btn-s" type="button" onClick={() => { setAsking(true); setFailure(""); }}>Request unlock</button></div>}
     {can.unlockRequested && <p className="fnd-muted">Unlock requested. A reviewer will respond.</p>}
@@ -104,28 +104,6 @@ export function SectionStatusCard({ sectionId, sectionsState, onSaveDraft = null
       </div>
     </div>}
     <div aria-live="polite">{message && <p className="fp-success">{message}</p>}{failure && <p className="fv3-error" role="alert">{failure}</p>}</div>
-  </section>;
-}
-
-// ------------------------------------------------------------------ member: all six sections at a glance (Review and Lock)
-
-export function SectionStatusTable({ readinessSections = [] }) {
-  const { sections, loading, error, reload } = useFoundationSections();
-  if (loading && !sections.length) return <p className="foundation-muted" aria-live="polite">Loading section status…</p>;
-  if (error && !sections.length) return <div role="alert"><p>{error}</p><button className="foundation-button foundation-button-secondary" type="button" onClick={reload}>Retry</button></div>;
-  const locked = sections.filter((s) => s.status === "locked").length;
-  return <section className="foundation-card fv3-table" aria-label="Section review status">
-    <div className="fp-card-title"><h2>SECTION STATUS</h2><span>{locked} of {SECTION_IDS.length} locked</span></div>
-    <table>
-      <thead><tr><th>Section</th><th>Status</th><th>Readiness</th><th>Next step</th></tr></thead>
-      <tbody>{sections.map((s) => {
-        const r = readinessSections.find((x) => x.id === s.section_id);
-        const can = memberActions(s);
-        const next = s.status === "locked" ? "Approved" : s.status === "in_review" ? "A reviewer is looking at it" : s.status === "submitted" ? "Waiting for review"
-          : s.review_note ? "Changes requested: " + s.review_note : can.submit ? "Ready to submit" : (missingText(s) ? "Needs: " + missingText(s) : "Keep editing");
-        return <tr key={s.section_id}><td>{s.label}</td><td><StatusBadge status={s.status} /></td><td>{r ? `${r.score}%` : "—"}</td><td>{next}</td></tr>;
-      })}</tbody>
-    </table>
   </section>;
 }
 
@@ -155,17 +133,17 @@ function ReviewRow({ row, onDone }) {
   return <li className="fv3-queue-row">
     <div className="fv3-queue-head"><b>{row.label}</b><StatusBadge status={row.status} /><small>Workspace {row.workspace_id} · version {row.version}</small></div>
     {row.status === "locked" && row.unlock_request_note && <div className="fv3-review-note" role="note"><b>Unlock requested</b><p>{row.unlock_request_note}</p></div>}
-    <div className="fv3-actions">
-      {can.startReview && <button className="foundation-button foundation-button-secondary" type="button" disabled={busy} onClick={() => send("start-review")}>Start review</button>}
-      {can.approve && <button className="foundation-button foundation-button-primary" type="button" disabled={busy} onClick={() => send("approve", note)}>Approve and lock</button>}
-      {can.requestChanges && <button className="foundation-button foundation-button-secondary" type="button" disabled={busy} onClick={() => { setMode("request-changes"); setFailure(""); }}>Request changes</button>}
-      {can.unlock && <button className="foundation-button foundation-button-secondary" type="button" disabled={busy} onClick={() => { setMode("unlock"); setFailure(""); }}>Unlock</button>}
+    <div className="fnd-review-actions fv3-actions">
+      {can.startReview && <button className="fnd-btn fnd-btn-s" type="button" disabled={busy} onClick={() => send("start-review")}>Start review</button>}
+      {can.approve && <button className="fnd-btn fnd-btn-p" type="button" disabled={busy} onClick={() => send("approve", note)}>Approve and lock</button>}
+      {can.requestChanges && <button className="fnd-btn fnd-btn-s" type="button" disabled={busy} onClick={() => { setMode("request-changes"); setFailure(""); }}>Request changes</button>}
+      {can.unlock && <button className="fnd-btn fnd-btn-s" type="button" disabled={busy} onClick={() => { setMode("unlock"); setFailure(""); }}>Unlock</button>}
     </div>
     {(mode === "request-changes" || mode === "unlock") && <div className="fv3-ask">
       <NoteBox id={id} action={mode} value={note} onChange={setNote} label={mode === "unlock" ? "Reason for unlocking" : "What needs to change?"} />
-      <div className="fv3-actions">
-        <button className="foundation-button foundation-button-primary" type="button" disabled={busy} onClick={() => send(mode, note)}>{mode === "unlock" ? "Unlock section" : "Send back to draft"}</button>
-        <button className="foundation-button foundation-button-secondary" type="button" onClick={() => { setMode(""); setNote(""); setFailure(""); }}>Cancel</button>
+      <div className="fnd-review-actions fv3-actions">
+        <button className="fnd-btn fnd-btn-p" type="button" disabled={busy} onClick={() => send(mode, note)}>{mode === "unlock" ? "Unlock section" : "Send back to draft"}</button>
+        <button className="fnd-btn fnd-btn-s" type="button" onClick={() => { setMode(""); setNote(""); setFailure(""); }}>Cancel</button>
       </div>
     </div>}
     {failure && <p className="fv3-error" role="alert">{failure}</p>}
@@ -187,66 +165,11 @@ export function ReviewerQueue() {
   }, []);
   useEffect(() => { load(); }, [load]);
   if (forbidden) return null;     // not a reviewer: show nothing
-  if (error) return <section className="foundation-card fv3-queue" role="alert"><p>{error}</p><button className="foundation-button foundation-button-secondary" type="button" onClick={load}>Retry</button></section>;
-  if (rows === null) return <section className="foundation-card fv3-queue"><p className="foundation-muted">Loading the review queue…</p></section>;
-  return <section className="foundation-card fv3-queue" aria-label="Reviewer queue">
-    <div className="fp-card-title"><h2>REVIEW QUEUE</h2><span>{rows.length} waiting</span></div>
-    {rows.length === 0 ? <p className="foundation-muted">Nothing is waiting for review.</p>
+  if (error) return <section className="fnd-card fv3-queue" role="alert"><p>{error}</p><button className="fnd-btn fnd-btn-s" type="button" onClick={load}>Retry</button></section>;
+  if (rows === null) return <section className="fnd-card fv3-queue"><p className="fnd-muted">Loading the review queue…</p></section>;
+  return <section className="fnd-card fv3-queue" aria-label="Reviewer queue">
+    <div className="fnd-queue-head"><h2 className="fnd-lbl">REVIEW QUEUE</h2><span className="fnd-muted fnd-small">{rows.length} waiting</span></div>
+    {rows.length === 0 ? <p className="fnd-muted">Nothing is waiting for review.</p>
       : <ul className="fv3-queue-list">{rows.map((row) => <ReviewRow key={queueKey(row)} row={row} onDone={load} />)}</ul>}
-  </section>;
-}
-
-// ------------------------------------------------------------------ section 1: Diagnostic Insight
-
-export function DiagnosticInsightCard() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState("");
-  const load = useCallback(async () => {
-    setError("");
-    try { setData(await apiClient.get("/api/foundation/diagnostic-insight")); }
-    catch (e) { setError(errorMessage(e, "Diagnostic Insight could not be loaded.")); }
-  }, []);
-  useEffect(() => { load(); }, [load]);
-  if (error) return <section className="foundation-card fv3-insight" role="alert"><p>{error}</p><button className="foundation-button foundation-button-secondary" type="button" onClick={load}>Retry</button></section>;
-  if (!data) return <section className="foundation-card fv3-insight"><p className="foundation-muted">Loading Diagnostic Insight…</p></section>;
-  if (!data.available) {
-    return <section className="foundation-card fv3-insight">
-      <div className="fp-card-title"><h2>DIAGNOSTIC INSIGHT</h2></div>
-      <p>{data.completed ? "This workspace has an earlier Brand Audit, but no Brand Diagnostic result yet." : "No Brand Diagnostic has been completed for this workspace yet."}</p>
-      <a className="foundation-button foundation-button-primary" href="/brand-diagnostic">Start the Brand Diagnostic</a>
-    </section>;
-  }
-  const r = data.result || {};
-  const gaps = Array.isArray(r.top_gaps) ? r.top_gaps : [];
-  const actions = Array.isArray(r.interpretation?.priority_actions) ? r.interpretation.priority_actions.slice(0, 3) : [];
-  return <section className="foundation-card fv3-insight" aria-label="Diagnostic Insight">
-    <div className="fp-card-title"><h2>DIAGNOSTIC INSIGHT</h2><span>{r.taken_by_me ? "Taken by you" : "Taken by a teammate"}</span></div>
-    <div className="fv3-insight-score"><b>{r.score ?? "—"}</b><small>/ 60</small><span>{r.score_range || ""}</span></div>
-    {r.recommended_tier && <p>Recommended starting point: <b>{r.recommended_tier}</b></p>}
-    {gaps.length > 0 && <><h3>Biggest gaps</h3><ul>{gaps.map((g) => <li key={g}>{g}</li>)}</ul></>}
-    {actions.length > 0 && <><h3>First actions</h3><ol>{actions.map((a) => <li key={a.priority}><b>{a.category}:</b> {a.action}</li>)}</ol></>}
-    {r.interpretation?.scope_note && <small className="foundation-muted">{r.interpretation.scope_note}</small>}
-  </section>;
-}
-
-// ------------------------------------------------------------------ Review and Lock: the approval summary panel
-
-export function ApprovalSummary({ children }) {
-  const { sections, loading, error, reload } = useFoundationSections();
-  const locked = sections.filter((s) => s.status === "locked");
-  const waiting = sections.filter((s) => s.status === "submitted" || s.status === "in_review");
-  const last = locked.map((s) => s.locked_at).filter(Boolean).sort().pop();
-  return <section className="foundation-card fp-approval-dark">
-    <div className="fp-card-title"><h2>APPROVAL AND LOCK</h2></div>
-    {error && !sections.length ? <div role="alert"><p>{error}</p><button className="foundation-button foundation-button-secondary" type="button" onClick={reload}>Retry</button></div>
-      : loading && !sections.length ? <p aria-live="polite">Loading…</p>
-      : <div className="fp-approval-status-list">
-        <p><span>Sections locked</span><b>{locked.length} of {SECTION_IDS.length}</b></p>
-        <p><span>Waiting for review</span><b>{waiting.length}</b></p>
-        <p><span>Last approved</span><b>{last ? new Date(last).toLocaleDateString() : "Nothing locked yet"}</b></p>
-        <p><span>Foundation status</span><b>{locked.length === SECTION_IDS.length ? "Locked" : waiting.length ? "In review" : "Draft"}</b></p>
-      </div>}
-    <p className="fp-approval-reason">A Core Truth House reviewer approves each section. A locked section cannot be edited until it is unlocked.</p>
-    <div className="fp-approval-actions">{children}</div>
   </section>;
 }
