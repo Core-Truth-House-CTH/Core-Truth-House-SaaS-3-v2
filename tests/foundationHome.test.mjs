@@ -34,6 +34,8 @@ test("home rows: seven in order, Review and Lock Ready only when all six are loc
   assert.equal(lockedCount(all), 6);
   const five = homeRows(SECTION_IDS.map((id, i) => sec(id, i < 5 ? { status: "locked" } : {})), []);
   assert.equal(five[6].label, "Not started");
+  assert.deepEqual(nextStep(all), { kind: "complete", id: "review_lock", title: "Your Foundation is complete", body: "All six sections are approved and locked. Open Review and Lock to see your whole Foundation in one place.", path: "/foundation/review-lock", button: "Open Review and Lock" });
+  assert.equal(nextStep(five).kind, "start");
   const three = homeRows(SECTION_IDS.map((id, i) => sec(id, i < 3 ? { status: "locked" } : {})), []);
   assert.equal(lockedCount(three), 3);
 });

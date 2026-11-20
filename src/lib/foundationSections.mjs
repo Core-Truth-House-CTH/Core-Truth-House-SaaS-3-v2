@@ -163,13 +163,15 @@ export function lockedCount(rows) {
   return rows.filter((r) => SECTION_IDS.includes(r.id) && r.state === "locked").length;
 }
 
-// "Your next step": the first sent-back or reopened section, else the first unfinished one, else waiting.
+// "Your next step": the first sent-back or reopened section, else the first unfinished one, else complete
+// (all six locked), else waiting.
 export function nextStep(rows) {
   const content = rows.filter((r) => r.id !== "review_lock");
   const sentBack = content.find((r) => r.state === "changes_requested" || r.state === "open_for_edits");
   if (sentBack) return { kind: "update", id: sentBack.id, title: `Update ${sentBack.name}`, body: sentBack.state === "open_for_edits" ? "Your reviewer opened it for edits. Make the change, then submit it again." : "Your reviewer sent it back with a note. Make the change, then submit it again.", path: sentBack.path, button: `Open ${sentBack.name}` };
   const open = content.find((r) => r.state === "in_progress" || r.state === "not_started");
   if (open) return { kind: open.state === "in_progress" ? "continue" : "start", id: open.id, title: `${open.state === "in_progress" ? "Continue" : "Start"} ${open.name}`, body: "Watch the lesson, then answer in your own words.", path: open.path, button: `Open ${open.name}` };
+  if (content.every((r) => r.state === "locked")) return { kind: "complete", id: "review_lock", title: "Your Foundation is complete", body: "All six sections are approved and locked. Open Review and Lock to see your whole Foundation in one place.", path: sectionPath("review_lock"), button: "Open Review and Lock" };
   return { kind: "waiting", id: null, title: "Waiting for review", body: "Every section is with your reviewer. You'll get an email when there's news.", path: null, button: null };
 }
 
