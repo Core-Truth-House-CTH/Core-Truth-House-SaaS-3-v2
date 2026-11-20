@@ -2,6 +2,7 @@
 //   ?s=draft|waiting|changes|unlocked|locked|incomplete   the state of one section
 //   ?sec=core_truth|audience|positioning|messaging|expression|brand_audit   which section (default core_truth)
 //   ?credits=none   every ai-assist answers 402      ?reviewer=1   the review queue answers with rows
+//   ?packs=open     credit-pack checkout is open (default: closed, as on staging and production today)
 //   ?lesson=1   the section under test has a lesson (and the library holds one general video)
 // Synthetic data only. Follows the server's rules for the routes it answers.
 const params = new URLSearchParams(location.search);
@@ -9,6 +10,7 @@ const scenario = params.get("s") || "draft";
 const target = params.get("sec") || "core_truth";
 const credits = params.get("credits") !== "none";
 const reviewer = params.get("reviewer") === "1";
+const packsOpen = params.get("packs") === "open";
 const LABELS = { brand_audit: "Diagnostic Insight", core_truth: "Core Truth", audience: "Audience Truth", positioning: "Positioning", messaging: "Messaging", expression: "Brand Expression" };
 const IDS = Object.keys(LABELS);
 const state = Object.fromEntries(IDS.map((id) => [id, { section_id: id, label: LABELS[id], status: "draft", version: 1, required_complete: true, missing_items: [] }]));
@@ -51,6 +53,7 @@ const api = {
     if (p === "/api/identity") return { ...identity };
     if (p === "/api/media-upload/assets") return { assets };
     if (p === "/api/training-videos") return { videos: videos.map((v) => ({ ...v })) };
+    if (p === "/api/billing/credit-packs") return { packs: [], total: 0, checkout_enabled: packsOpen };
     return {};
   },
   post: async (p, b) => {

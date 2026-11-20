@@ -184,13 +184,21 @@ try {
     await p.close();
   });
   await check("C-credits out of AI credits: friendly message and a Buy credits link, never the raw error", async () => {
-    const p = await open("page=core&s=draft&credits=none"); await card(p).waitFor();
+    const p = await open("page=core&s=draft&credits=none&packs=open"); await card(p).waitFor();
     await p.locator(".fnd-field", { hasText: "Where you're going" }).getByRole("button", { name: "Help me answer" }).click();
     await p.getByRole("link", { name: "Buy credits" }).waitFor();
     const t = (await p.locator(".fnd-house").innerText()).replace(/\s+/g, " ");
     assert.ok(t.includes("You've used this month's AI credits. They refill on December 13. Your work is saved. Buy more credits to keep going now."), t); assert.ok(!/Insufficient AI credits/.test(t));
     assert.equal(await p.getByRole("link", { name: "Buy credits" }).getAttribute("href"), "/billing#credit-packs");
     await shot(p, "core-out-of-credits"); await p.close();
+  });
+  await check("C-credits-closed packs closed: the message shows, the Buy credits button does not", async () => {
+    const p = await open("page=core&s=draft&credits=none"); await card(p).waitFor();
+    await p.locator(".fnd-field", { hasText: "Where you're going" }).getByRole("button", { name: "Help me answer" }).click();
+    await p.getByText("You've used this month's AI credits.", { exact: false }).waitFor();
+    await p.waitForTimeout(500);
+    assert.equal(await p.getByRole("link", { name: "Buy credits" }).count(), 0);
+    await shot(p, "core-out-of-credits-closed"); await p.close();
   });
   await check("C-house Tell the House opens Ask the House with the typed text; lists add and remove", async () => {
     const p = await open("page=core&s=draft"); await card(p).waitFor();
@@ -428,7 +436,7 @@ try {
   });
   // New journey step 8 rule: the first AI button on Positioning, then the credits message anywhere on the page.
   await check("J8 out-of-credits on Positioning, as the updated journey step 8 reads it", async () => {
-    const p = await open("page=positioning&sec=positioning&s=draft&credits=none"); await card(p).waitFor();
+    const p = await open("page=positioning&sec=positioning&s=draft&credits=none&packs=open"); await card(p).waitFor();
     const ai = p.getByRole("button", { name: /\bai\b|suggest|generate|draft with|write with|help me answer|refine/i }).first();
     assert.equal(await ai.count(), 1); await ai.click(); await p.getByRole("link", { name: "Buy credits" }).waitFor();
     const text = (await p.locator("body").innerText()).replace(/\s+/g, " ");

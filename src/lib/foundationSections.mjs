@@ -230,6 +230,8 @@ export function outOfCredits(error) {
   return error?.status === 402 || error?.response?.status === 402;
 }
 
+export const CREDIT_PACKS_PATH = "/api/billing/credit-packs";   // answers { packs, checkout_enabled }
+
 // The server's out-of-credits answer carries the approved wording with the refill date (Agent Tasks 4).
 export const OUT_OF_CREDITS_FALLBACK = "You've used this month's AI credits. Your work is saved. Buy more credits to keep going now.";
 export function outOfCreditsMessage(error) {

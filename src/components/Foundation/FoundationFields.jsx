@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAskTheHouse } from "../../context/AskTheHouseContext";
-import { aiButtonLabel, alignmentPrompt, errorMessage, fieldHelpPrompt, outOfCredits, outOfCreditsMessage } from "../../lib/foundationSections.mjs";
+import apiClient from "../../lib/apiClient";
+import { aiButtonLabel, alignmentPrompt, CREDIT_PACKS_PATH, errorMessage, fieldHelpPrompt, outOfCredits, outOfCreditsMessage } from "../../lib/foundationSections.mjs";
 
 // Shared pieces of a Foundation section page (build reference, artboard F): field cards with one AI
 // button each, list fields, and the Ask the House panel in the right column. Every control here sits
@@ -14,6 +15,7 @@ export function useFieldAssist(fetchSuggestion) {
   const [draft, setDraft] = useState(null);
   const [error, setError] = useState("");
   const [noCredits, setNoCredits] = useState("");
+  const [canBuy, setCanBuy] = useState(false);
   const request = async (field) => {
     const id = ++seq.current;
     setBusy(field); setError(""); setNoCredits(""); setDraft(null);
@@ -22,12 +24,16 @@ export function useFieldAssist(fetchSuggestion) {
       if (!text) throw new Error("No suggestion was returned.");
       if (id === seq.current) setDraft({ field, text });
     } catch (e) {
-      if (id === seq.current) { if (outOfCredits(e)) setNoCredits(outOfCreditsMessage(e)); else setError(errorMessage(e, "The suggestion could not be created.")); }
+      if (id === seq.current) { if (outOfCredits(e)) {
+        setNoCredits(outOfCreditsMessage(e)); setCanBuy(false);
+        // Buy credits shows only while credit-pack checkout is open (CREDIT_PACK_CHECKOUT_ENABLED and price IDs set).
+        apiClient.get(CREDIT_PACKS_PATH).then((r) => { if (id === seq.current) setCanBuy(r?.checkout_enabled === true); }).catch(() => {});
+      } else setError(errorMessage(e, "The suggestion could not be created.")); }
     } finally {
       if (id === seq.current) setBusy("");
     }
   };
-  return { busy, draft, error, noCredits, request, clear: () => setDraft(null) };
+  return { busy, draft, error, noCredits, canBuy, request, clear: () => setDraft(null) };
 }
 
 // The one AI button on a field card: a suggestion when the section has a suggestion route, otherwise
@@ -89,7 +95,7 @@ export function HousePanel({ sectionId, assist = null, nameOf = (f) => f, onUse,
       <p className="fnd-suggest-text">{assist.draft.text}</p>
       <div className="fnd-suggest-actions"><button className="fnd-btn fnd-btn-p" type="button" onClick={onUse} disabled={saving}>Use this</button><button className="fnd-btn fnd-btn-s" type="button" onClick={() => assist.request(assist.draft.field)}>Try another</button></div>
     </div>}
-    {assist && !assist.busy && assist.noCredits && <div className="fnd-suggest" role="alert"><p className="fnd-suggest-text">{assist.noCredits}</p><Link className="fnd-btn fnd-btn-p fnd-btn-link" to="/billing#credit-packs">Buy credits</Link></div>}
+    {assist && !assist.busy && assist.noCredits && <div className="fnd-suggest" role="alert"><p className="fnd-suggest-text">{assist.noCredits}</p>{assist.canBuy && <Link className="fnd-btn fnd-btn-p fnd-btn-link" to="/billing#credit-packs">Buy credits</Link>}</div>}
     {assist && !assist.busy && assist.error && <p className="fnd-house-error" role="alert">{assist.error}</p>}
     <form className="fnd-house-ask" onSubmit={ask}><label className="fnd-sr" htmlFor="house-ask">Tell the House what to change</label><input id="house-ask" type="text" value={text} onChange={(e) => setText(e.target.value)} placeholder="Tell the House what to change..." /></form>
     <p className="fnd-house-foot">Suggestions stay drafts until you use them.</p>
