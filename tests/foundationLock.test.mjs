@@ -1,5 +1,5 @@
-// A locked Foundation section: every field read-only, a plain note, and Request unlock still offered.
-// sectionLock() is what the shared section layout (FoundationSectionLayout.jsx) and the status card use.
+// A locked Foundation section: every field read-only, plain wording on the review card, and Request unlock still offered.
+// sectionLock() is what the shared section layout (FoundationSectionLayout.jsx) uses; reviewCard() is the card's wording.
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as sections from "../src/lib/foundationSections.mjs";
@@ -10,14 +10,14 @@ const lockOf = (section) => {
   return sections.sectionLock(section);
 };
 
-test("a locked section disables its fields and shows the plain locked note", () => {
+test("a locked section disables its fields and the review card says so plainly", () => {
   const lock = lockOf({ section_id: "core_truth", status: "locked" });
   assert.equal(lock.locked, true);
   assert.equal(lock.fieldsDisabled, true);
-  assert.equal(lock.note, "Approved and locked. To make changes, request an unlock.");
-  assert.equal(lock.note, sections.STATUS_HELP.locked);              // merged with the status line, shown once
-  assert.equal(lock.note, sections.LOCKED_NOTE);
-  assert.ok(!lock.note.includes("\u2014"), "no em-dash in copy");
+  const card = sections.reviewCard({ section_id: "core_truth", status: "locked" });
+  assert.equal(card.heading, "Approved and locked");
+  assert.equal(card.text, "To make changes, request an unlock.");
+  assert.ok(!(card.heading + card.text).includes("\u2014"), "no em-dash in copy");
 });
 
 test("a locked section with an unlock already requested stays locked", () => {
@@ -25,12 +25,11 @@ test("a locked section with an unlock already requested stays locked", () => {
   assert.equal(lock.fieldsDisabled, true);
 });
 
-test("draft, submitted and in-review sections keep their fields editable and show no note", () => {
+test("draft, submitted and in-review sections keep their fields editable", () => {
   for (const status of ["draft", "submitted", "in_review"]) {
     const lock = lockOf({ status });
     assert.equal(lock.locked, false, status);
     assert.equal(lock.fieldsDisabled, false, status);
-    assert.equal(lock.note, "", status);
   }
 });
 

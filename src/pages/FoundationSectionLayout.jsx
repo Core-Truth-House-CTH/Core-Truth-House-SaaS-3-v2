@@ -1,55 +1,71 @@
-import {SectionStatusCard,useFoundationSections} from "../components/Foundation/FoundationReview";
-import {sectionLock} from "../lib/foundationSections.mjs";
 import React from "react";
-import {Link,useLocation,useNavigate} from "react-router-dom";
-import {ArrowUpFromLine,ChevronDown,LockKeyhole} from "lucide-react";
+import {Link,useLocation} from "react-router-dom";
 import AuthShell from "../components/AuthShell";
 import AskTheHouseDrawer from "../components/ask-the-house/AskTheHouseDrawer";
 import {useAskTheHouse,getSurfaceFromPath} from "../context/AskTheHouseContext";
+import {SectionStatusCard,useFoundationSections} from "../components/Foundation/FoundationReview";
+import {FOUNDATION_SECTIONS,SECTION_IDS,sectionLock} from "../lib/foundationSections.mjs";
 import "./foundation-phase1.css";
 import "./foundation-v03.css";
+import "./foundation.css";
+
+// Foundation pages (build reference E: Home, F: section page). Approved 2026-11-18.
 
 export function FoundationPageShell({children}){
- const {isOpen,close,sectionId}=useAskTheHouse(),location=useLocation();
- return <AuthShell activeNav="foundation">{children}<AskTheHouseDrawer open={isOpen} onClose={close} surface={getSurfaceFromPath(location.pathname)} sectionId={sectionId}/></AuthShell>
+ const {isOpen,close,sectionId,initialInput}=useAskTheHouse(),location=useLocation();
+ return <AuthShell activeNav="foundation">{children}<AskTheHouseDrawer open={isOpen} onClose={close} surface={getSurfaceFromPath(location.pathname)} sectionId={sectionId} initialInput={initialInput}/></AuthShell>
 }
 
-export const FOUNDATION_TABS=[
- ["Foundation Home","/foundation","home"],
- ["Brand Audit","/brand-audit","brand_audit"],
- ["Core Truth","/brand-foundation","core_truth"],
- ["Audience Truth","/audience","audience"],
- ["Positioning","/brand-positioning","positioning"],
- ["Messaging","/messaging-structure","messaging"],
- ["Brand Expression","/identity-studio","expression"],
- ["Review and Lock","/foundation/review-lock","review_lock"],
-];
+export const FOUNDATION_TABS=[["Foundation Home","/foundation","home"],...FOUNDATION_SECTIONS.map(([id,label,to])=>[label,to,id])];
 
-const CARD_SECTIONS=["brand_audit","core_truth","audience","positioning","messaging","expression"];
-// The content grid. Section fields (children and rail) sit in one fieldset, disabled when the
-// section is locked, so every input, textarea, select and edit button is read-only at once.
-// The status card (with Request unlock) stays outside it.
-function SectionGrid({activeSection,hideRail,card=null,lock=sectionLock(null),rail,children}){
- return <div className={`foundation-content-grid fp-layout-${activeSection}${hideRail?" fp-no-rail":""}`}><main className="foundation-main-content">{card}<fieldset className="fv3-lock-scope" disabled={lock.fieldsDisabled} data-locked={lock.locked?"true":undefined}>{children}</fieldset></main>{!hideRail&&<aside className="foundation-right-rail"><fieldset className="fv3-lock-scope" disabled={lock.fieldsDisabled} data-locked={lock.locked?"true":undefined}>{rail}</fieldset></aside>}</div>
+function FoundationTabs({active}){
+ return <nav className="fnd-tabs" aria-label="Foundation sections"><div>{FOUNDATION_TABS.map(([label,to,id])=><Link key={id} to={to} className={active===id?"is-on":undefined} aria-current={active===id?"page":undefined}>{label}</Link>)}</div></nav>
 }
+
+// Lesson spot (Agent Tasks 8). No lesson store exists yet, so every section shows "coming soon"
+// with no play link, as the build reference specifies for a section without a lesson.
+function LessonSpot({sectionId}){
+ return <section className="fnd-card fnd-lesson" aria-label="Lesson">
+  <span className="fnd-lesson-tile" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor"/></svg></span>
+  <div className="fnd-lesson-copy"><p className="fnd-lbl fnd-lbl-sm">LESSON</p><p className="fnd-serif fnd-lesson-title">Lesson coming soon</p>{sectionId==="brand_audit"&&<p className="fnd-muted">New here? Start with the welcome lesson in your welcome email.</p>}</div>
+ </section>
+}
+
+// Navigation only: it does not save or submit.
+function PrevNext({sectionId}){
+ const i=FOUNDATION_SECTIONS.findIndex(([id])=>id===sectionId),next=FOUNDATION_SECTIONS[i+1];
+ return <div className="fnd-prevnext"><Link to="/foundation">← Foundation Home</Link><span/>{next&&<Link to={next[2]}>Next: {next[1]} →</Link>}</div>
+}
+
+// One fieldset per column holds the section's fields. It is disabled when the section is locked, so
+// every input, textarea, select and button inside is read-only at once; the server's 423 stays the
+// guard. The review card (with Request unlock) and the prev/next links sit outside it.
+function LockScope({lock,children}){
+ return <fieldset className="fv3-lock-scope" disabled={lock.fieldsDisabled} data-locked={lock.locked?"true":undefined}>{children}</fieldset>
+}
+
+function SectionBody({activeSection,lock=sectionLock(null),card=null,rail,children}){
+ const content=SECTION_IDS.includes(activeSection);
+ return <div className="fnd-row">
+  <main className="fnd-main">{content&&<LessonSpot sectionId={activeSection}/>}<LockScope lock={lock}>{children}</LockScope>{content&&<PrevNext sectionId={activeSection}/>}</main>
+  {(card||rail)&&<aside className="fnd-side">{card}{rail&&<LockScope lock={lock}>{rail}</LockScope>}</aside>}
+ </div>
+}
+
 // A Foundation section with a review status: one sections load feeds both the card and the lock.
-function ReviewedSectionGrid(props){
+function ReviewedSectionBody({onSaveDraft,saving,...props}){
  const sectionsState=useFoundationSections();
  const lock=sectionLock(sectionsState.sections.find((s)=>s.section_id===props.activeSection));
- return <SectionGrid {...props} lock={lock} card={<SectionStatusCard sectionId={props.activeSection} sectionsState={sectionsState}/>}/>
+ return <SectionBody {...props} lock={lock} card={<SectionStatusCard sectionId={props.activeSection} sectionsState={sectionsState} onSaveDraft={onSaveDraft} saving={saving}/>}/>
 }
-export function FoundationSectionLayout({title,subtitle,activeSection="core_truth",children,rail,footer=null,saveLabel="Save Draft",onSaveDraft,onSaveContinue,saving=false,hideRail=false,home=false,hideToolbar=false,headerActions=null,customTabs=null}){
- const nav=useNavigate();
- const sectionIndex=Math.max(1,FOUNDATION_TABS.findIndex((item)=>item[2]===activeSection));
- const current=FOUNDATION_TABS[sectionIndex];
- const canContinue=Boolean(onSaveContinue);
- return <div className={`foundation-phase1${home?" fp-home-page":""}`}>
-  <header className="foundation-page-heading"><div><h1>{title}</h1><p>{subtitle}</p></div>
-   {!home&&!hideToolbar&&<div className="foundation-section-toolbar"><button className="foundation-toolbar-control" type="button" disabled title="The version number is shown in the Review status card below.">Draft <ChevronDown size={13}/></button><button className="foundation-toolbar-control" type="button" disabled title="Review status and the Submit button are in the Review status card below.">Approval <ChevronDown size={13}/></button><label className="foundation-section-select"><span>Section {sectionIndex} of 7</span><select aria-label="Choose Foundation section" value={current[1]} onChange={e=>nav(e.target.value)}>{FOUNDATION_TABS.slice(1).map(([label,to,id],i)=><option key={id} value={to} disabled={id==="review_lock"}>{label}</option>)}</select></label>{activeSection==="review_lock"?<><button className="foundation-toolbar-control" type="button" disabled title="Blueprint export is not implemented.">Export Blueprint</button></>:<><button type="button" className="foundation-toolbar-control" onClick={onSaveDraft} disabled={!onSaveDraft||saving} title={onSaveDraft?undefined:"This section has no editable fields here."}>{saving?"Saving…":saveLabel}</button><button type="button" className="foundation-toolbar-primary" onClick={onSaveContinue} disabled={!canContinue||saving} title={canContinue?undefined:"Save and continue is unavailable for this section."}>{saving?"Saving…":"Save and Continue"} <span aria-hidden="true">&rarr;</span></button></>}</div>}
-   {home&&<div className="fp-home-controls"><span className="fp-home-control-status">Version unavailable</span><button className="foundation-button foundation-button-secondary" type="button" disabled title="Approval history is not implemented.">Approval <ChevronDown size={13}/></button><a className="foundation-button foundation-button-secondary" href="#foundation-sections">All Sections <ChevronDown size={13}/></a><button className="foundation-button foundation-button-secondary" type="button" disabled title="Blueprint export is not implemented."><ArrowUpFromLine size={15}/> Export Blueprint</button><button className="foundation-button foundation-button-primary" type="button" disabled title="Review and Lock workflow is not implemented.">Review and Lock <LockKeyhole size={14}/></button></div>}
-   {headerActions}
-  </header>
-  {customTabs || <nav className="foundation-tabs" aria-label="Foundation sections">{FOUNDATION_TABS.map(([label,to,id])=>id==="review_lock"?<Link key={id} to={to} className={`foundation-tab${activeSection===id?" is-active":""}`} aria-current={activeSection===id?"page":undefined}>{label}</Link>:<Link key={id} to={to} className={`foundation-tab${activeSection===id?" is-active":""}`} aria-current={activeSection===id?"page":undefined}>{label}</Link>)}</nav>}
-  {!home&&CARD_SECTIONS.includes(activeSection)?<ReviewedSectionGrid activeSection={activeSection} hideRail={hideRail} rail={rail}>{children}</ReviewedSectionGrid>:<SectionGrid activeSection={activeSection} hideRail={hideRail} rail={rail}>{children}</SectionGrid>}{footer&&<div className="fp-layout-footer">{footer}</div>}
+
+export function FoundationSectionLayout({title,subtitle,activeSection="core_truth",children,rail=null,footer=null,onSaveDraft=null,saving=false,home=false,headerActions=null,customTabs=null}){
+ return <div className="fnd foundation-phase1">
+  <div className="fnd-wrap">
+   <div className="fnd-head"><div><h1 className="fnd-h1">{title}</h1><p className="fnd-sub">{subtitle}</p></div>{headerActions}</div>
+   {customTabs||<FoundationTabs active={home?"home":activeSection}/>}
+   {home?children:SECTION_IDS.includes(activeSection)?<ReviewedSectionBody activeSection={activeSection} rail={rail} onSaveDraft={onSaveDraft} saving={saving}>{children}</ReviewedSectionBody>:<SectionBody activeSection={activeSection} rail={rail}>{children}</SectionBody>}
+   {footer&&<div className="fp-layout-footer">{footer}</div>}
+  </div>
  </div>
 }

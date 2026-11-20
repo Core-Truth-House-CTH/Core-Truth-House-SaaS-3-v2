@@ -82,9 +82,13 @@ export function getSurfaceLabelFromPath(pathname) {
 export function AskTheHouseProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false);
   const [sectionId, setSectionId] = useState(null);
+  // Optional text a page hands over (for example the Foundation "Tell the House what to change"
+  // box). The drawer only prefills its composer with it; nothing is sent until the member sends.
+  const [initialInput, setInitialInput] = useState("");
 
-  const open = useCallback((section) => {
+  const open = useCallback((section, input = "") => {
     if (section !== undefined) setSectionId(section || null);
+    setInitialInput(String(input || ""));
     setIsOpen(true);
   }, []);
 
@@ -97,8 +101,8 @@ export function AskTheHouseProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ isOpen, open, close, toggle, sectionId, setSectionId }),
-    [isOpen, open, close, toggle, sectionId]
+    () => ({ isOpen, open, close, toggle, sectionId, setSectionId, initialInput }),
+    [isOpen, open, close, toggle, sectionId, initialInput]
   );
 
   return (

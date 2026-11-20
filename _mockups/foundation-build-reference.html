@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CTH Foundation build reference (E: Home, F: Section)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+================================================================================
+CORE TRUTH HOUSE: FOUNDATION BUILD REFERENCE  (approved by Shake, 2026-11-18)
+Source: design canvas "CTH Foundation section: three directions", artboards E and F.
+
+HOW TO USE THIS FILE
+- Replicate the layout, spacing, type and colors below. Do NOT re-interpret from prose.
+- Use the app's existing tokens (src/styles/cth-tokens.css) where a value matches;
+  the hex values here are the approved CTH palette.
+- Reuse every existing data call. This is a FRONTEND reskin of the Foundation Home
+  and the 7 section pages. No backend changes, no new endpoints.
+- Keep the shared FoundationSectionLayout + <fieldset disabled> lock behaviour
+  (fix/foundation-locked-read-only-20261118). Server 423 stays the guard.
+- Build rule (Nov 15): replace the old layout, do not keep it alongside.
+
+SCREEN 1: FOUNDATION HOME (artboard E)
+Blocks, in order: header with section count + Export Blueprint, section tabs,
+sections table, right column (Your next step, From Shake). Nothing else.
+REMOVED from the old Home: Draft/Approval/All Sections dropdowns, member-facing
+"Review and Lock" button, lock-status panel, 4 stat cards, readiness ring,
+"Your path to 100%", conflicts box, Brand Promise card, Blueprint card, extra AI buttons.
+
+Header count: "{N} of 7 sections locked" (N = sections with status approved).
+No readiness percentage anywhere.
+
+Sections table: one row per section, links to the section page.
+Status label per section (from the section status store):
+  approved / locked             -> "Locked"             color #2d6a4f, solid dot
+  submitted OR in_review         -> "Waiting for Shake"  color #6b4a00, dot #f2e3b8
+  changes_requested              -> "Changes requested"  color #AF0024, hollow dot
+  draft with any saved content   -> "In progress"        color #33033c, hollow dot
+  draft, nothing saved           -> "Not started"        color #6e5868, hollow dot
+Footer line under table (exact): "Submit each section when it's ready. Shake reviews
+it and locks it once it's approved."
+
+Your next step (plum card), pick the first that applies:
+  1. any section changes_requested -> title "Update {Section}", body "Shake sent it back
+     with a note. Make the change, then submit it again.", button "Open {Section}"
+  2. first section In progress or Not started -> title "Continue {Section}" /
+     "Start {Section}", body "Watch the lesson, then answer in your own words.",
+     button "Open {Section}"
+  3. everything submitted/locked -> title "Waiting for Shake", body "Every section is
+     with Shake. You'll get an email when there's news.", no button.
+
+From Shake: the most recent reviewer note across all sections (section name + date).
+Hide the whole card when there is no note. "See all notes" links to the review
+history (or omit the link if no such view exists; do not build a new one).
+
+SCREEN 2: SECTION PAGE (artboard F, shown for Core Truth; same pattern for all 7)
+Blocks: title + subtitle, section tabs, lesson spot, field cards (2-up grid,
+1-up on narrow screens), prev/next links; right column: Your Review card,
+Ask the House panel.
+REMOVED: Draft/Approval/Section dropdowns, "Save and Continue", readiness ring,
+"Your path to 100%", "This section: 100% complete" card, duplicate bottom
+button bar, decorative icons on field cards.
+
+Lesson spot (Agent Tasks 8): title, duration, video link set by Shake per section.
+If no lesson is set: show the same card with "Lesson coming soon" and no play link.
+Diagnostic Insight only: add the line "New here? Start with the welcome lesson in
+your welcome email." (Agent Tasks 15).
+
+Field cards: label (small caps, crimson), one-line helper, input. ONE AI button
+per field: "Help me answer" when the field is empty, "Refine" when it has text.
+(1 AI credit each; out-of-credits shows the friendly message + Buy credits.)
+The field Shake's note refers to gets a 2px #AF0024 border and a "Shake's note" pill.
+Lists (Beliefs) and chips (Core values) keep their add/remove controls.
+
+Your Review card, by status:
+  draft              -> heading "Draft"; text "Submit when it's ready. You can keep
+                        working on other sections while Shake reviews this one.";
+                        buttons Save draft + Submit for review
+  submitted          -> heading "Waiting for Shake"; text "Shake gets an email when
+                        you submit."; button Withdraw (existing withdraw action)
+  in_review          -> heading "Shake is reviewing"; no buttons
+  changes_requested  -> heading "Changes requested"; Shake's note (avatar S, date,
+                        field); buttons Save draft + Submit for review
+  approved (locked)  -> heading "Approved and locked"; text "To make changes,
+                        request an unlock."; button Request unlock (existing action);
+                        fields disabled via the shared fieldset
+Required-fields check above the buttons: green "Required fields are filled" or
+crimson "{n} required fields left" (Submit disabled until filled).
+
+Ask the House panel (plum): "Uses your saved Foundation. 1 credit per suggestion."
+Suggestion box: "SUGGESTED {FIELD}, NOT APPLIED", text, buttons "Use this" and
+"Try another" (never "Request changes": that is the reviewer's action).
+Free-text input "Tell the House what to change...". Footer "Suggestions stay
+drafts until you use them." Disabled when the section is locked.
+
+Prev/next: "← Foundation Home" (or previous section) and "Next: {Section} →".
+Navigation only; it does not save or submit.
+
+OTHER 5 SECTIONS: same page structure; only the field cards change (use each
+section's existing fields). Review and Lock page: keep its current function,
+restyle with the same header, tabs and card language.
+================================================================================
+-->
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fbf7f4;font-family:'DM Sans',sans-serif;color:#2b1040}
+a{color:#AF0024}
+.hdr{display:flex;flex-wrap:wrap;align-items:center;gap:24px;padding:14px 32px;background:#0d0010;color:#f3e9f1}
+.logo{width:40px;height:40px;border-radius:50%;border:1px solid #c4a95b;background:#6b0016;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;color:#fffaf7;font-size:20px}
+.brand{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;letter-spacing:.04em;color:#fffaf7}
+.nav a{color:#e6d9e4;text-decoration:none;padding:10px 14px;font-size:14px}
+.nav a.on{color:#fffaf7;background:#7d001a;border-radius:999px;font-weight:600;padding:10px 18px}
+.wrap{max-width:1360px;margin:0 auto;padding:30px 40px 44px;display:flex;flex-direction:column;gap:22px}
+h1{margin:0;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:52px;line-height:1;color:#6b0016;letter-spacing:.02em}
+.sub{margin:6px 0 0;font-size:17px;color:#4a3546}
+.tabs{border-bottom:1px solid #e3d4d0;overflow-x:auto}
+.tabs div{display:flex;gap:4px;min-width:980px;font-size:15px}
+.tabs a{padding:12px 14px;color:#4a3546;text-decoration:none}
+.tabs a.on{color:#AF0024;font-weight:600;border-bottom:2px solid #AF0024}
+.row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+.main{flex:999 1 620px;min-width:0;display:flex;flex-direction:column;gap:18px}
+.side{flex:1 1 340px;max-width:420px;display:flex;flex-direction:column;gap:18px}
+.card{background:#fff;border:1px solid #ecdfdb;border-radius:16px;padding:22px}
+.plum{background:#33033c;color:#f3e9f1;border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.lbl{margin:0;font-size:13px;letter-spacing:.12em;color:#AF0024;font-weight:600}
+.gold{color:#c4a95b}
+.serif{font-family:'Cormorant Garamond',serif;font-weight:600}
+.muted{color:#6e5868;font-size:14px;margin:0}
+.btn{font:600 14px 'DM Sans',sans-serif;min-height:46px;padding:0 18px;border-radius:10px;cursor:pointer}
+.btn-p{border:0;background:#6b0016;color:#fffaf7}
+.btn-s{border:1px solid #e3d4d0;background:#fff;color:#2b1040}
+.btn-ai{font:500 13px 'DM Sans',sans-serif;min-height:36px;padding:0 12px;border:1px solid #e3d4d0;background:#fff;color:#33033c;border-radius:8px}
+.tbl{list-style:none;margin:0;padding:0}
+.tbl li a{display:grid;grid-template-columns:28px minmax(0,1fr) 210px 20px;align-items:center;gap:14px;padding:16px 6px;border-top:1px solid #f0e6e3;text-decoration:none;color:#2b1040}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid currentColor;vertical-align:middle;margin-right:8px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.field{display:flex;flex-direction:column;gap:8px;padding:20px;background:#fff;border:1px solid #ecdfdb;border-radius:16px}
+.field.noted{border:2px solid #AF0024}
+.fhead{display:flex;align-items:center;gap:10px}
+.pill{font-size:12px;font-weight:600;color:#fffaf7;background:#AF0024;padding:3px 8px;border-radius:999px}
+textarea{font:15px/1.55 'DM Sans',sans-serif;color:#2b1040;padding:12px;border:1px solid #e3d4d0;border-radius:10px;background:#fbf7f4;resize:vertical}
+.note{display:flex;gap:12px;padding:14px;background:#fbf7f4;border-radius:12px}
+.av{flex:none;width:36px;height:36px;border-radius:50%;background:#0d0010;color:#c4a95b;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+.screen{border:3px dashed #c4a95b;margin:24px;border-radius:12px;overflow:hidden}
+.screen>p{margin:0;padding:8px 14px;background:#c4a95b;color:#2a0a2e;font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ============================ SCREEN 1: FOUNDATION HOME (E) ============================ -->
+<div class="screen"><p>Screen 1: Foundation Home</p>
+<header class="hdr">
+  <span class="logo">CT</span><span class="brand">CORE TRUTH HOUSE</span>
+  <nav class="nav"><a href="#">Command Center</a><a href="#" class="on">Workspace</a><a href="#">Reports</a><a href="#">Knowledge Base</a></nav>
+</header>
+<div class="wrap">
+  <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px">
+    <div><h1>FOUNDATION</h1><p class="sub">Build the truth the rest of your brand will stand on.</p></div>
+    <span style="flex:1"></span>
+    <p style="margin:0;font-size:15px;color:#4a3546"><strong style="color:#2b1040">3 of 7</strong> sections locked</p>
+    <button class="btn btn-s" type="button">Export Blueprint</button>
+  </div>
+  <nav class="tabs"><div><a class="on" href="#">Foundation Home</a><a href="#">Diagnostic Insight</a><a href="#">Core Truth</a><a href="#">Audience Truth</a><a href="#">Positioning</a><a href="#">Messaging</a><a href="#">Brand Expression</a><a href="#">Review and Lock</a></div></nav>
+  <div class="row">
+    <section class="card main" style="padding:24px 24px 12px">
+      <h2 class="lbl" style="margin-bottom:16px">YOUR FOUNDATION SECTIONS</h2>
+      <ol class="tbl">
+        <li><a href="#"><span class="muted">1</span><span style="font-size:17px;font-weight:500">Diagnostic Insight</span><span style="color:#2d6a4f;font-weight:600;font-size:14px"><span class="dot" style="background:#2d6a4f"></span>Locked</span><span>›</span></a></li>
+        <li><a href="#"><span class="muted">2</span><span style="font-size:17px;font-weight:500">Core Truth</span><span style="color:#2d6a4f;font-weight:600;font-size:14px"><span class="dot" style="background:#2d6a4f"></span>Locked</span><span>›</span></a></li>
+        <li><a href="#"><span class="muted">3</span><span style="font-size:17px;font-weight:500">Audience Truth</span><span style="color:#2d6a4f;font-weight:600;font-size:14px"><span class="dot" style="background:#2d6a4f"></span>Locked</span><span>›</span></a></li>
+        <li><a href="#"><span class="muted">4</span><span style="font-size:17px;font-weight:500">Positioning</span><span style="color:#6b4a00;font-weight:600;font-size:14px"><span class="dot" style="background:#f2e3b8"></span>Waiting for Shake</span><span>›</span></a></li>
+        <li><a href="#"><span class="muted">5</span><span style="font-size:17px;font-weight:500">Messaging</span><span style="color:#AF0024;font-weight:600;font-size:14px"><span class="dot"></span>Changes requested</span><span>›</span></a></li>
+        <li><a href="#"><span class="muted">6</span><span style="font-size:17px;font-weight:500">Brand Expression</span><span style="color:#33033c;font-weight:600;font-size:14px"><span class="dot"></span>In progress</span><span>›</span></a></li>
+        <li><a href="#"><span class="muted">7</span><span style="font-size:17px;font-weight:500">Review and Lock</span><span style="color:#6e5868;font-weight:600;font-size:14px"><span class="dot"></span>Not started</span><span>›</span></a></li>
+      </ol>
+      <p class="muted" style="margin:8px 6px 12px;font-size:13px">Submit each section when it's ready. Shake reviews it and locks it once it's approved.</p>
+    </section>
+    <div class="side">
+      <section class="plum">
+        <h2 class="lbl gold">YOUR NEXT STEP</h2>
+        <p class="serif" style="margin:0;font-size:30px;line-height:1.1;color:#fffaf7">Update Messaging</p>
+        <p style="margin:0;font-size:15px;line-height:1.55;color:#e6d9e4">Shake sent it back with a note. Make the change, then submit it again.</p>
+        <a href="#" style="margin-top:6px;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:10px;background:#AF0024;color:#fffaf7;font-weight:600;text-decoration:none">Open Messaging</a>
+      </section>
+      <section class="card" style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px"><span class="av">S</span><div><h2 style="margin:0;font-size:15px">From Shake</h2><p class="muted" style="font-size:13px">On Messaging, Nov 17</p></div></div>
+        <p class="serif" style="margin:0;font-size:22px;font-weight:500;line-height:1.4">"Your promise is strong. Back it with one proof point a client would recognize, then it's ready."</p>
+        <a href="#" style="font-size:14px;font-weight:600">See all notes</a>
+      </section>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================ SCREEN 2: SECTION PAGE (F) ============================ -->
+<div class="screen"><p>Screen 2: Section page (Core Truth, status = changes_requested)</p>
+<header class="hdr">
+  <span class="logo">CT</span><span class="brand">CORE TRUTH HOUSE</span>
+  <nav class="nav"><a href="#">Command Center</a><a href="#" class="on">Workspace</a><a href="#">Reports</a><a href="#">Knowledge Base</a></nav>
+</header>
+<div class="wrap">
+  <div><h1>CORE TRUTH</h1><p class="sub">Define what your brand believes and why it exists.</p></div>
+  <nav class="tabs"><div><a href="#">Foundation Home</a><a href="#">Diagnostic Insight</a><a class="on" href="#">Core Truth</a><a href="#">Audience Truth</a><a href="#">Positioning</a><a href="#">Messaging</a><a href="#">Brand Expression</a><a href="#">Review and Lock</a></div></nav>
+  <div class="row">
+    <div class="main">
+      <section class="card" style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding:14px">
+        <a href="#" aria-label="Play lesson" style="flex:none;width:150px;height:84px;border-radius:10px;background:#33033c;display:flex;align-items:center;justify-content:center;color:#c4a95b;font-size:28px;text-decoration:none">▶</a>
+        <div style="flex:1 1 260px;display:flex;flex-direction:column;gap:3px">
+          <p class="lbl" style="font-size:12px">LESSON, 9 MIN</p>
+          <p class="serif" style="margin:0;font-size:24px">Finding your core truth</p>
+          <p class="muted">Watch before you write. Shake reviews your answers against it.</p>
+        </div>
+      </section>
+      <form class="fields">
+        <div class="field"><div class="fhead"><label class="lbl">PURPOSE</label><span style="flex:1"></span><button class="btn-ai" type="button">Refine</button></div><p class="muted">Why you exist. The higher goal behind the work.</p><textarea rows="3">Help founders lead with clarity.</textarea></div>
+        <div class="field noted"><div class="fhead"><label class="lbl">MISSION</label><span class="pill">Shake's note</span><span style="flex:1"></span><button class="btn-ai" type="button">Refine</button></div><p class="muted">Who you serve and what changes for them.</p><textarea rows="3">Turn brand decisions into a working system.</textarea></div>
+        <div class="field"><div class="fhead"><label class="lbl">VISION</label><span style="flex:1"></span><button class="btn-ai" type="button">Help me answer</button></div><p class="muted">Where you're going. The future you want to create.</p><textarea rows="3" placeholder="Write it the way you'd say it to a client."></textarea></div>
+        <div class="field"><div class="fhead"><p class="lbl">BELIEFS</p><span style="flex:1"></span><button class="btn-ai" type="button">Refine</button></div><p class="muted">The truths that shape your decisions.</p>
+          <div style="padding:10px 12px;border:1px solid #e3d4d0;border-radius:10px;background:#fbf7f4">Clarity builds trust. <span style="float:right;color:#AF0024">×</span></div>
+          <div style="padding:10px 12px;border:1px solid #e3d4d0;border-radius:10px;background:#fbf7f4">A strong foundation guides growth. <span style="float:right;color:#AF0024">×</span></div>
+          <a href="#" style="font-weight:600;font-size:14px;text-decoration:none">+ Add belief</a></div>
+        <div class="field"><div class="fhead"><p class="lbl">CORE VALUES</p><span style="flex:1"></span><button class="btn-ai" type="button">Refine</button></div><p class="muted">Three to five principles behind how you work.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px"><span style="padding:8px 14px;border:1px solid #e3d4d0;border-radius:999px">Clarity ×</span><span style="padding:8px 14px;border:1px solid #e3d4d0;border-radius:999px">Integrity ×</span><span style="padding:8px 14px;border:1px solid #e3d4d0;border-radius:999px">Community ×</span></div>
+          <a href="#" style="font-weight:600;font-size:14px;text-decoration:none">+ Add value</a></div>
+        <div class="field"><div class="fhead"><label class="lbl">FOUNDER INSIGHT</label><span style="flex:1"></span><button class="btn-ai" type="button">Refine</button></div><p class="muted">What you know about your clients that others miss.</p><textarea rows="3">Founders need one clear place to bring their brand decisions together and put them to work.</textarea></div>
+      </form>
+      <div style="display:flex;flex-wrap:wrap;gap:12px"><a href="#" style="font-weight:600;text-decoration:none">← Foundation Home</a><span style="flex:1"></span><a href="#" style="font-weight:600;text-decoration:none">Next: Audience Truth →</a></div>
+    </div>
+    <aside class="side">
+      <section class="card" style="display:flex;flex-direction:column;gap:14px">
+        <p class="lbl">YOUR REVIEW</p>
+        <p class="serif" style="margin:0;font-size:28px;line-height:1.1">Changes requested</p>
+        <div class="note"><span class="av">S</span><div><p class="muted" style="font-size:13px">Shake, Nov 17, on Mission</p><p style="margin:4px 0 0;font-size:15px;line-height:1.5">Say who it's for and what changes for them. One sentence.</p></div></div>
+        <p style="margin:0;font-size:14px;color:#2d6a4f;font-weight:600">✓ Required fields are filled</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px"><button class="btn btn-s" style="flex:1 1 120px" type="button">Save draft</button><button class="btn btn-p" style="flex:2 1 180px" type="button">Submit for review</button></div>
+        <p class="muted" style="font-size:13px">You can keep working on other sections while Shake reviews this one.</p>
+      </section>
+      <section class="plum" style="gap:14px">
+        <div><p class="serif" style="margin:0;font-size:24px;color:#fffaf7;letter-spacing:.04em">ASK THE HOUSE</p><p style="margin:2px 0 0;font-size:13px;color:#d9c6d6">Uses your saved Foundation. 1 credit per suggestion.</p></div>
+        <div style="background:#fbf7f4;color:#2b1040;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px">
+          <p class="lbl" style="font-size:12px">SUGGESTED MISSION, NOT APPLIED</p>
+          <p style="margin:0;font-size:15px;line-height:1.5">Help independent founders turn scattered brand decisions into one clear working system.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn btn-p" style="flex:1 1 120px;min-height:42px" type="button">Use this</button><button class="btn btn-s" style="flex:1 1 120px;min-height:42px;color:#6b0016" type="button">Try another</button></div>
+        </div>
+        <input type="text" placeholder="Tell the House what to change..." style="font:14px 'DM Sans',sans-serif;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid #5a2a63;background:#1c0520;color:#fffaf7">
+        <p style="margin:0;font-size:13px;color:#d9c6d6">Suggestions stay drafts until you use them.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+</div>
+</body>
+</html>

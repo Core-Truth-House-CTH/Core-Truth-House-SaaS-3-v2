@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import apiClient from "../../lib/apiClient";
 import {
-  errorMessage, memberActions, memberPath, missingText, noteRequired, queueKey, reviewerActions, reviewerPath,
-  scoreNote, sectionLock, statusLabel, STATUS_HELP, validateNote, MAX_NOTE, SECTION_IDS,
+  changesRequested, errorMessage, memberActions, memberPath, missingText, noteRequired, queueKey, requiredLeft, requiredLine,
+  reviewCard, reviewerActions, reviewerPath, shortDate, statusLabel, validateNote, MAX_NOTE, SECTION_IDS,
 } from "../../lib/foundationSections.mjs";
 
 // ------------------------------------------------------------------ data
@@ -33,20 +33,13 @@ function NoteBox({ id, action, value, onChange, label }) {
   </label>;
 }
 
-// ------------------------------------------------------------------ member: one section's status and submit
+// ------------------------------------------------------------------ member: "Your Review" card for one section
 
 // sectionsState is the useFoundationSections() result owned by the section layout, which also
-// uses it to lock the fields (one load, one source for the card and the lock).
-export function SectionStatusCard({ sectionId, sectionsState, readinessSection = null, onChanged }) {
+// uses it to lock the fields (one load, one source for the card and the lock). onSaveDraft is the
+// page's own save; the card reloads the section status after it so the required-fields line is current.
+export function SectionStatusCard({ sectionId, sectionsState, onSaveDraft = null, saving = false }) {
   const { sections, loading, error, reload } = sectionsState;
-  const [ownReadiness, setOwnReadiness] = useState(null);
-  const loadReadiness = useCallback(async () => {
-    try {
-      const r = await apiClient.get("/api/foundation/readiness");
-      setOwnReadiness((r?.sections || []).find((x) => x.id === sectionId) || null);
-    } catch { setOwnReadiness(null); }          // the score line is a nicety; the card works without it
-  }, [sectionId]);
-  useEffect(() => { loadReadiness(); }, [loadReadiness]);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [failure, setFailure] = useState("");
@@ -61,13 +54,17 @@ export function SectionStatusCard({ sectionId, sectionsState, readinessSection =
       await apiClient.post(memberPath(sectionId, action), body || {});
       setMessage(action === "submit" ? "Submitted for review." : action === "withdraw" ? "Withdrawn. You can edit again." : "Unlock requested.");
       setAsking(false); setNote("");
-      await Promise.all([reload(), loadReadiness()]);
-      if (onChanged) onChanged();
+      await reload();
     } catch (e) {
       setFailure(errorMessage(e));
     } finally {
       setBusy("");
     }
+  };
+
+  const saveDraft = async () => {
+    setFailure(""); setMessage("");
+    if ((await onSaveDraft()) !== false) { setMessage("Draft saved."); await reload(); }
   };
 
   const askForUnlock = () => {
@@ -76,36 +73,34 @@ export function SectionStatusCard({ sectionId, sectionsState, readinessSection =
     run("request-unlock", { note });
   };
 
-  if (loading && !section) return <section className="foundation-card fv3-status" aria-live="polite"><p className="foundation-muted">Loading section status…</p></section>;
-  if (error && !section) return <section className="foundation-card fv3-status" role="alert"><p>{error}</p><button className="foundation-button foundation-button-secondary" type="button" onClick={reload}>Retry</button></section>;
+  if (loading && !section) return <section className="fnd-card fnd-review fv3-status" aria-live="polite"><p className="fnd-muted">Loading section status…</p></section>;
+  if (error && !section) return <section className="fnd-card fnd-review fv3-status" role="alert"><p>{error}</p><button className="fnd-btn fnd-btn-s" type="button" onClick={reload}>Retry</button></section>;
   if (!section) return null;
 
   const can = memberActions(section);
-  const lock = sectionLock(section);
-  const missing = missingText(section);
-  const line = scoreNote(readinessSection || ownReadiness);
+  const card = reviewCard(section);
+  const sentBack = changesRequested(section);
+  const left = requiredLeft(section);
 
-  return <section className="foundation-card fv3-status" aria-label="Section review status" data-status={section.status}>
-    <div className="fv3-status-head">
-      <div><span className="fp-eyebrow">REVIEW STATUS</span><StatusBadge status={section.status} /></div>
-      {section.version ? <small>Version {section.version}</small> : null}
-    </div>
-    {lock.note ? <p className="fv3-locked-note" role="note">{lock.note}</p> : <p>{STATUS_HELP[section.status] || STATUS_HELP.draft}</p>}
-    {section.review_note && section.status === "draft" && <div className="fv3-review-note" role="note"><b>Changes requested</b><p>{section.review_note}</p></div>}
-    {section.review_note && section.status === "draft" && section.unlocked_at && <small>This section was unlocked for editing.</small>}
-    {can.submitBlocked && <p className="foundation-muted">To submit, still needed: {missing || "the required fields"}.</p>}
-    {line && <p className="foundation-muted">{line}</p>}
-    {can.unlockRequested && <p className="foundation-muted">Unlock requested. A reviewer will respond.</p>}
-    <div className="fv3-actions">
-      {(can.submit || can.submitBlocked) && <button className="foundation-button foundation-button-primary" type="button" disabled={!can.submit || Boolean(busy)} onClick={() => run("submit")}>{busy === "submit" ? "Submitting…" : "Submit for review"}</button>}
-      {can.withdraw && <button className="foundation-button foundation-button-secondary" type="button" disabled={Boolean(busy)} onClick={() => run("withdraw")}>{busy === "withdraw" ? "Withdrawing…" : "Withdraw to keep editing"}</button>}
-      {can.requestUnlock && !asking && <button className="foundation-button foundation-button-secondary" type="button" onClick={() => { setAsking(true); setFailure(""); }}>Request unlock</button>}
-    </div>
+  return <section className="fnd-card fnd-review fv3-status" aria-label="Your review" data-status={section.status}>
+    <p className="fnd-lbl">YOUR REVIEW</p>
+    <p className="fnd-serif fnd-review-heading">{card.heading}</p>
+    {sentBack && <div className="fnd-note fv3-review-note" role="note"><span className="fnd-av" aria-hidden="true">S</span><div><p className="fnd-muted fnd-note-meta">{["Shake", shortDate(section.review_note_at)].filter(Boolean).join(", ")}</p><p className="fnd-note-text">{section.review_note}</p></div></div>}
+    {card.text && <p className="fnd-muted">{card.text}</p>}
+    {card.edit && <p className={`fnd-required${left ? " is-missing" : ""}`}>{left ? requiredLine(section) : <>✓ {requiredLine(section)}</>}</p>}
+    {card.edit && <div className="fnd-review-actions">
+      {onSaveDraft && <button className="fnd-btn fnd-btn-s fnd-btn-save" type="button" disabled={saving || Boolean(busy)} onClick={saveDraft}>{saving ? "Saving…" : "Save draft"}</button>}
+      <button className="fnd-btn fnd-btn-p fnd-btn-submit" type="button" disabled={!can.submit || saving || Boolean(busy)} onClick={() => run("submit")}>{busy === "submit" ? "Submitting…" : "Submit for review"}</button>
+    </div>}
+    {sentBack && <p className="fnd-muted fnd-small">You can keep working on other sections while Shake reviews this one.</p>}
+    {can.withdraw && <div className="fnd-review-actions"><button className="fnd-btn fnd-btn-s" type="button" disabled={Boolean(busy)} onClick={() => run("withdraw")}>{busy === "withdraw" ? "Withdrawing…" : "Withdraw"}</button></div>}
+    {can.requestUnlock && !asking && <div className="fnd-review-actions"><button className="fnd-btn fnd-btn-s" type="button" onClick={() => { setAsking(true); setFailure(""); }}>Request unlock</button></div>}
+    {can.unlockRequested && <p className="fnd-muted">Unlock requested. A reviewer will respond.</p>}
     {asking && <div className="fv3-ask">
       <NoteBox id={`unlock-note-${sectionId}`} action="request-unlock" value={note} onChange={setNote} label="Why does this section need to change?" />
-      <div className="fv3-actions">
-        <button className="foundation-button foundation-button-primary" type="button" disabled={Boolean(busy)} onClick={askForUnlock}>Send request</button>
-        <button className="foundation-button foundation-button-secondary" type="button" onClick={() => { setAsking(false); setNote(""); setFailure(""); }}>Cancel</button>
+      <div className="fnd-review-actions">
+        <button className="fnd-btn fnd-btn-p" type="button" disabled={Boolean(busy)} onClick={askForUnlock}>Send request</button>
+        <button className="fnd-btn fnd-btn-s" type="button" onClick={() => { setAsking(false); setNote(""); setFailure(""); }}>Cancel</button>
       </div>
     </div>}
     <div aria-live="polite">{message && <p className="fp-success">{message}</p>}{failure && <p className="fv3-error" role="alert">{failure}</p>}</div>

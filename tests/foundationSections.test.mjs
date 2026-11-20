@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   statusLabel, noteRequired, validateNote, memberPath, reviewerPath, memberActions, reviewerActions,
-  scoreNote, errorMessage, MAX_NOTE, SECTION_IDS, queueKey,
+  errorMessage, MAX_NOTE, SECTION_IDS, queueKey,
 } from "../src/lib/foundationSections.mjs";
 
 test("status labels are plain words and unknown values fall back to Draft", () => {
@@ -64,14 +64,6 @@ test("paths match the backend routes and encode ids", () => {
   assert.equal(reviewerPath("ws 1/x", "audience", "request-changes"), "/api/foundation/review/ws%201%2Fx/sections/audience/request-changes");
   assert.equal(SECTION_IDS.length, 6);
   assert.equal(queueKey({ workspace_id: "w", section_id: "s" }), "w:s");
-});
-
-test("score note: only a locked section says 100; submitted says it is capped", () => {
-  assert.match(scoreNote({ locked: true, score: 100 }), /100%/);
-  assert.match(scoreNote({ awaiting_review: true, score: 90 }), /90%/);
-  assert.match(scoreNote({ score: 90, completeness: 100 }), /only a locked section reaches 100/);
-  assert.equal(scoreNote({ score: 40, completeness: 40 }), "");
-  assert.equal(scoreNote(null), "");
 });
 
 test("error messages: required-fields list, server message, plain string, fallback", () => {
