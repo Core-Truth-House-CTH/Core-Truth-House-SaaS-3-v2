@@ -19,10 +19,11 @@ const mocks={
  drawer:`export default function AskTheHouseDrawer(){return null}`,
  askContext:`export function useAskTheHouse(){return{isOpen:false,open:()=>{},close:()=>{},sectionId:null}}`,
  healthContext:`export function useBrandHealth(){return{healthData:null}}`,
- workspaceContext:`export function useWorkspace(){return{activeWorkspaceId:'synthetic-workspace',activeWorkspace:{name:'Synthetic Workspace'}}}`,
+ workspaceContext:`export function useWorkspace(){const cohort=new URLSearchParams(location.search).get('cohort')==='1';return{activeWorkspaceId:'synthetic-workspace',activeWorkspace:{name:'Synthetic Workspace',raw:cohort?{cohort_member:true}:{}}}}`,
  planContext:`export function usePlan(){return{isAdmin:new URLSearchParams(location.search).get('admin')==='1'}}`,
  authHook:`export function useUser(){return{user:{id:'synthetic-user',firstName:'Test'}}}`,
- api:`const api={get:async()=>{const e=new Error('synthetic unavailable');e.status=503;throw e}};export default api;`,
+ // ?f=continue|changes|complete|fail: the cohort workspace's Foundation (sections + readiness); every other read is unavailable.
+ api:`const q=new URLSearchParams(location.search),f=q.get('f')||'continue';const IDS=['brand_audit','core_truth','audience','positioning','messaging','expression'];const sec=(id,i)=>({section_id:id,status:f==='complete'||i===0?'locked':'draft',...(f==='changes'&&id==='audience'?{review_note:'Name one person.',review_note_at:'2026-11-19T10:00:00Z'}:{})});const unavailable=()=>{const e=new Error('synthetic unavailable');e.status=503;throw e};const api={get:async(p)=>{window.__calls=(window.__calls||[]).concat([p]);if(p==='/api/foundation/sections'){if(f==='fail')unavailable();return{sections:IDS.map(sec)}}if(p==='/api/foundation/readiness')return{sections:IDS.map((id,i)=>({id,score:i<2?60:0}))};unavailable()}};export default api;`,
  apiPaths:`const API_PATHS={onboarding:{progress:'/progress'},audit:{latest:'/audit'},workspace:{stats:(id)=>'/stats/'+id},buyerSignals:{list:()=>'/signals'},campaigns:{list:'/campaigns'},crm:{dashboard:'/crm'},analytics:{overview:'/analytics'}};export default API_PATHS;`,
  overview:`export async function fetchCommandCenterOverview(){const existing=new URLSearchParams(location.search).get('mode')==='existing';if(!existing)return{available:false};return{available:true,data:{brandHealth:{score:42,status:'Synthetic health'},buyerSignals:{confirmed:0,unconfirmed:0,recent:[]},openDecisions:{count:0},activeWork:{count:0,campaignCount:0,items:[]},systemAlerts:{count:0},brandHouse:{foundation:0,structure:0,house:0,estate:0},nextMove:{title:'Existing recommendation',body:'Preserve this recommendation.',action:'Open existing recommendation',route:'/existing-recommendation'},dailyIntelligence:[],recentProgress:[]}}}`,
 };
@@ -55,7 +56,7 @@ const bundle=await rolldown({input:'mock:entry',plugins:[{
 }],transform:{jsx:{runtime:'classic'}},logLevel:'silent'});
 const {output}=await bundle.generate({format:'iife'});await bundle.close();
 const code=output.find(item=>item.type==='chunk').code;
-const server=http.createServer((request,response)=>{if(request.url==='/bundle.js'){response.setHeader('Content-Type','text/javascript');return response.end(code)}if(request.url==='/styles.css'){response.setHeader('Content-Type','text/css');const assets=path.join(root,'dist-candidate/assets');const files=fs.readdirSync(assets);return response.end(files.filter(x=>/^index-.*\\.css$/.test(x)||/^CommandCenterNext-.*\\.css$/.test(x)).map(x=>fs.readFileSync(path.join(assets,x),'utf8')).join('\\n'))}response.setHeader('Content-Type','text/html');response.end('<html><head><link rel="stylesheet" href="/styles.css"></head><body><div id="root"></div><script src="/bundle.js"></script></body></html>')});
+const server=http.createServer((request,response)=>{if(request.url==='/bundle.js'){response.setHeader('Content-Type','text/javascript');return response.end(code)}if(request.url==='/styles.css'){response.setHeader('Content-Type','text/css');const assets=path.join(root,'dist-candidate/assets');const files=fs.readdirSync(assets);return response.end(files.filter(x=>/^index-.*\.css$/.test(x)||/^CommandCenterNext-.*\.css$/.test(x)).map(x=>fs.readFileSync(path.join(assets,x),'utf8')).join('\n'))}response.setHeader('Content-Type','text/html');response.end('<html><head><link rel="stylesheet" href="/styles.css"></head><body><div id="root"></div><script src="/bundle.js"></script></body></html>')});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 let browser,checks=0;
 try{
@@ -88,6 +89,25 @@ try{
  await existing.getByRole('button',{name:'Open existing recommendation'}).evaluate(el=>el.click());
  await existing.waitForFunction(()=>window.__navigatedTo==='/existing-recommendation');
  checks+=2;
+ assert.equal(((await existing.evaluate(()=>window.__calls||[])).filter(p=>p.startsWith('/api/foundation'))).length,0,'non-cohort workspaces load no Foundation data');checks++;
+ // Founding Cohort workspaces (Agent Tasks 17): Foundation Home's next step replaces the overview's move.
+ const SHOTS=process.env.SHOTS||'/tmp/cth-command-center';fs.mkdirSync(SHOTS,{recursive:true});
+ for(const [f,title,body,button,route] of [
+  ['continue','Continue Core Truth','Watch the lesson, then answer in your own words.','Open Core Truth','/brand-foundation'],
+  ['changes','Update Audience Truth','Your reviewer sent it back with a note. Make the change, then submit it again.','Open Audience Truth','/audience'],
+  ['complete','Your Foundation is complete','All six sections are approved and locked. Open Review and Lock to see your whole Foundation in one place.','Open Review and Lock','/foundation/review-lock'],
+  ['fail','Open your Foundation','Your Foundation progress could not be loaded right now.','Open Foundation Home','/foundation'],
+ ]){
+  const page=await browser.newPage({viewport:{width:1440,height:1100}});
+  await page.goto(base+'/?mode=existing&admin=0&cohort=1&f='+f);
+  await page.getByRole('heading',{name:title}).waitFor({state:'visible'});
+  assert.equal((await page.locator('.ccn-next-move p').textContent()).trim(),body,f);
+  assert.equal(await page.getByRole('heading',{name:'Existing recommendation'}).count(),0,f);
+  await page.locator('.ccn-next-move').screenshot({path:SHOTS+'/command-center-cohort-'+f+'.png'});
+  await page.getByRole('button',{name:button}).evaluate(el=>el.click());
+  await page.waitForFunction((r)=>window.__navigatedTo===r,route);
+  await page.close();checks+=2;
+ }
  console.log(checks+' mounted mocked Command Center checks passed');
 }finally{
  if(browser)await browser.close();

@@ -34,6 +34,8 @@ import { useUser } from "../hooks/useAuth";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
 import { fetchCommandCenterOverview } from "../lib/commandCenterOverview";
+import { useFoundationProgress } from "../hooks/useFoundationProgress";
+import { foundationNextMove } from "../lib/foundationSections.mjs";
 import "../styles/command-center-next.css";
 
 // Tier copy and destinations carried over verbatim from the legacy Command
@@ -459,6 +461,10 @@ export default function CommandCenterNext() {
   const { activeWorkspaceId, activeWorkspace } = useWorkspace();
   const { healthData } = useBrandHealth();
   const { isOpen, open, close, sectionId } = useAskTheHouse();
+  // Founding Cohort workspaces: "Your next move" is Foundation Home's next step (Agent Tasks 17).
+  // Other workspaces keep the overview's move. The Foundation is loaded only for the cohort.
+  const cohortWorkspace = activeWorkspace?.raw?.cohort_member === true;
+  const foundationProgress = useFoundationProgress(cohortWorkspace);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -794,6 +800,7 @@ export default function CommandCenterNext() {
       recentProgress,
     };
   }, [data, healthData, dataSource]);
+  const nextMove = cohortWorkspace ? foundationNextMove(foundationProgress) : derived?.nextMove;
 
   const firstName = user?.firstName || (user?.fullName || "").split(" ")[0] || activeWorkspace?.name || "Founder";
 
@@ -943,17 +950,17 @@ export default function CommandCenterNext() {
               </div>
             </article>
 
-            {derived.nextMove ? (
+            {nextMove ? (
             <article className="ccn-next-move">
               {/* Static section label, matching its sibling panels ("YOUR BRAND HOUSE").
                   The backend still sends nextMove.eyebrow; it is intentionally not used
                   as the section heading so the approved copy stays stable. */}
               <span className="ccn-panel-eyebrow"><Sparkles size={14} aria-hidden="true" /> YOUR NEXT MOVE</span>
-              <h2>{derived.nextMove.title}</h2>
-              <p>{derived.nextMove.body}</p>
+              <h2>{nextMove.title}</h2>
+              <p>{nextMove.body}</p>
               <div className="ccn-next-actions">
-                <button type="button" className="ccn-gold-btn" onClick={() => navigate(derived.nextMove.route)}>
-                  {derived.nextMove.action} <ArrowRight size={15} aria-hidden="true" />
+                <button type="button" className="ccn-gold-btn" onClick={() => navigate(nextMove.route)}>
+                  {nextMove.action} <ArrowRight size={15} aria-hidden="true" />
                 </button>
                 <button type="button" className="ccn-ghost-btn" onClick={() => open("command-center-next-move")}>
                   Ask Zuri Why

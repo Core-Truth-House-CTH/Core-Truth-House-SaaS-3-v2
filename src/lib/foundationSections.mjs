@@ -260,3 +260,14 @@ export function lessonLabel(lesson) {
 export function lessonEmbedUrl(lesson) {
   return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(lesson.youtube_id)}?autoplay=1&rel=0`;
 }
+
+// Command Center "Your next move" for a Founding Cohort workspace (Agent Tasks 17): Foundation Home's next
+// step, word for word. progress is a useFoundationProgress() result. While it loads, or if it cannot load,
+// the panel opens Foundation Home instead of guessing a section.
+export function foundationNextMove(progress) {
+  const home = { eyebrow: "YOUR FOUNDATION", action: "Open Foundation Home", route: "/foundation", evidence_ids: [] };
+  if (progress?.error && !progress?.sections?.length) return { ...home, title: "Open your Foundation", body: "Your Foundation progress could not be loaded right now." };
+  if (!progress?.sections?.length) return { ...home, title: "Your Foundation", body: "Finding your next section…" };
+  const step = progress.step;
+  return { ...home, title: step.title, body: step.body, action: step.button || home.action, route: step.path || home.route };
+}

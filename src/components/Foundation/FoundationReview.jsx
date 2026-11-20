@@ -7,20 +7,8 @@ import {
 
 // ------------------------------------------------------------------ data
 
-export function useFoundationSections() {
-  const [state, setState] = useState({ sections: [], reviewer: false, loading: true, error: "" });
-  const load = useCallback(async () => {
-    setState((s) => ({ ...s, loading: true, error: "" }));
-    try {
-      const r = await apiClient.get("/api/foundation/sections");
-      setState({ sections: r?.sections || [], reviewer: Boolean(r?.reviewer), loading: false, error: "" });
-    } catch (e) {
-      setState((s) => ({ ...s, loading: false, error: errorMessage(e, "Section status could not be loaded.") }));
-    }
-  }, []);
-  useEffect(() => { load(); }, [load]);
-  return { ...state, reload: load };
-}
+// The loader lives with Foundation Home's progress hook; re-exported here for the section pages.
+export { useFoundationSections } from "../../hooks/useFoundationProgress";
 
 function StatusBadge({ status }) {
   return <span className={`fv3-badge fv3-badge-${status || "draft"}`}>{statusLabel(status)}</span>;

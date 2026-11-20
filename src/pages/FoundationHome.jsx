@@ -1,21 +1,15 @@
-import React,{useCallback,useEffect,useState} from "react";
+import React from "react";
 import {Link} from "react-router-dom";
 import {FoundationPageShell,FoundationSectionLayout} from "./FoundationSectionLayout";
-import {useFoundationSections} from "../components/Foundation/FoundationReview";
-import {SECTION_IDS,homeRows,latestNote,lockedCount,nextStep,shortDate} from "../lib/foundationSections.mjs";
-import apiClient from "../lib/apiClient";
+import {useFoundationProgress} from "../hooks/useFoundationProgress";
+import {SECTION_IDS,latestNote,lockedCount,shortDate} from "../lib/foundationSections.mjs";
 
 // Foundation Home (build reference, artboard E): header with section count, section tabs, sections
 // table, and a right column with Your next step and the latest note From your reviewer. Nothing else.
 // Members never see the reviewer's name. There is no Export button (no per-section export exists).
 export default function FoundationHome(){
- const sectionsState=useFoundationSections();
- const [readiness,setReadiness]=useState([]);
- // Readiness only tells "In progress" from "Not started"; the page works without it.
- const loadReadiness=useCallback(async()=>{try{const r=await apiClient.get("/api/foundation/readiness");setReadiness(r?.sections||[])}catch{setReadiness([])}},[]);
- useEffect(()=>{loadReadiness()},[loadReadiness]);
- const {sections,loading,error,reload}=sectionsState;
- const rows=homeRows(sections,readiness),step=nextStep(rows),note=latestNote(sections),ready=sections.length>0;
+ const {sections,loading,error,reload,rows,step}=useFoundationProgress();
+ const note=latestNote(sections),ready=sections.length>0;
  const header=<><span className="fnd-spacer"/>{ready&&<p className="fnd-count"><strong>{lockedCount(rows)} of {SECTION_IDS.length}</strong> sections locked</p>}</>;
  return <FoundationPageShell><FoundationSectionLayout title="Foundation" subtitle="Build the truth the rest of your brand will stand on." activeSection="home" home headerActions={header}>
   {error&&!ready&&<p role="alert" className="fnd-error">{error} <button className="fnd-btn fnd-btn-s" onClick={reload} type="button">Retry</button></p>}

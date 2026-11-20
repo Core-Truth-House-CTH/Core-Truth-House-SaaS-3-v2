@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   reviewState, homeRows, lockedCount, nextStep, latestNote, shortDate, requiredLine, reviewCard, aiButtonLabel,
   openedForEdits, joinNames, alignmentPrompt, fieldHelpPrompt, REVIEW_STATE_LABELS,
-  outOfCredits, changesRequested, SECTION_IDS, lessonCategory, isLessonVideo, lessonFor, lessonLabel, lessonEmbedUrl,
+  outOfCredits, changesRequested, SECTION_IDS, lessonCategory, isLessonVideo, lessonFor, lessonLabel, lessonEmbedUrl, foundationNextMove,
 } from "../src/lib/foundationSections.mjs";
 
 const sec = (id, extra = {}) => ({ section_id: id, status: "draft", ...extra });
@@ -134,4 +134,18 @@ test("lessons: one per section by category, newest edit wins, needs a YouTube id
   assert.equal(lessonLabel({}), "LESSON");
   assert.equal(lessonLabel({ duration_minutes: 0 }), "LESSON");
   assert.equal(lessonEmbedUrl({ youtube_id: "abcDEF12345" }), "https://www.youtube-nocookie.com/embed/abcDEF12345?autoplay=1&rel=0");
+});
+
+test("Command Center next move for a cohort workspace is Foundation Home's next step", () => {
+  const sections = SECTION_IDS.map((id, i) => ({ section_id: id, status: i < 2 ? "locked" : "draft" }));
+  const rows = homeRows(sections, []);
+  const move = foundationNextMove({ sections, rows, step: nextStep(rows), loading: false, error: "" });
+  assert.deepEqual(move, { eyebrow: "YOUR FOUNDATION", action: "Open Audience Truth", route: "/audience", evidence_ids: [], title: "Start Audience Truth", body: "Watch the lesson, then answer in your own words." });
+  const all = homeRows(SECTION_IDS.map((id) => ({ section_id: id, status: "locked" })), []);
+  assert.equal(foundationNextMove({ sections: all.map((r) => r.section), step: nextStep(all) }).route, "/foundation/review-lock");
+  const waiting = homeRows(SECTION_IDS.map((id) => ({ section_id: id, status: "submitted" })), []);
+  const w = foundationNextMove({ sections: waiting.map((r) => r.section), step: nextStep(waiting) });
+  assert.deepEqual([w.title, w.action, w.route], ["Waiting for review", "Open Foundation Home", "/foundation"]);
+  assert.deepEqual([foundationNextMove({ sections: [], loading: true }).title, foundationNextMove({ sections: [], loading: true }).route], ["Your Foundation", "/foundation"]);
+  assert.equal(foundationNextMove({ sections: [], error: "x" }).title, "Open your Foundation");
 });
