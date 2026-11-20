@@ -342,7 +342,7 @@ function ReviewLockView() {
       <p className="fnd-lbl">APPROVAL AND LOCK</p>
       <p className="fnd-serif fnd-review-heading">{all ? "Your Foundation is locked" : waiting ? "In review" : "In progress"}</p>
       <dl className="fnd-facts">
-        <div><dt>Sections locked</dt><dd>{lockedCount(rows.filter((r) => r.id !== "review_lock"))} of 6</dd></div>
+        <div><dt>Sections locked</dt><dd>{lockedCount(rows)} of 6</dd></div>
         <div><dt>Waiting for review</dt><dd>{waiting}</dd></div>
         <div><dt>Last approved</dt><dd>{last ? shortDate(last) : "Nothing locked yet"}</dd></div>
       </dl>

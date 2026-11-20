@@ -86,10 +86,10 @@ try {
   const typeable = (p) => p.locator(".fnd-main, .fnd-side").locator("textarea, input").evaluateAll((els) => els.filter((e) => !e.matches(":disabled") && !e.readOnly && !e.closest(".fv3-status")).length);
   const NAMES = ["Diagnostic Insight", "Core Truth", "Audience Truth", "Positioning", "Messaging", "Brand Expression", "Review and Lock"];
   const HOME = {
-    draft: { core: "In progress", count: "1 of 7", step: "Continue Core Truth", note: false },
-    waiting: { core: "Waiting for review", count: "1 of 7", step: "Continue Audience Truth", note: false },
-    changes: { core: "Changes requested", count: "1 of 7", step: "Update Core Truth", note: true },
-    locked: { core: "Locked", count: "2 of 7", step: "Continue Audience Truth", note: false },
+    draft: { core: "In progress", count: "1 of 6", step: "Continue Core Truth", note: false },
+    waiting: { core: "Waiting for review", count: "1 of 6", step: "Continue Audience Truth", note: false },
+    changes: { core: "Changes requested", count: "1 of 6", step: "Update Core Truth", note: true },
+    locked: { core: "Locked", count: "2 of 6", step: "Continue Audience Truth", note: false },
   };
 
   for (const [s, want] of Object.entries(HOME)) {

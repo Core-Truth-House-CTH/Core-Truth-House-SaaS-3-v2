@@ -2,7 +2,7 @@ import React,{useCallback,useEffect,useState} from "react";
 import {Link} from "react-router-dom";
 import {FoundationPageShell,FoundationSectionLayout} from "./FoundationSectionLayout";
 import {useFoundationSections} from "../components/Foundation/FoundationReview";
-import {homeRows,latestNote,lockedCount,nextStep,shortDate} from "../lib/foundationSections.mjs";
+import {SECTION_IDS,homeRows,latestNote,lockedCount,nextStep,shortDate} from "../lib/foundationSections.mjs";
 import apiClient from "../lib/apiClient";
 
 // Foundation Home (build reference, artboard E): header with section count, section tabs, sections
@@ -16,7 +16,7 @@ export default function FoundationHome(){
  useEffect(()=>{loadReadiness()},[loadReadiness]);
  const {sections,loading,error,reload}=sectionsState;
  const rows=homeRows(sections,readiness),step=nextStep(rows),note=latestNote(sections),ready=sections.length>0;
- const header=<><span className="fnd-spacer"/>{ready&&<p className="fnd-count"><strong>{lockedCount(rows)} of 7</strong> sections locked</p>}</>;
+ const header=<><span className="fnd-spacer"/>{ready&&<p className="fnd-count"><strong>{lockedCount(rows)} of {SECTION_IDS.length}</strong> sections locked</p>}</>;
  return <FoundationPageShell><FoundationSectionLayout title="Foundation" subtitle="Build the truth the rest of your brand will stand on." activeSection="home" home headerActions={header}>
   {error&&!ready&&<p role="alert" className="fnd-error">{error} <button className="fnd-btn fnd-btn-s" onClick={reload} type="button">Retry</button></p>}
   {loading&&!ready?<p className="fnd-muted" aria-live="polite">Loading your Foundation…</p>:ready&&<div className="fnd-row">

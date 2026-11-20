@@ -25,13 +25,15 @@ test("a note only means changes requested while the section is a draft", () => {
   assert.equal(changesRequested(sec("x", { status: "submitted", review_note: "n" })), false);
 });
 
-test("home rows: seven in order, Review and Lock locked only when all six are", () => {
+test("home rows: seven in order, Review and Lock Ready only when all six are locked; count is out of six", () => {
   const rows = homeRows(SECTION_IDS.map((id) => sec(id)), []);
   assert.deepEqual(rows.map((r) => r.name), ["Diagnostic Insight", "Core Truth", "Audience Truth", "Positioning", "Messaging", "Brand Expression", "Review and Lock"]);
   assert.equal(rows[6].label, "Not started");
   const all = homeRows(SECTION_IDS.map((id) => sec(id, { status: "locked" })), []);
-  assert.equal(all[6].label, "Locked");
-  assert.equal(lockedCount(all), 7);
+  assert.equal(all[6].label, "Ready");
+  assert.equal(lockedCount(all), 6);
+  const five = homeRows(SECTION_IDS.map((id, i) => sec(id, i < 5 ? { status: "locked" } : {})), []);
+  assert.equal(five[6].label, "Not started");
   const three = homeRows(SECTION_IDS.map((id, i) => sec(id, i < 3 ? { status: "locked" } : {})), []);
   assert.equal(lockedCount(three), 3);
 });

@@ -93,6 +93,7 @@
 .fnd-state-changes_requested{color:var(--fnd-crimson)}
 .fnd-state-in_progress{color:var(--fnd-plum)}
 .fnd-state-not_started{color:var(--fnd-muted)}
+.fnd-state-ready{color:var(--fnd-green)}
 .fnd-state-open_for_edits{color:var(--fnd-plum)}
 
 /* Home: next step and From Shake */

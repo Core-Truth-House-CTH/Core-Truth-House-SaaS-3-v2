@@ -110,6 +110,7 @@ export const REVIEW_STATE_LABELS = {
   open_for_edits: "Open for edits",
   in_progress: "In progress",
   not_started: "Not started",
+  ready: "Ready",
 };
 
 export function sectionName(sectionId) {
@@ -145,20 +146,21 @@ export function reviewState(section, readinessSection) {
   return Number(readinessSection?.score) > 0 ? "in_progress" : "not_started";
 }
 
-// Foundation Home rows: the six stored sections plus Review and Lock, which counts as locked only
-// once every stored section is locked.
+// Foundation Home rows: the six stored sections plus Review and Lock, which has no review state of its
+// own: "Ready" once all six are locked, "Not started" before that.
 export function homeRows(sections = [], readinessSections = []) {
   const stored = SECTION_IDS.map((id) => {
     const section = sections.find((s) => s.section_id === id);
     return { id, section, state: reviewState(section, readinessSections.find((r) => r.id === id)) };
   });
   const allLocked = stored.every((r) => r.state === "locked");
-  const rows = [...stored, { id: "review_lock", section: null, state: allLocked ? "locked" : "not_started" }];
+  const rows = [...stored, { id: "review_lock", section: null, state: allLocked ? "ready" : "not_started" }];
   return rows.map((r, i) => ({ ...r, n: i + 1, name: sectionName(r.id), path: sectionPath(r.id), label: REVIEW_STATE_LABELS[r.state] }));
 }
 
+// Locked sections out of the six stored ones ("n of 6 sections locked"); Review and Lock is not counted.
 export function lockedCount(rows) {
-  return rows.filter((r) => r.state === "locked").length;
+  return rows.filter((r) => SECTION_IDS.includes(r.id) && r.state === "locked").length;
 }
 
 // "Your next step": the first sent-back or reopened section, else the first unfinished one, else waiting.
