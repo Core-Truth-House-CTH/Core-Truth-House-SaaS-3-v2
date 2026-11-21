@@ -667,7 +667,6 @@ export default function Billing() {
       const res = await apiClient.post(API_PATHS.billing.checkoutSubscription, {
         plan_id: planId,
         billing_cycle: billingCycle,
-        origin_url: window.location.origin,
       });
 
       if (res?.checkout_url) {
@@ -694,7 +693,6 @@ export default function Billing() {
     try {
       const res = await apiClient.post(API_PATHS.billing.checkoutCredits, {
         pack_id: packId,
-        origin_url: window.location.origin,
       });
 
       if (res?.checkout_url) {

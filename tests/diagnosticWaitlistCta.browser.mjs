@@ -43,7 +43,7 @@ const server=http.createServer((request,response)=>{
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const base=`http://127.0.0.1:${server.address().port}`;
 
-let browser,checks=0,leadStatus=200;
+let browser,checks=0,leadStatus=200,resultsEmail='on_its_way';
 const leadPosts=[];
 const liveStart='[data-testid="diagnostic-live-start"]';
 
@@ -63,11 +63,14 @@ async function finishQuiz(page){
 
 try{
   browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+  const mock=route=>{
+    const body=route.request().method()==='POST'?route.request().postDataJSON():{};
+    if(route.request().method()==='POST')leadPosts.push(body.status);
+    const answer=body.status==='completed'?{results_email:resultsEmail}:{};
+    return route.fulfill({status:leadStatus,contentType:'application/json',body:JSON.stringify(answer)});
+  };
   const page=await browser.newPage();
-  await page.route(`${API}/**`,route=>{
-    if(route.request().method()==='POST')leadPosts.push(route.request().postDataJSON().status);
-    return route.fulfill({status:leadStatus,contentType:'application/json',body:'{}'});
-  });
+  await page.route(`${API}/**`,mock);
   await page.goto(base);
 
   // Before saving: result shown in the pop-up only, nothing new on the page.
@@ -98,6 +101,11 @@ try{
   assert.deepEqual(leadPosts,['started','completed','completed']);
   checks++;
 
+  // The server accepted the results email: the page says where it is going.
+  const sentNote=page.locator('[data-testid="diagnostic-results-sent"]');
+  assert.equal((await sentNote.innerText()).trim(),'Your results are on their way to founder@example.test.');
+  checks++;
+
   // The existing pop-up button is kept and uses the same link.
   await page.getByRole('button',{name:'View Full Recommendation'}).click();
   modal=page.locator('.bdx-modal');
@@ -109,6 +117,23 @@ try{
   await page.reload();
   await page.locator(liveStart).waitFor({state:'visible'});
   assert.equal(await page.locator(liveStart).getByRole('link',{name:'Join the Cohort Waitlist'}).getAttribute('href'),expected);
+  assert.equal(await page.locator('[data-testid="diagnostic-results-sent"]').count(),0,'no stale promise after a reload');
+  checks++;
+
+  // The server did not send (unsubscribed earlier, or one already went today): no promise on the page.
+  resultsEmail='not_sent';
+  const other=await (await browser.newContext()).newPage();
+  await other.route(`${API}/**`,mock);
+  await other.goto(base);
+  const second=await finishQuiz(other);
+  await second.getByRole('button',{name:'Save My Answers'}).click();
+  await other.locator(liveStart).waitFor({state:'visible'});
+  assert.equal(await other.locator('[data-testid="diagnostic-results-sent"]').count(),0);
+  checks++;
+
+  // Nothing in the Diagnostic points to a plan, a price or plan checkout.
+  const source=fs.readFileSync(`${root}/src/pages/BrandDiagnosticPage.jsx`,'utf8');
+  for(const bad of ['redirect_url=%2Fbilling','/billing','/pricing','Start Foundation','Apply for Estate'])assert.ok(!source.includes(bad),bad);
   checks++;
   console.log(`${checks} diagnostic waitlist button Chromium checks passed`);
 }finally{

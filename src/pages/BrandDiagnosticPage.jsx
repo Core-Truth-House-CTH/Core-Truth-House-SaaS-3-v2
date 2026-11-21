@@ -130,9 +130,7 @@ function getRecommendation(score) {
  return {
  tier: "Foundation",
  range: "15 to 29",
- cta: "Start Foundation",
  line: "Your brand needs documented core truth, buyer clarity, beliefs, and voice before more content can convert.",
- next: "/sign-up?redirect_url=%2Fbilling&tier=foundation&source=diagnostic",
  };
  }
 
@@ -140,9 +138,7 @@ function getRecommendation(score) {
  return {
  tier: "Structure",
  range: "30 to 42",
- cta: "Build My Structure",
  line: "You have pieces, but not architecture. The next move is structure across content, offers, and conversion.",
- next: "/sign-up?redirect_url=%2Fbilling&tier=structure&source=diagnostic",
  };
  }
 
@@ -150,18 +146,14 @@ function getRecommendation(score) {
  return {
  tier: "House",
  range: "43 to 52",
- cta: "Enter the House",
  line: "You have a real brand. The next move is integration across identity, offers, content, and launch planning.",
- next: "/sign-up?redirect_url=%2Fbilling&tier=house&source=diagnostic",
  };
  }
 
  return {
  tier: "Estate",
  range: "53 to 60",
- cta: "Apply for Estate",
  line: "You are ready for refinement and scale. The risk is no longer clarity. The risk is dilution.",
- next: "/sign-up?redirect_url=%2Fbilling&tier=estate&source=diagnostic",
  };
 }
 
@@ -284,13 +276,12 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
  }
 
  async function saveResult() {
- await submitLead("completed");
- onComplete?.({
- score,
- recommendation,
- topGaps,
- answers,
- });
+ const saved = await submitLead("completed");
+ onComplete?.(
+ { score, recommendation, topGaps, answers },
+ // The server says whether the results email was accepted for sending; only then promise it.
+ saved?.results_email === "on_its_way" ? leadInfo.email.trim() : "",
+ );
  }
 
  const active = questions[currentQuestion];
@@ -430,6 +421,8 @@ function ModalDiagnostic({ open, onClose, onComplete, initialStep = "lead", init
 export default function BrandDiagnosticPage() {
  const [diagnosticOpen, setDiagnosticOpen] = useState(false);
  const [resultSnapshot, setResultSnapshot] = useState(null);
+ // Not stored: "on their way" is true only right after this save, not after a reload days later.
+ const [resultsSentTo, setResultsSentTo] = useState("");
  const [modalInitialStep, setModalInitialStep] = useState("lead");
  const [modalInitialData, setModalInitialData] = useState(null);
  // Bumped on each open so the modal remounts and re-reads initialStep/initialData.
@@ -648,6 +641,11 @@ export default function BrandDiagnosticPage() {
                   Join the Cohort Waitlist
                   <ArrowRight size={14} />
                 </a>
+                {resultsSentTo ? (
+                  <p className="bdx-sent-note" role="status" data-testid="diagnostic-results-sent">
+                    Your results are on their way to {resultsSentTo}.
+                  </p>
+                ) : null}
               </div>
             ) : null}
             <button type="button" onClick={openDiagnostic}>Take the full diagnostic <ArrowRight size={13} /></button>
@@ -800,8 +798,9 @@ export default function BrandDiagnosticPage() {
  initialStep={modalInitialStep}
  initialData={modalInitialData}
  onClose={() => setDiagnosticOpen(false)}
- onComplete={(snapshot) => {
+ onComplete={(snapshot, sentTo) => {
  setResultSnapshot(snapshot);
+ setResultsSentTo(sentTo || "");
  setDiagnosticOpen(false);
  // Persist the result so a page refresh restores it.
  try {
@@ -821,6 +820,14 @@ export default function BrandDiagnosticPage() {
  }
 
  .bdx-page * { box-sizing: border-box; }
+
+ .bdx-sent-note {
+ margin: 12px 0 0;
+ font-size: 14px;
+ line-height: 1.5;
+ color: #5b4566;
+ overflow-wrap: anywhere;
+ }
 
  .bdx-header {
  min-height: 64px;
