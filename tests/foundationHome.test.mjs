@@ -94,7 +94,7 @@ test("the out-of-credits box shows the server's approved wording, with the refil
   assert.equal(outOfCreditsMessage({ status: 402, data: { detail: msg } }), msg);
   assert.equal(outOfCreditsMessage({ status: 402, payload: { detail: "Insufficient AI credits." } }), OUT_OF_CREDITS_FALLBACK);
   assert.equal(outOfCreditsMessage({ status: 402 }), OUT_OF_CREDITS_FALLBACK);
-  assert.equal(OUT_OF_CREDITS_FALLBACK, "You've used this month's AI credits. Your work is saved. Buy more credits to keep going now.");
+  assert.equal(OUT_OF_CREDITS_FALLBACK, "You've used this month's AI credits. Your work is saved.");
 });
 
 test("an unlock reads as Open for edits; a later note reads as Changes requested", () => {

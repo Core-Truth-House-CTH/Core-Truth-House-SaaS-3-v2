@@ -198,6 +198,8 @@ try {
     await p.getByText("You've used this month's AI credits.", { exact: false }).waitFor();
     await p.waitForTimeout(500);
     assert.equal(await p.getByRole("link", { name: "Buy credits" }).count(), 0);
+    const said = (await p.locator(".fnd-house").innerText()).replace(/\s+/g, " ");
+    assert.ok(said.includes("They refill on December 13. Your work is saved.") && !/Buy more credits/.test(said), said);
     await shot(p, "core-out-of-credits-closed"); await p.close();
   });
   await check("C-house Tell the House opens Ask the House with the typed text; lists add and remove", async () => {

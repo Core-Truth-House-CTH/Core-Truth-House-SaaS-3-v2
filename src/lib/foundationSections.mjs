@@ -232,8 +232,10 @@ export function outOfCredits(error) {
 
 export const CREDIT_PACKS_PATH = "/api/billing/credit-packs";   // answers { packs, checkout_enabled }
 
-// The server's out-of-credits answer carries the approved wording with the refill date (Agent Tasks 4).
-export const OUT_OF_CREDITS_FALLBACK = "You've used this month's AI credits. Your work is saved. Buy more credits to keep going now.";
+// The server's out-of-credits answer carries the approved wording with the refill date (Agent Tasks 4), and adds
+// "Buy more credits to keep going now." only while credit packs are on sale (Agent Tasks 21). The fallback is for a
+// missing or unrecognised answer, so it never promises a purchase; the Buy credits button carries that.
+export const OUT_OF_CREDITS_FALLBACK = "You've used this month's AI credits. Your work is saved.";
 export function outOfCreditsMessage(error) {
   const text = errorMessage(error, "");
   return /^You've used this month's AI credits\./.test(text) ? text : OUT_OF_CREDITS_FALLBACK;

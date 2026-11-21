@@ -10,6 +10,7 @@ import { usePlan } from "../context/PlanContext";
 import { useUser, useClerk } from "../hooks/useAuth";
 import apiClient from "../lib/apiClient";
 import API_PATHS from "../lib/apiPaths";
+import { LIFETIME_PLAN_LABEL, creditsView, formatCredits } from "../lib/billingCredits.mjs";
 
 const SANS = "'DM Sans', sans-serif";
 const SERIF = "'Playfair Display', serif";
@@ -530,6 +531,7 @@ export default function Billing() {
   const [creditPacks, setCreditPacks] = useState([]);
   const [packsOpen, setPacksOpen] = useState(false);
   const [summary, setSummary] = useState(null);
+  const [usage, setUsage] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [checkoutBusy, setCheckoutBusy] = useState(null);
@@ -553,6 +555,14 @@ export default function Billing() {
   const loadBillingData = useCallback(async () => {
     setLoading(true);
 
+    // Credit balances come from the usage summary (Agent Tasks 21); if it fails, only the credits card says so.
+    const usageRequest = activeWorkspaceId
+      ? apiClient.get(API_PATHS.usage.summary, { params: { workspace_id: activeWorkspaceId } }).catch((error) => {
+          console.error("Failed to load credit balances", error);
+          return null;
+        })
+      : Promise.resolve(null);
+
     try {
       const [plansRes, packsRes, summaryRes] = await Promise.all([
         apiClient.get(API_PATHS.billing.plans),
@@ -564,6 +574,7 @@ export default function Billing() {
       setCreditPacks(packsRes?.packs || []);          // GET /api/billing/credit-packs answers { packs, checkout_enabled }
       setPacksOpen(packsRes?.checkout_enabled === true);
       setSummary(summaryRes || null);
+      setUsage(await usageRequest);
     } catch (error) {
       console.error("Failed to load billing data", error);
       setStatus({
@@ -573,7 +584,7 @@ export default function Billing() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeWorkspaceId]);
 
   const pollCheckoutStatus = useCallback(
     async (id, attempt = 0) => {
@@ -712,6 +723,8 @@ export default function Billing() {
     navigate("/", { replace: true });
   };
 
+  const credits = creditsView(usage);
+
   if (!hasActivePlan) {
     return (
       <CheckoutWall
@@ -771,11 +784,11 @@ export default function Billing() {
                   <h2 style={SECTION_HEADING_STYLE}>Current subscription</h2>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <p style={SECTION_LABEL_STYLE}>Plan</p>
                     <p style={{ ...SUMMARY_VALUE_STYLE, marginTop: 8 }}>
-                      {hasLifetimeAccess ? "Estate · lifetime access" : summary?.subscription?.plan_name || summary?.plan_name || "No active plan"}
+                      {hasLifetimeAccess ? LIFETIME_PLAN_LABEL : summary?.subscription?.plan_name || summary?.plan_name || "No active plan"}
                     </p>
                   </div>
 
@@ -786,15 +799,37 @@ export default function Billing() {
                     </p>
                   </div>
 
-                  <div>
-                    <p style={SECTION_LABEL_STYLE}>Credits</p>
-                    <p style={{ ...SUMMARY_VALUE_STYLE, marginTop: 8 }}>
-                      {summary?.credits?.available ?? summary?.available_credits ?? 0}
-                    </p>
-                  </div>
                 </div>
               </div>
 
+              <div className="mb-6" style={{ ...CARD_STYLE, padding: 24 }} data-testid="billing-credits">
+                <h2 style={{ ...SECTION_HEADING_STYLE, marginBottom: 16 }}>AI credits</h2>
+                {!credits ? (
+                  <p style={MUTED_STYLE}>Your credit balance could not be loaded. Refresh the page to try again.</p>
+                ) : credits.unlimited ? (
+                  <p style={SUMMARY_VALUE_STYLE}>Unlimited</p>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div>
+                      <p style={SECTION_LABEL_STYLE}>Monthly credits</p>
+                      <p style={{ ...SUMMARY_VALUE_STYLE, marginTop: 8 }}>{formatCredits(credits.monthly)}</p>
+                      {credits.refill && <p style={{ ...MUTED_STYLE, marginTop: 4 }}>Refills on {credits.refill}</p>}
+                    </div>
+                    <div>
+                      <p style={SECTION_LABEL_STYLE}>Purchased credits</p>
+                      <p style={{ ...SUMMARY_VALUE_STYLE, marginTop: 8 }}>{formatCredits(credits.purchased)}</p>
+                      <p style={{ ...MUTED_STYLE, marginTop: 4 }}>Never expire. Used after your monthly credits.</p>
+                    </div>
+                    <div>
+                      <p style={SECTION_LABEL_STYLE}>Total</p>
+                      <p style={{ ...SUMMARY_VALUE_STYLE, marginTop: 8 }}>{formatCredits(credits.total)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Founding Cohort members own lifetime Estate access: no plans to choose (Agent Tasks 21). */}
+              {!hasLifetimeAccess && (<>
               <div className="mb-4 flex items-center gap-3">
                 <button
                   type="button"
@@ -825,16 +860,16 @@ export default function Billing() {
                   />
                 ))}
               </div>
+              </>)}
 
+              {/* The whole section stays hidden while members cannot buy packs (Agent Tasks 21). */}
+              {packsOpen && (
               <div className="mb-4" id="credit-packs">
                 <h2 className="mb-4" style={SECTION_HEADING_STYLE}>
                   Credit packs
                 </h2>
-                {!packsOpen && (
-                  <p style={MUTED_STYLE}>Credit packs are not open yet.</p>
-                )}
                 <div className="grid gap-4 md:grid-cols-3">
-                  {packsOpen && creditPacks.map((pack) => (
+                  {creditPacks.map((pack) => (
                     <CreditPackCard
                       key={pack.id}
                       pack={pack}
@@ -844,6 +879,7 @@ export default function Billing() {
                   ))}
                 </div>
               </div>
+              )}
             </>
           )}
         </div>
