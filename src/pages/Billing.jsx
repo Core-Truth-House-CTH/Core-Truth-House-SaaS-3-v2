@@ -792,12 +792,15 @@ export default function Billing() {
                     </p>
                   </div>
 
+                  {/* Founding Cohort members have no subscription, so no subscription status (Shake, Nov 21). */}
+                  {!hasLifetimeAccess && (
                   <div>
-                    <p style={SECTION_LABEL_STYLE}>{hasLifetimeAccess ? "Subscription billing status" : "Status"}</p>
+                    <p style={SECTION_LABEL_STYLE}>Status</p>
                     <p style={{ ...SUMMARY_VALUE_STYLE, marginTop: 8 }}>
                       {summary?.subscription?.status || summary?.subscription_status || "inactive"}
                     </p>
                   </div>
+                  )}
 
                 </div>
               </div>

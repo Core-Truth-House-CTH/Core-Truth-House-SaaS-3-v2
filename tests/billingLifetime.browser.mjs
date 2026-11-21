@@ -82,6 +82,7 @@ try {
     assert.equal(await p.getByRole("button", { name: /choose plan/i }).count(), 0);
     assert.equal(await p.getByRole("button", { name: "Monthly" }).count(), 0);
     assert.ok(!/\$697/.test(t) && !/Current plan/.test(t), t);
+    assert.ok(!/billing status/i.test(t) && !/\binactive\b/i.test(t), "no subscription status for lifetime members: " + t);
     const c = await credits(p);
     assert.ok(/Monthly credits 900 Refills on December 13/i.test(c), c);
     assert.ok(/Purchased credits 500/i.test(c) && /Total 1,400/i.test(c), c);
@@ -105,6 +106,7 @@ try {
     assert.ok((await p.getByRole("button", { name: /choose plan/i }).count()) >= 1);
     const t = await text(p);
     assert.ok(!t.includes("Founding Cohort"), t);
+    assert.ok(/Status active/i.test(t), "subscribers still see their status: " + t);
     assert.ok(/Total 1,400/i.test(await credits(p)));
     assert.equal(await p.getByRole("heading", { name: "Credit packs" }).count(), 0);
     await shot(p, "subscriber-packs-closed"); await p.close();
